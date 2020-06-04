@@ -40,7 +40,7 @@ public:
 protected:
 
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isSprinting;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -53,7 +53,7 @@ protected:
 		bool isDead;
 
 
-private:
+protected:
 
 	float defaultMaxWalkSpeed;
 	float currentFowardSpeed;
@@ -74,11 +74,11 @@ protected:
 		TArray<TSubclassOf<class AAccessory>> Accessories;
 	class AAccessory* accessoryObj;
 
-public:
+protected:
 
 	void BeginSprint();
 	void EndSprint();
-	void UpdateSprint();
+	virtual void UpdateSprint();
 
 	void BeginCrouch();
 

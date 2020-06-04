@@ -163,19 +163,16 @@ void ABaseCharacter::MoveForward(float Value)
 
 void ABaseCharacter::MoveRight(float Value)
 {
-	if (!isSprinting)
+	if ((Controller != NULL) && (Value != 0.0f))
 	{
-		if ((Controller != NULL) && (Value != 0.0f))
-		{
-			// find out which way is right
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
+		// find out which way is right
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-			// get right vector 
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			// add movement in that direction
-			AddMovementInput(Direction, Value);
-		}
+		// get right vector 
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		// add movement in that direction
+		AddMovementInput(Direction, Value);
 	}
 
 }

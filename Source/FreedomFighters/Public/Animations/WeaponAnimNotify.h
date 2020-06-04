@@ -13,6 +13,10 @@ enum class AnimType : uint8
 	EndEquip UMETA(DisplayName = "EndEquip"),
 	UnEquip UMETA(DisplayName = "UnEquip"),
 	SwapWeapon UMETA(DisplayName = "SwapWeapon"),
+	ReloadClipIn UMETA(DisplayName = "ReloadClipIn"),
+	ReloadClipOut UMETA(DisplayName = "ReloadClipOut"),
+	ReloadEnd UMETA(DisplayName = "ReloadEnd"),
+
 };
 UCLASS()
 class FREEDOMFIGHTERS_API UWeaponAnimNotify : public UAnimNotify

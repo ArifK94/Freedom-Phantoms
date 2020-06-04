@@ -158,6 +158,8 @@ public:
 	FName getHolsterSocket();
 	FName getWeaponHandSocket();
 
+private:
+	void Recoil();
 
 protected:
 
@@ -245,6 +247,17 @@ protected:
 	float TimeBetweenShots;
 
 	float LastFireTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
+		float RecoilAmount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
+	float HorizontalRecoil;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
+	float VerticleRecoil;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ShotSound;

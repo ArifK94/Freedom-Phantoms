@@ -9,6 +9,8 @@
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+
 #include "Particles/ParticleSystem.h"
 
 #include "Components/SkeletalMeshComponent.h"
@@ -48,6 +50,10 @@ AWeapon::AWeapon()
 	MaxAmmo = 120;
 	RateOfFire = 600.0f;
 	BaseDamage = 20.0f;
+
+	RecoilAmount = 5.0f;
+	VerticleRecoil = 0.05f;
+	HorizontalRecoil = 0.01f;
 
 	isReloading = false;
 	canShowClip = true;
@@ -157,6 +163,9 @@ void AWeapon::Fire()
 		BeginFireEffect(TracerEndPoint);
 		BeginShellEffect();
 
+
+		Recoil();
+
 		LastFireTime = GetWorld()->TimeSeconds;
 
 		// try and play the sound if specified
@@ -171,6 +180,7 @@ void AWeapon::Fire()
 			EchoAudioComponent->Sound = ShotEchoSound;
 			EchoAudioComponent->Play(ShotSound->GetDuration());
 		}
+
 	}
 }
 
@@ -342,6 +352,22 @@ void AWeapon::SpawnMagazine()
 		}
 	}
 }
+
+void AWeapon::Recoil()
+{
+	AActor* MyOwner = GetOwner();
+
+	auto character = UGameplayStatics::GetPlayerController(MyOwner, 0);
+	VerticleRecoil = VerticleRecoil * -1;
+
+	auto pitchRecoil = UKismetMathLibrary::Lerp(0.0f, VerticleRecoil, RecoilAmount);
+	auto yawRecoil = UKismetMathLibrary::Lerp(0.0f, HorizontalRecoil, RecoilAmount);
+
+	character->AddPitchInput(pitchRecoil);
+	character->AddYawInput(yawRecoil);
+}
+
+
 
 void AWeapon::SetMagazineSocket()
 {

@@ -59,8 +59,14 @@ private:
 	class AHeadgear* headgearObj;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+		float MaxAimYawSprint;
+
+
 
 public:
+
+	AWeapon* GetCurrentWeapon();
 
 	void UpdateCombatMode();
 
@@ -89,10 +95,15 @@ public:
 
 	void setWeaponHand();
 
+	void setCharacterRotation();
+
 private:
 
 	void SpawnHelmet();
 	void SpawnLoadout();
+
+	virtual void UpdateSprint() override;
+
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

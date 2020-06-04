@@ -28,6 +28,9 @@
 
 #include <array>
 
+#include "GameFramework/Actor.h"
+
+
 
 ACombatCharacter::ACombatCharacter()
 {
@@ -43,6 +46,8 @@ ACombatCharacter::ACombatCharacter()
 	hasEquippedWeapon = false;
 	isSwappingWeapon = false;
 	isInCombatMode = false;
+
+	MaxAimYawSprint = 180.0f;
 
 }
 
@@ -124,15 +129,43 @@ void ACombatCharacter::Tick(float DeltaTime)
 		{
 			EndFire();
 		}
+
+		setCharacterRotation();
 	}
+}
 
+AWeapon* ACombatCharacter::GetCurrentWeapon()
+{
+	return currentWeaponObj;
+}
 
+void ACombatCharacter::UpdateSprint()
+{
+	if (isSprinting)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed * 2.5f;
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed;
+	}
 }
 
 
+
+void ACombatCharacter::setCharacterRotation()
+{
+	if (aimYaw > UKismetMathLibrary::Abs(MaxAimYawSprint))
+	{
+//		AActor::SetActorRotation();
+	//	EndSprint();
+	}
+}
+
 void ACombatCharacter::UpdatePawnControl()
 {
-	if (isInCombatMode)
+
+	if (isInCombatMode && !isSprinting)
 	{
 		bUseControllerRotationYaw = true;
 	}

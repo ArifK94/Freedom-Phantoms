@@ -7,6 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 
 #include "Weapons/Shotgun.h"
+#include "Weapons/Weapon.h"
 
 
 void UWeaponAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
@@ -31,9 +32,27 @@ void UWeaponAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 			case AnimType::SwapWeapon:
 				Character->swapWeapon();
 				break;
+			case AnimType::ReloadEnd:
+				Character->EndReload();
 			default:
 				break;
 			}
+
+			AWeapon* Weapon = Character->GetCurrentWeapon();
+
+			if (Weapon)
+			{
+				if (animType == AnimType::ReloadClipIn)
+				{
+					Weapon->ClipIn();
+				}
+				else if (animType == AnimType::ReloadClipOut)
+				{
+					Weapon->ClipOut();
+
+				}
+			}
+
 
 		}
 	}
