@@ -46,6 +46,8 @@ AWeapon::AWeapon()
 	EjectorSocket = "Ejector";
 	HandguardSocket = "HandguardSocket";
 	WeaponHandSocket = "weapon_hand";
+	ReloadClipHandSocket = "clip_hand";
+
 
 	MaxAmmo = 120;
 	RateOfFire = 600.0f;
@@ -94,6 +96,11 @@ void AWeapon::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	CurrentDeltaTime = DeltaTime;
+
+	if (weaponClipObj)
+	{
+		weaponClipObj->SetCurrentAmmo(CurrentAmmo);
+	}
 
 	if (CurrentAmmo <= 0)
 		isFiring = false;
@@ -286,6 +293,8 @@ void AWeapon::BeginReload()
 	{
 		isFiring = false;
 		isReloading = true;
+
+		weaponClipObj->getClipMesh()->SetVisibility(false);
 	}
 }
 
@@ -320,7 +329,11 @@ void AWeapon::ClipOut()
 		ClipAudioComponent->Play(0.0f);
 	}
 
-	CurrentAmmo = 0;
+	// Drop magazine
+	if (weaponClip && canShowClip)
+	{
+		weaponClipObj->DropClip(MeshComp, ClipSocket, weaponClip);
+	}
 }
 
 void AWeapon::SpawnMagazine()
@@ -360,12 +373,18 @@ void AWeapon::Recoil()
 	auto character = UGameplayStatics::GetPlayerController(MyOwner, 0);
 	VerticleRecoil = VerticleRecoil * -1;
 
-	auto pitchRecoil = UKismetMathLibrary::Lerp(0.0f, VerticleRecoil, RecoilAmount);
-	auto yawRecoil = UKismetMathLibrary::Lerp(0.0f, HorizontalRecoil, RecoilAmount);
 
-	character->AddPitchInput(pitchRecoil);
-	character->AddYawInput(yawRecoil);
+	TargetHorizontalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.15, 0.15);
+	TargetVerticalRecoil = UKismetMathLibrary::RandomFloatInRange(0.5, -0.5f);
+
+
+	//	TargetVerticalRecoil = UKismetMathLibrary::Lerp(0.0f, VerticleRecoil, RecoilAmount);
+	//	TargetHorizontalRecoil = UKismetMathLibrary::Lerp(0.0f, HorizontalRecoil, RecoilAmount);
+
+	character->AddPitchInput(TargetVerticalRecoil);
+	character->AddYawInput(TargetHorizontalRecoil);
 }
+
 
 
 
@@ -376,6 +395,7 @@ void AWeapon::SetMagazineSocket()
 
 void AWeapon::SetClipSocket(USkeletalMeshComponent* meshComponent)
 {
+	weaponClipObj->getClipMesh()->SetVisibility(true);
 	weaponClipObj->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ReloadClipHandSocket);
 }
 

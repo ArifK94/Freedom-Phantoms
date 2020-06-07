@@ -9,13 +9,14 @@
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class AnimType : uint8
 {
-	Grab UMETA(DisplayName = "Grab"),
+	GrabWeapon UMETA(DisplayName = "GrabWeapon"),
 	EndEquip UMETA(DisplayName = "EndEquip"),
 	UnEquip UMETA(DisplayName = "UnEquip"),
 	SwapWeapon UMETA(DisplayName = "SwapWeapon"),
 	ReloadClipIn UMETA(DisplayName = "ReloadClipIn"),
 	ReloadClipOut UMETA(DisplayName = "ReloadClipOut"),
 	ReloadEnd UMETA(DisplayName = "ReloadEnd"),
+	GrabClip UMETA(DisplayName = "GrabClip"),
 
 };
 UCLASS()

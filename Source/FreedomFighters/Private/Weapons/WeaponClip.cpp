@@ -2,12 +2,18 @@
 
 
 #include "Weapons/WeaponClip.h"
+#include "Kismet/GameplayStatics.h"
 
-// Sets default values
+#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
 AWeaponClip::AWeaponClip()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = false;
 
 	clipMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClipMeshComp"));
 	clipMeshComp->SetCollisionProfileName(TEXT("NoCollision"));
@@ -15,13 +21,71 @@ AWeaponClip::AWeaponClip()
 
 	ammoCapacity = 30;
 
+	CurrentAmmo = ammoCapacity;
+}
+
+
+void AWeaponClip::DropClip(USkeletalMeshComponent* MeshComp, FName ClipSocket, TSubclassOf<class AWeaponClip> weaponClip)
+{
+	UWorld* world = GetWorld();
+
+	if (world)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+
+		FVector location = MeshComp->GetSocketLocation(ClipSocket);
+		FRotator rotation = MeshComp->GetSocketRotation(ClipSocket);
+
+		// Spawn the weapon actor
+		DroppedClip = world->SpawnActor<AWeaponClip>(weaponClip, location, rotation, SpawnParams);
+
+		if (DroppedClip)
+		{
+			DroppedClip->SetOwner(this);
+
+			DroppedClip->getClipMesh()->SetSimulatePhysics(true);
+			DroppedClip->getClipMesh()->SetEnableGravity(true);
+			DroppedClip->getClipMesh()->SetNotifyRigidBodyCollision(true);
+			DroppedClip->getClipMesh()->SetCollisionProfileName("WeaponClip");
+			DroppedClip->getClipMesh()->OnComponentHit.AddDynamic(this, &AWeaponClip::OnClipHit);
+			DroppedClip->SetLifeSpan(10);
+
+		}
+	}
+}
+
+void AWeaponClip::OnClipHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+	{
+		//	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("I Hit: %s"), *OtherActor->GetName()));
+
+		UWorld* world = GetWorld();
+
+		float x = 0.0f, y = 0.0f, z = 0.0f;
+
+		UKismetMathLibrary::BreakVector(NormalImpulse, x, y, z);
+
+		if (z > 50)
+		{
+			if (HighImpactSound != NULL)
+			{
+				UGameplayStatics::PlaySoundAtLocation(world, HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), .5f);
+			}
+		}
+
+	}
 }
 
 // Called when the game starts or when spawned
 void AWeaponClip::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	CurrentAmmo = ammoCapacity;
 }
 
 // Called every frame
@@ -29,5 +93,10 @@ void AWeaponClip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AWeaponClip::SetCurrentAmmo(int value)
+{
+	CurrentAmmo = value;
 }
 

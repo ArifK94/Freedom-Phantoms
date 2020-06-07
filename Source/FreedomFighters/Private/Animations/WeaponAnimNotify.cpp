@@ -20,7 +20,7 @@ void UWeaponAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 		{
 			switch (animType)
 			{
-			case AnimType::Grab:
+			case AnimType::GrabWeapon:
 				Character->GrabWeapon();
 				break;
 			case AnimType::EndEquip:
@@ -50,6 +50,10 @@ void UWeaponAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 				{
 					Weapon->ClipOut();
 
+				}
+				else if (animType == AnimType::GrabClip)
+				{
+					Character->GetCurrentWeapon()->SetClipSocket(Character->GetMesh());
 				}
 			}
 

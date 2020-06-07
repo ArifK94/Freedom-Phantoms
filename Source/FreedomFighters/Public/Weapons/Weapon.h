@@ -161,6 +161,7 @@ public:
 private:
 	void Recoil();
 
+
 protected:
 
 	float CurrentDeltaTime;
@@ -252,12 +253,16 @@ protected:
 		float RecoilAmount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
-	float HorizontalRecoil;
+		float HorizontalRecoil;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
-	float VerticleRecoil;
+		float VerticleRecoil;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true"))
+		float TargetVerticalRecoil;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true"))
+		float	TargetHorizontalRecoil;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ShotSound;

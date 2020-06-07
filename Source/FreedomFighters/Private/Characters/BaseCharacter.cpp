@@ -51,8 +51,11 @@ ABaseCharacter::ABaseCharacter()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	CameraBoom->TargetArmLength = 150.0f; // The camera follows at this distance behind the character	
+	CameraBoom->SocketOffset.Set(0.0f, 70.0f, 50.0f);
+
+	//DefaultCamSocketOffset = CameraBoom->SocketOffset.
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -94,9 +97,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 
 	UpdateSprint();
 
-	CameraBoom->TargetArmLength = 150.0f;
-	CameraBoom->AttachTo(RootComponent);
-	CameraBoom->SocketOffset.Set(0.0f, 40.0f, 50.0f);
+
 
 }
 

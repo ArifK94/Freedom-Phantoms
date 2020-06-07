@@ -329,7 +329,7 @@ void ACombatCharacter::BeginReload()
 	if (currentWeaponObj)
 	{
 		currentWeaponObj->BeginReload();
-		currentWeaponObj->SetClipSocket(GetMesh());
+	//	currentWeaponObj->SetClipSocket(GetMesh());
 	}
 }
 

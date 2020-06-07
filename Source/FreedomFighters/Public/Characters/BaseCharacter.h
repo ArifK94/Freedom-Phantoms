@@ -37,8 +37,11 @@ public:
 		float BaseLookUpRate;
 
 
-protected:
+private:
 
+	FVector DefaultCamSocketOffset;
+
+protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isSprinting;
