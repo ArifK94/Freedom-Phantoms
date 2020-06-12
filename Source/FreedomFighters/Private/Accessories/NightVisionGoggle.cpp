@@ -4,30 +4,23 @@
 #include "Accessories/NightVisionGoggle.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Components/PostProcessComponent.h"
 
 ANightVisionGoggle::ANightVisionGoggle()
 {
-	PrimaryActorTick.bCanEverTick = true;
-
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
 	Mesh->CanCharacterStepUpOn = ECB_No;
 
+	VisionPPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("VisionPPComp"));
+
+	isVisorOn = false;
+
 }
 
-void ANightVisionGoggle::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-void ANightVisionGoggle::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
 
 void ANightVisionGoggle::ToggleVision()
 {
-
+	isVisorOn = !isVisorOn;
 }
 

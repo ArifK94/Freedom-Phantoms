@@ -24,12 +24,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Night Vision Goggles", meta = (AllowPrivateAccess = "true"))
 	FTransform ActiveAngle;
 
-protected:
-	virtual void BeginPlay() override;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Night Vision Goggles", meta = (AllowPrivateAccess = "true"))
+	class UPostProcessComponent* VisionPPComp;
+
+	bool isVisorOn;
 
 public:	
-	virtual void Tick(float DeltaTime) override;
-
 	void ToggleVision();
 
 };
