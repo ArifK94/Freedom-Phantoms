@@ -24,6 +24,10 @@ void ANightVisionGoggle::BeginPlay()
 void ANightVisionGoggle::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void ANightVisionGoggle::ToggleVision()
+{
 
 }
 
