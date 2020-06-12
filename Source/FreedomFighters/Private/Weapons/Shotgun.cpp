@@ -74,8 +74,14 @@ void AShotgun::BeginPlay()
 
 	hasLoadedShell = true;
 
-
-	pullDuration = HandguardPullSound->Duration;
+	if (HandguardPullSound != NULL)
+	{
+		pullDuration = HandguardPullSound->Duration;
+	}
+	else
+	{
+		pullDuration = 1.0f;
+	}
 }
 
 void AShotgun::Tick(float DeltaTime)
@@ -147,6 +153,8 @@ void AShotgun::Fire()
 			}
 
 			BeginFireEffect(TracerEndPoint);
+
+			Recoil();
 
 			LastFireTime = GetWorld()->TimeSeconds;
 

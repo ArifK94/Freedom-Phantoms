@@ -205,7 +205,15 @@ void ABaseCharacter::UpdateSprint()
 void ABaseCharacter::BeginSprint()
 {
 	if (currentFowardSpeed > 0.0f)
+	{
 		isSprinting = true;
+
+		if (GetCharacterMovement()->IsCrouching())
+		{
+			UnCrouch();
+		}
+
+	}
 }
 
 void ABaseCharacter::EndSprint()

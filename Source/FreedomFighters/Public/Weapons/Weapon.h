@@ -119,6 +119,7 @@ protected:
 
 	void SpawnMagazine();
 
+	void Recoil();
 
 	virtual FVector getMuzzleLocation();
 
@@ -158,8 +159,6 @@ public:
 	FName getHolsterSocket();
 	FName getWeaponHandSocket();
 
-private:
-	void Recoil();
 
 
 protected:

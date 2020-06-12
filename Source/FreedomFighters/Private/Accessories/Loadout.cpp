@@ -15,12 +15,13 @@
 // Sets default values
 ALoadout::ALoadout()
 {
-	CreateSkeletalMeshParent();
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
+	Mesh->CanCharacterStepUpOn = ECB_No;
+
 
 	FRotator MakeControlRot = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, 270.0f);
-	SkelMesh->SetRelativeRotation(MakeControlRot);
-
-	ParentSocket = "loadout_socket";
+	Mesh->SetRelativeRotation(MakeControlRot);
 }
 
 
@@ -45,9 +46,7 @@ AWeapon* ALoadout::SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owne
 		return gameInstanceController->SpawnSMG(mesh, owner);
 		break;
 	case LoadoutType::Shotgun:
-	//	return gameInstanceController->SpawnShotgun(mesh, owner);
-		return gameInstanceController->SpawnAssaultRifle(mesh, owner);
-
+		return gameInstanceController->SpawnShotgun(mesh, owner);
 		break;
 	case LoadoutType::LMG:
 		return	gameInstanceController->SpawnLMG(mesh, owner);
@@ -56,29 +55,9 @@ AWeapon* ALoadout::SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owne
 		return gameInstanceController->SpawnAssaultRifle(mesh, owner);
 		break;
 	}
-	return	gameInstanceController->SpawnAssaultRifle(mesh, owner);
-}
-
-FVector ALoadout::getPrimaryWeaponHolsterLocation()
-{
-	return PrimaryWeaponHolsterLocation;
 }
 
 
-FRotator ALoadout::getPrimaryWeaponHolsterRotation()
-{
-	return PrimaryWeaponHolsterRotation;
-}
-
-FVector ALoadout::getSideArmHolsterLocation()
-{
-	return SideArmHolsterLocation;
-}
-
-FRotator ALoadout::getSideArmHolsterRotation()
-{
-	return SideArmHolsterRotation;
-}
 
 
 

@@ -15,33 +15,29 @@ class FREEDOMFIGHTERS_API AHeadgear : public AAccessory
 	GENERATED_BODY()
 
 private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Headgear", meta = (AllowPrivateAccess = "true"))
+		UStaticMeshComponent* Mesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory Helmet", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Nightvision_Holder;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class AGoggle> Goggle;
+	class AGoggle* GoggleObj;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory Helmet", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Nightvision_Goggles;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
+		FName GoggleSocket;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory Helmet", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Goggles;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class ANightVisionGoggle> NightVisionGoggle;
+	class ANightVisionGoggle* NightVisionGoggleObj;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory Helmet", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Torchlight_Holder;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
+		FName NVGSocket;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory Helmet", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Torchlight;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory Helmet", meta = (AllowPrivateAccess = "true"))
-		USpotLightComponent* TorchBeam;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory Helmet", meta = (AllowPrivateAccess = "true"))
-		USpotLightComponent* LaserBeam;
-
-private:
 
 	bool isNightVisionOn;
 	bool isGogglesOff;
-	
+
 public:	
 	AHeadgear();
 
@@ -52,5 +48,9 @@ public:
 
 	void ToggleGoggles();
 
+	void SpawnGoggle();
+	void SpawnNVG();
 
+protected:
+	virtual void BeginPlay() override;
 };

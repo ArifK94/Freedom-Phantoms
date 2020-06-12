@@ -90,8 +90,8 @@ void ACombatCharacter::BeginPlay()
 	{
 		if (loadoutObj)
 		{
-			primaryWeaponObj = loadoutObj->SpawnPrimaryWeapon(loadoutObj->getMainSkelMesh(), this);
-			secondaryWeaponObj = gameInstanceController->SpawnSecondaryWeapon(loadoutObj->getMainSkelMesh(), this);
+			primaryWeaponObj = loadoutObj->SpawnPrimaryWeapon(loadoutObj->getLoadoutMesh(), this);
+			secondaryWeaponObj = gameInstanceController->SpawnSecondaryWeapon(loadoutObj->getLoadoutMesh(), this);
 		}
 
 		else
@@ -346,6 +346,9 @@ void ACombatCharacter::UpdateReload()
 	if (currentWeaponObj)
 	{
 		isReloading = currentWeaponObj->isReloading;
+
+		if (isReloading)
+			isAiming = false;
 	}
 }
 
@@ -393,12 +396,9 @@ void ACombatCharacter::SpawnLoadout()
 		if (loadoutObj)
 		{
 			loadoutObj->SetOwner(this);
-			//loadoutObj->setMeshSocket(GetMesh());
 			loadoutObj->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			loadoutObj->getLoadoutMesh()->SetMasterPoseComponent(GetMesh());
 
-			//gameInstanceController->setHolsterSideArmLocation(loadout->getSideArmHolsterLocation());
-			//gameInstanceController->setHolsterSideArmRotation(loadout->getSideArmHolsterRotation());
 		}
 	}
 }

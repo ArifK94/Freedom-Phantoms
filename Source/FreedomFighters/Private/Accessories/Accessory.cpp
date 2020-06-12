@@ -25,14 +25,14 @@ void AAccessory::Tick(float DeltaTime)
 
 void AAccessory::CreateStaticMeshParent()
 {
-	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	StaticMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	StaticMesh->CanCharacterStepUpOn = ECB_No;
 }
 
 void AAccessory::CreateSkeletalMeshParent()
 {
-	SkelMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkelMesh"));
+	SkelMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SkelMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	SkelMesh->CanCharacterStepUpOn = ECB_No;
 }

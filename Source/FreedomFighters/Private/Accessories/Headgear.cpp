@@ -2,53 +2,81 @@
 
 
 #include "Accessories/Headgear.h"
+#include "Accessories/NightVisionGoggle.h"
+#include "Accessories/Goggle.h"
 
 #include "Components/StaticMeshComponent.h"
-#include "Components/SkeletalMeshComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Math/UnrealMathUtility.h"
 
-// Sets default values
 AHeadgear::AHeadgear()
 {
-	CreateStaticMeshParent();
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
+	Mesh->CanCharacterStepUpOn = ECB_No;
 
-	Nightvision_Holder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Nightvision_Holder"));
-	Nightvision_Holder->AttachTo(StaticMesh, "Nightvision_Holder");
-	Nightvision_Holder->SetCollisionProfileName(TEXT("NoCollision"));
-	Nightvision_Holder->CanCharacterStepUpOn = ECB_No;
-
-	Nightvision_Goggles = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Nightvision_Goggles"));
-	Nightvision_Goggles->AttachTo(StaticMesh, "Nightvision");
-	Nightvision_Goggles->SetCollisionProfileName(TEXT("NoCollision"));
-	Nightvision_Goggles->CanCharacterStepUpOn = ECB_No;
-
-	Goggles = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Goggles"));
-	Goggles->AttachTo(StaticMesh, "Goggles");
-	Goggles->SetCollisionProfileName(TEXT("NoCollision"));
-	Goggles->CanCharacterStepUpOn = ECB_No;
-
-	Torchlight_Holder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Torchlight_Holder"));
-	Torchlight_Holder->AttachTo(StaticMesh, "Torchlight_Holder");
-	Torchlight_Holder->SetCollisionProfileName(TEXT("NoCollision"));
-	Torchlight_Holder->CanCharacterStepUpOn = ECB_No;
-
-	Torchlight = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Torchlight"));
-	Torchlight->AttachTo(StaticMesh, "Torchlight");
-	Torchlight->SetCollisionProfileName(TEXT("NoCollision"));
-	Torchlight->CanCharacterStepUpOn = ECB_No;
-
-	TorchBeam = CreateDefaultSubobject<USpotLightComponent>(TEXT("TorchBeam"));
-	TorchBeam->AttachTo(StaticMesh, "TorchBeam");
-
-	LaserBeam = CreateDefaultSubobject<USpotLightComponent>(TEXT("LaserBeam"));
-	LaserBeam->AttachTo(StaticMesh, "LaserBeam");
-
-	isNightVisionOn = false;
-	isGogglesOff = false;
 	ParentSocket = "headgear_socket";
+	GoggleSocket = "Goggles";
+	NVGSocket = "NVG";
+
 
 }
+
+void AHeadgear::BeginPlay()
+{
+	Super::BeginPlay();
+
+	SpawnGoggle();
+	SpawnNVG();
+}
+
+void AHeadgear::SpawnNVG()
+{
+	UWorld* world = GetWorld();
+
+	if (world)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// Spawn the weapon actor
+		NightVisionGoggleObj = world->SpawnActor<ANightVisionGoggle>(NightVisionGoggle, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+		if (NightVisionGoggleObj)
+		{
+			NightVisionGoggleObj->SetOwner(this);
+			NightVisionGoggleObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, NVGSocket);
+		}
+	}
+}
+
+
+
+void AHeadgear::SpawnGoggle()
+{
+	UWorld* world = GetWorld();
+
+	if (world)
+	{
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// Spawn the weapon actor
+		GoggleObj = world->SpawnActor<AGoggle>(Goggle, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+		if (GoggleObj)
+		{
+			GoggleObj->SetOwner(this);
+			GoggleObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, GoggleSocket);
+		}
+	}
+}
+
+
+
 
 // Toggle visibility between goggles & night vision goggles
 void AHeadgear::ToggleRandomAccessory()
@@ -58,15 +86,13 @@ void AHeadgear::ToggleRandomAccessory()
 	switch (random)
 	{
 	case 0:
-		Nightvision_Holder->SetVisibility(false);
-		Nightvision_Goggles->SetVisibility(false);
+	//	Nightvision_Goggles->SetVisibility(false);
 		break;
 	case 1:
-		Goggles->SetVisibility(false);
+	//	Goggles->SetVisibility(false);
 		break;
 	default:
-		Nightvision_Holder->SetVisibility(false);
-		Nightvision_Goggles->SetVisibility(false);
+	//	Nightvision_Goggles->SetVisibility(false);
 		break;
 	}
 }
@@ -85,9 +111,6 @@ void AHeadgear::ToggleVisor()
 		VisorAngle.Roll = 140.0f;
 		isNightVisionOn = true;
 	}
-
-	Nightvision_Goggles->SetRelativeRotation(VisorAngle);
-
 }
 
 void AHeadgear::ToggleGoggles()
@@ -104,7 +127,4 @@ void AHeadgear::ToggleGoggles()
 		GogglesAngle.Roll = -30.0f;
 		isGogglesOff = true;
 	}
-
-	Goggles->SetRelativeRotation(GogglesAngle);
-
 }

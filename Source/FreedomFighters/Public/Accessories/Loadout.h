@@ -19,28 +19,18 @@ enum class LoadoutType : uint8
 };
 
 UCLASS()
-class FREEDOMFIGHTERS_API ALoadout : public AAccessory
+class FREEDOMFIGHTERS_API ALoadout : public AActor
 {
 	GENERATED_BODY()
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
-		FVector PrimaryWeaponHolsterLocation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
-		FRotator PrimaryWeaponHolsterRotation;
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
-		FVector SideArmHolsterLocation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
-		FRotator SideArmHolsterRotation;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
 		LoadoutType loadoutType;
-	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory", meta = (AllowPrivateAccess = "true"))
+		USkeletalMeshComponent* Mesh;
+
 
 private:
 	class UGameInstanceController* gameInstanceController;
@@ -51,13 +41,7 @@ public:
 
 	class AWeapon* SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owner);
 
-	FVector getPrimaryWeaponHolsterLocation();
-	FRotator getPrimaryWeaponHolsterRotation();
-
-	FVector getSideArmHolsterLocation();
-	FRotator getSideArmHolsterRotation();
-
-	USkeletalMeshComponent* getLoadoutMesh() { return SkelMesh; }
+	USkeletalMeshComponent* getLoadoutMesh() { return Mesh; }
 
 protected:
 
