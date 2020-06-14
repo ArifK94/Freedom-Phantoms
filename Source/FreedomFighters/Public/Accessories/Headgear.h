@@ -20,14 +20,14 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class AGoggle> Goggle;
-	class AGoggle* GoggleObj;
+	 AGoggle* GoggleObj;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
 		FName GoggleSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class ANightVisionGoggle> NightVisionGoggle;
-	class ANightVisionGoggle* NightVisionGoggleObj;
+	ANightVisionGoggle* NightVisionGoggleObj;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
 		FName NVGSocket;
@@ -50,6 +50,11 @@ public:
 
 	void SpawnGoggle();
 	void SpawnNVG();
+
+	ANightVisionGoggle* getNightVision() {
+		return NightVisionGoggleObj;
+	}
+
 
 protected:
 	virtual void BeginPlay() override;

@@ -81,6 +81,8 @@ public:
 	void EndReload();
 	void UpdateReload();
 
+	void ToggleNightVision();
+
 	void UpdatePawnControl();
 
 	void BeginWeaponSwap();

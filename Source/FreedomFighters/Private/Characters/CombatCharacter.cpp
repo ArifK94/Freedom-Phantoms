@@ -6,6 +6,7 @@
 
 #include "Accessories/Headgear.h"
 #include "Accessories/Loadout.h"
+#include "Accessories/NightVisionGoggle.h"
 
 #include "Weapons/Weapon.h"
 #include "FreedomFighters/FreedomFighters.h"
@@ -69,6 +70,12 @@ void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	PlayerInputComponent->BindAction("EquipWeapon", IE_Pressed, this, &ACombatCharacter::BeginEquipWeapon);
 
 	PlayerInputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACombatCharacter::BeginWeaponSwap);
+
+	PlayerInputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACombatCharacter::ToggleNightVision);
+
+
+
+
 }
 
 void ACombatCharacter::BeginPlay()
@@ -237,6 +244,20 @@ void ACombatCharacter::swapWeapon()
 		}
 
 		BeginEquipWeapon();
+	}
+}
+
+
+
+
+void ACombatCharacter::ToggleNightVision()
+{
+	if (headgearObj)
+	{
+		if (headgearObj->getNightVision())
+		{
+			headgearObj->getNightVision()->ToggleVision();
+		}
 	}
 }
 
