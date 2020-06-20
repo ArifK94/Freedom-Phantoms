@@ -28,6 +28,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 	USoundBase* HighImpactSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Bullet", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class AWeaponBullet> WeaponBulletClass;
 
 	AWeaponClip* DroppedClip;
 
@@ -48,5 +50,9 @@ public:
 
 	int GetCurrentAmmo() const { return CurrentAmmo; }
 	void SetCurrentAmmo(int value);
+
+	TSubclassOf<class AWeaponBullet> getBulletClass() {
+		return WeaponBulletClass;
+	}
 
 };

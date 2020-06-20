@@ -159,7 +159,7 @@ public:
 	FName getHolsterSocket();
 	FName getWeaponHandSocket();
 
-
+	void SpawnWeaponAttachments();
 
 protected:
 
@@ -175,6 +175,21 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Hand Offsets", meta = (AllowPrivateAccess = "true"))
 		USceneComponent* HandguardMesh;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class AWeaponClip> weaponClip;
+	class AWeaponClip* weaponClipObj;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+		TSubclassOf<UDamageType> DamageType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		SelectiveFire selectiveFireMode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Attachment", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class UWeaponAttachmentManager> WeaponAttachmentClass;
+	UWeaponAttachmentManager* WeaponAttachmentObj;
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
@@ -212,18 +227,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Hand Offsets", meta = (AllowPrivateAccess = "true"))
 		FTransform HandguardOffset;
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class AWeaponClip> weaponClip;
-	class AWeaponClip* weaponClipObj;
-
-
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		TSubclassOf<UDamageType> DamageType;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		SelectiveFire selectiveFireMode;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		float RateOfFire;

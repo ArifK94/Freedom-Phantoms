@@ -20,6 +20,7 @@ ANightVisionGoggle::ANightVisionGoggle()
 	NVGAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("NVGAudioComponent"));
 
 	isVisorOn = false;
+	canToggle = false;
 }
 
 void ANightVisionGoggle::BeginPlay()
@@ -28,19 +29,26 @@ void ANightVisionGoggle::BeginPlay()
 
 	gameHUDController = Cast<AGameHUDController>(GetWorld()->GetFirstPlayerController()->GetHUD());
 	VisionPPComp->bEnabled = false;
+	canToggle = true;
 }
 
 
 void ANightVisionGoggle::ToggleVision()
 {
-	isVisorOn = !isVisorOn;
-
-	if (gameHUDController)
+	if (canToggle)
 	{
-		gameHUDController->CreateNVGWidget();
+		canToggle = false;
+
+		isVisorOn = !isVisorOn;
+
+		if (gameHUDController)
+		{
+			gameHUDController->CreateNVGWidget();
+		}
+
+		GetWorldTimerManager().SetTimer(UnusedHandle, this, &ANightVisionGoggle::SetVisorState, .5f, false);
 	}
 
-	GetWorldTimerManager().SetTimer(UnusedHandle, this, &ANightVisionGoggle::SetVisorState, .5f, false);
 }
 
 
@@ -67,4 +75,6 @@ void ANightVisionGoggle::SetVisorState()
 			NVGAudioComponent->Play(0.0f);
 		}
 	}
+
+	canToggle = true;
 }

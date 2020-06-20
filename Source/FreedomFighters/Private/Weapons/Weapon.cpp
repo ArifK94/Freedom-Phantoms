@@ -2,9 +2,8 @@
 
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponClip.h"
-
+#include "Weapons/WeaponAttachmentManager.h"
 #include "FreedomFighters/FreedomFighters.h"
-
 #include "Managers/GameInstanceController.h"
 
 #include "DrawDebugHelpers.h"
@@ -23,6 +22,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Sound/SoundBase.h"
 #include "Engine.h"
+#include "UObject/UObjectGlobals.h"
 
 
 // Sets default values
@@ -88,6 +88,7 @@ void AWeapon::BeginPlay()
 
 	SpawnMagazine();
 	ConfigSetup();
+	SpawnWeaponAttachments();
 
 }
 
@@ -429,3 +430,15 @@ FName AWeapon::getWeaponHandSocket()
 {
 	return WeaponHandSocket;
 }
+
+void AWeapon::SpawnWeaponAttachments()
+{
+	UWorld* World = GetWorld();
+
+	if (World && WeaponAttachmentClass != NULL)
+	{
+		WeaponAttachmentObj = NewObject<UWeaponAttachmentManager>((UObject*)GetTransientPackage(), WeaponAttachmentClass);
+		WeaponAttachmentObj->SpawnAttachments(MeshComp, this, World);
+	}
+}
+

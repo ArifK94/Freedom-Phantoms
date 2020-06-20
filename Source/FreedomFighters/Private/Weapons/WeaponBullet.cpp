@@ -3,22 +3,29 @@
 
 #include "Weapons/WeaponBullet.h"
 
-// Sets default values
+#include "Components/StaticMeshComponent.h"
+
+#include "GameFramework/ProjectileMovementComponent.h"
+
 AWeaponBullet::AWeaponBullet()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
+	Mesh->CanCharacterStepUpOn = ECB_No;
+
+	BulletMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("BulletMovement"));
+	BulletMovement->InitialSpeed = 2000.0f;
+	BulletMovement->MaxSpeed = 2000.0f;
 }
 
-// Called when the game starts or when spawned
 void AWeaponBullet::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-// Called every frame
 void AWeaponBullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

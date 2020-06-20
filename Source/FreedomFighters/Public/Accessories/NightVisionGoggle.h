@@ -41,6 +41,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Night Vision Goggles Sounds", meta = (AllowPrivateAccess = "true"))
 		USoundBase* NVGOffSound;
 
+
+	bool canToggle;
+
 public:	
 
 	UFUNCTION(BlueprintCallable, Category = "NVG")
