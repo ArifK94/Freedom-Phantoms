@@ -39,8 +39,6 @@ void AGrenadeLauncher::Fire()
 
 	isFiring = true;
 
-	// Trace world from pawn eyes to cross hair location
-
 	AActor* MyOwner = GetOwner();
 
 	if (MyOwner)
@@ -51,57 +49,20 @@ void AGrenadeLauncher::Fire()
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
-
 		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocket);
 
 		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		AWeaponBullet* bulletObj = world->SpawnActor<AWeaponBullet>(weaponClipObj->getBulletClass(), MuzzleLocation, FRotator::ZeroRotator, SpawnParams);
-
-		//FVector ShotDirection = EyeRotation.Vector();
-		//FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
-
-		//FCollisionQueryParams QueryParams;
-		//QueryParams.AddIgnoredActor(MyOwner);
-		//QueryParams.AddIgnoredActor(this);
-		//QueryParams.bTraceComplex = true;
-		//QueryParams.bReturnPhysicalMaterial = true;
-
-		//// Particle "Target" parameter
-		//FVector TracerEndPoint = TraceEnd;
+		AWeaponBullet* bulletObj = world->SpawnActor<AWeaponBullet>(weaponClipObj->getBulletClass(), MuzzleLocation, EyeRotation, SpawnParams);
+		if (bulletObj)
+		{
+			bulletObj->SetOwner(this);
+		}
 
 
-		//FHitResult Hit;
-		//if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
-		//{
-		//	// Blocking hit! Process damage
-		//	AActor* HitActor = Hit.GetActor();
-
-		//	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-
-		//	float ActualDamage = BaseDamage;
-		//	if (SurfaceType == SURFACE_FLESHVULNERABLE)
-		//	{
-		//		ActualDamage *= 4.0f;
-		//	}
-
-		//	UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
-
-		//	UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
-
-		//	if (SelectedEffect)
-		//	{
-		//		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
-		//	}
-
-		//	TracerEndPoint = Hit.ImpactPoint;
-		//}
-
-
-		//BeginFireEffect(TracerEndPoint);
-		//BeginShellEffect();
-
+		BeginShellEffect();
 
 		Recoil();
 
@@ -120,5 +81,9 @@ void AGrenadeLauncher::Fire()
 			EchoAudioComponent->Play(ShotSound->GetDuration());
 		}
 
+		if (CurrentAmmo <= 0 && canAutoReload)
+		{
+			BeginReload();
+		}
 	}
 }

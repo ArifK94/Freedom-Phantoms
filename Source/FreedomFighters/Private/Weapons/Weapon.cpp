@@ -59,7 +59,7 @@ AWeapon::AWeapon()
 
 	isReloading = false;
 	canShowClip = true;
-
+	canAutoReload = true;
 }
 
 void AWeapon::ConfigSetup()
@@ -111,7 +111,18 @@ void AWeapon::Tick(float DeltaTime)
 
 void AWeapon::Fire()
 {
-	if (CurrentAmmo <= 0) return;
+	if (CurrentAmmo <= 0)
+	{
+		if (canAutoReload)
+		{
+			BeginReload();
+			return;
+		}
+		else
+		{
+			return;
+		}
+	}
 
 	CurrentAmmo -= 1;
 
@@ -188,6 +199,9 @@ void AWeapon::Fire()
 			EchoAudioComponent->Sound = ShotEchoSound;
 			EchoAudioComponent->Play(ShotSound->GetDuration());
 		}
+
+
+
 
 	}
 }
@@ -428,6 +442,12 @@ FName AWeapon::getHolsterSocket()
 
 FName AWeapon::getWeaponHandSocket()
 {
+	//if (WeaponAttachmentObj != NULL)
+	//{
+	//	return WeaponAttachmentObj->getUnderBarrelWeaponObj()->getMeshComp()->GetSocketLocation(MuzzleSocket);
+	//}
+
+
 	return WeaponHandSocket;
 }
 

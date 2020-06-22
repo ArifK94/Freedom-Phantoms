@@ -9,6 +9,8 @@
 #include "Accessories/NightVisionGoggle.h"
 
 #include "Weapons/Weapon.h"
+#include "Weapons/WeaponAttachmentManager.h"
+
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -73,8 +75,7 @@ void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	PlayerInputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACombatCharacter::ToggleNightVision);
 
-
-
+	PlayerInputComponent->BindAction("ToggleUnderBarrel", IE_Pressed, this, &ACombatCharacter::ToggleUnderBarrelWeapon);
 
 }
 
@@ -111,6 +112,11 @@ void ACombatCharacter::BeginPlay()
 		{
 			currentWeaponObj = primaryWeaponObj;
 			BeginEquipWeapon();
+		}
+
+		if (currentWeaponObj->getWeaponAttachmentObj() != NULL)
+		{
+			underBarrelWeaponObj = currentWeaponObj->getWeaponAttachmentObj()->getUnderBarrelWeaponObj();
 		}
 	}
 
@@ -164,8 +170,8 @@ void ACombatCharacter::setCharacterRotation()
 {
 	if (aimYaw > UKismetMathLibrary::Abs(MaxAimYawSprint))
 	{
-//		AActor::SetActorRotation();
-	//	EndSprint();
+		//		AActor::SetActorRotation();
+			//	EndSprint();
 	}
 }
 
@@ -350,7 +356,7 @@ void ACombatCharacter::BeginReload()
 	if (currentWeaponObj)
 	{
 		currentWeaponObj->BeginReload();
-	//	currentWeaponObj->SetClipSocket(GetMesh());
+		//	currentWeaponObj->SetClipSocket(GetMesh());
 	}
 }
 
@@ -367,9 +373,6 @@ void ACombatCharacter::UpdateReload()
 	if (currentWeaponObj)
 	{
 		isReloading = currentWeaponObj->isReloading;
-
-		if (isReloading)
-			isAiming = false;
 	}
 }
 
@@ -424,4 +427,22 @@ void ACombatCharacter::SpawnLoadout()
 	}
 }
 
+
+void ACombatCharacter::ToggleUnderBarrelWeapon()
+{
+	if (currentWeaponObj && !isReloading)
+	{
+		if (currentWeaponObj == underBarrelWeaponObj)
+		{
+			currentWeaponObj = primaryWeaponObj;
+		}
+		else
+		{
+			if (underBarrelWeaponObj != NULL)
+			{
+				currentWeaponObj = underBarrelWeaponObj;
+			}
+		}
+	}
+}
 

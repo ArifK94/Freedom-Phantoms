@@ -49,6 +49,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class AWeapon* secondaryWeaponObj;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class AWeapon* underBarrelWeaponObj;
+
 
 	UPROPERTY(EditAnywhere, Category = "Accessories")
 		TArray<TSubclassOf<class ALoadout>> Loadouts;
@@ -98,6 +101,8 @@ public:
 	void setWeaponHand();
 
 	void setCharacterRotation();
+
+	void ToggleUnderBarrelWeapon();
 
 private:
 

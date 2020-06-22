@@ -196,6 +196,9 @@ protected:
 		bool canShowClip;
 
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+		bool canAutoReload;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		WeaponType weaponType;
 
@@ -308,4 +311,12 @@ public:
 	void setCharacter(USkeletalMeshComponent* mesh) { CharacterReference = mesh; }
 	USkeletalMeshComponent* getCharacter() { return CharacterReference; }
 
+	USkeletalMeshComponent* getMeshComp() {
+		return MeshComp;
+	}
+
+
+	UWeaponAttachmentManager* getWeaponAttachmentObj() {
+		return WeaponAttachmentObj;
+	}
 };

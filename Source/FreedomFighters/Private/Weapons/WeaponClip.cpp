@@ -49,7 +49,7 @@ void AWeaponClip::DropClip(USkeletalMeshComponent* MeshComp, FName ClipSocket, T
 			DroppedClip->getClipMesh()->SetSimulatePhysics(true);
 			DroppedClip->getClipMesh()->SetEnableGravity(true);
 			DroppedClip->getClipMesh()->SetNotifyRigidBodyCollision(true);
-			DroppedClip->getClipMesh()->SetCollisionProfileName("WeaponClip");
+			DroppedClip->getClipMesh()->SetCollisionProfileName("WeaponProjectile");
 			DroppedClip->getClipMesh()->OnComponentHit.AddDynamic(this, &AWeaponClip::OnClipHit);
 			DroppedClip->SetLifeSpan(10);
 

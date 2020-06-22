@@ -46,6 +46,7 @@ public:
 		return UnderBarrelWeaponClasses;
 	}
 
+	AWeapon* getUnderBarrelWeaponObj() { return UnderBarrelWeaponObj; }
 
 protected:
 	virtual bool IsSupportedForNetworking() const override { return true; };
