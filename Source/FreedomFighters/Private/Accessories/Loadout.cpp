@@ -37,25 +37,24 @@ void ALoadout::BeginPlay()
 
 AWeapon* ALoadout::SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owner)
 {
-	//switch (loadoutType)
-	//{
-	//case LoadoutType::Assault:
-	//	return gameInstanceController->SpawnAssaultRifle(mesh, owner);
-	//	break;
-	//case LoadoutType::SMG:
-	//	return gameInstanceController->SpawnSMG(mesh, owner);
-	//	break;
-	//case LoadoutType::Shotgun:
-	//	return gameInstanceController->SpawnShotgun(mesh, owner);
-	//	break;
-	//case LoadoutType::LMG:
-	//	return	gameInstanceController->SpawnLMG(mesh, owner);
-	//	break;
-	//default:
-	//	return gameInstanceController->SpawnAssaultRifle(mesh, owner);
-	//	break;
-	//}
-	return gameInstanceController->SpawnAssaultRifle(mesh, owner);
+	switch (loadoutType)
+	{
+	case LoadoutType::Assault:
+		return gameInstanceController->SpawnAssaultRifle(mesh, owner);
+		break;
+	case LoadoutType::SMG:
+		return gameInstanceController->SpawnSMG(mesh, owner);
+		break;
+	case LoadoutType::Shotgun:
+		return gameInstanceController->SpawnShotgun(mesh, owner);
+		break;
+	case LoadoutType::LMG:
+		return	gameInstanceController->SpawnLMG(mesh, owner);
+		break;
+	default:
+		return gameInstanceController->SpawnAssaultRifle(mesh, owner);
+		break;
+	}
 }
 
 
