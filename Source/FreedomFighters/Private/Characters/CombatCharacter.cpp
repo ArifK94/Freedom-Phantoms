@@ -180,11 +180,11 @@ void ACombatCharacter::UpdatePawnControl()
 
 	if (isInCombatMode && !isSprinting)
 	{
-		bUseControllerRotationYaw = true;
+	//	bUseControllerRotationYaw = true;
 	}
 	else
 	{
-		bUseControllerRotationYaw = false;
+	//	bUseControllerRotationYaw = false;
 	}
 }
 
