@@ -168,10 +168,24 @@ void ACombatCharacter::UpdateSprint()
 
 void ACombatCharacter::setCharacterRotation()
 {
-	if (aimYaw > UKismetMathLibrary::Abs(MaxAimYawSprint))
+	float x = 0.0f, y = 0.0f;
+
+	auto controlYaw = 0.0f, actorYaw = 0.0f;
+
+	UKismetMathLibrary::BreakRotator(GetControlRotation(), x, y, controlYaw);
+	UKismetMathLibrary::BreakRotator(GetActorRotation(), x, y, actorYaw);
+
+	auto ControlTargetRot = UKismetMathLibrary::MakeRotator(x, y, controlYaw);
+	auto ActorTargetRot = UKismetMathLibrary::MakeRotator(x, y, actorYaw);
+
+	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlTargetRot, ActorTargetRot);
+
+	if (UKismetMathLibrary::Abs(Target.Yaw) >= UKismetMathLibrary::Abs(MaxAimYawSprint) && isSprinting && isInCombatMode)
 	{
-		//		AActor::SetActorRotation();
-			//	EndSprint();
+		EndSprint();
+
+		FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, Time, 15.0f);
+		AActor::AddActorWorldRotation(MoveToTarget);
 	}
 }
 
@@ -180,11 +194,11 @@ void ACombatCharacter::UpdatePawnControl()
 
 	if (isInCombatMode && !isSprinting)
 	{
-	//	bUseControllerRotationYaw = true;
+		//	bUseControllerRotationYaw = true;
 	}
 	else
 	{
-	//	bUseControllerRotationYaw = false;
+		//	bUseControllerRotationYaw = false;
 	}
 }
 
