@@ -161,6 +161,12 @@ public:
 
 	void SpawnWeaponAttachments();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
+		FVector MuzzleLocationTest;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
+		FRotator MuzzleRotationTest;
+
 protected:
 
 	float CurrentDeltaTime;
@@ -287,6 +293,8 @@ protected:
 	UAudioComponent* ShotAudioComponent;
 	UAudioComponent* EchoAudioComponent;
 	UAudioComponent* ClipAudioComponent;
+
+
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))

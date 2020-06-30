@@ -41,6 +41,10 @@ private:
 
 	FVector DefaultCamSocketOffset;
 
+	// Rotate body to face crosshair
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FRotator TargetTiltRotation;
+
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))

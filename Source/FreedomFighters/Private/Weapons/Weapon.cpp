@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Math/Vector.h"
 
 #include "Particles/ParticleSystem.h"
 
@@ -60,6 +61,8 @@ AWeapon::AWeapon()
 	isReloading = false;
 	canShowClip = true;
 	canAutoReload = true;
+
+
 }
 
 void AWeapon::ConfigSetup()
@@ -107,102 +110,110 @@ void AWeapon::Tick(float DeltaTime)
 		isFiring = false;
 
 	AmmoCount = FString::FromInt(CurrentAmmo) + " / " + FString::FromInt(MaxAmmo);
+
+
+	MuzzleLocationTest = MeshComp->GetSocketLocation(MuzzleSocket);
+	MuzzleRotationTest = MeshComp->GetSocketRotation(MuzzleSocket);
 }
+
+
 
 void AWeapon::Fire()
 {
-	if (CurrentAmmo <= 0)
-	{
-		if (canAutoReload)
-		{
-			BeginReload();
-			return;
-		}
-		else
-		{
-			return;
-		}
-	}
-
-	CurrentAmmo -= 1;
-
-	isFiring = true;
-
-	// Trace world from pawn eyes to cross hair location
 
 	AActor* MyOwner = GetOwner();
 
 	if (MyOwner)
 	{
+
+		if (CurrentAmmo <= 0)
+		{
+			if (canAutoReload)
+			{
+				BeginReload();
+				return;
+			}
+			else
+			{
+				return;
+			}
+		}
+
+		// Trace world from pawn eyes to cross hair location
 		FVector EyeLocation;
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+		isFiring = true;
 
-		FVector ShotDirection = EyeRotation.Vector();
-		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
+		// Dot product allows to check if muzzle is facing in same direction as the camera view
+		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(MuzzleRotationTest));
 
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(MyOwner);
-		QueryParams.AddIgnoredActor(this);
-		QueryParams.bTraceComplex = true;
-		QueryParams.bReturnPhysicalMaterial = true;
-
-		// Particle "Target" parameter
-		FVector TracerEndPoint = TraceEnd;
-
-
-		FHitResult Hit;
-		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
+		if (UKismetMathLibrary::Abs(directionValue) <= 0.2f)
 		{
-			// Blocking hit! Process damage
-			AActor* HitActor = Hit.GetActor();
+			CurrentAmmo -= 1;
 
-			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+			FVector ShotDirection = EyeRotation.Vector();
+			FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
-			float ActualDamage = BaseDamage;
-			if (SurfaceType == SURFACE_FLESHVULNERABLE)
+			FCollisionQueryParams QueryParams;
+			QueryParams.AddIgnoredActor(MyOwner);
+			QueryParams.AddIgnoredActor(this);
+			QueryParams.bTraceComplex = true;
+			QueryParams.bReturnPhysicalMaterial = true;
+
+			// Particle "Target" parameter
+			FVector TracerEndPoint = TraceEnd;
+
+
+			FHitResult Hit;
+			if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 			{
-				ActualDamage *= 4.0f;
+				// Blocking hit! Process damage
+				AActor* HitActor = Hit.GetActor();
+
+				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+				float ActualDamage = BaseDamage;
+				if (SurfaceType == SURFACE_FLESHVULNERABLE)
+				{
+					ActualDamage *= 4.0f;
+				}
+
+				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+
+				UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
+
+				if (SelectedEffect)
+				{
+					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+				}
+
+				TracerEndPoint = Hit.ImpactPoint;
 			}
 
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+			//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 
-			UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
+			BeginFireEffect(TracerEndPoint);
+			BeginShellEffect();
 
-			if (SelectedEffect)
+
+			Recoil();
+
+			LastFireTime = GetWorld()->TimeSeconds;
+
+			// try and play the sound if specified
+			if (ShotSound != NULL)
 			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+				ShotAudioComponent->Sound = ShotSound;
+				ShotAudioComponent->Play(0.0f);
 			}
 
-			TracerEndPoint = Hit.ImpactPoint;
+			if (ShotEchoSound != NULL)
+			{
+				EchoAudioComponent->Sound = ShotEchoSound;
+				EchoAudioComponent->Play(ShotSound->GetDuration());
+			}
 		}
-
-		//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
-
-		BeginFireEffect(TracerEndPoint);
-		BeginShellEffect();
-
-
-		Recoil();
-
-		LastFireTime = GetWorld()->TimeSeconds;
-
-		// try and play the sound if specified
-		if (ShotSound != NULL)
-		{
-			ShotAudioComponent->Sound = ShotSound;
-			ShotAudioComponent->Play(0.0f);
-		}
-
-		if (ShotEchoSound != NULL)
-		{
-			EchoAudioComponent->Sound = ShotEchoSound;
-			EchoAudioComponent->Play(ShotSound->GetDuration());
-		}
-
-
-
-
 	}
 }
 

@@ -180,13 +180,15 @@ void ACombatCharacter::setCharacterRotation()
 
 	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlTargetRot, ActorTargetRot);
 
-	if (UKismetMathLibrary::Abs(Target.Yaw) >= UKismetMathLibrary::Abs(MaxAimYawSprint) && isSprinting && isInCombatMode)
+	if (UKismetMathLibrary::Abs(Target.Yaw) >= UKismetMathLibrary::Abs(MaxAimYawSprint) && isInCombatMode)
 	{
 		EndSprint();
 
-		FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, Time, 15.0f);
+		aimYaw = 0.0f;
+		FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, Time, 50.0f);
 		AActor::AddActorWorldRotation(MoveToTarget);
 	}
+
 }
 
 void ACombatCharacter::UpdatePawnControl()
