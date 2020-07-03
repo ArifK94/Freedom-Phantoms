@@ -66,6 +66,8 @@ private:
 		float MaxAimYawSprint;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float HandGuardAlpha;
 
 public:
 
@@ -103,6 +105,8 @@ public:
 	void setCharacterRotation();
 
 	void ToggleUnderBarrelWeapon();
+
+	void UpdateHandGaurdIK();
 
 private:
 

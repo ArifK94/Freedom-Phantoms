@@ -51,7 +51,7 @@ ACombatCharacter::ACombatCharacter()
 	isInCombatMode = false;
 
 	MaxAimYawSprint = 180.0f;
-
+	HandGuardAlpha = 0.0f;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -143,7 +143,8 @@ void ACombatCharacter::Tick(float DeltaTime)
 			EndFire();
 		}
 
-		setCharacterRotation();
+		UpdateHandGaurdIK();
+		//setCharacterRotation();
 	}
 }
 
@@ -459,6 +460,24 @@ void ACombatCharacter::ToggleUnderBarrelWeapon()
 				currentWeaponObj = underBarrelWeaponObj;
 			}
 		}
+	}
+}
+
+void ACombatCharacter::UpdateHandGaurdIK()
+{
+	if (currentWeaponObj)
+	{
+		currentWeaponObj->SetHandGuardIK(GetMesh());
+
+		if (isInCombatMode && !isReloading)
+		{
+			HandGuardAlpha = 1.0f;
+		}
+		else
+		{
+			HandGuardAlpha = 0.0f;
+		}
+
 	}
 }
 

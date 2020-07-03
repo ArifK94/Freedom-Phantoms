@@ -18,6 +18,7 @@
 #include "Components/AudioComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Components/SkinnedMeshComponent.h"
 
 #include "TimerManager.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
@@ -37,7 +38,6 @@ AWeapon::AWeapon()
 	MeshComp->CanCharacterStepUpOn = ECB_No;
 
 	ShotAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotAudioComponent"));
-	EchoAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("EchoAudioComponent"));
 	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));
 
 	MuzzleSocket = "Muzzle";
@@ -206,12 +206,6 @@ void AWeapon::Fire()
 			{
 				ShotAudioComponent->Sound = ShotSound;
 				ShotAudioComponent->Play(0.0f);
-			}
-
-			if (ShotEchoSound != NULL)
-			{
-				EchoAudioComponent->Sound = ShotEchoSound;
-				EchoAudioComponent->Play(ShotSound->GetDuration());
 			}
 		}
 	}
@@ -453,12 +447,6 @@ FName AWeapon::getHolsterSocket()
 
 FName AWeapon::getWeaponHandSocket()
 {
-	//if (WeaponAttachmentObj != NULL)
-	//{
-	//	return WeaponAttachmentObj->getUnderBarrelWeaponObj()->getMeshComp()->GetSocketLocation(MuzzleSocket);
-	//}
-
-
 	return WeaponHandSocket;
 }
 
@@ -470,6 +458,26 @@ void AWeapon::SpawnWeaponAttachments()
 	{
 		WeaponAttachmentObj = NewObject<UWeaponAttachmentManager>((UObject*)GetTransientPackage(), WeaponAttachmentClass);
 		WeaponAttachmentObj->SpawnAttachments(MeshComp, this, World);
+
+		if (WeaponAttachmentObj)
+		{
+			if (WeaponAttachmentObj->getUnderBarrelWeaponObj())
+			{
+				HandguardMesh = WeaponAttachmentObj->getUnderBarrelWeaponObj()->getMeshComp();
+			}
+		}
+			
 	}
+}
+
+void AWeapon::SetHandGuardIK(USkeletalMeshComponent* CharacterMesh)
+{
+	FVector TargetPosition;
+	FRotator TargetRotation;
+
+	FTransform InputTransform  = HandguardMesh->GetSocketTransform(HandguardSocket, RTS_World);
+	CharacterMesh->TransformToBoneSpace("j_wrist_ri", InputTransform.GetLocation(), InputTransform.GetRotation().Rotator(), TargetPosition, TargetRotation);
+	HandguardOffset.SetLocation(TargetPosition);
+	HandguardOffset.SetRotation(TargetRotation.Quaternion());
 }
 

@@ -75,12 +75,6 @@ void AGrenadeLauncher::Fire()
 			ShotAudioComponent->Play(0.0f);
 		}
 
-		if (ShotEchoSound != NULL)
-		{
-			EchoAudioComponent->Sound = ShotEchoSound;
-			EchoAudioComponent->Play(ShotSound->GetDuration());
-		}
-
 		if (CurrentAmmo <= 0 && canAutoReload)
 		{
 			BeginReload();

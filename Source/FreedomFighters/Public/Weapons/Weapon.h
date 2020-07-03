@@ -145,7 +145,6 @@ public:
 
 	void ClipOut();
 
-
 	void SetMagazineSocket();
 
 	void SetClipSocket(USkeletalMeshComponent* meshComponent);
@@ -160,6 +159,9 @@ public:
 	FName getWeaponHandSocket();
 
 	void SpawnWeaponAttachments();
+
+
+	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		FVector MuzzleLocationTest;
@@ -279,9 +281,6 @@ protected:
 		USoundBase* ShotSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
-		USoundBase* ShotEchoSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ReloadClipOutSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
@@ -291,7 +290,6 @@ protected:
 		USoundBase* ReloadEndSound;
 
 	UAudioComponent* ShotAudioComponent;
-	UAudioComponent* EchoAudioComponent;
 	UAudioComponent* ClipAudioComponent;
 
 
@@ -315,6 +313,7 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
+
 
 	void setCharacter(USkeletalMeshComponent* mesh) { CharacterReference = mesh; }
 	USkeletalMeshComponent* getCharacter() { return CharacterReference; }

@@ -164,12 +164,6 @@ void AShotgun::Fire()
 				ShotAudioComponent->Play(0.0f);
 			}
 
-			if (ShotEchoSound != NULL)
-			{
-				EchoAudioComponent->Sound = ShotEchoSound;
-				EchoAudioComponent->Play(ShotSound->GetDuration());
-			}
-
 			GetWorldTimerManager().SetTimer(pullHandguardTimeHandle, this, &AShotgun::beginHandguardPull, .3f, false);
 		}
 	}
