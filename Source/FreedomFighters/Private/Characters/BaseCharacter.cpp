@@ -22,6 +22,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine.h"
 
+
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
@@ -66,8 +67,8 @@ ABaseCharacter::ABaseCharacter()
 
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 
-	currentFowardSpeed = 0.0f;
-	Time = 0.0f;
+	CharacterSpeed = 0.0f;
+	CurrentDeltaTime = 0.0f;
 
 	isSprinting = false;
 	isDead = false;
@@ -82,6 +83,8 @@ void ABaseCharacter::BeginPlay()
 	UGameInstance* instance = UGameplayStatics::GetGameInstance(world);
 	gameInstanceController = Cast<UGameInstanceController>(instance);
 
+	// Create Anim Instance Object
+	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
@@ -89,15 +92,14 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	Time = DeltaTime;
+	CurrentDeltaTime = DeltaTime;
 
-	currentFowardSpeed = GetVelocity().Size();
+
+	UpdateCharacterMovement();
 
 	AimOffset();
 
 	UpdateSprint();
-
-
 
 }
 
@@ -204,7 +206,7 @@ void ABaseCharacter::UpdateSprint()
 
 void ABaseCharacter::BeginSprint()
 {
-	if (currentFowardSpeed > 0.0f)
+	if (CharacterSpeed > 0.0f)
 	{
 		isSprinting = true;
 
@@ -237,13 +239,25 @@ void ABaseCharacter::AimOffset()
 {
 	float x = 0.0f;
 
-	ControlRotation = GetControlRotation();
-	ActorRotation = GetActorRotation();
+	FRotator ControlRotation = GetControlRotation();
+	FRotator ActorRotation = GetActorRotation();
 
 	FRotator Current = UKismetMathLibrary::MakeRotator(x, aimPitch, aimYaw);
 	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlRotation, ActorRotation);
-	FRotator MoveToTarget = FMath::RInterpTo(Current, Target, Time, 15.0f);
+	FRotator MoveToTarget = FMath::RInterpTo(Current, Target, CurrentDeltaTime, 15.0f);
 
 	UKismetMathLibrary::BreakRotator(MoveToTarget, MoveToTarget.Roll, aimPitch, aimYaw);
+}
+
+void ABaseCharacter::UpdateCharacterMovement()
+{
+	FVector Velocity = AActor::GetVelocity();
+
+	CharacterSpeed = Velocity.Size();
+
+	if (AnimInstance)
+		CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
+
+	IsCharacterInAir = APawn::GetMovementComponent()->IsFalling();
 }
 

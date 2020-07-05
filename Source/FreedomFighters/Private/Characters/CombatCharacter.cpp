@@ -144,7 +144,7 @@ void ACombatCharacter::Tick(float DeltaTime)
 		}
 
 		UpdateHandGaurdIK();
-		//setCharacterRotation();
+	//	setCharacterRotation();
 	}
 }
 
@@ -185,24 +185,23 @@ void ACombatCharacter::setCharacterRotation()
 	{
 		EndSprint();
 
-		aimYaw = 0.0f;
-		FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, Time, 50.0f);
-		AActor::AddActorWorldRotation(MoveToTarget);
+		FRotator MoveToTarget = FMath::RInterpTo(AActor::GetActorRotation(), Target, CurrentDeltaTime, 5.0f);
+		AddActorWorldRotation(MoveToTarget);
 	}
-
 }
 
 void ACombatCharacter::UpdatePawnControl()
 {
+	bUseControllerRotationYaw = true;
 
-	if (isInCombatMode && !isSprinting)
-	{
-		//	bUseControllerRotationYaw = true;
-	}
-	else
-	{
-		//	bUseControllerRotationYaw = false;
-	}
+	//if (isInCombatMode && CharacterSpeed > 0.1f)
+	//{
+	//	bUseControllerRotationYaw = true;
+	//}
+	//else
+	//{
+	//	bUseControllerRotationYaw = false;
+	//}
 }
 
 void ACombatCharacter::BeginWeaponSwap()
@@ -316,7 +315,7 @@ void ACombatCharacter::EndFire()
 
 void ACombatCharacter::UpdateCombatMode()
 {
-	if (currentWeaponObj && hasEquippedWeapon)
+	if (currentWeaponObj && hasEquippedWeapon && !isReloading)
 	{
 		if (isAiming || currentWeaponObj->isFiring)
 			isInCombatMode = true;
@@ -331,11 +330,6 @@ void ACombatCharacter::UpdateFire()
 {
 	if (currentWeaponObj)
 	{
-		//if (isFiring && currentWeaponObj->getCurrentAmmo() <= 0)
-		//{
-		//	EndFire();
-		//}
-
 		if (!hasEquippedWeapon || isSwappingWeapon)
 		{
 			EndFire();
@@ -373,7 +367,6 @@ void ACombatCharacter::BeginReload()
 	if (currentWeaponObj)
 	{
 		currentWeaponObj->BeginReload();
-		//	currentWeaponObj->SetClipSocket(GetMesh());
 	}
 }
 

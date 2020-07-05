@@ -45,7 +45,19 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FRotator TargetTiltRotation;
 
+
+	UAnimInstance* AnimInstance;
+
 protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float CharacterSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float CharacterDirection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsCharacterInAir;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isSprinting;
@@ -63,12 +75,8 @@ protected:
 protected:
 
 	float defaultMaxWalkSpeed;
-	float currentFowardSpeed;
 
-	float Time;
-
-	FRotator ControlRotation;
-	FRotator ActorRotation;
+	float CurrentDeltaTime;
 
 	UAudioComponent* VoiceAudioComponent;
 
@@ -90,6 +98,9 @@ protected:
 	void BeginCrouch();
 
 	void AimOffset();
+
+	void UpdateCharacterMovement();
+
 
 
 	UHealthComponent* HealthComp;
