@@ -253,11 +253,23 @@ void ABaseCharacter::UpdateCharacterMovement()
 {
 	FVector Velocity = AActor::GetVelocity();
 
+	// get the speed of the character
 	CharacterSpeed = Velocity.Size();
 
+	// get the direction of the character
 	if (AnimInstance)
-		CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
+	{
+		if (!isSprinting)
+		{
+			CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
+		}
+		else
+		{
+			CharacterDirection = aimYaw;
+		}
+	}
 
+	// check if character is in the air
 	IsCharacterInAir = APawn::GetMovementComponent()->IsFalling();
 }
 

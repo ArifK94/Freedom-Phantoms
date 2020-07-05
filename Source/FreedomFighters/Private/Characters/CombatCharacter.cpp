@@ -49,6 +49,7 @@ ACombatCharacter::ACombatCharacter()
 	hasEquippedWeapon = false;
 	isSwappingWeapon = false;
 	isInCombatMode = false;
+	IsInAimOffSetRotation = false;
 
 	MaxAimYawSprint = 180.0f;
 	HandGuardAlpha = 0.0f;
@@ -144,7 +145,8 @@ void ACombatCharacter::Tick(float DeltaTime)
 		}
 
 		UpdateHandGaurdIK();
-	//	setCharacterRotation();
+		setCharacterRotation();
+		disableSprint();
 	}
 }
 
@@ -169,6 +171,38 @@ void ACombatCharacter::UpdateSprint()
 
 void ACombatCharacter::setCharacterRotation()
 {
+	if (isInCombatMode)
+	{
+		float x = 0.0f, y = 0.0f;
+
+		auto controlYaw = 0.0f, actorYaw = 0.0f;
+
+		UKismetMathLibrary::BreakRotator(GetControlRotation(), x, y, controlYaw);
+		UKismetMathLibrary::BreakRotator(GetActorRotation(), x, y, actorYaw);
+
+		auto ControlTargetRot = UKismetMathLibrary::MakeRotator(x, y, controlYaw);
+		auto ActorTargetRot = UKismetMathLibrary::MakeRotator(x, y, actorYaw);
+
+		FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlTargetRot, ActorTargetRot);
+
+		if (UKismetMathLibrary::Abs(Target.Yaw) >= 70.0f || IsInAimOffSetRotation)
+		{
+			IsInAimOffSetRotation = true;
+		}
+
+		if (IsInAimOffSetRotation)
+		{
+			FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, CurrentDeltaTime, 5.0f);
+			AddActorWorldRotation(MoveToTarget);
+
+			IsInAimOffSetRotation = !UKismetMathLibrary::NearlyEqual_FloatFloat(Target.Yaw, 0.0f, 2.0f);
+		}
+	}
+}
+
+void ACombatCharacter::disableSprint()
+{
+
 	float x = 0.0f, y = 0.0f;
 
 	auto controlYaw = 0.0f, actorYaw = 0.0f;
@@ -184,24 +218,19 @@ void ACombatCharacter::setCharacterRotation()
 	if (UKismetMathLibrary::Abs(Target.Yaw) >= UKismetMathLibrary::Abs(MaxAimYawSprint) && isInCombatMode)
 	{
 		EndSprint();
-
-		FRotator MoveToTarget = FMath::RInterpTo(AActor::GetActorRotation(), Target, CurrentDeltaTime, 5.0f);
-		AddActorWorldRotation(MoveToTarget);
 	}
 }
 
 void ACombatCharacter::UpdatePawnControl()
 {
-	bUseControllerRotationYaw = true;
-
-	//if (isInCombatMode && CharacterSpeed > 0.1f)
-	//{
-	//	bUseControllerRotationYaw = true;
-	//}
-	//else
-	//{
-	//	bUseControllerRotationYaw = false;
-	//}
+	if (isInCombatMode && CharacterSpeed > 0.1f && !isSprinting)
+	{
+		bUseControllerRotationYaw = true;
+	}
+	else
+	{
+		bUseControllerRotationYaw = false;
+	}
 }
 
 void ACombatCharacter::BeginWeaponSwap()
@@ -405,7 +434,6 @@ void ACombatCharacter::SpawnHelmet()
 		if (headgearObj)
 		{
 			headgearObj->SetOwner(this);
-			//headgearObj->setMeshSocket(GetMesh());
 			headgearObj->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "headgear_socket");
 		}
 	}

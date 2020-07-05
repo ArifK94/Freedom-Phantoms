@@ -1,5 +1,3 @@
-
-
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponClip.h"
 #include "Weapons/WeaponAttachmentManager.h"
@@ -120,7 +118,6 @@ void AWeapon::Tick(float DeltaTime)
 
 void AWeapon::Fire()
 {
-
 	AActor* MyOwner = GetOwner();
 
 	if (MyOwner)
@@ -148,7 +145,7 @@ void AWeapon::Fire()
 		// Dot product allows to check if muzzle is facing in same direction as the camera view
 		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(MuzzleRotationTest));
 
-		if (UKismetMathLibrary::Abs(directionValue) <= 0.2f)
+		if (UKismetMathLibrary::Abs(directionValue) <= 0.5f)
 		{
 			CurrentAmmo -= 1;
 

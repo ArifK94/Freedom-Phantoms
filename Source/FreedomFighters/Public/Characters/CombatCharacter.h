@@ -69,6 +69,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float HandGuardAlpha;
 
+
+	bool IsInAimOffSetRotation;
+
 public:
 
 	AWeapon* GetCurrentWeapon();
@@ -103,6 +106,8 @@ public:
 	void setWeaponHand();
 
 	void setCharacterRotation();
+
+	void disableSprint();
 
 	void ToggleUnderBarrelWeapon();
 
