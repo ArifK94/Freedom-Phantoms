@@ -1,27 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Weapons/WeaponOptic.h"
+#include "Weapons/WeaponLaser.h"
 
 #include "Components/StaticMeshComponent.h"
 
-AWeaponOptic::AWeaponOptic()
+AWeaponLaser::AWeaponLaser()
 {
-	PrimaryActorTick.bCanEverTick = true;
-
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->CanCharacterStepUpOn = ECB_No;
-
 }
 
-void AWeaponOptic::BeginPlay()
+void AWeaponLaser::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-void AWeaponOptic::Tick(float DeltaTime)
+void AWeaponLaser::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 

@@ -234,6 +234,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ReloadClipHandSocket;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+		FName OpticsSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+		FName LaserSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+		FName TorchlightSocket;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Hand Offsets", meta = (AllowPrivateAccess = "true"))
 		FTransform HandguardOffset;
@@ -318,12 +328,12 @@ public:
 	void setCharacter(USkeletalMeshComponent* mesh) { CharacterReference = mesh; }
 	USkeletalMeshComponent* getCharacter() { return CharacterReference; }
 
-	USkeletalMeshComponent* getMeshComp() {
-		return MeshComp;
-	}
+	USkeletalMeshComponent* getMeshComp() { return MeshComp; }
 
+	UWeaponAttachmentManager* getWeaponAttachmentObj() { return WeaponAttachmentObj; }
 
-	UWeaponAttachmentManager* getWeaponAttachmentObj() {
-		return WeaponAttachmentObj;
-	}
+	FName getOpticsSocket() { return OpticsSocket; }
+	FName getLaserSocket() { return LaserSocket; }
+	FName getTorchlightSocket() { return TorchlightSocket; }
+
 };

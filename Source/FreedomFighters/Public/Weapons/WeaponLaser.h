@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "WeaponOptic.generated.h"
+#include "WeaponLaser.generated.h"
 
 UCLASS()
-class FREEDOMFIGHTERS_API AWeaponOptic : public AActor
+class FREEDOMFIGHTERS_API AWeaponLaser : public AActor
 {
 	GENERATED_BODY()
 	
@@ -16,7 +16,7 @@ private:
 		UStaticMeshComponent* MeshComp;
 
 public:	
-	AWeaponOptic();
+	AWeaponLaser();
 
 protected:
 	virtual void BeginPlay() override;

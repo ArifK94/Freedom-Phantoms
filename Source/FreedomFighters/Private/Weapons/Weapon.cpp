@@ -46,7 +46,9 @@ AWeapon::AWeapon()
 	HandguardSocket = "HandguardSocket";
 	WeaponHandSocket = "weapon_hand";
 	ReloadClipHandSocket = "clip_hand";
-
+	OpticsSocket = "Optics";
+	LaserSocket = "Laser";
+	TorchlightSocket = "Torchlight";
 
 	MaxAmmo = 120;
 	RateOfFire = 600.0f;
