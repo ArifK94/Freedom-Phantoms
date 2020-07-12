@@ -113,6 +113,11 @@ public:
 
 	void UpdateHandGaurdIK();
 
+	void ToggleLaser();
+
+	void ToggleLight();
+
+
 private:
 
 	void SpawnHelmet();

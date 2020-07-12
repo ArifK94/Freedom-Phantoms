@@ -9,7 +9,7 @@
 
 AWeaponLaser::AWeaponLaser()
 {
-	//PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
@@ -30,15 +30,14 @@ AWeaponLaser::AWeaponLaser()
 void AWeaponLaser::ToggleBeam()
 {
 	isLightEnabled = !isLightEnabled;
-
-	LightComp->bVisible = isLightEnabled;
+	LightComp->SetVisibility(isLightEnabled);
 }
 
 void AWeaponLaser::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	//LightComp->bVisible = isLightEnabled;
+	LightComp->SetVisibility(isLightEnabled);
 	LightComp->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LightSocket);
 
 }
@@ -46,5 +45,6 @@ void AWeaponLaser::BeginPlay()
 void AWeaponLaser::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 }
 

@@ -10,6 +10,8 @@
 
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponAttachmentManager.h"
+#include "Weapons/WeaponTorchlight.h"
+#include "Weapons/WeaponLaser.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -77,6 +79,10 @@ void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	PlayerInputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACombatCharacter::ToggleNightVision);
 
 	PlayerInputComponent->BindAction("ToggleUnderBarrel", IE_Pressed, this, &ACombatCharacter::ToggleUnderBarrelWeapon);
+
+	PlayerInputComponent->BindAction("ToggleLaser", IE_Pressed, this, &ACombatCharacter::ToggleLaser);
+	PlayerInputComponent->BindAction("ToggleLight", IE_Pressed, this, &ACombatCharacter::ToggleLight);
+
 
 }
 
@@ -502,3 +508,18 @@ void ACombatCharacter::UpdateHandGaurdIK()
 	}
 }
 
+void ACombatCharacter::ToggleLaser()
+{
+	if (currentWeaponObj)
+	{
+		currentWeaponObj->getWeaponAttachmentObj()->getLaserObj()->ToggleBeam();
+	}
+}
+
+void ACombatCharacter::ToggleLight()
+{
+	if (currentWeaponObj)
+	{
+		currentWeaponObj->getWeaponAttachmentObj()->getTorchLight()->ToggleBeam();
+	}
+}

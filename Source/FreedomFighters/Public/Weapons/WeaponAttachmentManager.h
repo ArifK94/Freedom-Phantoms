@@ -62,6 +62,14 @@ public:
 
 	AWeapon* getUnderBarrelWeaponObj() { return UnderBarrelWeaponObj; }
 
+	AWeaponLaser* getLaserObj() {
+		return LaserObj;
+	}
+
+	AWeaponTorchlight* getTorchLight() {
+		return TorchlightObj;
+	}
+
 protected:
 	virtual bool IsSupportedForNetworking() const override { return true; };
 

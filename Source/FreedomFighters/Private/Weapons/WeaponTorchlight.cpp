@@ -30,14 +30,14 @@ void AWeaponTorchlight::ToggleBeam()
 {
 	isLightEnabled = !isLightEnabled;
 
-	LightComp->bVisible = isLightEnabled;
+	LightComp->SetVisibility(isLightEnabled);
 }
 
 void AWeaponTorchlight::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	//LightComp->bVisible = isLightEnabled;
+	LightComp->SetVisibility(isLightEnabled);
 	LightComp->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LightSocket);
 
 }
