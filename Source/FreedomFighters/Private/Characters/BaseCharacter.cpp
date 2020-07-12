@@ -259,14 +259,7 @@ void ABaseCharacter::UpdateCharacterMovement()
 	// get the direction of the character
 	if (AnimInstance)
 	{
-		if (!isSprinting)
-		{
-			CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
-		}
-		else
-		{
-			CharacterDirection = aimYaw;
-		}
+		CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
 	}
 
 	// check if character is in the air
