@@ -113,6 +113,17 @@ void AWeapon::Tick(float DeltaTime)
 
 	MuzzleLocationTest = MeshComp->GetSocketLocation(MuzzleSocket);
 	MuzzleRotationTest = MeshComp->GetSocketRotation(MuzzleSocket);
+
+
+	// Reset Burst fire count
+	if (selectiveFireMode == SelectiveFire::Burst)
+	{
+		if (BurstAmmountCount >= 3)
+		{
+			StopFire();
+		}
+	}
+
 }
 
 
@@ -145,7 +156,6 @@ void AWeapon::Fire()
 
 		if (CanShoot())
 		{
-
 			CurrentAmmo -= 1;
 
 			FVector ShotDirection = EyeRotation.Vector();
@@ -199,6 +209,8 @@ void AWeapon::StartFire()
 {
 	if (!isReloading)
 	{
+		isFiring = true;
+
 		float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
 
 		switch (selectiveFireMode)
@@ -210,21 +222,21 @@ void AWeapon::StartFire()
 			Fire();
 			break;
 		case SelectiveFire::Burst:
-
-			if (BurstAmmountCount >= 2)
-			{
-				GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
-				BurstAmmountCount = 0;
-			}
-			else
-			{
-				GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
-			}
+			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::BurstDelay, TimeBetweenShots, true, FirstDelay);
 			break;
 		default:
 			Fire();
 			break;
 		}
+	}
+}
+
+
+void AWeapon::BurstDelay()
+{
+	if (BurstAmmountCount < 3)
+	{
+		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, 0.0f);
 	}
 }
 
@@ -235,6 +247,8 @@ void AWeapon::StopFire()
 	isFiring = false;
 
 	CurrentVerticleRecoil = 0.0f;
+	BurstAmmountCount = 0;
+
 }
 
 bool AWeapon::CanShoot()
@@ -259,6 +273,7 @@ bool AWeapon::CanShoot()
 
 	return false;
 }
+
 
 void AWeapon::PlayShotEffect(FVector TracerEndPoint)
 {

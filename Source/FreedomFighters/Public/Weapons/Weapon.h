@@ -171,6 +171,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		FRotator MuzzleRotationTest;
 
+private:
+	void BurstDelay();
+
 protected:
 
 	float CurrentDeltaTime;
