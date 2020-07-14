@@ -41,8 +41,7 @@ enum class SelectiveFire : uint8
 {
 	Automatic		UMETA(DisplayName = "Automatic"),
 	SemiAutomatic 	UMETA(DisplayName = "SemiAutomatic"),
-	Burst			UMETA(DisplayName = "Burst"),
-	Single			UMETA(DisplayName = "Single")
+	Burst			UMETA(DisplayName = "Burst")
 };
 
 USTRUCT(BlueprintType)
@@ -123,9 +122,13 @@ protected:
 
 	virtual FVector getMuzzleLocation();
 
+	bool CanShoot();
+
+	void PlayShotEffect(FVector TracerEndPoint);
+
+
 
 public:
-
 	void StartFire();
 
 	void StopFire();
@@ -135,7 +138,6 @@ public:
 	void BeginShellEffect();
 
 	void CameraShakeEffect();
-
 
 	void BeginReload();
 
@@ -303,13 +305,15 @@ protected:
 	UAudioComponent* ClipAudioComponent;
 
 
-
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* ShellEjectEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Damage")
 		float BaseDamage;
+
+private:
+	int BurstAmmountCount;
+	float CurrentVerticleRecoil;
 
 public:
 

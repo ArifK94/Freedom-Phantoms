@@ -46,6 +46,7 @@ ACombatCharacter::ACombatCharacter()
 	secondaryWeaponObj = nullptr;
 
 	isAiming = false;
+	isFiring = false;
 	isReloading = false;
 	isEquippingWeapon = false;
 	hasEquippedWeapon = false;
@@ -247,6 +248,7 @@ void ACombatCharacter::BeginWeaponSwap()
 	}
 	else
 	{
+		// swap weapons without the need of animations if not already equipped
 		if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
 		{
 			currentWeaponObj = secondaryWeaponObj;
@@ -262,6 +264,9 @@ void ACombatCharacter::BeginWeaponSwap()
 void ACombatCharacter::BeginEquipWeapon()
 {
 	isEquippingWeapon = true;
+
+	if (isReloading)
+		isReloading = false;
 }
 
 void ACombatCharacter::GrabWeapon()
@@ -289,6 +294,10 @@ void ACombatCharacter::swapWeapon()
 {
 	if (isSwappingWeapon)
 	{
+		if (isReloading)
+			isReloading = false;
+
+
 		hasEquippedWeapon = false;
 
 		if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
@@ -335,6 +344,7 @@ void ACombatCharacter::BeginFire()
 	{
 		if (hasEquippedWeapon)
 		{
+			isFiring = true;
 			currentWeaponObj->StartFire();
 		}
 	}
@@ -345,6 +355,7 @@ void ACombatCharacter::EndFire()
 	if (currentWeaponObj)
 	{
 		currentWeaponObj->StopFire();
+		isFiring = false;
 	}
 }
 
@@ -352,7 +363,7 @@ void ACombatCharacter::UpdateCombatMode()
 {
 	if (currentWeaponObj && hasEquippedWeapon && !isReloading)
 	{
-		if (isAiming || currentWeaponObj->isFiring)
+		if (isAiming || isFiring)
 			isInCombatMode = true;
 		else
 			isInCombatMode = false;

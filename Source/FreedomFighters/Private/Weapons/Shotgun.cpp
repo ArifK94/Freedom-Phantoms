@@ -101,20 +101,16 @@ void AShotgun::Fire()
 {
 	if (CurrentAmmo <= 0) return;
 
-
 	// Trace world from pawn eyes to cross hair location
-
 	AActor* MyOwner = GetOwner();
 
 	if (MyOwner)
 	{
-		if (hasLoadedShell)
+		if (hasLoadedShell && CanShoot())
 		{
 			hasLoadedShell = false;
 
 			CurrentAmmo -= 1;
-
-			isFiring = true;
 
 			FVector EyeLocation;
 			FRotator EyeRotation;
@@ -152,19 +148,9 @@ void AShotgun::Fire()
 				TracerEndPoint = Hit.ImpactPoint;
 			}
 
-			BeginFireEffect(TracerEndPoint);
-
-			Recoil();
-
-			LastFireTime = GetWorld()->TimeSeconds;
-
-			if (ShotSound != NULL)
-			{
-				ShotAudioComponent->Sound = ShotSound;
-				ShotAudioComponent->Play(0.0f);
-			}
-
+			PlayShotEffect(TracerEndPoint);
 			GetWorldTimerManager().SetTimer(pullHandguardTimeHandle, this, &AShotgun::beginHandguardPull, .3f, false);
+
 		}
 	}
 }

@@ -111,7 +111,6 @@ void AWeapon::Tick(float DeltaTime)
 
 	AmmoCount = FString::FromInt(CurrentAmmo) + " / " + FString::FromInt(MaxAmmo);
 
-
 	MuzzleLocationTest = MeshComp->GetSocketLocation(MuzzleSocket);
 	MuzzleRotationTest = MeshComp->GetSocketRotation(MuzzleSocket);
 }
@@ -144,11 +143,9 @@ void AWeapon::Fire()
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 		isFiring = true;
 
-		// Dot product allows to check if muzzle is facing in same direction as the camera view
-		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(MuzzleRotationTest));
-
-		if (UKismetMathLibrary::Abs(directionValue) <= 0.5f)
+		if (CanShoot())
 		{
+
 			CurrentAmmo -= 1;
 
 			FVector ShotDirection = EyeRotation.Vector();
@@ -190,22 +187,9 @@ void AWeapon::Fire()
 				TracerEndPoint = Hit.ImpactPoint;
 			}
 
-			//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
+			PlayShotEffect(TracerEndPoint);
 
-			BeginFireEffect(TracerEndPoint);
-			BeginShellEffect();
-
-
-			Recoil();
-
-			LastFireTime = GetWorld()->TimeSeconds;
-
-			// try and play the sound if specified
-			if (ShotSound != NULL)
-			{
-				ShotAudioComponent->Sound = ShotSound;
-				ShotAudioComponent->Play(0.0f);
-			}
+			BurstAmmountCount++;
 		}
 	}
 }
@@ -223,11 +207,19 @@ void AWeapon::StartFire()
 			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
 			break;
 		case SelectiveFire::SemiAutomatic:
+			Fire();
 			break;
 		case SelectiveFire::Burst:
-			break;
-		case SelectiveFire::Single:
-			Fire();
+
+			if (BurstAmmountCount >= 2)
+			{
+				GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
+				BurstAmmountCount = 0;
+			}
+			else
+			{
+				GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+			}
 			break;
 		default:
 			Fire();
@@ -241,7 +233,51 @@ void AWeapon::StopFire()
 	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
 	isFiring = false;
+
+	CurrentVerticleRecoil = 0.0f;
 }
+
+bool AWeapon::CanShoot()
+{
+	AActor* MyOwner = GetOwner();
+
+	if (MyOwner)
+	{
+		FVector EyeLocation;
+		FRotator EyeRotation;
+		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+		isFiring = true;
+
+		// Dot product allows to check if muzzle is facing in same direction as the camera view
+		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(MuzzleRotationTest));
+
+		if (UKismetMathLibrary::Abs(directionValue) <= 0.5f)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void AWeapon::PlayShotEffect(FVector TracerEndPoint)
+{
+	BeginFireEffect(TracerEndPoint);
+	BeginShellEffect();
+
+
+	Recoil();
+
+	LastFireTime = GetWorld()->TimeSeconds;
+
+	// try and play the sound if specified
+	if (ShotSound != NULL)
+	{
+		ShotAudioComponent->Sound = ShotSound;
+		ShotAudioComponent->Play(0.0f);
+	}
+}
+
 
 void AWeapon::BeginFireEffect(FVector TraceEnd)
 {
@@ -392,9 +428,10 @@ void AWeapon::Recoil()
 	auto character = UGameplayStatics::GetPlayerController(MyOwner, 0);
 	VerticleRecoil = VerticleRecoil * -1;
 
+	CurrentVerticleRecoil += .2f;
 
-	TargetHorizontalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.15, 0.15);
-	TargetVerticalRecoil = UKismetMathLibrary::RandomFloatInRange(0.5, -0.5f);
+	TargetHorizontalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.3, 0.3);
+	TargetVerticalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.5f, -0.8f) * 2.0f / 3.0f;
 
 
 	//	TargetVerticalRecoil = UKismetMathLibrary::Lerp(0.0f, VerticleRecoil, RecoilAmount);
@@ -465,7 +502,7 @@ void AWeapon::SpawnWeaponAttachments()
 				HandguardMesh = WeaponAttachmentObj->getUnderBarrelWeaponObj()->getMeshComp();
 			}
 		}
-			
+
 	}
 }
 
@@ -474,7 +511,7 @@ void AWeapon::SetHandGuardIK(USkeletalMeshComponent* CharacterMesh)
 	FVector TargetPosition;
 	FRotator TargetRotation;
 
-	FTransform InputTransform  = HandguardMesh->GetSocketTransform(HandguardSocket, RTS_World);
+	FTransform InputTransform = HandguardMesh->GetSocketTransform(HandguardSocket, RTS_World);
 	CharacterMesh->TransformToBoneSpace("j_wrist_ri", InputTransform.GetLocation(), InputTransform.GetRotation().Rotator(), TargetPosition, TargetRotation);
 	HandguardOffset.SetLocation(TargetPosition);
 	HandguardOffset.SetRotation(TargetRotation.Quaternion());
