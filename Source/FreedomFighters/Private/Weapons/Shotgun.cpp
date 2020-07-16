@@ -104,11 +104,12 @@ void AShotgun::Fire()
 	// Trace world from pawn eyes to cross hair location
 	AActor* MyOwner = GetOwner();
 
-	if (MyOwner)
+	if (MyOwner && CanFire)
 	{
-		if (hasLoadedShell && CanShoot())
+		if (hasLoadedShell)
 		{
 			hasLoadedShell = false;
+			isFiring = true;
 
 			CurrentAmmo -= 1;
 
@@ -149,8 +150,8 @@ void AShotgun::Fire()
 			}
 
 			PlayShotEffect(TracerEndPoint);
-			GetWorldTimerManager().SetTimer(pullHandguardTimeHandle, this, &AShotgun::beginHandguardPull, .3f, false);
 
+			GetWorldTimerManager().SetTimer(pullHandguardTimeHandle, this, &AShotgun::beginHandguardPull, .3f, false);
 		}
 	}
 }
@@ -216,7 +217,6 @@ void AShotgun::setHandguard()
 
 	if (HandguardComp)
 	{
-		//HandguardOffset = HandguardComp->GetSocketTransform("HandOffset",  ERelativeTransformSpace::RTS_World);
 		HandguardMesh = HandguardComp;
 	}
 }

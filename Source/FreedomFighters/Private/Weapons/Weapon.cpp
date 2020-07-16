@@ -111,8 +111,8 @@ void AWeapon::Tick(float DeltaTime)
 
 	AmmoCount = FString::FromInt(CurrentAmmo) + " / " + FString::FromInt(MaxAmmo);
 
-	MuzzleLocationTest = MeshComp->GetSocketLocation(MuzzleSocket);
-	MuzzleRotationTest = MeshComp->GetSocketRotation(MuzzleSocket);
+	CurrentMuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocket);
+	CurrentMuzzleRotation = MeshComp->GetSocketRotation(MuzzleSocket);
 
 
 	// Reset Burst fire count
@@ -123,10 +123,24 @@ void AWeapon::Tick(float DeltaTime)
 			StopFire();
 		}
 	}
+	else if (selectiveFireMode == SelectiveFire::SemiAutomatic)
+	{
+		if (BurstAmmountCount >= 1)
+		{
+			StopFire();
+		}
+	}
+
+	if (IsFacingCrosshair())
+	{
+		CanFire = true;
+	}
+	else
+	{
+		CanFire = false;
+	}
 
 }
-
-
 
 void AWeapon::Fire()
 {
@@ -154,7 +168,7 @@ void AWeapon::Fire()
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 		isFiring = true;
 
-		if (CanShoot())
+		if (CanFire)
 		{
 			CurrentAmmo -= 1;
 
@@ -204,6 +218,22 @@ void AWeapon::Fire()
 	}
 }
 
+void AWeapon::BurstDelay()
+{
+	if (BurstAmmountCount < 3)
+	{
+		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, 0.0f);
+	}
+}
+
+void AWeapon::SemiFireDelay()
+{
+	if (BurstAmmountCount < 1)
+	{
+		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, 0.0f);
+	}
+}
+
 
 void AWeapon::StartFire()
 {
@@ -219,7 +249,7 @@ void AWeapon::StartFire()
 			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
 			break;
 		case SelectiveFire::SemiAutomatic:
-			Fire();
+			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::SemiFireDelay, TimeBetweenShots, true, FirstDelay);
 			break;
 		case SelectiveFire::Burst:
 			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::BurstDelay, TimeBetweenShots, true, FirstDelay);
@@ -232,13 +262,7 @@ void AWeapon::StartFire()
 }
 
 
-void AWeapon::BurstDelay()
-{
-	if (BurstAmmountCount < 3)
-	{
-		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, 0.0f);
-	}
-}
+
 
 void AWeapon::StopFire()
 {
@@ -251,7 +275,7 @@ void AWeapon::StopFire()
 
 }
 
-bool AWeapon::CanShoot()
+bool AWeapon::IsFacingCrosshair()
 {
 	AActor* MyOwner = GetOwner();
 
@@ -260,10 +284,9 @@ bool AWeapon::CanShoot()
 		FVector EyeLocation;
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-		isFiring = true;
 
 		// Dot product allows to check if muzzle is facing in same direction as the camera view
-		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(MuzzleRotationTest));
+		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(CurrentMuzzleRotation));
 
 		if (UKismetMathLibrary::Abs(directionValue) <= 0.5f)
 		{
@@ -448,10 +471,6 @@ void AWeapon::Recoil()
 	TargetHorizontalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.3, 0.3);
 	TargetVerticalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.5f, -0.8f) * 2.0f / 3.0f;
 
-
-	//	TargetVerticalRecoil = UKismetMathLibrary::Lerp(0.0f, VerticleRecoil, RecoilAmount);
-	//	TargetHorizontalRecoil = UKismetMathLibrary::Lerp(0.0f, HorizontalRecoil, RecoilAmount);
-
 	character->AddPitchInput(TargetVerticalRecoil);
 	character->AddYawInput(TargetHorizontalRecoil);
 }
@@ -470,35 +489,11 @@ void AWeapon::SetClipSocket(USkeletalMeshComponent* meshComponent)
 	weaponClipObj->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ReloadClipHandSocket);
 }
 
-int32 AWeapon::getCurrentAmmo()
-{
-	return CurrentAmmo;
-}
-
-int32 AWeapon::getMaxAmmo()
-{
-	return MaxAmmo;
-}
-
-int32 AWeapon::getAmmoPerClip()
-{
-	return AmmoPerClip;
-}
 
 
 void AWeapon::setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket)
 {
 	MeshComp->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, socket);
-}
-
-FName AWeapon::getHolsterSocket()
-{
-	return HolsterSocket;
-}
-
-FName AWeapon::getWeaponHandSocket()
-{
-	return WeaponHandSocket;
 }
 
 void AWeapon::SpawnWeaponAttachments()

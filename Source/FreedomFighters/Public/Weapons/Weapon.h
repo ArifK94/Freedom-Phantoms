@@ -108,27 +108,6 @@ class FREEDOMFIGHTERS_API AWeapon : public AActor
 public:
 	AWeapon();
 
-protected:
-	virtual void Fire();
-
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		virtual void OnReload();
-
-	void ConfigSetup();
-
-	void SpawnMagazine();
-
-	void Recoil();
-
-	virtual FVector getMuzzleLocation();
-
-	bool CanShoot();
-
-	void PlayShotEffect(FVector TracerEndPoint);
-
-
-
-public:
 	void StartFire();
 
 	void StopFire();
@@ -151,30 +130,37 @@ public:
 
 	void SetClipSocket(USkeletalMeshComponent* meshComponent);
 
-	int32 getCurrentAmmo();
-	int32 getMaxAmmo();
-	int32 getAmmoPerClip();
-
 	void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket);
-
-	FName getHolsterSocket();
-	FName getWeaponHandSocket();
 
 	void SpawnWeaponAttachments();
 
-
 	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
-		FVector MuzzleLocationTest;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
-		FRotator MuzzleRotationTest;
 
 private:
 	void BurstDelay();
+	void SemiFireDelay();
+	bool IsFacingCrosshair();
 
 protected:
+	virtual void Fire();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		virtual void OnReload();
+
+	void ConfigSetup();
+
+	void SpawnMagazine();
+
+	void Recoil();
+
+	virtual FVector getMuzzleLocation();
+
+	void PlayShotEffect(FVector TracerEndPoint);
+
+
+protected:
+	bool CanFire;
 
 	float CurrentDeltaTime;
 
@@ -182,6 +168,7 @@ protected:
 
 	USkeletalMeshComponent* CharacterReference;
 
+protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 		USkeletalMeshComponent* MeshComp;
@@ -208,9 +195,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
 		bool canShowClip;
 
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		bool canAutoReload;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		bool isFiring;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		bool isReloading;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		WeaponType weaponType;
@@ -314,23 +307,27 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Damage")
 		float BaseDamage;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")
+		FVector CurrentMuzzleLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")
+		FRotator CurrentMuzzleRotation;
+
 private:
 	int BurstAmmountCount;
 	float CurrentVerticleRecoil;
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		bool isFiring;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		bool isReloading;
-
-
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
 
+
+
+
+public:
 
 	void setCharacter(USkeletalMeshComponent* mesh) { CharacterReference = mesh; }
 	USkeletalMeshComponent* getCharacter() { return CharacterReference; }
@@ -339,8 +336,18 @@ public:
 
 	UWeaponAttachmentManager* getWeaponAttachmentObj() { return WeaponAttachmentObj; }
 
+
+	int32 getCurrentAmmo() { return CurrentAmmo; }
+	int32 getMaxAmmo() { return MaxAmmo; }
+	int32 getAmmoPerClip() { return AmmoPerClip; }
+
+	FName getHolsterSocket() { return HolsterSocket; }
+	FName getWeaponHandSocket() { return WeaponHandSocket; }
 	FName getOpticsSocket() { return OpticsSocket; }
 	FName getLaserSocket() { return LaserSocket; }
 	FName getTorchlightSocket() { return TorchlightSocket; }
+
+	bool getIsReloading() { return isReloading; }
+	bool getIsFiring() { return isFiring; }
 
 };

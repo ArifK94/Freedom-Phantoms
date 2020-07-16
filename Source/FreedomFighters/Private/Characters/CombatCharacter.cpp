@@ -428,7 +428,7 @@ void ACombatCharacter::UpdateReload()
 {
 	if (currentWeaponObj)
 	{
-		isReloading = currentWeaponObj->isReloading;
+		isReloading = currentWeaponObj->getIsReloading();
 	}
 }
 
