@@ -130,16 +130,6 @@ void AWeapon::Tick(float DeltaTime)
 			StopFire();
 		}
 	}
-
-	if (IsFacingCrosshair())
-	{
-		CanFire = true;
-	}
-	else
-	{
-		CanFire = false;
-	}
-
 }
 
 void AWeapon::Fire()
@@ -168,7 +158,7 @@ void AWeapon::Fire()
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 		isFiring = true;
 
-		if (CanFire)
+		if (IsFacingCrosshair())
 		{
 			CurrentAmmo -= 1;
 
@@ -288,7 +278,10 @@ bool AWeapon::IsFacingCrosshair()
 		// Dot product allows to check if muzzle is facing in same direction as the camera view
 		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(CurrentMuzzleRotation));
 
-		if (UKismetMathLibrary::Abs(directionValue) <= 0.5f)
+		FVector locationValue  = UKismetMathLibrary::Subtract_VectorVector(CurrentMuzzleLocation, EyeLocation);
+		
+		float limit = 50.0f;
+		if (UKismetMathLibrary::Abs(directionValue) <= 0.5f && (UKismetMathLibrary::Abs(locationValue.X) <= limit || UKismetMathLibrary::Abs(locationValue.Y) <= limit || UKismetMathLibrary::Abs(locationValue.Z) <= limit))
 		{
 			return true;
 		}

@@ -104,7 +104,7 @@ void AShotgun::Fire()
 	// Trace world from pawn eyes to cross hair location
 	AActor* MyOwner = GetOwner();
 
-	if (MyOwner && CanFire)
+	if (MyOwner && IsFacingCrosshair())
 	{
 		if (hasLoadedShell)
 		{

@@ -135,12 +135,12 @@ public:
 	void SpawnWeaponAttachments();
 
 	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh);
+	bool IsFacingCrosshair();
 
 
 private:
 	void BurstDelay();
 	void SemiFireDelay();
-	bool IsFacingCrosshair();
 
 protected:
 	virtual void Fire();
@@ -160,8 +160,6 @@ protected:
 
 
 protected:
-	bool CanFire;
-
 	float CurrentDeltaTime;
 
 	class UGameInstanceController* gameInstanceController;
