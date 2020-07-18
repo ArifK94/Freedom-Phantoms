@@ -5,12 +5,18 @@
 
 #include "Managers/GameInstanceController.h"
 #include "Weapons/Weapon.h"
+#include "Weapons/WeaponSet.h"
+#include "Weapons/WeaponAttachmentManager.h"
+
+#include "UObject/UObjectGlobals.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine.h"
+
+
 
 // Sets default values
 ALoadout::ALoadout()
@@ -33,31 +39,30 @@ void ALoadout::BeginPlay()
 	UGameInstance* instance = UGameplayStatics::GetGameInstance(world);
 	gameInstanceController = Cast<UGameInstanceController>(instance);
 
+
+	WeaponSetObj = NewObject<UWeaponSet>((UObject*)GetTransientPackage(), WeaponSetClass);
 }
 
 AWeapon* ALoadout::SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owner)
 {
+	UWorld* World = GetWorld();
+
 	switch (loadoutType)
 	{
 	case LoadoutType::Assault:
-		return gameInstanceController->SpawnAssaultRifle(mesh, owner);
+		return WeaponSetObj->SpawnAssaultRifle(World, mesh, owner);
 		break;
 	case LoadoutType::SMG:
-		return gameInstanceController->SpawnSMG(mesh, owner);
+		return WeaponSetObj->SpawnSMG(World, mesh, owner);
 		break;
 	case LoadoutType::Shotgun:
-		return gameInstanceController->SpawnShotgun(mesh, owner);
+		return WeaponSetObj->SpawnShotgun(World, mesh, owner);
 		break;
 	case LoadoutType::LMG:
-		return	gameInstanceController->SpawnLMG(mesh, owner);
+		return WeaponSetObj->SpawnLMG(World, mesh, owner);
 		break;
 	default:
-		return gameInstanceController->SpawnAssaultRifle(mesh, owner);
+		return WeaponSetObj->SpawnAssaultRifle(World, mesh, owner);
 		break;
 	}
 }
-
-
-
-
-

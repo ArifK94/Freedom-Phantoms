@@ -3,6 +3,7 @@
 
 #include "Characters/CombatCharacter.h"
 #include "Managers/GameInstanceController.h"
+#include "Managers/FactionManager.h"
 
 #include "Accessories/Headgear.h"
 #include "Accessories/Loadout.h"
@@ -34,6 +35,8 @@
 #include <array>
 
 #include "GameFramework/Actor.h"
+#include "UObject/UObjectGlobals.h"
+
 
 
 
@@ -83,13 +86,12 @@ void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	PlayerInputComponent->BindAction("ToggleLaser", IE_Pressed, this, &ACombatCharacter::ToggleLaser);
 	PlayerInputComponent->BindAction("ToggleLight", IE_Pressed, this, &ACombatCharacter::ToggleLight);
-
-
 }
 
 void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
 
 	if (Headgears.Num() > 0)
 	{

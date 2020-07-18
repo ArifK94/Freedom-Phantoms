@@ -26,7 +26,6 @@
 
 AWeapon* UGameInstanceController::SpawnAssaultRifle(USkeletalMeshComponent* mesh, AActor* owner)
 {
-	//return SpawnWeapon(mesh, owner, AssaultRifles);
 	UWorld* world = GetWorld();
 
 	if (world)

@@ -36,6 +36,11 @@ private:
 	class UGameInstanceController* gameInstanceController;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Attachment", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class UWeaponSet> WeaponSetClass;
+	UWeaponSet* WeaponSetObj;
+
+
 public:	
 	ALoadout();
 

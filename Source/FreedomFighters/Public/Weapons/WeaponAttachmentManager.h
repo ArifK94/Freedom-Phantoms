@@ -15,6 +15,9 @@ UCLASS(Blueprintable)
 class FREEDOMFIGHTERS_API UWeaponAttachmentManager : public UObject
 {
 	GENERATED_BODY()
+
+protected:
+	virtual bool IsSupportedForNetworking() const override { return true; };
 	
 private:
 
@@ -70,8 +73,7 @@ public:
 		return TorchlightObj;
 	}
 
-protected:
-	virtual bool IsSupportedForNetworking() const override { return true; };
+
 
 
 };
