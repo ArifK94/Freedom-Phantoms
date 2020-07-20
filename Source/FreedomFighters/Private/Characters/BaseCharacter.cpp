@@ -100,7 +100,6 @@ void ABaseCharacter::Tick(float DeltaTime)
 	AimOffset();
 
 	UpdateSprint();
-
 }
 
 // Called to bind functionality to input
@@ -171,6 +170,8 @@ void ABaseCharacter::MoveRight(float Value)
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		MoveRightInput = Value;
 
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
