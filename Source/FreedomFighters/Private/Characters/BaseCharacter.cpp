@@ -114,6 +114,8 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABaseCharacter::BeginCrouch);
 
+	PlayerInputComponent->BindAction("TakeCover", IE_Pressed, this, &ABaseCharacter::TakeCover);
+
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
 
@@ -265,5 +267,40 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 	// check if character is in the air
 	IsCharacterInAir = APawn::GetMovementComponent()->IsFalling();
+}
+
+void ABaseCharacter::TakeCover()
+{
+	if (isTakingCover)
+	{
+		isTakingCover = false;
+	}
+	else
+	{
+		if (canTakeCover && IsFacingCoverAngle())
+		{
+			isTakingCover = true;
+			bUseControllerRotationYaw = !isTakingCover;
+			AActor::SetActorRotation(CoverRotation.Quaternion());
+		}
+		else
+		{
+			isTakingCover = false;
+		}
+	}
+
+
+}
+
+bool ABaseCharacter::IsFacingCoverAngle()
+{
+	float differenceAngle = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(GetActorRotation()), UKismetMathLibrary::GetForwardVector(CoverRotation));
+
+	float facingAngle = UKismetMathLibrary::DegAcos(differenceAngle);
+
+	if (facingAngle > 55.0f)
+		return true;
+
+	return false;
 }
 

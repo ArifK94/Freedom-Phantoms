@@ -119,11 +119,14 @@ protected:
 	void UpdateCharacterMovement();
 
 
-
 	UHealthComponent* HealthComp;
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+private:
+	void TakeCover();
+	bool IsFacingCoverAngle();
 
 protected:
 
