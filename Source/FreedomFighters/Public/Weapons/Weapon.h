@@ -219,7 +219,7 @@ protected:
 		FName HolsterSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
-		FName WeaponHandSocket;
+		FName ParentHolderSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
 		FName EjectorSocket;
@@ -340,7 +340,7 @@ public:
 	int32 getAmmoPerClip() { return AmmoPerClip; }
 
 	FName getHolsterSocket() { return HolsterSocket; }
-	FName getWeaponHandSocket() { return WeaponHandSocket; }
+	FName getParentHolderSocket() { return ParentHolderSocket; }
 	FName getOpticsSocket() { return OpticsSocket; }
 	FName getLaserSocket() { return LaserSocket; }
 	FName getTorchlightSocket() { return TorchlightSocket; }

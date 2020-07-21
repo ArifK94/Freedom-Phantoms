@@ -44,11 +44,11 @@ AWeapon::AWeapon()
 	HolsterSocket = "holster1";
 	EjectorSocket = "Ejector";
 	HandguardSocket = "HandguardSocket";
-	WeaponHandSocket = "weapon_hand";
 	ReloadClipHandSocket = "clip_hand";
 	OpticsSocket = "Optics";
 	LaserSocket = "Laser";
 	TorchlightSocket = "Torchlight";
+	ParentHolderSocket = "Hand";
 
 	MaxAmmo = 120;
 	RateOfFire = 600.0f;

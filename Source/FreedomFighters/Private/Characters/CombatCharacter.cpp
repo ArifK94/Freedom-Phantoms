@@ -59,6 +59,8 @@ ACombatCharacter::ACombatCharacter()
 
 	MaxAimYawSprint = 180.0f;
 	HandGuardAlpha = 0.0f;
+
+	WeaponHandSocket = "weapon_hand";
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -331,7 +333,7 @@ void ACombatCharacter::ToggleNightVision()
 
 void ACombatCharacter::setWeaponHand()
 {
-	currentWeaponObj->setWeaponSocket(GetMesh(), currentWeaponObj->getWeaponHandSocket());
+	currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
 }
 
 void ACombatCharacter::unEquipWeapon()

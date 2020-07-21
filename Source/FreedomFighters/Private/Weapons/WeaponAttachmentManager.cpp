@@ -44,7 +44,7 @@ void UWeaponAttachmentManager::SpawnUnderBarrel(USkeletalMeshComponent* mesh, AW
 			if (UnderBarrelWeaponObj)
 			{
 				UnderBarrelWeaponObj->SetOwner(owner);
-				UnderBarrelWeaponObj->AttachToComponent(mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, UnderBarrelWeaponObj->getWeaponHandSocket());
+				UnderBarrelWeaponObj->AttachToComponent(mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, UnderBarrelWeaponObj->getParentHolderSocket());
 			}
 		}
 	}
