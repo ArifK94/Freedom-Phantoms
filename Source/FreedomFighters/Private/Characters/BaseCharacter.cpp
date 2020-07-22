@@ -116,6 +116,10 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("TakeCover", IE_Pressed, this, &ABaseCharacter::TakeCover);
 
+	PlayerInputComponent->BindAction("PeakAround", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
+	PlayerInputComponent->BindAction("PeakAround", IE_Released, this, &ABaseCharacter::EndPeakAround);
+
+
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
 
@@ -267,6 +271,19 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 	// check if character is in the air
 	IsCharacterInAir = APawn::GetMovementComponent()->IsFalling();
+}
+
+void ABaseCharacter::BeginPeakAround()
+{
+	if (isTakingCover)
+	{
+		isPeakingAround = true;
+	}
+}
+
+void ABaseCharacter::EndPeakAround()
+{
+	isPeakingAround = false;
 }
 
 void ABaseCharacter::TakeCover()

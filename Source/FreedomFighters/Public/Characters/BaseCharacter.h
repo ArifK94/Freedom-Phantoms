@@ -45,7 +45,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FRotator TargetTiltRotation;
 
-
 	UAnimInstance* AnimInstance;
 
 protected:
@@ -86,6 +85,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isEndOfCoverRight;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool isPeakingAround;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
 
@@ -118,6 +120,8 @@ protected:
 
 	void UpdateCharacterMovement();
 
+	void BeginPeakAround();
+	void EndPeakAround();
 
 	UHealthComponent* HealthComp;
 
