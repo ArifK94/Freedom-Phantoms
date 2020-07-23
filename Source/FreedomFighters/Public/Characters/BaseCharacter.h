@@ -47,6 +47,8 @@ private:
 
 	UAnimInstance* AnimInstance;
 
+	bool canMoveForward;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

@@ -346,7 +346,7 @@ void ACombatCharacter::BeginFire()
 {
 	if (currentWeaponObj)
 	{
-		if (hasEquippedWeapon)
+		if (hasEquippedWeapon && !isReloading)
 		{
 			isFiring = true;
 			currentWeaponObj->StartFire();

@@ -72,12 +72,15 @@ ABaseCharacter::ABaseCharacter()
 
 	isSprinting = false;
 	isDead = false;
+	canMoveForward = false;
 
 }
 
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	canMoveForward = true;
 
 	UWorld* world = GetWorld();
 	UGameInstance* instance = UGameplayStatics::GetGameInstance(world);
@@ -157,15 +160,18 @@ void ABaseCharacter::LookUpAtRate(float Rate)
 
 void ABaseCharacter::MoveForward(float Value)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
+	if (canMoveForward)
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		if ((Controller != NULL) && (Value != 0.0f))
+		{
+			// find out which way is forward
+			const FRotator Rotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// get forward vector
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, Value);
+			// get forward vector
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			AddMovementInput(Direction, Value);
+		}
 	}
 }
 
@@ -278,12 +284,18 @@ void ABaseCharacter::BeginPeakAround()
 	if (isTakingCover)
 	{
 		isPeakingAround = true;
+		canMoveForward = false;
 	}
 }
 
 void ABaseCharacter::EndPeakAround()
 {
-	isPeakingAround = false;
+	if (isTakingCover)
+	{
+		isPeakingAround = false;
+		canMoveForward = true;
+	}
+
 }
 
 void ABaseCharacter::TakeCover()
@@ -298,7 +310,7 @@ void ABaseCharacter::TakeCover()
 		{
 			isTakingCover = true;
 			bUseControllerRotationYaw = !isTakingCover;
-			AActor::SetActorRotation(CoverRotation.Quaternion());
+			//AActor::SetActorRotation(CoverRotation.Quaternion());
 		}
 		else
 		{
