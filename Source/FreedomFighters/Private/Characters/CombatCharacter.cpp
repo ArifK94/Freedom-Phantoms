@@ -155,9 +155,16 @@ void ACombatCharacter::Tick(float DeltaTime)
 			EndFire();
 		}
 
+	
 		UpdateHandGaurdIK();
 		setCharacterRotation();
 		disableSprint();
+
+
+		if (isInCombatMode && CharacterSpeed > UKismetMathLibrary::Abs(0.0f))
+		{
+			isTakingCover = false;
+		}
 	}
 }
 

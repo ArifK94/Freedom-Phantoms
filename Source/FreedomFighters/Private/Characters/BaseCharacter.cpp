@@ -104,19 +104,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 
 	UpdateSprint();
 
-	if (isTakingCover)
-	{
-		SetActorRotation(CoverRotation.Quaternion());
-	}
-
-	if (FVector::DotProduct(UKismetMathLibrary::GetForwardVector(GetControlRotation()), UKismetMathLibrary::GetForwardVector(CoverRotation)) > 0.9f && isTakingCover)
-	{
-		canMoveForward = false;
-	}
-	else
-	{
-		canMoveForward = true;
-	}
+	UpdateCover();
 }
 
 // Called to bind functionality to input
@@ -350,5 +338,22 @@ bool ABaseCharacter::IsFacingCoverAngle()
 		return true;
 
 	return false;
+}
+
+void ABaseCharacter::UpdateCover()
+{
+	if (isTakingCover)
+	{
+		SetActorRotation(CoverRotation.Quaternion());
+	}
+
+	if (FVector::DotProduct(UKismetMathLibrary::GetForwardVector(GetControlRotation()), UKismetMathLibrary::GetForwardVector(CoverRotation)) > 0.9f && isTakingCover)
+	{
+		canMoveForward = false;
+	}
+	else
+	{
+		canMoveForward = true;
+	}
 }
 

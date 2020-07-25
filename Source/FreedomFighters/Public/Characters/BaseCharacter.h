@@ -133,6 +133,7 @@ protected:
 private:
 	void TakeCover();
 	bool IsFacingCoverAngle();
+	void UpdateCover();
 
 protected:
 
