@@ -103,6 +103,20 @@ void ABaseCharacter::Tick(float DeltaTime)
 	AimOffset();
 
 	UpdateSprint();
+
+	if (isTakingCover)
+	{
+		SetActorRotation(CoverRotation.Quaternion());
+	}
+
+	if (FVector::DotProduct(UKismetMathLibrary::GetForwardVector(GetControlRotation()), UKismetMathLibrary::GetForwardVector(CoverRotation)) > 0.9f && isTakingCover)
+	{
+		canMoveForward = false;
+	}
+	else
+	{
+		canMoveForward = true;
+	}
 }
 
 // Called to bind functionality to input
@@ -168,6 +182,8 @@ void ABaseCharacter::MoveForward(float Value)
 			const FRotator Rotation = Controller->GetControlRotation();
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
 
+			EndPeakAround();
+
 			// get forward vector
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 			AddMovementInput(Direction, Value);
@@ -184,6 +200,8 @@ void ABaseCharacter::MoveRight(float Value)
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		MoveRightInput = Value;
+
+		EndPeakAround();
 
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
@@ -309,14 +327,15 @@ void ABaseCharacter::TakeCover()
 		if (canTakeCover && IsFacingCoverAngle())
 		{
 			isTakingCover = true;
-			bUseControllerRotationYaw = !isTakingCover;
-			//AActor::SetActorRotation(CoverRotation.Quaternion());
 		}
 		else
 		{
 			isTakingCover = false;
 		}
 	}
+
+
+	//bUseControllerRotationYaw = !isTakingCover;
 
 
 }
@@ -327,7 +346,7 @@ bool ABaseCharacter::IsFacingCoverAngle()
 
 	float facingAngle = UKismetMathLibrary::DegAcos(differenceAngle);
 
-	if (facingAngle > 55.0f)
+	if (facingAngle < 55.0f)
 		return true;
 
 	return false;
