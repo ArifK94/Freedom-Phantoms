@@ -49,13 +49,12 @@ private:
 
 	bool canMoveForward;
 
+	class ACoverSpline* CoverObj;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float CharacterSpeed;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		float MoveRightInput;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float CharacterDirection;
@@ -103,7 +102,7 @@ protected:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	class UGameInstanceController* gameInstanceController;
+		class UGameInstanceController* gameInstanceController;
 
 
 	UPROPERTY(EditAnywhere, Category = "Accessories")
@@ -129,6 +128,10 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+
+	UFUNCTION(BlueprintCallable, Category = "BeginOverlap")
+		void OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 private:
 	void TakeCover();

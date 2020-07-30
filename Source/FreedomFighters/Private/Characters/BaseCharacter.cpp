@@ -2,6 +2,9 @@
 
 
 #include "Characters/BaseCharacter.h"
+
+#include "Props/CoverSpline.h"
+
 #include "Managers/GameInstanceController.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -12,6 +15,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "CustomComponents/HealthComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/SplineComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -28,6 +32,7 @@ ABaseCharacter::ABaseCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+
 	//GetCapsuleComponent()->SetCollisionResponseToChannels(COLLISION_WEAPON, ECR_Ignore);
 
 	// set our turn rates for input
@@ -89,6 +94,7 @@ void ABaseCharacter::BeginPlay()
 	// Create Anim Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterBeginOverlap);
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
 
@@ -123,7 +129,6 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("PeakAround", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
 	PlayerInputComponent->BindAction("PeakAround", IE_Released, this, &ABaseCharacter::EndPeakAround);
-
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
@@ -162,7 +167,7 @@ void ABaseCharacter::LookUpAtRate(float Rate)
 
 void ABaseCharacter::MoveForward(float Value)
 {
-	if (canMoveForward)
+	if (Value < 0.0f || canMoveForward)
 	{
 		if ((Controller != NULL) && (Value != 0.0f))
 		{
@@ -174,9 +179,11 @@ void ABaseCharacter::MoveForward(float Value)
 
 			// get forward vector
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
 			AddMovementInput(Direction, Value);
 		}
 	}
+
 }
 
 void ABaseCharacter::MoveRight(float Value)
@@ -186,8 +193,6 @@ void ABaseCharacter::MoveRight(float Value)
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		MoveRightInput = Value;
 
 		EndPeakAround();
 
@@ -210,6 +215,30 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 		DetachFromControllerPendingDestroy();
 	}
 }
+
+void ABaseCharacter::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+	{
+		// Check if we have overlapped with a cover actor
+		if (OtherActor->GetClass()->IsChildOf(ACoverSpline::StaticClass()))
+		{
+			// cast this cover actor to get the object
+			CoverObj = Cast<ACoverSpline>(OtherActor);
+
+			if (CoverObj)
+			{
+				canTakeCover = true;
+			}
+			else
+			{
+				canTakeCover = false;
+			}
+		}
+
+	}
+}
+
 
 void ABaseCharacter::UpdateSprint()
 {
@@ -304,6 +333,8 @@ void ABaseCharacter::EndPeakAround()
 
 }
 
+
+
 void ABaseCharacter::TakeCover()
 {
 	if (isTakingCover)
@@ -312,7 +343,7 @@ void ABaseCharacter::TakeCover()
 	}
 	else
 	{
-		if (canTakeCover && IsFacingCoverAngle())
+		if (canTakeCover)
 		{
 			isTakingCover = true;
 		}
@@ -321,10 +352,6 @@ void ABaseCharacter::TakeCover()
 			isTakingCover = false;
 		}
 	}
-
-
-	//bUseControllerRotationYaw = !isTakingCover;
-
 
 }
 
