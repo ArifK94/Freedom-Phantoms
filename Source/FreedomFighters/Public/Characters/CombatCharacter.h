@@ -84,6 +84,8 @@ public:
 
 	AWeapon* GetCurrentWeapon();
 
+	void UpdateCameraView();
+
 	void UpdateCombatMode();
 
 	void BeginFire();

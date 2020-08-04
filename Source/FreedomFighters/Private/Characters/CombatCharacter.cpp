@@ -138,6 +138,8 @@ void ACombatCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UpdateCameraView();
+
 	if (currentWeaponObj)
 	{
 		UpdateCombatMode();
@@ -155,7 +157,7 @@ void ACombatCharacter::Tick(float DeltaTime)
 			EndFire();
 		}
 
-	
+
 		UpdateHandGaurdIK();
 		setCharacterRotation();
 		disableSprint();
@@ -171,6 +173,26 @@ void ACombatCharacter::Tick(float DeltaTime)
 AWeapon* ACombatCharacter::GetCurrentWeapon()
 {
 	return currentWeaponObj;
+}
+
+void ACombatCharacter::UpdateCameraView()
+{
+	if (isTakingCover)
+	{
+		if (isEndOfCoverLeft)
+		{
+			CameraBoom->SocketOffset.Set(0.0f, -70.0f, 50.0f);
+		}
+		else if (isEndOfCoverRight)
+		{
+			CameraBoom->SocketOffset.Set(0.0f, 70.0f, 50.0f);
+		}
+	}
+	else
+	{
+		if (CameraBoom->SocketOffset != DefaultCamSocketOffset)
+			CameraBoom->SocketOffset = DefaultCamSocketOffset;
+	}
 }
 
 void ACombatCharacter::UpdateSprint()

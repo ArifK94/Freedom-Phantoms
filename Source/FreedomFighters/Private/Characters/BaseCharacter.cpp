@@ -61,7 +61,7 @@ ABaseCharacter::ABaseCharacter()
 	CameraBoom->TargetArmLength = 150.0f; // The camera follows at this distance behind the character	
 	CameraBoom->SocketOffset.Set(0.0f, 70.0f, 50.0f);
 
-	//DefaultCamSocketOffset = CameraBoom->SocketOffset.
+	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -84,6 +84,8 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 
 	canMoveForward = true;
 
@@ -267,11 +269,9 @@ void ABaseCharacter::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp, 
 				canTakeCover = false;
 				isTakingCover = false;
 			}
-			else
-			{
-				isEndOfCoverRight = false;
-				isEndOfCoverLeft = false;
-			}
+
+			isEndOfCoverRight = false;
+			isEndOfCoverLeft = false;
 		}
 	}
 }

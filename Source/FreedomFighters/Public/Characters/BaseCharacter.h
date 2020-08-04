@@ -15,18 +15,17 @@ class FREEDOMFIGHTERS_API ABaseCharacter : public ACharacter
 	GENERATED_BODY()
 
 
-		/** Camera boom positioning the camera behind the character */
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+public:
+	// Sets default values for this character's properties
+	ABaseCharacter();
+
+	/** Camera boom positioning the camera behind the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* FollowCamera;
-
-public:
-	// Sets default values for this character's properties
-	ABaseCharacter();
-
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
@@ -36,20 +35,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 		float BaseLookUpRate;
 
-
-private:
-
-	FVector DefaultCamSocketOffset;
-
-	// Rotate body to face crosshair
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FRotator TargetTiltRotation;
-
-	UAnimInstance* AnimInstance;
-
-	bool canMoveForward;
-
-	class ABaseCoverProp* CurrentCoverObj;
 
 protected:
 
@@ -108,6 +93,19 @@ protected:
 	float CurrentDeltaTime;
 
 	UAudioComponent* VoiceAudioComponent;
+
+	FVector DefaultCamSocketOffset;
+
+	// Rotate body to face crosshair
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FRotator TargetTiltRotation;
+
+	UAnimInstance* AnimInstance;
+
+	bool canMoveForward;
+
+	class ABaseCoverProp* CurrentCoverObj;
+
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
