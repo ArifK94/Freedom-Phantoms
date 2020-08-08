@@ -32,6 +32,21 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
 		bool IsCorner;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+		bool CanPeakLeft;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+		bool CanPeakRight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+		bool CanPeakUp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+		bool CanPeakDown;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+		FVector PeakDirection;
+
 		bool CanTakeCover;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
@@ -54,6 +69,27 @@ public:
 
 	bool getCanTakeCover() {
 		return CanTakeCover;
+	}
+
+	bool getCanPeakLeft() {
+		return CanPeakLeft;
+	}
+
+	bool getCanPeakRight() {
+		return CanPeakRight;
+	}
+
+	bool getCanPeakUp() {
+		return CanPeakUp;
+	}
+
+	bool getCanPeakDown() {
+		return CanPeakDown;
+	}
+
+	FVector getPeakDirection()
+	{
+		return PeakDirection;
 	}
 
 	CoverCornerType getCornerType() {

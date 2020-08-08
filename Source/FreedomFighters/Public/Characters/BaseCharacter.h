@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
+#include "Props/BaseCoverProp.h"
+
+
 #include "BaseCharacter.generated.h"
 
 class UHealthComponent;
@@ -72,12 +76,6 @@ protected:
 		bool isCoveringLow;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool isEndOfCoverLeft;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool isEndOfCoverRight;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isAtCoverCorner;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -85,6 +83,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FVector PeakDirection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		CoverCornerType CurrentCoverType;
 
 protected:
 
@@ -117,6 +121,8 @@ protected:
 	class AAccessory* accessoryObj;
 
 protected:
+
+	void UpdateCameraView();
 
 	void BeginSprint();
 	void EndSprint();

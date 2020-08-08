@@ -107,6 +107,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	CurrentDeltaTime = DeltaTime;
 
+	UpdateCameraView();
 
 	UpdateCharacterMovement();
 
@@ -131,8 +132,18 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("TakeCover", IE_Pressed, this, &ABaseCharacter::TakeCover);
 
-	PlayerInputComponent->BindAction("PeakAround", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
-	PlayerInputComponent->BindAction("PeakAround", IE_Released, this, &ABaseCharacter::EndPeakAround);
+	PlayerInputComponent->BindAction("PeakUp", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
+	PlayerInputComponent->BindAction("PeakUp", IE_Released, this, &ABaseCharacter::EndPeakAround);
+
+	PlayerInputComponent->BindAction("PeakLeft", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
+	PlayerInputComponent->BindAction("PeakLeft", IE_Released, this, &ABaseCharacter::EndPeakAround);
+
+	PlayerInputComponent->BindAction("PeakDown", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
+	PlayerInputComponent->BindAction("PeakDown", IE_Released, this, &ABaseCharacter::EndPeakAround);
+
+	PlayerInputComponent->BindAction("PeakRight", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
+	PlayerInputComponent->BindAction("PeakRight", IE_Released, this, &ABaseCharacter::EndPeakAround);
+
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
@@ -188,6 +199,18 @@ void ABaseCharacter::MoveForward(float Value)
 		}
 	}
 
+	if (isTakingCover)
+	{
+		if (CurrentCoverObj)
+		{
+			if (Value > 0.0f && CurrentCoverObj->getCanPeakUp())
+				PeakDirection = FVector(0.0F, 0.0F, Value);
+			else if (Value < 0.0f)
+				PeakDirection = FVector(0.0F, 0.0F, -Value);
+		}
+
+	}
+
 }
 
 void ABaseCharacter::MoveRight(float Value)
@@ -204,6 +227,18 @@ void ABaseCharacter::MoveRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
+	}
+
+	if (isTakingCover)
+	{
+		if (CharacterSpeed == 0.0f)
+		{
+			if (Value > 0.0f)
+				PeakDirection = FVector(0.0F, Value, 0.0f);
+			else if (Value < 0.0f)
+				PeakDirection = FVector(0.0F, Value, 0.0f);
+		}
+
 	}
 
 }
@@ -236,15 +271,23 @@ void ABaseCharacter::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp
 				CoverRotation = CurrentCoverObj->getArrowDirection()->GetComponentRotation();
 				isAtCoverCorner = CurrentCoverObj->getIsCorner();
 
+
+				//CurrentCoverType = CurrentCoverObj->getCornerType();
+
 				if (CurrentCoverObj->getCornerType() == CoverCornerType::Left)
 				{
 					GetCharacterMovement()->StopMovementImmediately();
-					isEndOfCoverLeft = true;
+					CurrentCoverType = CoverCornerType::Left;
 				}
 				else if (CurrentCoverObj->getCornerType() == CoverCornerType::Right)
 				{
+					CurrentCoverType = CoverCornerType::Right;
+
 					GetCharacterMovement()->StopMovementImmediately();
-					isEndOfCoverRight = true;
+				}
+				else
+				{
+					CurrentCoverType = CoverCornerType::None;
 				}
 
 			}
@@ -268,11 +311,31 @@ void ABaseCharacter::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp, 
 			{
 				canTakeCover = false;
 				isTakingCover = false;
+
+				//CurrentCoverType = CoverCornerType::None;
 			}
 
-			isEndOfCoverRight = false;
-			isEndOfCoverLeft = false;
 		}
+	}
+}
+
+void ABaseCharacter::UpdateCameraView()
+{
+	if (isTakingCover)
+	{
+		if (CurrentCoverType == CoverCornerType::Left)
+		{
+			CameraBoom->SocketOffset.Set(0.0f, -70.0f, 50.0f);
+		}
+		else if (CurrentCoverType == CoverCornerType::Right)
+		{
+			CameraBoom->SocketOffset.Set(0.0f, 70.0f, 50.0f);
+		}
+	}
+	else
+	{
+		if (CameraBoom->SocketOffset != DefaultCamSocketOffset)
+			CameraBoom->SocketOffset = DefaultCamSocketOffset;
 	}
 }
 
