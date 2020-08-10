@@ -111,7 +111,8 @@ protected:
 	class ABaseCoverProp* CurrentCoverObj;
 
 
-protected:
+	FTimerHandle THandler_MovemntInputDisable;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class UGameInstanceController* gameInstanceController;
 
@@ -119,6 +120,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Accessories")
 		TArray<TSubclassOf<class AAccessory>> Accessories;
 	class AAccessory* accessoryObj;
+
+
 
 protected:
 
@@ -153,6 +156,7 @@ private:
 	void TakeCover();
 	bool IsFacingCoverAngle();
 	void UpdateCover();
+	void RenableMovementInput();
 
 protected:
 

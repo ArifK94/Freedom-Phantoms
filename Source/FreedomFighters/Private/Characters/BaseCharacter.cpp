@@ -182,6 +182,8 @@ void ABaseCharacter::LookUpAtRate(float Rate)
 
 void ABaseCharacter::MoveForward(float Value)
 {
+	//Controller->SetIgnoreMoveInput(false);
+
 	if (Value < 0.0f || canMoveForward)
 	{
 		if ((Controller != NULL) && (Value != 0.0f))
@@ -215,6 +217,8 @@ void ABaseCharacter::MoveForward(float Value)
 
 void ABaseCharacter::MoveRight(float Value)
 {
+//	Controller->SetIgnoreMoveInput(false);
+
 	if ((Controller != NULL) && (Value != 0.0f))
 	{
 		// find out which way is right
@@ -271,25 +275,7 @@ void ABaseCharacter::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp
 				CoverRotation = CurrentCoverObj->getArrowDirection()->GetComponentRotation();
 				isAtCoverCorner = CurrentCoverObj->getIsCorner();
 
-
-				//CurrentCoverType = CurrentCoverObj->getCornerType();
-
-				if (CurrentCoverObj->getCornerType() == CoverCornerType::Left)
-				{
-					GetCharacterMovement()->StopMovementImmediately();
-					CurrentCoverType = CoverCornerType::Left;
-				}
-				else if (CurrentCoverObj->getCornerType() == CoverCornerType::Right)
-				{
-					CurrentCoverType = CoverCornerType::Right;
-
-					GetCharacterMovement()->StopMovementImmediately();
-				}
-				else
-				{
-					CurrentCoverType = CoverCornerType::None;
-				}
-
+				CurrentCoverType = CurrentCoverObj->getCornerType();
 			}
 		}
 	}
@@ -311,8 +297,6 @@ void ABaseCharacter::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp, 
 			{
 				canTakeCover = false;
 				isTakingCover = false;
-
-				//CurrentCoverType = CoverCornerType::None;
 			}
 
 		}
@@ -472,6 +456,12 @@ void ABaseCharacter::UpdateCover()
 	if (isTakingCover)
 	{
 		SetActorRotation(CoverRotation.Quaternion());
+
+		//if (CurrentCoverType != CoverCornerType::None)
+		//{
+		//	Controller->SetIgnoreMoveInput(true);
+		//	GetWorldTimerManager().SetTimer(THandler_MovemntInputDisable, this, &ABaseCharacter::RenableMovementInput, 5.0f, true, 0.0f);
+		//}
 	}
 
 	if (FVector::DotProduct(UKismetMathLibrary::GetForwardVector(GetControlRotation()), UKismetMathLibrary::GetForwardVector(CoverRotation)) > 0.9f && isTakingCover)
@@ -482,5 +472,12 @@ void ABaseCharacter::UpdateCover()
 	{
 		canMoveForward = true;
 	}
+}
+
+void ABaseCharacter::RenableMovementInput()
+{
+	Controller->SetIgnoreMoveInput(false);
+	GetWorldTimerManager().ClearTimer(THandler_MovemntInputDisable);
+
 }
 

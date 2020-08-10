@@ -7,6 +7,8 @@
 #include "Weapons//WeaponClip.h"
 #include "Managers/GameInstanceController.h"
 
+#include "FreedomFighters/FreedomFighters.h"
+
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -131,14 +133,21 @@ void AShotgun::Fire()
 
 
 			FHitResult Hit;
-			if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams))
+			if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 			{
 				// Blocking hit! Process damage
 				AActor* HitActor = Hit.GetActor();
 
-				UGameplayStatics::ApplyPointDamage(HitActor, 1.0f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
-
 				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+				float ActualDamage = BaseDamage;
+				if (SurfaceType == SURFACE_FLESHVULNERABLE)
+				{
+					ActualDamage *= 4.0f;
+				}
+
+				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+
 				UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
 
 				if (SelectedEffect)
