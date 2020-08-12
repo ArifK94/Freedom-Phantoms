@@ -86,7 +86,10 @@ public:
 
 	void UpdateCombatMode();
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void BeginFire();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void EndFire();
 	void UpdateFire();
 

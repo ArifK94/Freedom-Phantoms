@@ -268,6 +268,9 @@ protected:
 
 	float LastFireTime;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
+		float BulletSpread;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
 		float RecoilAmount;
 

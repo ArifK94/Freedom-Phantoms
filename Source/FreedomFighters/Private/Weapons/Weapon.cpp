@@ -57,6 +57,7 @@ AWeapon::AWeapon()
 	RecoilAmount = 5.0f;
 	VerticleRecoil = 0.05f;
 	HorizontalRecoil = 0.01f;
+	BulletSpread = 2.0f;
 
 	isReloading = false;
 	canShowClip = true;
@@ -163,6 +164,10 @@ void AWeapon::Fire()
 			CurrentAmmo -= 1;
 
 			FVector ShotDirection = EyeRotation.Vector();
+
+			float HalfRad = FMath::DegreesToRadians(BulletSpread);
+			ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+
 			FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
 			FCollisionQueryParams QueryParams;
@@ -464,8 +469,8 @@ void AWeapon::Recoil()
 	TargetHorizontalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.3, 0.3);
 	TargetVerticalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.5f, -0.8f) * 2.0f / 3.0f;
 
-	character->AddPitchInput(TargetVerticalRecoil);
-	character->AddYawInput(TargetHorizontalRecoil);
+	//character->AddPitchInput(TargetVerticalRecoil);
+	//character->AddYawInput(TargetHorizontalRecoil);
 }
 
 
