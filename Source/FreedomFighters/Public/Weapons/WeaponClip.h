@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "WeaponClip.generated.h"
 
+class AWeaponBullet;
 UCLASS()
 class FREEDOMFIGHTERS_API AWeaponClip : public AActor
 {
@@ -29,7 +30,8 @@ private:
 	USoundBase* HighImpactSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Bullet", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class AWeaponBullet> WeaponBulletClass;
+		TSubclassOf< AWeaponBullet> WeaponBulletClass;
+	 AWeaponBullet* BulletObj;
 
 	AWeaponClip* DroppedClip;
 
@@ -37,6 +39,8 @@ private:
 
 	UFUNCTION(BlueprintCallable, Category = "Collision")
 	void OnClipHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	void SpawnBullet();
 
 protected:
 	virtual void BeginPlay() override;
@@ -51,7 +55,11 @@ public:
 	int GetCurrentAmmo() const { return CurrentAmmo; }
 	void SetCurrentAmmo(int value);
 
-	TSubclassOf<class AWeaponBullet> getBulletClass() {
+	AWeaponBullet* getBulletObj() { 
+		return BulletObj; 
+	}
+
+	TSubclassOf<AWeaponBullet> getBulletClass() {
 		return WeaponBulletClass;
 	}
 

@@ -140,7 +140,7 @@ void AShotgun::Fire()
 
 				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
-				float ActualDamage = BaseDamage;
+				float ActualDamage = BulletDamage;
 				if (SurfaceType == SURFACE_FLESHVULNERABLE)
 				{
 					ActualDamage *= 4.0f;

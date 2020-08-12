@@ -179,6 +179,8 @@ protected:
 		TSubclassOf<class AWeaponClip> weaponClip;
 	class AWeaponClip* weaponClipObj;
 
+	class AWeaponBullet* BulletObj;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		TSubclassOf<UDamageType> DamageType;
 
@@ -306,7 +308,7 @@ protected:
 		UParticleSystem* ShellEjectEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Damage")
-		float BaseDamage;
+		float BulletDamage;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")

@@ -2,6 +2,8 @@
 
 
 #include "Weapons/WeaponClip.h"
+#include "Weapons/WeaponBullet.h"
+
 #include "Kismet/GameplayStatics.h"
 
 #include "Components/StaticMeshComponent.h"
@@ -80,12 +82,37 @@ void AWeaponClip::OnClipHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 	}
 }
 
+void AWeaponClip::SpawnBullet()
+{
+	UWorld* world = GetWorld();
+
+	if (WeaponBulletClass)
+	{
+		if (world)
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			// Spawn the weapon actor
+			BulletObj = world->SpawnActor<AWeaponBullet>(WeaponBulletClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+			if (BulletObj)
+			{
+				BulletObj->SetOwner(this);
+				BulletObj->getMesh()->ToggleVisibility(false);
+			}
+		}
+	}
+}
+
 // Called when the game starts or when spawned
 void AWeaponClip::BeginPlay()
 {
 	Super::BeginPlay();
 
 	CurrentAmmo = ammoCapacity;
+	SpawnBullet();
 }
 
 // Called every frame

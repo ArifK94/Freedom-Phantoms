@@ -1,6 +1,8 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponClip.h"
+#include "Weapons/WeaponBullet.h"
 #include "Weapons/WeaponAttachmentManager.h"
+
 #include "FreedomFighters/FreedomFighters.h"
 #include "Managers/GameInstanceController.h"
 
@@ -52,7 +54,7 @@ AWeapon::AWeapon()
 
 	MaxAmmo = 120;
 	RateOfFire = 600.0f;
-	BaseDamage = 20.0f;
+	BulletDamage = 20.0f;
 
 	RecoilAmount = 5.0f;
 	VerticleRecoil = 0.05f;
@@ -73,8 +75,7 @@ void AWeapon::ConfigSetup()
 	AmmoPerClip = weaponClipObj->GetAmmoCapacity();
 	CurrentAmmo = AmmoPerClip;
 
-	TimeBetweenShots = 60 / RateOfFire;
-}
+	TimeBetweenShots = 60 / RateOfFire;}
 
 FVector AWeapon::getMuzzleLocation()
 {
@@ -161,6 +162,17 @@ void AWeapon::Fire()
 
 		if (IsFacingCrosshair())
 		{
+			if (weaponClipObj)
+			{
+				if (weaponClipObj->getBulletObj())
+				{
+					BulletObj = weaponClipObj->getBulletObj();
+					BulletDamage = BulletObj->getDamageAmount();
+				}
+
+			}
+
+
 			CurrentAmmo -= 1;
 
 			FVector ShotDirection = EyeRotation.Vector();
@@ -188,10 +200,10 @@ void AWeapon::Fire()
 
 				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
-				float ActualDamage = BaseDamage;
+				float ActualDamage = BulletDamage;
 				if (SurfaceType == SURFACE_FLESHVULNERABLE)
 				{
-					ActualDamage *= 4.0f;
+					ActualDamage *= 100;
 				}
 
 				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);

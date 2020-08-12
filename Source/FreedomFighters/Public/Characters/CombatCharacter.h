@@ -86,24 +86,29 @@ public:
 
 	void UpdateCombatMode();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void BeginFire();
+	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
+		void BeginFire();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void EndFire();
+	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
+		void EndFire();
 	void UpdateFire();
 
-	void BeginAim();
-	void EndAim();
+	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
+		void BeginAim();
+	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
+		void EndAim();
 
-	void BeginReload();
+	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
+		void BeginReload();
 	void EndReload();
 	void UpdateReload();
 
-	void ToggleNightVision();
+	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
+		void ToggleNightVision();
 
 	void UpdatePawnControl();
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 	void BeginWeaponSwap();
 
 	void BeginEquipWeapon();

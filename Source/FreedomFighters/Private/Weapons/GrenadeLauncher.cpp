@@ -43,7 +43,6 @@ void AGrenadeLauncher::Fire()
 
 	if (MyOwner)
 	{
-		UWorld* world = GetWorld();
 
 		FVector EyeLocation;
 		FRotator EyeRotation;
@@ -55,6 +54,7 @@ void AGrenadeLauncher::Fire()
 		SpawnParams.Owner = this;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+		UWorld* world = GetWorld();
 		AWeaponBullet* bulletObj = world->SpawnActor<AWeaponBullet>(weaponClipObj->getBulletClass(), MuzzleLocation, EyeRotation, SpawnParams);
 		if (bulletObj)
 		{
