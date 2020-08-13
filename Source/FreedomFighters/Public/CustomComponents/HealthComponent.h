@@ -16,14 +16,12 @@ class FREEDOMFIGHTERS_API UHealthComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UHealthComponent();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health Component")
 		uint8 TeamNumber;
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
 
