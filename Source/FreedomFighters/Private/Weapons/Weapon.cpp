@@ -206,7 +206,7 @@ void AWeapon::Fire()
 					ActualDamage *= 100;
 				}
 
-				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
 
 				UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
 
