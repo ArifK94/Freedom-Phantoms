@@ -112,7 +112,6 @@ void AWeaponClip::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentAmmo = ammoCapacity;
-	SpawnBullet();
 }
 
 // Called every frame

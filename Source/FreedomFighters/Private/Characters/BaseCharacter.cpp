@@ -5,8 +5,6 @@
 
 #include "Props/BaseCoverProp.h"
 
-#include "Managers/GameInstanceController.h"
-
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 
@@ -88,10 +86,6 @@ void ABaseCharacter::BeginPlay()
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 
 	canMoveForward = true;
-
-	UWorld* world = GetWorld();
-	UGameInstance* instance = UGameplayStatics::GetGameInstance(world);
-	gameInstanceController = Cast<UGameInstanceController>(instance);
 
 	// Create Anim Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;

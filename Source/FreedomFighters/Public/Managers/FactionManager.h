@@ -7,6 +7,10 @@
 #include "FactionManager.generated.h"
 
 class AWeapon;
+class UWeaponSet;
+class USoundBase;
+class AHeadgear;
+class ALoadout;
 UCLASS(Blueprintable)
 class FREEDOMFIGHTERS_API UFactionManager : public UObject
 {
@@ -16,39 +20,45 @@ protected:
 	virtual bool IsSupportedForNetworking() const override { return true; };
 
 
-public:
-
 private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Attachment", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class UWeaponSet> WeaponSetClass;
+		TSubclassOf<UWeaponSet> WeaponSetClass;
 	UWeaponSet* WeaponSetObj;
 
 
 	UPROPERTY(EditAnywhere, Category = "Accessories")
-		TArray<TSubclassOf<class ALoadout>> Loadouts;
-	class ALoadout* loadoutObj;
+		TArray<TSubclassOf< ALoadout>> Loadouts;
+	ALoadout* loadoutObj;
 
 	UPROPERTY(EditAnywhere, Category = "Accessories")
-		TArray<TSubclassOf<class AHeadgear>> Headgears;
-	class AHeadgear* headgearObj;
+		TArray<TSubclassOf< AHeadgear>> Headgears;
+	AHeadgear* headgearObj;
+
+
+	UPROPERTY(EditAnywhere, Category = "Audio Battle Chatters")
+		TArray<TSubclassOf<USoundBase>> TargetFoundClips;
+
+	UPROPERTY(EditAnywhere, Category = "Audio Battle Chatters")
+		TArray<TSubclassOf<USoundBase>> ReloadingClips;
 
 private:
-	UWorld* WorldOwner;
+	UWorld* CurrentWorld;
 
 	AWeapon* PrimaryWeaponObj;
 	AWeapon* SecondaryWeaponObj;
 
 public:
+	UFactionManager();
 	void Init(UWorld* World);
-	void SetWeaponTypeClass(USkeletalMeshComponent* mesh, AActor* owner);
 
 public:
+
+	UWeaponSet* getWeaponSetObj() { return WeaponSetObj; }
 
 	AWeapon* getPrimaryWeaponObj() { return PrimaryWeaponObj; }
 	AWeapon* getSecondaryWeaponObj() { return SecondaryWeaponObj; }
 
-private:
-	void SpawnHelmet();
-	void SpawnLoadout();
+	AHeadgear* SpawnHelmet(USkeletalMeshComponent* Mesh, AActor* Owner);
+	ALoadout* SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Owner);
 };

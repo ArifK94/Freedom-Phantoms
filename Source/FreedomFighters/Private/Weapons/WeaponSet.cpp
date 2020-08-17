@@ -27,6 +27,10 @@ UWeaponSet::UWeaponSet()
 {
 }
 
+void UWeaponSet::Init(UWorld* World)
+{
+}
+
 AWeapon* UWeaponSet::SpawnAssaultRifle(UWorld* world, USkeletalMeshComponent* mesh, AActor* owner)
 {
 	if (world)
@@ -141,10 +145,4 @@ AWeapon* UWeaponSet::SpawnSecondaryWeapon(UWorld* world, USkeletalMeshComponent*
 		}
 	}
 	return weaponSecondaryObj;
-}
-
-
-AWeapon* UWeaponSet::SpawnPistol(UWorld* world, USkeletalMeshComponent* mesh, AActor* owner)
-{
-	return nullptr;
 }

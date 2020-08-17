@@ -2,7 +2,6 @@
 
 
 #include "Characters/CombatCharacter.h"
-#include "Managers/GameInstanceController.h"
 #include "Managers/FactionManager.h"
 
 #include "Accessories/Headgear.h"
@@ -13,6 +12,8 @@
 #include "Weapons/WeaponAttachmentManager.h"
 #include "Weapons/WeaponTorchlight.h"
 #include "Weapons/WeaponLaser.h"
+#include "Weapons/Pistol.h"
+#include "Weapons/WeaponSet.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -32,7 +33,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
-#include <array>
 
 #include "GameFramework/Actor.h"
 #include "UObject/UObjectGlobals.h"
@@ -42,8 +42,6 @@
 
 ACombatCharacter::ACombatCharacter()
 {
-	gameInstanceController = nullptr;
-
 	currentWeaponObj = nullptr;
 	primaryWeaponObj = nullptr;
 	secondaryWeaponObj = nullptr;
@@ -61,6 +59,7 @@ ACombatCharacter::ACombatCharacter()
 	HandGuardAlpha = 0.0f;
 
 	WeaponHandSocket = "weapon_hand";
+	SecondaryWeaponHandSocket = "weapon_hand_secondary";
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -94,30 +93,21 @@ void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (FactionClass)
+		FactionObj = NewObject<UFactionManager>((UObject*)GetTransientPackage(), FactionClass);
 
-	if (Headgears.Num() > 0)
+	if (FactionObj)
 	{
-		SpawnHelmet();
-	}
+		FactionObj->Init(GetWorld());
 
-	if (Loadouts.Num() > 0)
-	{
-		SpawnLoadout();
-	}
+		headgearObj = FactionObj->SpawnHelmet(GetMesh(), this);
+		loadoutObj = FactionObj->SpawnLoadout(GetMesh(), this);
 
 
-	if (gameInstanceController)
-	{
 		if (loadoutObj)
 		{
 			primaryWeaponObj = loadoutObj->SpawnPrimaryWeapon(loadoutObj->getLoadoutMesh(), this);
-			secondaryWeaponObj = gameInstanceController->SpawnSecondaryWeapon(loadoutObj->getLoadoutMesh(), this);
-		}
-
-		else
-		{
-			//primaryWeaponObj = gameInstanceController->SpawnPrimaryWeapon(GetMesh(), this);
-			//secondaryWeaponObj = gameInstanceController->SpawnSecondaryWeapon(GetMesh(), this);
+			secondaryWeaponObj = FactionObj->getWeaponSetObj()->SpawnSecondaryWeapon(GetWorld(), loadoutObj->getLoadoutMesh(), this);
 		}
 
 		if (primaryWeaponObj)
@@ -150,7 +140,7 @@ void ACombatCharacter::Tick(float DeltaTime)
 
 		UpdateReload();
 
-		if (isEquippingWeapon)
+		if (isEquippingWeapon || isDead)
 		{
 			EndFire();
 		}
@@ -222,7 +212,6 @@ void ACombatCharacter::setCharacterRotation()
 
 void ACombatCharacter::disableSprint()
 {
-
 	float x = 0.0f, y = 0.0f;
 
 	auto controlYaw = 0.0f, actorYaw = 0.0f;
@@ -342,7 +331,15 @@ void ACombatCharacter::ToggleNightVision()
 
 void ACombatCharacter::setWeaponHand()
 {
-	currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+	if (currentWeaponObj->IsA(APistol::StaticClass()))
+	{
+		currentWeaponObj->setWeaponSocket(GetMesh(), SecondaryWeaponHandSocket);
+	}
+	else
+	{
+		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+	}
+
 }
 
 void ACombatCharacter::unEquipWeapon()
@@ -442,56 +439,6 @@ void ACombatCharacter::UpdateReload()
 	if (currentWeaponObj)
 	{
 		isReloading = currentWeaponObj->getIsReloading();
-	}
-}
-
-void ACombatCharacter::SpawnHelmet()
-{
-	UWorld* world = GetWorld();
-
-	if (world)
-	{
-		int RandIndex = rand() % Headgears.Num();
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-
-		// Spawn a random helmet actor
-		headgearObj = world->SpawnActor<AHeadgear>(Headgears[RandIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-		if (headgearObj)
-		{
-			headgearObj->SetOwner(this);
-			headgearObj->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "headgear_socket");
-		}
-	}
-}
-
-void ACombatCharacter::SpawnLoadout()
-{
-	UWorld* world = GetWorld();
-
-	if (world)
-	{
-		int RandIndex = rand() % Loadouts.Num();
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-
-		// Spawn a random helmet actor
-		loadoutObj = world->SpawnActor<ALoadout>(Loadouts[RandIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-		if (loadoutObj)
-		{
-			loadoutObj->SetOwner(this);
-			loadoutObj->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			loadoutObj->getLoadoutMesh()->SetMasterPoseComponent(GetMesh());
-
-		}
 	}
 }
 

@@ -162,15 +162,15 @@ void AWeapon::Fire()
 
 		if (IsFacingCrosshair())
 		{
-			if (weaponClipObj)
-			{
-				if (weaponClipObj->getBulletObj())
-				{
-					BulletObj = weaponClipObj->getBulletObj();
-					BulletDamage = BulletObj->getDamageAmount();
-				}
+			//if (weaponClipObj)
+			//{
+			//	if (weaponClipObj->getBulletObj())
+			//	{
+			//		BulletObj = weaponClipObj->getBulletObj();
+			//		BulletDamage = BulletObj->getDamageAmount();
+			//	}
 
-			}
+			//}
 
 
 			CurrentAmmo -= 1;

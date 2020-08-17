@@ -46,6 +46,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
 		FName WeaponHandSocket;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+		FName SecondaryWeaponHandSocket;
+
 private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -59,6 +62,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class AWeapon* underBarrelWeaponObj;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class UFactionManager> FactionClass;
+	UFactionManager* FactionObj;
 
 
 	UPROPERTY(EditAnywhere, Category = "Accessories")
@@ -135,9 +142,6 @@ public:
 
 
 private:
-
-	void SpawnHelmet();
-	void SpawnLoadout();
 
 	virtual void UpdateSprint() override;
 

@@ -110,17 +110,7 @@ protected:
 
 	class ABaseCoverProp* CurrentCoverObj;
 
-
 	FTimerHandle THandler_MovemntInputDisable;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		class UGameInstanceController* gameInstanceController;
-
-
-	UPROPERTY(EditAnywhere, Category = "Accessories")
-		TArray<TSubclassOf<class AAccessory>> Accessories;
-	class AAccessory* accessoryObj;
-
 
 
 protected:

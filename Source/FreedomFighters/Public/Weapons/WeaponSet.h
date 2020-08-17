@@ -37,17 +37,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Secondary Weapons")
 		TArray<TSubclassOf<class AWeapon>> SecondaryWeapons;
-	UPROPERTY(EditAnywhere, Category = "Secondary Weapons")
-		TArray<TSubclassOf<class AWeapon>> Pistols;
-
-
-	UPROPERTY(EditAnywhere, Category = "Audio Battle Chatters")
-		TArray<TSubclassOf<class USoundBase>> ReloadingClips;
-
 
 public:
 
 	UWeaponSet();
+	void Init(UWorld* World);
+
 
 	AWeapon* SpawnAssaultRifle(UWorld* world, USkeletalMeshComponent* mesh, AActor* owner);
 	AWeapon* SpawnSMG(UWorld* world, USkeletalMeshComponent* mesh, AActor* owner);
@@ -55,6 +50,5 @@ public:
 	AWeapon* SpawnLMG(UWorld* world, USkeletalMeshComponent* mesh, AActor* owner);
 
 	AWeapon* SpawnSecondaryWeapon(UWorld* world, USkeletalMeshComponent* mesh, AActor* owner);
-	AWeapon* SpawnPistol(UWorld* world, USkeletalMeshComponent* mesh, AActor* owner);
 	
 };
