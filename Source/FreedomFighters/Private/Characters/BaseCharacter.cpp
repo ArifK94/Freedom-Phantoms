@@ -24,7 +24,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine.h"
 
-
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
@@ -67,6 +66,7 @@ ABaseCharacter::ABaseCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
+
 
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 

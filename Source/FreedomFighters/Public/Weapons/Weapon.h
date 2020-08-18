@@ -300,8 +300,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ReloadEndSound;
 
-	UAudioComponent* ShotAudioComponent;
-	UAudioComponent* ClipAudioComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* ShotAudioComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* ClipAudioComponent;
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))

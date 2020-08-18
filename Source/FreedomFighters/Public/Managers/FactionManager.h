@@ -36,10 +36,10 @@ private:
 	AHeadgear* headgearObj;
 
 
-	UPROPERTY(EditAnywhere, Category = "Audio Battle Chatters")
-		TArray<TSubclassOf<USoundBase>> TargetFoundClips;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Battle Chatters", meta = (AllowPrivateAccess = "true"))
+		TArray<USoundBase*> TargetFoundClips;
 
-	UPROPERTY(EditAnywhere, Category = "Audio Battle Chatters")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Battle Chatters", meta = (AllowPrivateAccess = "true"))
 		TArray<TSubclassOf<USoundBase>> ReloadingClips;
 
 private:

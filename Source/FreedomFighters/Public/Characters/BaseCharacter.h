@@ -96,7 +96,8 @@ protected:
 
 	float CurrentDeltaTime;
 
-	UAudioComponent* VoiceAudioComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* VoiceAudioComponent;
 
 	FVector DefaultCamSocketOffset;
 
