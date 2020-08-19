@@ -24,9 +24,7 @@ private:
 	UStaticMeshComponent* HandguardComp;
 	UAudioComponent* HandguardAudioComponent;
 
-	float pullDuration;
 
-	float accumulatorFloat;
 
 	FTimerHandle pullHandguardTimeHandle;
 
@@ -43,15 +41,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
 		USoundBase* InsertAmmoSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Handguard", meta = (AllowPrivateAccess = "true"))
-		bool useHanguardAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Handguard", meta = (AllowPrivateAccess = "true"))
-		FVector HandguardOriginPos;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Handguard", meta = (AllowPrivateAccess = "true"))
-		FVector HandguardPullPos;
 
 
 
@@ -99,10 +88,6 @@ private:
 	virtual void Fire() override;
 
 	virtual void OnReload() override;
-
-	virtual void SpawnMagazine();
-
-	void setAmmoHolder();
 
 	void setHandguard();
 

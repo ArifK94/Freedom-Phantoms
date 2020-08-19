@@ -33,7 +33,6 @@ AShotgun::AShotgun()
 	Ammo_Holder = nullptr;
 	hasLoadedShell = false;
 	isPullingHandguard = false;
-	useHanguardAnimation = false;
 
 	HandguardSpeed = 0.0f;
 }
@@ -71,32 +70,14 @@ void AShotgun::BeginPlay()
 {
 	Super::BeginPlay();
 
-	setAmmoHolder();
 	setHandguard();
 
 	hasLoadedShell = true;
-
-	if (HandguardPullSound != NULL)
-	{
-		pullDuration = HandguardPullSound->Duration;
-	}
-	else
-	{
-		pullDuration = 1.0f;
-	}
 }
 
 void AShotgun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime); // Call parent class tick function  
-
-	accumulatorFloat += DeltaTime;
-
-	if (isPullingHandguard && !useHanguardAnimation)
-	{
-		pullHanguard();
-	}
-
 }
 
 void AShotgun::Fire()
@@ -166,55 +147,6 @@ void AShotgun::Fire()
 }
 
 
-void AShotgun::setAmmoHolder()
-{
-	// Get Barrel Component
-	for (UActorComponent* component : GetComponentsByTag(UStaticMeshComponent::StaticClass(), "AmmoHolder"))
-	{
-		Ammo_Holder = Cast<UStaticMeshComponent>(component);
-	}
-
-	// If there is a barrel component, set the mesh
-	if (Ammo_Holder)
-	{
-		SpawnMagazine();
-	}
-}
-
-
-
-void AShotgun::SpawnMagazine()
-{
-	UWorld* world = GetWorld();
-	TArray<FName> allCartridges = Ammo_Holder->GetAllSocketNames();
-
-	if (world)
-	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		for (int i = 0; i < allCartridges.Num(); i++)
-		{
-			FString currentCartridge = allCartridges[i].ToString();
-
-			if (currentCartridge.Contains("cartridge"))
-			{
-				// convert this to FName to set the socket
-				FName targetSocket = FName(*currentCartridge);
-
-				// Spawn the weapon actor
-				weaponClipObj = world->SpawnActor<AWeaponClip>(weaponClip, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-				if (weaponClipObj)
-				{
-					weaponClipObj->SetOwner(this);
-					weaponClipObj->AttachToComponent(Ammo_Holder, FAttachmentTransformRules::SnapToTargetNotIncludingScale, targetSocket);
-				}
-			}
-		}
-	}
-}
 
 
 void AShotgun::setHandguard()
@@ -239,24 +171,6 @@ void AShotgun::pullHanguard()
 		if (!hasLoadedShell)
 		{
 			BeginShellEffect();
-
-			if (!useHanguardAnimation)
-			{
-				// pull handguard
-				FVector handguardTarget = UKismetMathLibrary::VInterpTo(HandguardOriginPos, HandguardPullPos, accumulatorFloat, HandguardSpeed);
-				HandguardComp->SetRelativeLocation(handguardTarget);
-
-				// if pull reached position
-				if (handguardTarget == HandguardPullPos)
-				{
-					// wait for delay before loading again, for realism
-					FTimerHandle tHandle;
-					const float Delay = .5f;
-					GetWorldTimerManager().SetTimer(tHandle, this, &AShotgun::pushHanguard, Delay, false);
-
-					isPullingHandguard = false;
-				}
-			}
 		}
 
 		GetWorldTimerManager().ClearTimer(pullHandguardTimeHandle);
@@ -268,14 +182,6 @@ void AShotgun::pushHanguard()
 {
 	if (HandguardComp)
 	{
-		if (!useHanguardAnimation)
-		{
-			FVector handguardLoadTarget = UKismetMathLibrary::VInterpTo(HandguardPullPos, HandguardOriginPos, accumulatorFloat, HandguardSpeed);
-			HandguardComp->SetRelativeLocation(handguardLoadTarget);
-
-			PlayHandguardPushSound();
-		}
-
 		isPullingHandguard = false;
 		hasLoadedShell = true;
 		isReloading = false;

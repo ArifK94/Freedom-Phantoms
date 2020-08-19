@@ -23,6 +23,18 @@ void UFactionManager::Init(UWorld* World)
 
 	if (WeaponSetClass)
 		WeaponSetObj = NewObject<UWeaponSet>((UObject*)GetTransientPackage(), WeaponSetClass);
+
+	setRanomVoiceSet();
+}
+
+void UFactionManager::setRanomVoiceSet()
+{
+	if (VoiceClips.Num() > 0)
+	{
+		int RandIndex = rand() % VoiceClips.Num();
+
+		SelectedVoiceClipSet = VoiceClips[RandIndex];
+	}
 }
 
 AHeadgear* UFactionManager::SpawnHelmet(USkeletalMeshComponent* Mesh, AActor* Owner)

@@ -75,7 +75,8 @@ void AWeapon::ConfigSetup()
 	AmmoPerClip = weaponClipObj->GetAmmoCapacity();
 	CurrentAmmo = AmmoPerClip;
 
-	TimeBetweenShots = 60 / RateOfFire;}
+	TimeBetweenShots = 60 / RateOfFire;
+}
 
 FVector AWeapon::getMuzzleLocation()
 {
@@ -295,8 +296,8 @@ bool AWeapon::IsFacingCrosshair()
 		// Dot product allows to check if muzzle is facing in same direction as the camera view
 		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(CurrentMuzzleRotation));
 
-		FVector locationValue  = UKismetMathLibrary::Subtract_VectorVector(CurrentMuzzleLocation, EyeLocation);
-		
+		FVector locationValue = UKismetMathLibrary::Subtract_VectorVector(CurrentMuzzleLocation, EyeLocation);
+
 		float limit = 50.0f;
 		if (UKismetMathLibrary::Abs(directionValue) <= 0.5f && (UKismetMathLibrary::Abs(locationValue.X) <= limit || UKismetMathLibrary::Abs(locationValue.Y) <= limit || UKismetMathLibrary::Abs(locationValue.Z) <= limit))
 		{
@@ -392,13 +393,13 @@ void AWeapon::OnReload()
 
 void AWeapon::BeginReload()
 {
-	if (CurrentAmmo < AmmoPerClip && MaxAmmo > 0)
-	{
-		isFiring = false;
-		isReloading = true;
+	if (MaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !isReloading)	return;
 
-		weaponClipObj->getClipMesh()->SetVisibility(false);
-	}
+	isFiring = false;
+	isReloading = true;
+
+	weaponClipObj->getClipMesh()->SetVisibility(false);
+
 }
 
 void AWeapon::EndReload()

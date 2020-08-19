@@ -3,6 +3,7 @@
 
 #include "Characters/CombatCharacter.h"
 #include "Managers/FactionManager.h"
+#include "Managers/FactionManager.h"
 
 #include "Accessories/Headgear.h"
 #include "Accessories/Loadout.h"
@@ -23,6 +24,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/AudioComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -54,6 +56,7 @@ ACombatCharacter::ACombatCharacter()
 	isSwappingWeapon = false;
 	isInCombatMode = false;
 	IsInAimOffSetRotation = false;
+	HasSaidReloading = false;
 
 	MaxAimYawSprint = 180.0f;
 	HandGuardAlpha = 0.0f;
@@ -420,7 +423,7 @@ void ACombatCharacter::EndAim()
 
 void ACombatCharacter::BeginReload()
 {
-	if (currentWeaponObj)
+	if (currentWeaponObj && !isReloading)
 	{
 		currentWeaponObj->BeginReload();
 	}
@@ -431,6 +434,8 @@ void ACombatCharacter::EndReload()
 	if (currentWeaponObj)
 	{
 		currentWeaponObj->EndReload();
+
+		HasSaidReloading = false;
 	}
 }
 
@@ -439,6 +444,16 @@ void ACombatCharacter::UpdateReload()
 	if (currentWeaponObj)
 	{
 		isReloading = currentWeaponObj->getIsReloading();
+
+		if (currentWeaponObj->getIsReloading() && !HasSaidReloading)
+		{
+			HasSaidReloading = true;
+			if (FactionObj != NULL)
+			{
+				VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
+				VoiceAudioComponent->Play(0.0f);
+			}
+		}
 	}
 }
 

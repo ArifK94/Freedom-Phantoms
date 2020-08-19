@@ -87,6 +87,8 @@ private:
 
 	bool IsInAimOffSetRotation;
 
+	bool HasSaidReloading;
+
 public:
 
 	AWeapon* GetCurrentWeapon();

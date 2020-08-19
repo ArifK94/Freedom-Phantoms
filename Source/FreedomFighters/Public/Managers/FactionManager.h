@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Engine/DataTable.h"
+
 #include "FactionManager.generated.h"
 
 class AWeapon;
@@ -11,6 +13,23 @@ class UWeaponSet;
 class USoundBase;
 class AHeadgear;
 class ALoadout;
+
+
+
+USTRUCT(BlueprintType)
+struct FVoiceClipSet : public FTableRowBase
+{
+	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* TargetFoundSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* ReloadingSound;
+};
+
+
+
 UCLASS(Blueprintable)
 class FREEDOMFIGHTERS_API UFactionManager : public UObject
 {
@@ -35,12 +54,9 @@ private:
 		TArray<TSubclassOf< AHeadgear>> Headgears;
 	AHeadgear* headgearObj;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Battle Chatters", meta = (AllowPrivateAccess = "true"))
-		TArray<USoundBase*> TargetFoundClips;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Battle Chatters", meta = (AllowPrivateAccess = "true"))
-		TArray<TSubclassOf<USoundBase>> ReloadingClips;
+		TArray<FVoiceClipSet>	VoiceClips;
+	FVoiceClipSet SelectedVoiceClipSet;
 
 private:
 	UWorld* CurrentWorld;
@@ -53,6 +69,10 @@ public:
 	void Init(UWorld* World);
 
 public:
+
+	void setRanomVoiceSet();
+
+	FVoiceClipSet getSelectedVoiceClipSet() { return SelectedVoiceClipSet; }
 
 	UWeaponSet* getWeaponSetObj() { return WeaponSetObj; }
 
