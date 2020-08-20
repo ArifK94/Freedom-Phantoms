@@ -20,12 +20,18 @@ USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase
 {
 	GENERATED_BODY()
-
+		
 		UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* TargetFoundSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* ReloadingSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* FriendlyDownSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* EnemyDownSound;
 };
 
 

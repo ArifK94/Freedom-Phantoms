@@ -56,7 +56,8 @@ ACombatCharacter::ACombatCharacter()
 	isSwappingWeapon = false;
 	isInCombatMode = false;
 	IsInAimOffSetRotation = false;
-	HasSaidReloading = false;
+	HasPlayedReloadingSound = false;
+	HasPlayedTargetFoundSound = false;
 
 	MaxAimYawSprint = 180.0f;
 	HandGuardAlpha = 0.0f;
@@ -389,7 +390,7 @@ void ACombatCharacter::UpdateFire()
 {
 	if (currentWeaponObj)
 	{
-		if (!hasEquippedWeapon || isSwappingWeapon)
+		if (!hasEquippedWeapon || isSwappingWeapon || isReloading)
 		{
 			EndFire();
 		}
@@ -435,7 +436,7 @@ void ACombatCharacter::EndReload()
 	{
 		currentWeaponObj->EndReload();
 
-		HasSaidReloading = false;
+		HasPlayedReloadingSound = false;
 	}
 }
 
@@ -445,10 +446,10 @@ void ACombatCharacter::UpdateReload()
 	{
 		isReloading = currentWeaponObj->getIsReloading();
 
-		if (currentWeaponObj->getIsReloading() && !HasSaidReloading)
+		if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
 		{
-			HasSaidReloading = true;
-			if (FactionObj != NULL)
+			HasPlayedReloadingSound = true;
+			if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
 			{
 				VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
 				VoiceAudioComponent->Play(0.0f);
@@ -508,4 +509,18 @@ void ACombatCharacter::ToggleLight()
 	{
 		currentWeaponObj->getWeaponAttachmentObj()->getTorchLight()->ToggleBeam();
 	}
+}
+
+void ACombatCharacter::TargetFound()
+{
+	if (!HasPlayedTargetFoundSound)
+	{
+		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().TargetFoundSound != NULL)
+		{
+			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().TargetFoundSound;
+			VoiceAudioComponent->Play(0.0f);
+			HasPlayedTargetFoundSound = true;
+		}
+	}
+
 }

@@ -65,15 +65,13 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class UFactionManager> FactionClass;
-	UFactionManager* FactionObj;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
+		UFactionManager* FactionObj;
 
 
-	UPROPERTY(EditAnywhere, Category = "Accessories")
-		TArray<TSubclassOf<class ALoadout>> Loadouts;
 	class ALoadout* loadoutObj;
 
-	UPROPERTY(EditAnywhere, Category = "Accessories")
-		TArray<TSubclassOf<class AHeadgear>> Headgears;
 	class AHeadgear* headgearObj;
 
 
@@ -87,7 +85,8 @@ private:
 
 	bool IsInAimOffSetRotation;
 
-	bool HasSaidReloading;
+	bool HasPlayedReloadingSound;
+	bool HasPlayedTargetFoundSound;
 
 public:
 
@@ -141,6 +140,9 @@ public:
 	void ToggleLaser();
 
 	void ToggleLight();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
+		void TargetFound();
 
 
 private:
