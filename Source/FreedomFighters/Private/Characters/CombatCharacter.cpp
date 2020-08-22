@@ -38,6 +38,7 @@
 
 #include "GameFramework/Actor.h"
 #include "UObject/UObjectGlobals.h"
+#include "TimerManager.h"
 
 
 
@@ -452,7 +453,7 @@ void ACombatCharacter::UpdateReload()
 			if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
 			{
 				VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
-				VoiceAudioComponent->Play(0.0f);
+				VoiceAudioComponent->Play();
 			}
 		}
 	}
@@ -513,14 +514,37 @@ void ACombatCharacter::ToggleLight()
 
 void ACombatCharacter::TargetFound()
 {
-	if (!HasPlayedTargetFoundSound)
+	if (!HasPlayedTargetFoundSound && !isDead)
 	{
 		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().TargetFoundSound != NULL)
 		{
 			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().TargetFoundSound;
-			VoiceAudioComponent->Play(0.0f);
+			VoiceAudioComponent->Play();
 			HasPlayedTargetFoundSound = true;
 		}
 	}
 
+}
+
+void ACombatCharacter::EnemyKilled()
+{
+	if (!HasPlayedEnemyKilledSound && !isDead)
+	{
+		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().EnemyDownSound != NULL)
+		{
+			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().EnemyDownSound;
+			VoiceAudioComponent->Play();
+			HasPlayedEnemyKilledSound = true;
+
+			GetWorldTimerManager().SetTimer(THandler_VoiceSoundReset, this, &ACombatCharacter::ResetVoiceSound, 5.0f, true, 0.0f);
+		}
+	}
+
+}
+
+void ACombatCharacter::ResetVoiceSound()
+{
+	GetWorldTimerManager().ClearTimer(THandler_VoiceSoundReset);
+
+	HasPlayedEnemyKilledSound = false;
 }

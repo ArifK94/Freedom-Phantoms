@@ -8,9 +8,9 @@ UCoverSplineComponent::UCoverSplineComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	MC = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-	MC->RegisterComponent();
-	MC->Activate();
+	//MC = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
+	//MC->RegisterComponent();
+	//MC->Activate();
 
 
 	//UArrowComponent* ArrowDirection = NewObject<UArrowComponent>(this, UArrowComponent::StaticClass());

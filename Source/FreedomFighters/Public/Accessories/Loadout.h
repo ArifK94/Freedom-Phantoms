@@ -8,6 +8,7 @@
 #include "Loadout.generated.h"
 
 class USkeletalMeshComponent;
+class UWeaponSet;
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class LoadoutType : uint8
@@ -33,16 +34,14 @@ public:
 
 
 private:
-	class UGameInstanceController* gameInstanceController;
+	//class UGameInstanceController* gameInstanceController;
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Attachment", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class UWeaponSet> WeaponSetClass;
-	UWeaponSet* WeaponSetObj;
+	 UWeaponSet* CurrentWeaponSetObj;
 
 
 public:	
 	ALoadout();
+	void Init(UWeaponSet* WeaponSetObj);
 
 	class AWeapon* SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owner);
 

@@ -87,6 +87,8 @@ ALoadout* UFactionManager::SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Ow
 			loadoutObj->SetOwner(Owner);
 			loadoutObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			loadoutObj->getLoadoutMesh()->SetMasterPoseComponent(Mesh);
+			loadoutObj->Init(WeaponSetObj);
+
 			return loadoutObj;
 		}
 	}

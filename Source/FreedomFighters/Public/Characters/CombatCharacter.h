@@ -66,7 +66,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class UFactionManager> FactionClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		UFactionManager* FactionObj;
 
 
@@ -87,6 +87,11 @@ private:
 
 	bool HasPlayedReloadingSound;
 	bool HasPlayedTargetFoundSound;
+	bool HasPlayedEnemyKilledSound;
+
+
+	FTimerHandle THandler_VoiceSoundReset;
+
 
 public:
 
@@ -144,6 +149,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
 		void TargetFound();
 
+	void EnemyKilled();
+
+	void ResetVoiceSound();
 
 private:
 

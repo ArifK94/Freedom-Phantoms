@@ -3,6 +3,8 @@
 
 #include "CustomComponents/HealthComponent.h"
 
+#include "Characters/CombatCharacter.h"
+
 UHealthComponent::UHealthComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -36,7 +38,7 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 		return;
 	}
 
-	// return if someone else damaged this actor & if friendly fire
+	// return if self damage & if friendly fire
 	if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))
 	{
 		return;
@@ -44,6 +46,20 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 	// Update health clamp
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
+
+	if (Health <= 0.0f)
+	{
+		if (DamagedActor->IsA(ACombatCharacter::StaticClass()))
+		{
+			ACombatCharacter* combatChar = Cast<ACombatCharacter>(DamagedActor);
+
+			if (combatChar)
+			{
+				combatChar->EnemyKilled();
+			}
+		}
+	}
+
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 }
