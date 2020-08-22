@@ -526,6 +526,18 @@ void ACombatCharacter::TargetFound()
 
 }
 
+void ACombatCharacter::FriendlyKilled()
+{
+	if (!isDead)
+	{
+		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().FriendlyDownSound != NULL)
+		{
+			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().FriendlyDownSound;
+			VoiceAudioComponent->Play();
+		}
+	}
+}
+
 void ACombatCharacter::EnemyKilled()
 {
 	if (!HasPlayedEnemyKilledSound && !isDead)

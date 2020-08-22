@@ -49,14 +49,23 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 	if (Health <= 0.0f)
 	{
-		if (DamagedActor->IsA(ACombatCharacter::StaticClass()))
+		if (DamageCauser->IsA(ACombatCharacter::StaticClass()))
 		{
-			ACombatCharacter* combatChar = Cast<ACombatCharacter>(DamagedActor);
+			ACombatCharacter* opposingChar = Cast<ACombatCharacter>(DamageCauser);
 
-			if (combatChar)
+			if (opposingChar)
 			{
-				combatChar->EnemyKilled();
+				opposingChar->EnemyKilled();
 			}
+
+
+			//ACombatCharacter* friendlyChar = Cast<ACombatCharacter>(DamageCauser);
+
+			//if (friendlyChar)
+			//{
+			//	friendlyChar->FriendlyKilled();
+			//}
+
 		}
 	}
 

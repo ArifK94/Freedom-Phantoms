@@ -149,6 +149,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
 		void TargetFound();
 
+	void FriendlyKilled();
+
 	void EnemyKilled();
 
 	void ResetVoiceSound();
