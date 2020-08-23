@@ -163,17 +163,6 @@ void AWeapon::Fire()
 
 		if (IsFacingCrosshair())
 		{
-			//if (weaponClipObj)
-			//{
-			//	if (weaponClipObj->getBulletObj())
-			//	{
-			//		BulletObj = weaponClipObj->getBulletObj();
-			//		BulletDamage = BulletObj->getDamageAmount();
-			//	}
-
-			//}
-
-
 			CurrentAmmo -= 1;
 
 			FVector ShotDirection = EyeRotation.Vector();
@@ -285,6 +274,8 @@ void AWeapon::StopFire()
 
 bool AWeapon::IsFacingCrosshair()
 {
+	return true;
+
 	AActor* MyOwner = GetOwner();
 
 	if (MyOwner)
