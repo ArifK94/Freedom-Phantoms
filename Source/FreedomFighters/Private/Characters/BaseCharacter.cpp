@@ -58,8 +58,6 @@ ABaseCharacter::ABaseCharacter()
 	CameraBoom->TargetArmLength = 150.0f; // The camera follows at this distance behind the character	
 	CameraBoom->SocketOffset.Set(0.0f, 0.0f, 0.0f);
 
-	DefaultCamSocketOffset = CameraBoom->SocketOffset;
-
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
@@ -82,6 +80,8 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 
 	canMoveForward = true;
 

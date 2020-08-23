@@ -149,6 +149,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
 		void TargetFound();
 
+	ACombatCharacter* FindNearestFriendly();
+
 	void FriendlyKilled();
 
 	void EnemyKilled();

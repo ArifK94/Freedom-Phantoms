@@ -25,6 +25,7 @@
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/AudioComponent.h"
+#include "CustomComponents/HealthComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -524,6 +525,31 @@ void ACombatCharacter::TargetFound()
 		}
 	}
 
+}
+
+ACombatCharacter* ACombatCharacter::FindNearestFriendly()
+{
+	
+	TArray<AActor*> allCombatChars;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACombatCharacter::StaticClass(), allCombatChars);
+
+	for (auto CurrentCombatant : allCombatChars)
+	{
+		if (CurrentCombatant != this)
+		{
+			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentCombatant->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
+			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentCombatant);
+
+			if (isFriendly && IsAlive)
+			{
+				return Cast<ACombatCharacter>(CurrentCombatant);
+			}
+
+		}
+	}
+	return NULL;
 }
 
 void ACombatCharacter::FriendlyKilled()

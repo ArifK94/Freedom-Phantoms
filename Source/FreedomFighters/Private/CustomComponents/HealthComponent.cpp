@@ -55,12 +55,17 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 				opposingChar->EnemyKilled();
 			}
 
-			//ACombatCharacter* friendlyChar = Cast<ACombatCharacter>(DamageCauser);
+			ACombatCharacter* currentActor = Cast<ACombatCharacter>(DamagedActor);
 
-			//if (friendlyChar)
-			//{
-			//	friendlyChar->FriendlyKilled();
-			//}
+			if (currentActor)
+			{
+				auto nearestFriendly = currentActor->FindNearestFriendly();
+
+				if (nearestFriendly)
+				{
+					nearestFriendly->FriendlyKilled();
+				}
+			}
 
 		}
 	}

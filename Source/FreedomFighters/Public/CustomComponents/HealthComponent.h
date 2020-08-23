@@ -44,4 +44,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Health Component")
 		static bool IsFriendly(AActor* AActorA, AActor* ActorB);
+
+
+	float getCurrentHealth() {
+		return Health;
+	}
 };
