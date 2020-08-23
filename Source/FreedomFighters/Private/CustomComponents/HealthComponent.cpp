@@ -44,6 +44,12 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 		return;
 	}
 
+	if (Health <= 0.0f) return;
+
+	// Update health clamp
+	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
+
+
 	if (Health <= 0.0f)
 	{
 		if (DamageCauser->IsA(ACombatCharacter::StaticClass()))
@@ -69,9 +75,6 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 		}
 	}
-
-	// Update health clamp
-	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
 
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
