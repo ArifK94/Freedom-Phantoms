@@ -22,7 +22,10 @@ private:
 
 
 	UStaticMeshComponent* HandguardComp;
-	UAudioComponent* HandguardAudioComponent;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* HandguardAudioComponent;
 
 
 
