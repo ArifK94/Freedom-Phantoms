@@ -529,9 +529,10 @@ void ACombatCharacter::TargetFound()
 
 ACombatCharacter* ACombatCharacter::FindNearestFriendly()
 {
-	
+
 	TArray<AActor*> allCombatChars;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACombatCharacter::StaticClass(), allCombatChars);
+	AActor* ClosestAlly = nullptr;
 
 	for (auto CurrentCombatant : allCombatChars)
 	{
@@ -544,11 +545,22 @@ ACombatCharacter* ACombatCharacter::FindNearestFriendly()
 
 			if (isFriendly && IsAlive)
 			{
-				return Cast<ACombatCharacter>(CurrentCombatant);
+				ClosestAlly = CurrentCombatant;
+
+				if (CurrentCombatant->GetDistanceTo(this) < ClosestAlly->GetDistanceTo(this))
+				{
+					ClosestAlly = CurrentCombatant;
+				}
 			}
 
 		}
 	}
+
+	if (ClosestAlly != nullptr)
+	{
+		return	Cast<ACombatCharacter>(ClosestAlly);
+	}
+
 	return NULL;
 }
 
