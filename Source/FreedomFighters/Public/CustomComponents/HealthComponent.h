@@ -21,19 +21,36 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health Component")
 		uint8 TeamNumber;
 
-protected:
-	virtual void BeginPlay() override;
+private:
+	void RegenerateHealth();
 
 
-	UPROPERTY(BlueprintReadOnly, Category = "Health Component")
+private:
+	float mDeltaTime;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
 		float Health;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
 		float MaxHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+		bool CanRegenerateHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+		float RegenPerSecond;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+		bool isAlive;
+
+private:
+	virtual void BeginPlay() override;
 
 
 	UFUNCTION(BlueprintCallable, Category = "Health Component")
 		void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
 
@@ -48,5 +65,9 @@ public:
 
 	float getCurrentHealth() {
 		return Health;
+	}
+
+	bool IsAlive() {
+		return isAlive;
 	}
 };

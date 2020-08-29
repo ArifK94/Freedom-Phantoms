@@ -529,7 +529,6 @@ void ACombatCharacter::TargetFound()
 
 ACombatCharacter* ACombatCharacter::FindNearestFriendly()
 {
-
 	TArray<AActor*> allCombatChars;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACombatCharacter::StaticClass(), allCombatChars);
 	AActor* ClosestAlly = nullptr;
@@ -543,7 +542,7 @@ ACombatCharacter* ACombatCharacter::FindNearestFriendly()
 			bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
 			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentCombatant);
 
-			if (isFriendly && IsAlive)
+			if (isFriendly && CurrentHealth->IsAlive())
 			{
 				ClosestAlly = CurrentCombatant;
 
@@ -561,7 +560,45 @@ ACombatCharacter* ACombatCharacter::FindNearestFriendly()
 		return	Cast<ACombatCharacter>(ClosestAlly);
 	}
 
-	return NULL;
+	return nullptr;
+}
+
+ACombatCharacter* ACombatCharacter::FindNearestEnemy(float TargetRange)
+{
+	TArray<AActor*> allCombatChars;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACombatCharacter::StaticClass(), allCombatChars);
+	AActor* ClosestEnemy = nullptr;
+
+	for (auto CurrentCombatant : allCombatChars)
+	{
+		if (CurrentCombatant != this)
+		{
+			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentCombatant->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
+			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentCombatant);
+
+			if (!isFriendly && IsAlive)
+			{
+				ClosestEnemy = CurrentCombatant;
+
+				auto DistanceDiff = (CurrentCombatant->GetActorLocation() - this->GetActorLocation()).Size();
+
+				if (DistanceDiff < TargetRange)
+				{
+					ClosestEnemy = CurrentCombatant;
+				}
+			}
+
+		}
+	}
+
+	if (ClosestEnemy != nullptr)
+	{
+		return	Cast<ACombatCharacter>(ClosestEnemy);
+	}
+
+	return nullptr;
 }
 
 void ACombatCharacter::FriendlyKilled()

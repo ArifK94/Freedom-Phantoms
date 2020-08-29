@@ -149,7 +149,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
 		void TargetFound();
 
+	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
 	ACombatCharacter* FindNearestFriendly();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
+	ACombatCharacter* FindNearestEnemy(float TargetRange);
+
 
 	void FriendlyKilled();
 
