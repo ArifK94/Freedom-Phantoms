@@ -10,7 +10,9 @@
 
 #include "UObject/UObjectGlobals.h"
 #include <Runtime\Engine\Classes\Engine\World.h>
+#include <array>
 
+#include "EngineUtils.h"
 
 UFactionManager::UFactionManager()
 {
@@ -93,4 +95,11 @@ ALoadout* UFactionManager::SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Ow
 		}
 	}
 	return nullptr;
+}
+
+void AddOperative(ACombatCharacter* CombatCharacter)
+{
+	if (CombatCharacter)
+	{
+	}
 }

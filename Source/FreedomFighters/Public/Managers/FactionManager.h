@@ -13,7 +13,7 @@ class UWeaponSet;
 class USoundBase;
 class AHeadgear;
 class ALoadout;
-
+class ACombatCharacter;
 
 
 USTRUCT(BlueprintType)
@@ -33,6 +33,25 @@ struct FVoiceClipSet : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* EnemyDownSound;
 };
+
+
+
+USTRUCT(BlueprintType)
+struct FSquadSet : public FTableRowBase
+{
+	GENERATED_BODY()
+		
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FName Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		uint8 MaxOperatives;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<TSubclassOf< ACombatCharacter>> Operatives;
+
+};
+
 
 
 
@@ -61,8 +80,13 @@ private:
 	AHeadgear* headgearObj;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Battle Chatters", meta = (AllowPrivateAccess = "true"))
-		TArray<FVoiceClipSet>	VoiceClips;
+		TArray<FVoiceClipSet> VoiceClips;
 	FVoiceClipSet SelectedVoiceClipSet;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Squads", meta = (AllowPrivateAccess = "true"))
+		TArray<FSquadSet> SquadSet;
+	FSquadSet SelectedSquad;
+
 
 private:
 	UWorld* CurrentWorld;
@@ -87,4 +111,6 @@ public:
 
 	AHeadgear* SpawnHelmet(USkeletalMeshComponent* Mesh, AActor* Owner);
 	ALoadout* SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Owner);
+
+	void AddOperative(ACombatCharacter* CombatCharacter);
 };
