@@ -10,6 +10,14 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UHealthComponent*, HealthComp, float, Health, float, HealthDelta, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser);
 
 
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class TeamFaction : uint8
+{
+	ShadowCompany		UMETA(DisplayName = "ShadowCompany"),
+	Russian 		UMETA(DisplayName = "Russian"),
+};
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UHealthComponent : public UActorComponent
 {
@@ -19,7 +27,7 @@ public:
 	UHealthComponent();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health Component")
-		uint8 TeamNumber;
+		TeamFaction SelectedFaction;
 
 private:
 	void RegenerateHealth();

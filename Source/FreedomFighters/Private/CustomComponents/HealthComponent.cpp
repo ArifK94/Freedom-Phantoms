@@ -11,8 +11,6 @@ UHealthComponent::UHealthComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	TeamNumber = 255;
-
 	MaxHealth = 100;
 
 	CanRegenerateHealth = true;
@@ -55,7 +53,7 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 	mDeltaTime = DeltaTime;
 
-	RegenerateHealth();
+	//RegenerateHealth();
 }
 
 void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
@@ -122,7 +120,7 @@ bool UHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 		return true;
 	}
 
-	return HealthCompA->TeamNumber == HealthCompB->TeamNumber;
+	return HealthCompA->SelectedFaction == HealthCompB->SelectedFaction;
 }
 
 
