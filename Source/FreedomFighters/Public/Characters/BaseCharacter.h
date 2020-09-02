@@ -204,4 +204,9 @@ public:
 	UPostProcessComponent* getCharacterOutlinePPComp() {
 		return  CharacterOutlinePPComp;
 	}
+
+	UAudioComponent* getVoiceAudioComponent()
+	{
+		return VoiceAudioComponent;
+	}
 };

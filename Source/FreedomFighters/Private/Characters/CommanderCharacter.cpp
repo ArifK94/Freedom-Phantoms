@@ -85,17 +85,24 @@ void ACommanderCharacter::Recruit()
 {
 	if (CurrentCombatCharacter != nullptr)
 	{
-		FCommanderFollower test = FCommanderFollower();
-		test.Follower = CurrentCombatCharacter;
-		test.CurrentCommand = CommanderOrders::Follow;
-		ActorFollowers.Add(test);
+		FCommanderFollower follower = FCommanderFollower();
+		follower.Follower = CurrentCombatCharacter;
+		follower.CurrentCommand = CommanderOrders::Follow;
+		ActorFollowers.Add(follower);
 
 
-		if (FactionObj != NULL)
+		if (FactionObj != nullptr)
 		{
 			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().RecruitSound;
 			VoiceAudioComponent->Play();
 		}
+
+		if (CurrentCombatCharacter->getFactionObj() != nullptr)
+		{
+			CurrentCombatCharacter->getVoiceAudioComponent()->Sound = CurrentCombatCharacter->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
+			CurrentCombatCharacter->getVoiceAudioComponent()->Play();
+		}
+
 
 		ResetTargetActor();
 	}

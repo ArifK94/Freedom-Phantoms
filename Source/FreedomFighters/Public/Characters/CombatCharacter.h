@@ -176,4 +176,10 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 	
+public:
+	UFactionManager* getFactionObj()
+	{
+		return FactionObj;
+	}
+
 };
