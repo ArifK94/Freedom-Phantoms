@@ -17,6 +17,8 @@ UHealthComponent::UHealthComponent()
 	RegenPerSecond = 10.0f;
 
 	isAlive = false;
+
+	HasUnlimitedHealth = false;
 }
 
 
@@ -58,6 +60,8 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
+	if (HasUnlimitedHealth) return;
+
 	if (!isAlive) return;
 
 	if (Damage <= 0.0f) return;

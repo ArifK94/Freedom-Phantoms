@@ -3,7 +3,6 @@
 
 #include "Characters/CombatCharacter.h"
 #include "Managers/FactionManager.h"
-#include "Managers/FactionManager.h"
 
 #include "Accessories/Headgear.h"
 #include "Accessories/Loadout.h"

@@ -14,6 +14,7 @@
 #include "CustomComponents/HealthComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/SplineComponent.h"
+#include "Components/PostProcessComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -65,6 +66,7 @@ ABaseCharacter::ABaseCharacter()
 
 	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
 
+	CharacterOutlinePPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("CharacterOutlinePPComp"));
 
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 
@@ -108,6 +110,11 @@ void ABaseCharacter::Tick(float DeltaTime)
 	UpdateSprint();
 
 	UpdateCover();
+
+	if (isDead)
+	{
+		ShowCharacterOutline(false);
+	}
 }
 
 // Called to bind functionality to input
@@ -407,6 +414,23 @@ void ABaseCharacter::EndPeakAround()
 		canMoveForward = true;
 	}
 
+}
+
+void ABaseCharacter::ShowCharacterOutline(bool CanShow)
+{
+	TArray<UActorComponent*> SkeletalMeshComponents = this->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
+	for (int32 ComponentIdx = 0; ComponentIdx < SkeletalMeshComponents.Num(); ++ComponentIdx)
+	{
+		auto currentSkel = Cast<USkeletalMeshComponent>(SkeletalMeshComponents[ComponentIdx]);
+		currentSkel->SetRenderCustomDepth(CanShow);
+	}
+
+	TArray<UActorComponent*> StaticComponents = this->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+	for (int32 ComponentIdx = 0; ComponentIdx < StaticComponents.Num(); ++ComponentIdx)
+	{
+		auto currentSkel = Cast<UStaticMeshComponent>(StaticComponents[ComponentIdx]);
+		currentSkel->SetRenderCustomDepth(CanShow);
+	}
 }
 
 

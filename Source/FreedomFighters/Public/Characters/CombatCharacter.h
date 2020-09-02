@@ -41,13 +41,20 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool hasEquippedWeapon;
 
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
 		FName WeaponHandSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
 		FName SecondaryWeaponHandSocket;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class UFactionManager> FactionClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
+		UFactionManager* FactionObj;
+
+
 
 private:
 
@@ -63,11 +70,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class AWeapon* underBarrelWeaponObj;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class UFactionManager> FactionClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
-		UFactionManager* FactionObj;
 
 
 	class ALoadout* loadoutObj;

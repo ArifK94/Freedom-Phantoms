@@ -48,6 +48,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
 		float RegenPerSecond;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+		bool HasUnlimitedHealth;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
 		bool isAlive;
 

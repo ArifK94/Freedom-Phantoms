@@ -4,7 +4,11 @@
 #include "Characters/CommanderCharacter.h"
 #include "..\..\Public\Characters\CommanderCharacter.h"
 
+#include "Managers/FactionManager.h"
 
+#include "CustomComponents/HealthComponent.h"
+
+#include "Containers/Array.h"
 #include "Engine.h"
 
 
@@ -17,6 +21,9 @@ ACommanderCharacter::ACommanderCharacter()
 void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAction("Recruit", IE_Pressed, this, &ACommanderCharacter::Recruit);
+
 }
 
 
@@ -38,35 +45,79 @@ void ACommanderCharacter::CheckRecruit()
 {
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	QueryParams.AddIgnoredActor(this);
 	QueryParams.bTraceComplex = true;
-	QueryParams.bReturnPhysicalMaterial = true;
+	//QueryParams.bReturnPhysicalMaterial = true;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
 
 	auto MyLocation = this->GetActorLocation();
 	FHitResult OutHit;
 	FVector Start = this->GetActorLocation();
 
-	// alternatively you can get the camera location
-	// FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-
 	FVector ForwardVector = FollowCamera->GetForwardVector();
-	FVector End = ((ForwardVector * 1000.f) + Start);
-	FCollisionQueryParams CollisionParams;
+	FVector End = ((ForwardVector * 500.0f) + Start);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
-
-	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams))
+	if (GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, ObjectParams, QueryParams))
 	{
 		if (OutHit.bBlockingHit)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("You are hitting: %s"), *OutHit.GetActor()->GetName()));
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Impact Point: %s"), *OutHit.ImpactPoint.ToString()));
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Normal Point: %s"), *OutHit.ImpactNormal.ToString()));
+			auto CurrentTargetActor = OutHit.GetActor();
+			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
+			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
+
+			if (CurrentHealth && CurrentHealth->IsAlive() && isFriendly && !IfAlreadyRecruited(CurrentTargetActor))
+			{
+				ResetTargetActor();
+
+				CurrentCombatCharacter = Cast<ACombatCharacter>(CurrentTargetActor);
+				CurrentCombatCharacter->ShowCharacterOutline(true);
+			}
 		}
+	}
+	else
+	{
+		ResetTargetActor();
 	}
 }
 
-void ACommanderCharacter::Recruit(ACombatCharacter* Character)
+void ACommanderCharacter::Recruit()
 {
+	if (CurrentCombatCharacter != nullptr)
+	{
+		FCommanderFollower test = FCommanderFollower();
+		test.Follower = CurrentCombatCharacter;
+		test.CurrentCommand = CommanderOrders::Follow;
+		ActorFollowers.Add(test);
 
+
+		if (FactionObj != NULL)
+		{
+			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().RecruitSound;
+			VoiceAudioComponent->Play();
+		}
+
+		ResetTargetActor();
+	}
+}
+
+bool ACommanderCharacter::IfAlreadyRecruited(AActor* TargetActor)
+{
+	for (auto follower : ActorFollowers)
+	{
+		if (follower.Follower == TargetActor)
+			return true;
+	}
+
+
+	return false;
+}
+
+void ACommanderCharacter::ResetTargetActor()
+{
+	if (CurrentCombatCharacter != nullptr)
+	{
+		CurrentCombatCharacter->ShowCharacterOutline(false);
+		CurrentCombatCharacter = nullptr;
+	}
 }

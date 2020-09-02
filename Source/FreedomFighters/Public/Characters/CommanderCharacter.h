@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CombatCharacter.h"
+
+#include "Engine/DataTable.h"
+
+
 #include "CommanderCharacter.generated.h"
 
 class ACombatCharacter;
@@ -16,25 +20,43 @@ enum class CommanderOrders : uint8
 	Follow		UMETA(DisplayName = "Follow")
 };
 
+USTRUCT(BlueprintType)
+struct FCommanderFollower : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		ACombatCharacter* Follower;
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		CommanderOrders CurrentCommand;
+};
+
+
 UCLASS()
 class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter
 {
 	GENERATED_BODY()
 
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		TArray<FCommanderFollower> ActorFollowers;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		ACombatCharacter* CurrentCombatCharacter;
+
 public:
 	ACommanderCharacter();
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operative Commands", meta = (AllowPrivateAccess = "true"))
-		CommanderOrders CurrentCommand;
-
-
-
-	TArray<ACombatCharacter*> CommanderFollowers;
-
 	void CheckRecruit();
 
-	void Recruit(ACombatCharacter* Character);
+	void Recruit();
+
+	bool IfAlreadyRecruited(AActor* TargetActor);
+
+	void ResetTargetActor();
 
 
 protected:

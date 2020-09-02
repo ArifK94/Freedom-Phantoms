@@ -12,6 +12,7 @@
 
 class UHealthComponent;
 class UAudioComponent;
+class UPostProcessComponent;
 
 UCLASS(config = Game)
 class FREEDOMFIGHTERS_API ABaseCharacter : public ACharacter
@@ -90,6 +91,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		CoverCornerType CurrentCoverType;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Highlight", meta = (AllowPrivateAccess = "true"))
+		 UPostProcessComponent* CharacterOutlinePPComp;
+
 protected:
 
 	float defaultMaxWalkSpeed;
@@ -131,6 +135,7 @@ protected:
 	void BeginPeakAround();
 	void EndPeakAround();
 
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health", meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
 
@@ -149,6 +154,10 @@ private:
 	bool IsFacingCoverAngle();
 	void UpdateCover();
 	void RenableMovementInput();
+
+public:
+	void ShowCharacterOutline(bool CanShow);
+
 
 protected:
 
@@ -192,4 +201,7 @@ public:
 		return isDead;
 	}
 
+	UPostProcessComponent* getCharacterOutlinePPComp() {
+		return  CharacterOutlinePPComp;
+	}
 };
