@@ -14,7 +14,6 @@
 
 ACommanderCharacter::ACommanderCharacter()
 {
-
 }
 
 
@@ -23,7 +22,6 @@ void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Recruit", IE_Pressed, this, &ACommanderCharacter::Recruit);
-
 }
 
 
@@ -31,6 +29,8 @@ void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 void ACommanderCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	VoiceAudioComponent->OnAudioFinished.AddDynamic(this, &ACommanderCharacter::OnAudioFinished);
 }
 
 void ACommanderCharacter::Tick(float DeltaTime)
@@ -46,7 +46,6 @@ void ACommanderCharacter::CheckRecruit()
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.bTraceComplex = true;
-	//QueryParams.bReturnPhysicalMaterial = true;
 
 	FCollisionObjectQueryParams ObjectParams;
 	ObjectParams.AllObjects;
@@ -72,6 +71,7 @@ void ACommanderCharacter::CheckRecruit()
 
 				CurrentCombatCharacter = Cast<ACombatCharacter>(CurrentTargetActor);
 				CurrentCombatCharacter->ShowCharacterOutline(true);
+				LastRecruit = CurrentCombatCharacter;
 			}
 		}
 	}
@@ -85,10 +85,10 @@ void ACommanderCharacter::Recruit()
 {
 	if (CurrentCombatCharacter != nullptr)
 	{
-		FCommanderFollower follower = FCommanderFollower();
-		follower.Follower = CurrentCombatCharacter;
+		FCommanderRecruit follower = FCommanderRecruit();
+		follower.Recruit = CurrentCombatCharacter;
 		follower.CurrentCommand = CommanderOrders::Follow;
-		ActorFollowers.Add(follower);
+		ActiveRecruits.Add(follower);
 
 
 		if (FactionObj != nullptr)
@@ -97,25 +97,17 @@ void ACommanderCharacter::Recruit()
 			VoiceAudioComponent->Play();
 		}
 
-		if (CurrentCombatCharacter->getFactionObj() != nullptr)
-		{
-			CurrentCombatCharacter->getVoiceAudioComponent()->Sound = CurrentCombatCharacter->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
-			CurrentCombatCharacter->getVoiceAudioComponent()->Play();
-		}
-
-
 		ResetTargetActor();
 	}
 }
 
 bool ACommanderCharacter::IfAlreadyRecruited(AActor* TargetActor)
 {
-	for (auto follower : ActorFollowers)
+	for (auto follower : ActiveRecruits)
 	{
-		if (follower.Follower == TargetActor)
+		if (follower.Recruit == TargetActor)
 			return true;
 	}
-
 
 	return false;
 }
@@ -128,3 +120,20 @@ void ACommanderCharacter::ResetTargetActor()
 		CurrentCombatCharacter = nullptr;
 	}
 }
+
+
+void ACommanderCharacter::OnAudioFinished()
+{
+	if (LastRecruit != nullptr)
+	{
+		if (LastRecruit->getFactionObj() != nullptr)
+		{
+			LastRecruit->getVoiceAudioComponent()->Sound = LastRecruit->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
+			LastRecruit->getVoiceAudioComponent()->Play();
+		}
+	}
+
+
+
+}
+

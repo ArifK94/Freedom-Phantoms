@@ -7,7 +7,6 @@
 
 #include "Engine/DataTable.h"
 
-
 #include "CommanderCharacter.generated.h"
 
 class ACombatCharacter;
@@ -21,12 +20,12 @@ enum class CommanderOrders : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FCommanderFollower : public FTableRowBase
+struct FCommanderRecruit : public FTableRowBase
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		ACombatCharacter* Follower;
+		ACombatCharacter* Recruit;
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -41,7 +40,9 @@ class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
-		TArray<FCommanderFollower> ActorFollowers;
+		TArray<FCommanderRecruit> ActiveRecruits;
+
+		ACombatCharacter* LastRecruit;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		ACombatCharacter* CurrentCombatCharacter;
@@ -58,6 +59,8 @@ private:
 
 	void ResetTargetActor();
 
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
+		void OnAudioFinished();
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

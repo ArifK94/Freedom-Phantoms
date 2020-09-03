@@ -65,6 +65,10 @@ ABaseCharacter::ABaseCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
+	VoiceAudioComponent->SetWorldLocation(FVector::ZeroVector);
+	VoiceAudioComponent->SetRelativeLocation(FVector::ZeroVector);
+
+	VoiceAudioComponent->AttachTo(RootComponent);
 
 	CharacterOutlinePPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("CharacterOutlinePPComp"));
 

@@ -13,7 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UHealthC
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class TeamFaction : uint8
 {
-	ShadowCompany		UMETA(DisplayName = "ShadowCompany"),
+	ShadowCompany	UMETA(DisplayName = "ShadowCompany"),
 	Russian 		UMETA(DisplayName = "Russian"),
 };
 
