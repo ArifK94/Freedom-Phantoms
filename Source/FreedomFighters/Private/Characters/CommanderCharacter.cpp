@@ -11,10 +11,15 @@
 #include "Containers/Array.h"
 #include "Engine.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+
+
 
 ACommanderCharacter::ACommanderCharacter()
 {
 }
+
+
 
 
 void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -22,6 +27,7 @@ void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Recruit", IE_Pressed, this, &ACommanderCharacter::Recruit);
+	PlayerInputComponent->BindAction("DefendArea", IE_Pressed, this, &ACommanderCharacter::DefendArea);
 }
 
 
@@ -41,7 +47,7 @@ void ACommanderCharacter::Tick(float DeltaTime)
 }
 
 
-void ACommanderCharacter::CheckRecruit()
+FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 {
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
@@ -50,29 +56,56 @@ void ACommanderCharacter::CheckRecruit()
 	FCollisionObjectQueryParams ObjectParams;
 	ObjectParams.AllObjects;
 
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery1);
+	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery2);
+	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery_MAX);
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
+
+	TArray<AActor*> ActorsToIgnore;
+
 	auto MyLocation = this->GetActorLocation();
 	FHitResult OutHit;
 	FVector Start = this->GetActorLocation();
 
 	FVector ForwardVector = FollowCamera->GetForwardVector();
-	FVector End = ((ForwardVector * 500.0f) + Start);
+	FVector End = ((ForwardVector * Length) + Start);
 
-	if (GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, ObjectParams, QueryParams))
+	//auto SphereLineTrace = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), Start, End, 50.0f, ObjectTypes, true, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHit, true);
+
+	auto LineTrace = GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, ObjectParams, QueryParams);
+
+	if (LineTrace)
 	{
 		if (OutHit.bBlockingHit)
 		{
-			auto CurrentTargetActor = OutHit.GetActor();
-			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
-			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
+			return OutHit;
+		}
+	}
 
-			if (CurrentHealth && CurrentHealth->IsAlive() && isFriendly && !IfAlreadyRecruited(CurrentTargetActor))
-			{
-				ResetTargetActor();
 
-				CurrentCombatCharacter = Cast<ACombatCharacter>(CurrentTargetActor);
-				CurrentCombatCharacter->ShowCharacterOutline(true);
-				LastRecruit = CurrentCombatCharacter;
-			}
+	return FHitResult();
+}
+
+
+
+void ACommanderCharacter::CheckRecruit()
+{
+	if (GetCurrentTraceHit().bBlockingHit)
+	{
+
+		auto CurrentTargetActor = GetCurrentTraceHit().GetActor();
+		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
+		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
+
+		if (CurrentHealth && CurrentHealth->IsAlive() && isFriendly && !IfAlreadyRecruited(CurrentTargetActor))
+		{
+			ResetTargetActor();
+
+			PotentialRecruit = Cast<ACombatCharacter>(CurrentTargetActor);
+			PotentialRecruit->ShowCharacterOutline(true);
+			PotentialRecruit->setCommandingOfficer(this);
+			LastRecruit = PotentialRecruit;
 		}
 	}
 	else
@@ -83,12 +116,15 @@ void ACommanderCharacter::CheckRecruit()
 
 void ACommanderCharacter::Recruit()
 {
-	if (CurrentCombatCharacter != nullptr)
+	if (PotentialRecruit != nullptr)
 	{
 		FCommanderRecruit follower = FCommanderRecruit();
-		follower.Recruit = CurrentCombatCharacter;
+		follower.Recruit = PotentialRecruit;
 		follower.CurrentCommand = CommanderOrders::Follow;
 		ActiveRecruits.Add(follower);
+
+
+		CurrentRecruit = follower;
 
 
 		if (FactionObj != nullptr)
@@ -112,12 +148,48 @@ bool ACommanderCharacter::IfAlreadyRecruited(AActor* TargetActor)
 	return false;
 }
 
+FCommanderRecruit ACommanderCharacter::GetRecruitInfo(AActor* TargetActor)
+{
+
+	for (auto follower : ActiveRecruits)
+	{
+		if (follower.Recruit == TargetActor)
+		{
+			return follower;
+		}
+	}
+
+	return FCommanderRecruit();
+}
+
+void ACommanderCharacter::DefendArea()
+{
+	if (ActiveRecruits.Num() > 0)
+	{
+		if (GetCurrentTraceHit(50000.0f).bBlockingHit)
+		{
+
+			if (FactionObj != nullptr)
+			{
+				VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().DefendSound;
+				VoiceAudioComponent->Play();
+			}
+
+			CurrentRecruit.CurrentCommand = CommanderOrders::Defend;
+			TargetDefendLocation =  GetCurrentTraceHit().Location;
+
+			//VoiceAudioComponent->Sound->GetDuration();
+		}
+	}
+
+}
+
 void ACommanderCharacter::ResetTargetActor()
 {
-	if (CurrentCombatCharacter != nullptr)
+	if (PotentialRecruit != nullptr)
 	{
-		CurrentCombatCharacter->ShowCharacterOutline(false);
-		CurrentCombatCharacter = nullptr;
+		PotentialRecruit->ShowCharacterOutline(false);
+		PotentialRecruit = nullptr;
 	}
 }
 
@@ -130,6 +202,7 @@ void ACommanderCharacter::OnAudioFinished()
 		{
 			LastRecruit->getVoiceAudioComponent()->Sound = LastRecruit->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
 			LastRecruit->getVoiceAudioComponent()->Play();
+			LastRecruit = nullptr;
 		}
 	}
 

@@ -24,11 +24,11 @@ struct FCommanderRecruit : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		ACombatCharacter* Recruit;
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		CommanderOrders CurrentCommand;
 };
 
@@ -42,25 +42,44 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		TArray<FCommanderRecruit> ActiveRecruits;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		FCommanderRecruit CurrentRecruit;
+
 		ACombatCharacter* LastRecruit;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
-		ACombatCharacter* CurrentCombatCharacter;
+		ACombatCharacter* PotentialRecruit;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		FVector TargetDefendLocation;
 
 public:
 	ACommanderCharacter();
 
 private:
+
+	FHitResult GetCurrentTraceHit(float Length = 500.0f);
+
 	void CheckRecruit();
 
 	void Recruit();
 
+	void RecruitPlaySound();
+
+	UFUNCTION(BlueprintCallable, Category = "Commander")
 	bool IfAlreadyRecruited(AActor* TargetActor);
 
 	void ResetTargetActor();
 
-	UFUNCTION(BlueprintCallable, Category = "Sounds")
+	UFUNCTION(BlueprintCallable, Category = "Commander")
 		void OnAudioFinished();
+
+
+	UFUNCTION(BlueprintCallable, Category = "Commander")
+	FCommanderRecruit GetRecruitInfo(AActor* TargetActor);
+
+
+	void DefendArea();
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

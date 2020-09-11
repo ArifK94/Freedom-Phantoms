@@ -54,7 +54,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		UFactionManager* FactionObj;
 
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
+		class ACommanderCharacter* CommandingOfficer;
 
 private:
 
@@ -181,5 +182,8 @@ public:
 	{
 		return FactionObj;
 	}
+
+
+	void setCommandingOfficer(ACommanderCharacter* Commander) { CommandingOfficer = Commander; }
 
 };

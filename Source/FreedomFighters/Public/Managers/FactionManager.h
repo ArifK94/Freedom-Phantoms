@@ -41,6 +41,15 @@ struct FVoiceClipSet : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* AcknowledgeCommandSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* FollowSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* AttackSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* DefendSound;
 };
 
 
