@@ -51,6 +51,10 @@ private:
 		ACombatCharacter* PotentialRecruit;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		uint8 CurrentRecruitIndex;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		FVector TargetDefendLocation;
 
 public:
@@ -77,7 +81,6 @@ private:
 
 	UFUNCTION(BlueprintCallable, Category = "Commander")
 	FCommanderRecruit GetRecruitInfo(AActor* TargetActor);
-
 
 	void DefendArea();
 
