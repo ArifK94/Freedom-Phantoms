@@ -10,6 +10,7 @@
 #include "CommanderCharacter.generated.h"
 
 class ACombatCharacter;
+class AOrderIcon;
 
 UENUM(BlueprintType)
 enum class CommanderOrders : uint8
@@ -57,6 +58,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		FVector TargetDefendLocation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AOrderIcon> OrderIcon;
+	AOrderIcon* OrderIconObj;
+
+	TArray<AOrderIcon*> OrderIconArray;
+
 public:
 	ACommanderCharacter();
 
@@ -83,6 +90,12 @@ private:
 	FCommanderRecruit GetRecruitInfo(AActor* TargetActor);
 
 	void DefendArea();
+
+	void SpawnIcon();
+
+	bool HasOrderIcon();
+
+	void IncrementCurrentRecruit();
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
