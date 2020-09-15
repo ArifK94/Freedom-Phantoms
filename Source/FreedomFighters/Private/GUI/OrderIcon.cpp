@@ -29,12 +29,11 @@ AOrderIcon::AOrderIcon()
 
 void AOrderIcon::SetRotation(AActor* TargetActor)
 {
-	float x = 0.0f, y = 0.0f, z = 0.0f;
+	float x = 0.0f, y = 0.0f, Yaw = 0.0f;
 
 	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(Head->GetComponentLocation(), TargetActor->GetActorLocation());
-	UKismetMathLibrary::BreakRotator(TargetRotation, x, y, z);
-	TargetRotation = FRotator(x, 0.0f, 0.0f);
-
+	UKismetMathLibrary::BreakRotator(TargetRotation, x, y, Yaw);
+	TargetRotation = UKismetMathLibrary::MakeRotator(90.0f, 0.0f, Yaw + 90.0f);
 
 	Head->SetWorldRotation(TargetRotation);
 }
