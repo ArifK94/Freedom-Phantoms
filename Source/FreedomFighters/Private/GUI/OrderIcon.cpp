@@ -38,9 +38,31 @@ void AOrderIcon::SetRotation(AActor* TargetActor)
 	Head->SetWorldRotation(TargetRotation);
 }
 
+void AOrderIcon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	OrginalPos = Head->GetRelativeLocation();
+}
+
+void AOrderIcon::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	SetRotation(GetOwner());
+
+	if (Root->IsVisible())
+	{
+		FVector handguardLoadTarget = UKismetMathLibrary::VInterpTo(OrginalPos, FVector(0, 0, OrginalPos.Z * 10.0f), DeltaTime, 5.0f);
+		Head->SetRelativeLocation(handguardLoadTarget);
+	}
+
+}
+
+
 void AOrderIcon::BeginCountDown()
 {
-	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &AOrderIcon::HideIcon, 1.0f, false, 5.0f);
+	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &AOrderIcon::HideIcon, 1.0f, false, 3.0f);
 }
 
 void AOrderIcon::ShowIcon(FVector Location)
@@ -57,18 +79,10 @@ void AOrderIcon::HideIcon()
 	Root->SetVisibility(false, true);
 
 	GetWorldTimerManager().ClearTimer(THandler_Countdown);
-
 }
 
-void AOrderIcon::BeginPlay()
+void AOrderIcon::AnimateTransform()
 {
-	Super::BeginPlay();
-	
+
 }
 
-void AOrderIcon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	SetRotation(GetOwner());
-}

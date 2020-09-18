@@ -24,6 +24,8 @@ private:
 private:
 	FTimerHandle THandler_Countdown;
 
+	FVector OrginalPos;
+
 
 public:	
 	AOrderIcon();
@@ -35,7 +37,7 @@ public:
 
 private:
 	void BeginCountDown();
-
+	void AnimateTransform();
 
 protected:
 	virtual void BeginPlay() override;

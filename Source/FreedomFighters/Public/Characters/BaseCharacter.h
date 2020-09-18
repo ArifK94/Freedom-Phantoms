@@ -122,10 +122,13 @@ protected:
 
 	void UpdateCameraView();
 
+	UFUNCTION(BlueprintCallable, Category = "Character Actions")
 	void BeginSprint();
+	UFUNCTION(BlueprintCallable, Category = "Character Actions")
 	void EndSprint();
 	virtual void UpdateSprint();
 
+	UFUNCTION(BlueprintCallable, Category = "Character Actions")
 	void BeginCrouch();
 
 	void AimOffset();
