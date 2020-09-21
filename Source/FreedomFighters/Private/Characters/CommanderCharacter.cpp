@@ -29,7 +29,9 @@ void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Recruit", IE_Pressed, this, &ACommanderCharacter::Recruit);
-	PlayerInputComponent->BindAction("DefendArea", IE_Pressed, this, &ACommanderCharacter::DefendArea);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ACommanderCharacter::Attack);
+	PlayerInputComponent->BindAction("Defend", IE_Pressed, this, &ACommanderCharacter::DefendArea);
+	PlayerInputComponent->BindAction("Follow", IE_Pressed, this, &ACommanderCharacter::FollowCommander);
 }
 
 
@@ -66,7 +68,7 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 
 	TArray<AActor*> ActorsToIgnore;
 
-	auto MyLocation = this->GetActorLocation();
+	FVector MyLocation = this->GetActorLocation();
 	FHitResult OutHit;
 	FVector Start = this->GetActorLocation();
 
@@ -176,7 +178,7 @@ FCommanderRecruit ACommanderCharacter::GetRecruitInfo(AActor* TargetActor)
 	return FCommanderRecruit();
 }
 
-void ACommanderCharacter::DefendArea()
+void ACommanderCharacter::Attack()
 {
 	if (ActiveRecruits.Num() > 0)
 	{
@@ -184,31 +186,86 @@ void ACommanderCharacter::DefendArea()
 
 		if (HitResult.bBlockingHit)
 		{
-			if (FactionObj != nullptr)
+			AActor* CurrentTargetActor = HitResult.GetActor();
+			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
+			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
+
+			if (CurrentHealth && CurrentHealth->IsAlive() && !isFriendly)
 			{
-				VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().DefendSound;
-				VoiceAudioComponent->Play();
+				TargetDefendLocation = CurrentTargetActor->GetActorLocation();
 			}
-
-			ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Defend;
-			CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
-
-			TargetDefendLocation = HitResult.ImpactPoint;
-
-			SpawnIcon();
-
-			IncrementCurrentRecruit();
-
-			//VoiceAudioComponent->Sound->GetDuration();
+			else
+			{
+				TargetDefendLocation = HitResult.ImpactPoint;
+			}
 		}
+
+		ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Attack;
+		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
+
+
+		SpawnIcon(AttackMaterial);
+
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().AttackSound);
+
+		IncrementCurrentRecruit();
+
+	}
+
+
+}
+
+void ACommanderCharacter::DefendArea()
+{
+	if (ActiveRecruits.Num() > 0)
+	{
+		if (isAiming)
+		{
+			FHitResult HitResult = GetCurrentTraceHit(50000.0f);
+
+			if (HitResult.bBlockingHit)
+			{
+				TargetDefendLocation = HitResult.ImpactPoint;
+			}
+		}
+		else
+		{
+			TargetDefendLocation = GetActorLocation();
+		}
+
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound);
+
+		ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Defend;
+		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
+
+
+		SpawnIcon(DefendMaterial);
+
+		IncrementCurrentRecruit();
+
+		//VoiceAudioComponent->Sound->GetDuration();
 	}
 
 }
 
-void ACommanderCharacter::SpawnIcon()
+void ACommanderCharacter::FollowCommander()
+{
+	if (ActiveRecruits.Num() > 0)
+	{
+		ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Follow;
+		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
+
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().FollowSound);
+
+		TargetDefendLocation = GetActorLocation();
+	}
+}
+
+void ACommanderCharacter::SpawnIcon(UMaterialInterface* Material)
 {
 	if (HasOrderIcon())
 	{
+		OrderIconArray[CurrentRecruitIndex]->SetIconMaterial(Material);
 		OrderIconArray[CurrentRecruitIndex]->ShowIcon(TargetDefendLocation);
 	}
 	else
@@ -226,6 +283,7 @@ void ACommanderCharacter::SpawnIcon()
 			if (OrderIconObj)
 			{
 				OrderIconArray.Add(OrderIconObj);
+				OrderIconObj->SetIconMaterial(Material);
 				OrderIconObj->ShowIcon(TargetDefendLocation);
 			}
 		}
@@ -261,6 +319,17 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 	}
 
 }
+
+void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase)
+{
+
+	if (FactionObj != nullptr)
+	{
+		VoiceAudioComponent->Sound = SoundBase;
+		VoiceAudioComponent->Play();
+	}
+}
+
 
 void ACommanderCharacter::ResetTargetActor()
 {

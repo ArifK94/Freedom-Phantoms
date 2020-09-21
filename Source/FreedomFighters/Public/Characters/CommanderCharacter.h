@@ -54,9 +54,17 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		uint8 CurrentRecruitIndex;
 
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		FVector TargetDefendLocation;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Order Icon", meta = (AllowPrivateAccess = "true"))
+		UMaterialInterface* AttackMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Order Icon", meta = (AllowPrivateAccess = "true"))
+		UMaterialInterface* DefendMaterial;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AOrderIcon> OrderIcon;
@@ -89,13 +97,19 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "Commander")
 	FCommanderRecruit GetRecruitInfo(AActor* TargetActor);
 
+	void Attack();
+
 	void DefendArea();
 
-	void SpawnIcon();
+	void FollowCommander();
+
+	void SpawnIcon(UMaterialInterface* Material);
 
 	bool HasOrderIcon();
 
 	void IncrementCurrentRecruit();
+
+	void PlayVoiceSound(USoundBase* SoundBase);
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

@@ -218,7 +218,7 @@ void ABaseCharacter::MoveForward(float Value)
 
 void ABaseCharacter::MoveRight(float Value)
 {
-//	Controller->SetIgnoreMoveInput(false);
+	//	Controller->SetIgnoreMoveInput(false);
 
 	if ((Controller != NULL) && (Value != 0.0f))
 	{
@@ -274,8 +274,15 @@ void ABaseCharacter::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp
 			{
 				canTakeCover = true;
 				CoverRotation = CurrentCoverObj->getArrowDirection()->GetComponentRotation();
-				isAtCoverCorner = CurrentCoverObj->getIsCorner();
 
+				if (CurrentCoverObj->getCornerType() != CoverCornerType::None)
+				{
+					isAtCoverCorner = true;
+				}
+				else
+				{
+					isAtCoverCorner = false;
+				}
 				CurrentCoverType = CurrentCoverObj->getCornerType();
 			}
 		}
@@ -445,14 +452,7 @@ void ABaseCharacter::TakeCover()
 	}
 	else
 	{
-		if (canTakeCover)
-		{
-			isTakingCover = true;
-		}
-		else
-		{
-			isTakingCover = false;
-		}
+		isTakingCover = canTakeCover;
 	}
 
 }

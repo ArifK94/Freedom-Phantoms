@@ -81,6 +81,12 @@ void AOrderIcon::HideIcon()
 	GetWorldTimerManager().ClearTimer(THandler_Countdown);
 }
 
+void AOrderIcon::SetIconMaterial(UMaterialInterface* Material)
+{
+	Head->SetMaterial(0, Material);
+
+}
+
 void AOrderIcon::AnimateTransform()
 {
 

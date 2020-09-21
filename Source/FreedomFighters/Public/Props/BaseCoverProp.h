@@ -14,23 +14,29 @@ enum class CoverCornerType : uint8
 	Right 		UMETA(DisplayName = "Right")
 };
 
+
+
 UCLASS()
 class FREEDOMFIGHTERS_API ABaseCoverProp : public AActor
 {
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
-		class UBoxComponent* CoverArea;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+		class USceneComponent* Root;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+		class UBoxComponent* CoverArea;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* ForwardDirection;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
 		bool IsCoverLow;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
-		bool IsCorner;
+		bool IsCoverHigh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
 		bool CanPeakLeft;
@@ -62,10 +68,6 @@ public:
 	bool getIsCoverLow() {
 		return IsCoverLow;
 	}
-
-	bool getIsCorner() {
-		return IsCorner;
-	};
 
 	bool getCanTakeCover() {
 		return CanTakeCover;

@@ -7,10 +7,16 @@
 
 ABaseCoverProp::ABaseCoverProp()
 {
+	
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = Root;
+
 	CoverArea = CreateDefaultSubobject<UBoxComponent>(TEXT("CoverArea"));
-	RootComponent = CoverArea;
+	CoverArea->AttachTo(Root);
 	CoverArea->SetCollisionProfileName(TEXT("OverlapAll"));
 
 	ForwardDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("ForwardDirection"));
-	ForwardDirection->AttachTo(CoverArea);
+	ForwardDirection->AttachTo(Root);
+
+	IsCoverHigh = true;
 }
