@@ -136,14 +136,14 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("PeakUp", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
 	PlayerInputComponent->BindAction("PeakUp", IE_Released, this, &ABaseCharacter::EndPeakAround);
 
-	PlayerInputComponent->BindAction("PeakLeft", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
-	PlayerInputComponent->BindAction("PeakLeft", IE_Released, this, &ABaseCharacter::EndPeakAround);
+	//PlayerInputComponent->BindAction("PeakLeft", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
+	//PlayerInputComponent->BindAction("PeakLeft", IE_Released, this, &ABaseCharacter::EndPeakAround);
 
-	PlayerInputComponent->BindAction("PeakDown", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
-	PlayerInputComponent->BindAction("PeakDown", IE_Released, this, &ABaseCharacter::EndPeakAround);
+	//PlayerInputComponent->BindAction("PeakDown", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
+	//PlayerInputComponent->BindAction("PeakDown", IE_Released, this, &ABaseCharacter::EndPeakAround);
 
-	PlayerInputComponent->BindAction("PeakRight", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
-	PlayerInputComponent->BindAction("PeakRight", IE_Released, this, &ABaseCharacter::EndPeakAround);
+	//PlayerInputComponent->BindAction("PeakRight", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
+	//PlayerInputComponent->BindAction("PeakRight", IE_Released, this, &ABaseCharacter::EndPeakAround);
 
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
@@ -202,16 +202,16 @@ void ABaseCharacter::MoveForward(float Value)
 		}
 	}
 
-	if (isTakingCover)
+	if (isTakingCover && CurrentCoverObj != nullptr)
 	{
-		if (CurrentCoverObj)
+		if (Value > 0.0f && CurrentCoverObj->getCanPeakUp())
 		{
-			if (Value > 0.0f && CurrentCoverObj->getCanPeakUp())
-				PeakDirection = FVector(0.0F, 0.0F, Value);
-			else if (Value < 0.0f)
-				PeakDirection = FVector(0.0F, 0.0F, -Value);
+			PeakDirection = FVector(0.0F, 0.0F, Value);
 		}
-
+		else if (Value < 0.0f && CurrentCoverObj->getCanPeakDown())
+		{
+			PeakDirection = FVector(0.0F, 0.0F, -Value);
+		}
 	}
 
 }
@@ -234,16 +234,19 @@ void ABaseCharacter::MoveRight(float Value)
 		AddMovementInput(Direction, Value);
 	}
 
-	if (isTakingCover)
+	if (isTakingCover && CurrentCoverObj != nullptr)
 	{
 		if (CharacterSpeed == 0.0f)
 		{
-			if (Value > 0.0f)
+			if (Value > 0.0f && CurrentCoverObj->getCanPeakRight())
+			{
 				PeakDirection = FVector(0.0F, Value, 0.0f);
-			else if (Value < 0.0f)
+			}
+			else if (Value < 0.0f && CurrentCoverObj->getCanPeakLeft())
+			{
 				PeakDirection = FVector(0.0F, Value, 0.0f);
+			}
 		}
-
 	}
 
 }
@@ -348,6 +351,11 @@ void ABaseCharacter::BeginSprint()
 {
 	if (CharacterSpeed > 0.0f)
 	{
+		if (isTakingCover)
+		{
+			isTakingCover = false;
+		}
+
 		isSprinting = true;
 
 		if (GetCharacterMovement()->IsCrouching())
@@ -408,10 +416,12 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 void ABaseCharacter::BeginPeakAround()
 {
-	if (isTakingCover)
+	if (isTakingCover && CurrentCoverObj->getCanPeakUp())
 	{
-		isPeakingAround = true;
 		canMoveForward = false;
+		CurrentCoverPeakAction = CoverPeakAction::Up;
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Impact Point")));
+
 	}
 }
 
@@ -419,10 +429,9 @@ void ABaseCharacter::EndPeakAround()
 {
 	if (isTakingCover)
 	{
-		isPeakingAround = false;
 		canMoveForward = true;
+		CurrentCoverPeakAction = CoverPeakAction::None;
 	}
-
 }
 
 void ABaseCharacter::ShowCharacterOutline(bool CanShow)
@@ -452,6 +461,9 @@ void ABaseCharacter::TakeCover()
 	}
 	else
 	{
+		if (isSprinting)
+			isSprinting = false;
+
 		isTakingCover = canTakeCover;
 	}
 

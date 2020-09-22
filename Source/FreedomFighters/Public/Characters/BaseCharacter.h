@@ -14,6 +14,18 @@ class UHealthComponent;
 class UAudioComponent;
 class UPostProcessComponent;
 
+
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class CoverPeakAction : uint8
+{
+	None		UMETA(DisplayName = "None"),
+	Up		UMETA(DisplayName = "Up"),
+	Down 		UMETA(DisplayName = "Down"),
+	Left		UMETA(DisplayName = "Left"),
+	Right			UMETA(DisplayName = "Right")
+};
+
+
 UCLASS(config = Game)
 class FREEDOMFIGHTERS_API ABaseCharacter : public ACharacter
 {
@@ -79,8 +91,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isAtCoverCorner;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool isPeakingAround;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
@@ -90,6 +100,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		CoverCornerType CurrentCoverType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		CoverPeakAction CurrentCoverPeakAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Highlight", meta = (AllowPrivateAccess = "true"))
 		 UPostProcessComponent* CharacterOutlinePPComp;
