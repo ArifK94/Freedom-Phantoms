@@ -53,15 +53,6 @@ struct FWeaponAnimSet : public FTableRowBase
 		WeaponType weaponType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAnimSequence* ArmedSprintStart;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAnimSequence* ArmedSprintLoop;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAnimSequence* ArmedSprintStop;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UBlendSpace1D* StandArmed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

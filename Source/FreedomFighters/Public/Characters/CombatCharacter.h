@@ -165,11 +165,6 @@ public:
 
 	void ResetVoiceSound();
 
-private:
-
-	virtual void UpdateSprint() override;
-
-
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

@@ -19,10 +19,10 @@ UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class CoverPeakAction : uint8
 {
 	None		UMETA(DisplayName = "None"),
-	Up		UMETA(DisplayName = "Up"),
+	Up			UMETA(DisplayName = "Up"),
 	Down 		UMETA(DisplayName = "Down"),
 	Left		UMETA(DisplayName = "Left"),
-	Right			UMETA(DisplayName = "Right")
+	Right		UMETA(DisplayName = "Right")
 };
 
 
@@ -62,6 +62,15 @@ protected:
 		float CharacterDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float CharacterVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float ForwardInputValue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float RightInputValue;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsCharacterInAir;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -91,6 +100,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isAtCoverCorner;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool ReceeivedInitialDirection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool ChangedCharacterDirection;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
@@ -105,7 +120,14 @@ protected:
 		CoverPeakAction CurrentCoverPeakAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Highlight", meta = (AllowPrivateAccess = "true"))
-		 UPostProcessComponent* CharacterOutlinePPComp;
+		UPostProcessComponent* CharacterOutlinePPComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* VoiceAudioComponent;
+
+	// Rotate body to face crosshair
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FRotator TargetTiltRotation;
 
 protected:
 
@@ -113,14 +135,7 @@ protected:
 
 	float CurrentDeltaTime;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UAudioComponent* VoiceAudioComponent;
-
 	FVector DefaultCamSocketOffset;
-
-	// Rotate body to face crosshair
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FRotator TargetTiltRotation;
 
 	UAnimInstance* AnimInstance;
 
@@ -128,7 +143,16 @@ protected:
 
 	class ABaseCoverProp* CurrentCoverObj;
 
+
+private:
+
+	float LastCharDirection;
+	float LastForwardInputVal;
+	float LastRightInput;
+
 	FTimerHandle THandler_MovemntInputDisable;
+
+	FTimerHandle THandler_ResetInitialDirectionBool;
 
 
 protected:
@@ -136,13 +160,13 @@ protected:
 	void UpdateCameraView();
 
 	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-	void BeginSprint();
+		void BeginSprint();
 	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-	void EndSprint();
-	virtual void UpdateSprint();
+		void EndSprint();
+	void UpdateSpeed();
 
 	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-	void BeginCrouch();
+		void BeginCrouch();
 
 	void AimOffset();
 
@@ -167,9 +191,15 @@ protected:
 
 private:
 	void TakeCover();
+
 	bool IsFacingCoverAngle();
+
+	void UpdateDirection();
 	void UpdateCover();
+
 	void RenableMovementInput();
+
+	void ResetInitialDirectionBool();
 
 public:
 	void ShowCharacterOutline(bool CanShow);

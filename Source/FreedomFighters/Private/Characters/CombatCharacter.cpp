@@ -139,8 +139,6 @@ void ACombatCharacter::Tick(float DeltaTime)
 
 		UpdatePawnControl();
 
-		UpdateSprint();
-
 		UpdateFire();
 
 		UpdateReload();
@@ -166,20 +164,6 @@ void ACombatCharacter::Tick(float DeltaTime)
 AWeapon* ACombatCharacter::GetCurrentWeapon()
 {
 	return currentWeaponObj;
-}
-
-
-
-void ACombatCharacter::UpdateSprint()
-{
-	if (isSprinting)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed * 2.5f;
-	}
-	else
-	{
-		GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed;
-	}
 }
 
 

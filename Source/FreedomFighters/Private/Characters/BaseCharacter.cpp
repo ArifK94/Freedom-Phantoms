@@ -59,6 +59,13 @@ ABaseCharacter::ABaseCharacter()
 	CameraBoom->TargetArmLength = 150.0f; // The camera follows at this distance behind the character	
 	CameraBoom->SocketOffset.Set(0.0f, 0.0f, 0.0f);
 
+	CameraBoom->bEnableCameraLag = true;
+	CameraBoom->bEnableCameraRotationLag = true;
+	CameraBoom->CameraLagSpeed = 50.0f;
+	CameraBoom->CameraRotationLagSpeed = 50.0f;
+	CameraBoom->CameraLagMaxDistance = 10.0f;
+
+
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
@@ -78,7 +85,7 @@ ABaseCharacter::ABaseCharacter()
 	isSprinting = false;
 	isDead = false;
 	canMoveForward = false;
-
+	ReceeivedInitialDirection = false;
 }
 
 void ABaseCharacter::BeginPlay()
@@ -108,8 +115,6 @@ void ABaseCharacter::Tick(float DeltaTime)
 	UpdateCharacterMovement();
 
 	AimOffset();
-
-	UpdateSprint();
 
 	UpdateCover();
 
@@ -183,61 +188,86 @@ void ABaseCharacter::LookUpAtRate(float Rate)
 
 void ABaseCharacter::MoveForward(float Value)
 {
-	//Controller->SetIgnoreMoveInput(false);
-
-	if (Value < 0.0f || canMoveForward)
+	if (Controller != NULL)
 	{
-		if ((Controller != NULL) && (Value != 0.0f))
+		//Controller->SetIgnoreMoveInput(false);
+		ForwardInputValue = Value;
+
+		if (Value < 0.0f || canMoveForward)
 		{
-			// find out which way is forward
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
+			if (Value != 0.0f)
+			{
+				// find out which way is forward
+				const FRotator Rotation = Controller->GetControlRotation();
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-			EndPeakAround();
+				//EndPeakAround();
 
-			// get forward vector
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+				// get forward vector
+				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-			AddMovementInput(Direction, Value);
+				AddMovementInput(Direction, Value);
+
+				//FRotator Rotator2 = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, Rotation.Yaw);
+				//auto FowardRoation2 = UKismetMathLibrary::GetForwardVector(Rotator2);
+				//auto RightRoation2 = UKismetMathLibrary::GetRightVector(Rotator2);
+				//AddMovementInput(FowardRoation2, ForwardInputValue);
+			}
+		}
+
+		if (isTakingCover && CurrentCoverObj != nullptr)
+		{
+			if (Value > 0.0f && CurrentCoverObj->getCanPeakUp())
+			{
+				PeakDirection = FVector(0.0F, 0.0F, Value);
+			}
+			else if (Value < 0.0f && CurrentCoverObj->getCanPeakDown())
+			{
+				PeakDirection = FVector(0.0F, 0.0F, -Value);
+			}
 		}
 	}
 
-	if (isTakingCover && CurrentCoverObj != nullptr)
-	{
-		if (Value > 0.0f && CurrentCoverObj->getCanPeakUp())
-		{
-			PeakDirection = FVector(0.0F, 0.0F, Value);
-		}
-		else if (Value < 0.0f && CurrentCoverObj->getCanPeakDown())
-		{
-			PeakDirection = FVector(0.0F, 0.0F, -Value);
-		}
-	}
 
 }
 
 void ABaseCharacter::MoveRight(float Value)
 {
-	//	Controller->SetIgnoreMoveInput(false);
-
-	if ((Controller != NULL) && (Value != 0.0f))
+	if (Controller != NULL)
 	{
-		// find out which way is right
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		RightInputValue = Value;
 
-		EndPeakAround();
-
-		// get right vector 
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		// add movement in that direction
-		AddMovementInput(Direction, Value);
-	}
-
-	if (isTakingCover && CurrentCoverObj != nullptr)
-	{
-		if (CharacterSpeed == 0.0f)
+		if (Value != 0.0f)
 		{
+			//find out which way is right
+			const FRotator Rotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			//EndPeakAround();
+
+			// get right vector 
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			// add movement in that direction
+			AddMovementInput(Direction, Value);
+
+
+			//FRotator Rotator2 = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, Rotation.Yaw);
+			//auto RightRoation2 = UKismetMathLibrary::GetRightVector(Rotator2);
+			//AddMovementInput(RightRoation2, RightInputValue);
+		}
+
+		if (isTakingCover && CurrentCoverObj != nullptr)
+		{
+			if (CurrentCoverType == CoverCornerType::Right)
+			{
+
+			}
+			else if (CurrentCoverType == CoverCornerType::Left)
+			{
+
+			}
+
+
 			if (Value > 0.0f && CurrentCoverObj->getCanPeakRight())
 			{
 				PeakDirection = FVector(0.0F, Value, 0.0f);
@@ -246,8 +276,10 @@ void ABaseCharacter::MoveRight(float Value)
 			{
 				PeakDirection = FVector(0.0F, Value, 0.0f);
 			}
+
 		}
 	}
+
 
 }
 
@@ -277,16 +309,22 @@ void ABaseCharacter::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp
 			{
 				canTakeCover = true;
 				CoverRotation = CurrentCoverObj->getArrowDirection()->GetComponentRotation();
+				CurrentCoverType = CurrentCoverObj->getCornerType();
 
-				if (CurrentCoverObj->getCornerType() != CoverCornerType::None)
+				if (CurrentCoverType != CoverCornerType::None)
 				{
 					isAtCoverCorner = true;
+
+					if (isTakingCover)
+					{
+						Controller->SetIgnoreMoveInput(true);
+						GetWorldTimerManager().SetTimer(THandler_MovemntInputDisable, this, &ABaseCharacter::RenableMovementInput, 1.0f, false, .1f);
+					}
 				}
 				else
 				{
 					isAtCoverCorner = false;
 				}
-				CurrentCoverType = CurrentCoverObj->getCornerType();
 			}
 		}
 	}
@@ -296,7 +334,7 @@ void ABaseCharacter::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp, 
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
-		if (OtherActor->GetClass()->IsChildOf(ABaseCoverProp::StaticClass()))
+		if (!OtherActor->GetClass()->IsChildOf(ABaseCoverProp::StaticClass()))
 		{
 			// cast this cover actor to get the object
 			ABaseCoverProp* PreviousCoverObj = Cast<ABaseCoverProp>(OtherActor);
@@ -304,12 +342,11 @@ void ABaseCharacter::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp, 
 			// Check if last cover object is the same as the one just entered?
 			// if so, then get out of cover
 			// this is to prevent from coming out of cover if another cover box entered and the current has ended overlap
-			if (CurrentCoverObj == PreviousCoverObj)
+			if (!PreviousCoverObj)
 			{
 				canTakeCover = false;
 				isTakingCover = false;
 			}
-
 		}
 	}
 }
@@ -334,22 +371,9 @@ void ABaseCharacter::UpdateCameraView()
 	}
 }
 
-
-void ABaseCharacter::UpdateSprint()
-{
-	if (isSprinting)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed * 2.5f;
-	}
-	else
-	{
-		GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed;
-	}
-}
-
 void ABaseCharacter::BeginSprint()
 {
-	if (CharacterSpeed > 0.0f)
+	if (CharacterSpeed > 0.1f)
 	{
 		if (isTakingCover)
 		{
@@ -362,8 +386,8 @@ void ABaseCharacter::BeginSprint()
 		{
 			UnCrouch();
 		}
-
 	}
+
 }
 
 void ABaseCharacter::EndSprint()
@@ -402,17 +426,85 @@ void ABaseCharacter::UpdateCharacterMovement()
 	FVector Velocity = AActor::GetVelocity();
 
 	// get the speed of the character
-	CharacterSpeed = Velocity.Size();
+	CharacterVelocity = Velocity.Size();
 
-	// get the direction of the character
-	if (AnimInstance)
-	{
-		CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
-	}
+	UpdateSpeed();
+	UpdateDirection();
 
 	// check if character is in the air
 	IsCharacterInAir = APawn::GetMovementComponent()->IsFalling();
 }
+
+void ABaseCharacter::UpdateSpeed()
+{
+	float TargetSpeed = FMath::Clamp(FMath::Abs(ForwardInputValue) + FMath::Abs(RightInputValue), 0.0f, 1.0f);
+
+	if (isSprinting)
+	{
+		TargetSpeed = TargetSpeed * 2.0f;
+	}
+
+	CharacterSpeed = TargetSpeed;
+
+	if (LastForwardInputVal != ForwardInputValue || LastRightInput != RightInputValue)
+	{
+		ChangedCharacterDirection = true;
+	}
+	else
+	{
+		ChangedCharacterDirection = false;
+	}
+
+	LastForwardInputVal = ForwardInputValue;
+	LastRightInput = RightInputValue;
+
+}
+
+void ABaseCharacter::UpdateDirection()
+{
+	// get the direction of the character
+	if (AnimInstance)
+	{
+		//	CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
+	}
+
+
+	float x = 0.0f, y = 0.0f;
+	float Pitch = 0.0f, Yaw = 0.0f, Roll = 0.0f;
+
+	FVector InputPos = UKismetMathLibrary::MakeVector(ForwardInputValue, RightInputValue, 0.0f);
+
+	FRotator rotation = UKismetMathLibrary::MakeRotFromX(InputPos);
+
+	FRotator Rotator = UKismetMathLibrary::NormalizedDeltaRotator(FollowCamera->GetComponentRotation(), GetCapsuleComponent()->GetComponentRotation());
+	FRotator TargetRotator = UKismetMathLibrary::NormalizedDeltaRotator(rotation, Rotator);
+
+
+	if (CharacterSpeed > 0.01f)
+	{
+		if (ReceeivedInitialDirection)
+		{
+			if (CharacterSpeed < 0.01f)
+			{
+				ReceeivedInitialDirection = false;
+			}
+		}
+		else
+		{
+			CharacterDirection = TargetRotator.Yaw;
+			GetWorldTimerManager().SetTimer(THandler_ResetInitialDirectionBool, this, &ABaseCharacter::ResetInitialDirectionBool, 1.0f, false, .1f);
+		}
+	}
+	else
+	{
+		if (CharacterSpeed < 0.01f)
+		{
+			ReceeivedInitialDirection = false;
+		}
+	}
+}
+
+
 
 void ABaseCharacter::BeginPeakAround()
 {
@@ -420,8 +512,6 @@ void ABaseCharacter::BeginPeakAround()
 	{
 		canMoveForward = false;
 		CurrentCoverPeakAction = CoverPeakAction::Up;
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Impact Point")));
-
 	}
 }
 
@@ -486,12 +576,6 @@ void ABaseCharacter::UpdateCover()
 	if (isTakingCover)
 	{
 		SetActorRotation(CoverRotation.Quaternion());
-
-		//if (CurrentCoverType != CoverCornerType::None)
-		//{
-		//	Controller->SetIgnoreMoveInput(true);
-		//	GetWorldTimerManager().SetTimer(THandler_MovemntInputDisable, this, &ABaseCharacter::RenableMovementInput, 5.0f, true, 0.0f);
-		//}
 	}
 
 	if (FVector::DotProduct(UKismetMathLibrary::GetForwardVector(GetControlRotation()), UKismetMathLibrary::GetForwardVector(CoverRotation)) > 0.9f && isTakingCover)
@@ -508,6 +592,12 @@ void ABaseCharacter::RenableMovementInput()
 {
 	Controller->SetIgnoreMoveInput(false);
 	GetWorldTimerManager().ClearTimer(THandler_MovemntInputDisable);
+}
+
+void ABaseCharacter::ResetInitialDirectionBool()
+{
+	ReceeivedInitialDirection = true;
+	GetWorldTimerManager().ClearTimer(THandler_ResetInitialDirectionBool);
 
 }
 
