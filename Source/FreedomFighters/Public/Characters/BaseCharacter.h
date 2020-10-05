@@ -159,10 +159,7 @@ protected:
 
 	void UpdateCameraView();
 
-	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-		void BeginSprint();
-	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-		void EndSprint();
+
 	void UpdateSpeed();
 
 	UFUNCTION(BlueprintCallable, Category = "Character Actions")
@@ -203,6 +200,12 @@ private:
 
 public:
 	void ShowCharacterOutline(bool CanShow);
+
+
+	UFUNCTION(BlueprintCallable, Category = "Character Actions")
+		void BeginSprint();
+	UFUNCTION(BlueprintCallable, Category = "Character Actions")
+		void EndSprint();
 
 
 protected:
@@ -254,5 +257,10 @@ public:
 	UAudioComponent* getVoiceAudioComponent()
 	{
 		return VoiceAudioComponent;
+	}
+
+	void SetForwardInput(float value)
+	{
+		ForwardInputValue = value;
 	}
 };

@@ -56,8 +56,8 @@ ABaseCharacter::ABaseCharacter()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-	CameraBoom->TargetArmLength = 150.0f; // The camera follows at this distance behind the character	
-	CameraBoom->SocketOffset.Set(0.0f, 0.0f, 0.0f);
+	CameraBoom->TargetArmLength = 200.0f; // The camera follows at this distance behind the character	
+	CameraBoom->SocketOffset.Set(0.0f, 40.0f, 50.0f);
 
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->bEnableCameraRotationLag = true;
@@ -86,6 +86,12 @@ ABaseCharacter::ABaseCharacter()
 	isDead = false;
 	canMoveForward = false;
 	ReceeivedInitialDirection = false;
+
+
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterBeginOverlap);
+	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterEndOverlap);
+	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
+
 }
 
 void ABaseCharacter::BeginPlay()
@@ -98,11 +104,6 @@ void ABaseCharacter::BeginPlay()
 
 	// Create Anim Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-
-	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterBeginOverlap);
-	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterEndOverlap);
-
-	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
 
 void ABaseCharacter::Tick(float DeltaTime)
@@ -206,7 +207,7 @@ void ABaseCharacter::MoveForward(float Value)
 				// get forward vector
 				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-				AddMovementInput(Direction, Value);
+				//AddMovementInput(Direction, Value);
 
 				//FRotator Rotator2 = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, Rotation.Yaw);
 				//auto FowardRoation2 = UKismetMathLibrary::GetForwardVector(Rotator2);
@@ -248,7 +249,7 @@ void ABaseCharacter::MoveRight(float Value)
 			// get right vector 
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			// add movement in that direction
-			AddMovementInput(Direction, Value);
+			//AddMovementInput(Direction, Value);
 
 
 			//FRotator Rotator2 = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, Rotation.Yaw);
@@ -426,7 +427,7 @@ void ABaseCharacter::UpdateCharacterMovement()
 	FVector Velocity = AActor::GetVelocity();
 
 	// get the speed of the character
-	CharacterVelocity = Velocity.Size();
+	CharacterVelocity = UKismetMathLibrary::NormalizeToRange(Velocity.Size(), 0.0f, 1.0f);
 
 	UpdateSpeed();
 	UpdateDirection();
