@@ -181,4 +181,8 @@ public:
 
 	void setCommandingOfficer(ACommanderCharacter* Commander) { CommandingOfficer = Commander; }
 
+	ACommanderCharacter* getCommander() {
+		return CommandingOfficer;
+	}
+
 };

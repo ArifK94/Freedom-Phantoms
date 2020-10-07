@@ -11,9 +11,9 @@
 #include "Kismet/KismetMathLibrary.h"
 
 
-UMovementTaskNode::UMovementTaskNode(const FObjectInitializer& ObjectInit)
+UMovementTaskNode::UMovementTaskNode()
 {
-	AcceptanceRadius = 50.0f;
+	AcceptanceRadius = 100.0f;
 }
 
 EBTNodeResult::Type UMovementTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -33,19 +33,16 @@ EBTNodeResult::Type UMovementTaskNode::ExecuteTask(UBehaviorTreeComponent& Owner
 
 	 if (MovementInput == EPathFollowingRequestResult::AlreadyAtGoal)
 	 {
-		 OwningCharacter->SetForwardInput(0.0f);
+		 OwningCharacter->MoveForward(0.0f);
 	 }
 	 else
 	 {
-		 OwningCharacter->SetForwardInput(1.0f);
+		 OwningCharacter->MoveForward(1.0f);
 	 }
 
 		FVector OwnerLocation = OwningCharacter->GetActorLocation();
 
 		float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
-
-// 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("CurrentTargetDistance: %f"), CurrentTargetDistance));
-
 
 		if (CurrentTargetDistance > 200.0f)
 		{

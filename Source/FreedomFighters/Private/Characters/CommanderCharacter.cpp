@@ -2,7 +2,6 @@
 
 
 #include "Characters/CommanderCharacter.h"
-#include "..\..\Public\Characters\CommanderCharacter.h"
 #include "GUI/OrderIcon.h"
 
 #include "Managers/FactionManager.h"
@@ -21,9 +20,6 @@ ACommanderCharacter::ACommanderCharacter()
 	CurrentRecruitIndex = 0;
 }
 
-
-
-
 void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -39,8 +35,6 @@ void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 void ACommanderCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	VoiceAudioComponent->OnAudioFinished.AddDynamic(this, &ACommanderCharacter::OnAudioFinished);
 }
 
 void ACommanderCharacter::Tick(float DeltaTime)
@@ -132,6 +126,8 @@ void ACommanderCharacter::Recruit()
 		FCommanderRecruit follower = FCommanderRecruit();
 		follower.Recruit = PotentialRecruit;
 		follower.CurrentCommand = CommanderOrders::Follow;
+		follower.TargetLocation = GetActorLocation();
+
 		ActiveRecruits.Add(follower);
 
 		if (ActiveRecruits.Num() == 0)
@@ -140,19 +136,13 @@ void ACommanderCharacter::Recruit()
 			CurrentRecruit = follower;
 		}
 
-		if (FactionObj != nullptr)
-		{
-			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().RecruitSound;
-			VoiceAudioComponent->Play();
-		}
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().RecruitSound, ActiveRecruits[CurrentRecruitIndex]);
 
 		ResetTargetActor();
 	}
 }
 
-void ACommanderCharacter::RecruitPlaySound()
-{
-}
+
 
 bool ACommanderCharacter::IfAlreadyRecruited(AActor* TargetActor)
 {
@@ -192,11 +182,11 @@ void ACommanderCharacter::Attack()
 
 			if (CurrentHealth && CurrentHealth->IsAlive() && !isFriendly)
 			{
-				TargetDefendLocation = CurrentTargetActor->GetActorLocation();
+				ActiveRecruits[CurrentRecruitIndex].TargetLocation = CurrentTargetActor->GetActorLocation();
 			}
 			else
 			{
-				TargetDefendLocation = HitResult.ImpactPoint;
+				ActiveRecruits[CurrentRecruitIndex].TargetLocation = HitResult.ImpactPoint;
 			}
 		}
 
@@ -206,13 +196,10 @@ void ACommanderCharacter::Attack()
 
 		SpawnIcon(AttackMaterial);
 
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().AttackSound);
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().AttackSound, ActiveRecruits[CurrentRecruitIndex]);
 
 		IncrementCurrentRecruit();
-
 	}
-
-
 }
 
 void ACommanderCharacter::DefendArea()
@@ -225,15 +212,15 @@ void ACommanderCharacter::DefendArea()
 
 			if (HitResult.bBlockingHit)
 			{
-				TargetDefendLocation = HitResult.ImpactPoint;
+				ActiveRecruits[CurrentRecruitIndex].TargetLocation = HitResult.ImpactPoint;
 			}
 		}
 		else
 		{
-			TargetDefendLocation = GetActorLocation();
+			ActiveRecruits[CurrentRecruitIndex].TargetLocation = GetActorLocation();
 		}
 
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound);
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound, ActiveRecruits[CurrentRecruitIndex]);
 
 		ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Defend;
 		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
@@ -242,8 +229,6 @@ void ACommanderCharacter::DefendArea()
 		SpawnIcon(DefendMaterial);
 
 		IncrementCurrentRecruit();
-
-		//VoiceAudioComponent->Sound->GetDuration();
 	}
 
 }
@@ -255,9 +240,11 @@ void ACommanderCharacter::FollowCommander()
 		ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Follow;
 		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
 
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().FollowSound);
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().FollowSound, ActiveRecruits[CurrentRecruitIndex]);
 
-		TargetDefendLocation = GetActorLocation();
+		ActiveRecruits[CurrentRecruitIndex].TargetLocation = GetActorLocation();
+
+		IncrementCurrentRecruit();
 	}
 }
 
@@ -266,7 +253,7 @@ void ACommanderCharacter::SpawnIcon(UMaterialInterface* Material)
 	if (HasOrderIcon())
 	{
 		OrderIconArray[CurrentRecruitIndex]->SetIconMaterial(Material);
-		OrderIconArray[CurrentRecruitIndex]->ShowIcon(TargetDefendLocation);
+		OrderIconArray[CurrentRecruitIndex]->ShowIcon(ActiveRecruits[CurrentRecruitIndex].TargetLocation);
 	}
 	else
 	{
@@ -278,13 +265,13 @@ void ACommanderCharacter::SpawnIcon(UMaterialInterface* Material)
 			SpawnParams.Owner = this;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			OrderIconObj = world->SpawnActor<AOrderIcon>(OrderIcon, TargetDefendLocation, FRotator::ZeroRotator, SpawnParams);
+			OrderIconObj = world->SpawnActor<AOrderIcon>(OrderIcon, ActiveRecruits[CurrentRecruitIndex].TargetLocation, FRotator::ZeroRotator, SpawnParams);
 
 			if (OrderIconObj)
 			{
 				OrderIconArray.Add(OrderIconObj);
 				OrderIconObj->SetIconMaterial(Material);
-				OrderIconObj->ShowIcon(TargetDefendLocation);
+				OrderIconObj->ShowIcon(ActiveRecruits[CurrentRecruitIndex].TargetLocation);
 			}
 		}
 	}
@@ -320,16 +307,23 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 
 }
 
-void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase)
+void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, FCommanderRecruit TargetRecruit)
 {
-
-	if (FactionObj != nullptr)
+	if (FactionObj != nullptr && SoundBase != nullptr)
 	{
 		VoiceAudioComponent->Sound = SoundBase;
 		VoiceAudioComponent->Play();
 	}
+
+	FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(this, &ACommanderCharacter::PlayAcknowledgeSound, TargetRecruit);
+	GetWorldTimerManager().SetTimer(TargetRecruit.THandler_ResponseSound, RespawnDelegate, 1.0f, false, SoundBase->GetDuration());
 }
 
+void ACommanderCharacter::PlayAcknowledgeSound(FCommanderRecruit TargetRecruit)
+{
+	TargetRecruit.Recruit->getVoiceAudioComponent()->Sound = TargetRecruit.Recruit->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
+	TargetRecruit.Recruit->getVoiceAudioComponent()->Play();
+}
 
 void ACommanderCharacter::ResetTargetActor()
 {
@@ -337,19 +331,5 @@ void ACommanderCharacter::ResetTargetActor()
 	{
 		PotentialRecruit->ShowCharacterOutline(false);
 		PotentialRecruit = nullptr;
-	}
-}
-
-
-void ACommanderCharacter::OnAudioFinished()
-{
-	if (LastRecruit != nullptr)
-	{
-		if (LastRecruit->getFactionObj() != nullptr)
-		{
-			LastRecruit->getVoiceAudioComponent()->Sound = LastRecruit->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
-			LastRecruit->getVoiceAudioComponent()->Play();
-			LastRecruit = nullptr;
-		}
 	}
 }

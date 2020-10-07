@@ -25,12 +25,18 @@ struct FCommanderRecruit : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		ACombatCharacter* Recruit;
 
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		CommanderOrders CurrentCommand;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives")
+		FVector TargetLocation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives")
+		FTimerHandle THandler_ResponseSound;
+
 };
 
 
@@ -46,7 +52,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		FCommanderRecruit CurrentRecruit;
 
-		ACombatCharacter* LastRecruit;
+	ACombatCharacter* LastRecruit;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		ACombatCharacter* PotentialRecruit;
@@ -54,8 +60,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		uint8 CurrentRecruitIndex;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
-		FVector TargetDefendLocation;
+
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Order Icon", meta = (AllowPrivateAccess = "true"))
@@ -72,8 +77,13 @@ private:
 
 	TArray<AOrderIcon*> OrderIconArray;
 
+
+
 public:
 	ACommanderCharacter();
+
+	UFUNCTION(BlueprintCallable, Category = "Commander")
+		FCommanderRecruit GetRecruitInfo(AActor* TargetActor);
 
 private:
 
@@ -83,19 +93,11 @@ private:
 
 	void Recruit();
 
-	void RecruitPlaySound();
 
 	UFUNCTION(BlueprintCallable, Category = "Commander")
-	bool IfAlreadyRecruited(AActor* TargetActor);
+		bool IfAlreadyRecruited(AActor* TargetActor);
 
 	void ResetTargetActor();
-
-	UFUNCTION(BlueprintCallable, Category = "Commander")
-		void OnAudioFinished();
-
-
-	UFUNCTION(BlueprintCallable, Category = "Commander")
-	FCommanderRecruit GetRecruitInfo(AActor* TargetActor);
 
 	void Attack();
 
@@ -109,7 +111,10 @@ private:
 
 	void IncrementCurrentRecruit();
 
-	void PlayVoiceSound(USoundBase* SoundBase);
+	void PlayVoiceSound(USoundBase* SoundBase, FCommanderRecruit TargetRecruit);
+
+	void PlayAcknowledgeSound(FCommanderRecruit TargetRecruit);
+
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -117,5 +122,9 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
-	
+
+public:
+	FCommanderRecruit GetCurrentRecruit() {
+		return  CurrentRecruit;
+	}
 };

@@ -207,11 +207,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character Actions")
 		void EndSprint();
 
+	void MoveForward(float Value);
 
 protected:
 
-
-	void MoveForward(float Value);
 	void MoveRight(float Value);
 
 	/**
@@ -257,10 +256,5 @@ public:
 	UAudioComponent* getVoiceAudioComponent()
 	{
 		return VoiceAudioComponent;
-	}
-
-	void SetForwardInput(float value)
-	{
-		ForwardInputValue = value;
 	}
 };

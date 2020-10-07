@@ -208,11 +208,6 @@ void ABaseCharacter::MoveForward(float Value)
 				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
 				//AddMovementInput(Direction, Value);
-
-				//FRotator Rotator2 = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, Rotation.Yaw);
-				//auto FowardRoation2 = UKismetMathLibrary::GetForwardVector(Rotator2);
-				//auto RightRoation2 = UKismetMathLibrary::GetRightVector(Rotator2);
-				//AddMovementInput(FowardRoation2, ForwardInputValue);
 			}
 		}
 
@@ -250,11 +245,6 @@ void ABaseCharacter::MoveRight(float Value)
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			// add movement in that direction
 			//AddMovementInput(Direction, Value);
-
-
-			//FRotator Rotator2 = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, Rotation.Yaw);
-			//auto RightRoation2 = UKismetMathLibrary::GetRightVector(Rotator2);
-			//AddMovementInput(RightRoation2, RightInputValue);
 		}
 
 		if (isTakingCover && CurrentCoverObj != nullptr)
@@ -277,7 +267,6 @@ void ABaseCharacter::MoveRight(float Value)
 			{
 				PeakDirection = FVector(0.0F, Value, 0.0f);
 			}
-
 		}
 	}
 
