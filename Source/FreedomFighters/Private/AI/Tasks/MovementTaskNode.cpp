@@ -52,11 +52,7 @@ EBTNodeResult::Type UMovementTaskNode::ExecuteTask(UBehaviorTreeComponent& Owner
 		{
 			OwningCharacter->EndSprint();
 		}
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Succeeded!"));
-
 		return EBTNodeResult::Succeeded;
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Failed!"));
-
 	return EBTNodeResult::Failed;
 }
