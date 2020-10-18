@@ -55,14 +55,15 @@ public:
 
 protected:
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement", meta = (AllowPrivateAccess = "true"))
+		bool UseRootMotion;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float CharacterSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float CharacterDirection;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		float CharacterVelocity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float ForwardInputValue;
@@ -256,5 +257,10 @@ public:
 	UAudioComponent* getVoiceAudioComponent()
 	{
 		return VoiceAudioComponent;
+	}
+
+	void SetCharacterDirection(float Value)
+	{
+		CharacterDirection = Value;
 	}
 };

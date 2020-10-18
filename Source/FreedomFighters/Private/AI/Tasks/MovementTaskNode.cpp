@@ -3,6 +3,8 @@
 
 #include "AI/Tasks/MovementTaskNode.h"
 #include "AIController.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -21,26 +23,16 @@ EBTNodeResult::Type UMovementTaskNode::ExecuteTask(UBehaviorTreeComponent& Owner
 	UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
 	FVector TargetDestination = MyBlackboard->GetValueAsVector(BB_TargetDestination.SelectedKeyName);
 
- 	AAIController* AIOwner = OwnerComp.GetAIOwner(); // to get the controller
- 	APawn* Pawn = AIOwner->GetPawn(); // to get the actor
+	AAIController* AIOwner = OwnerComp.GetAIOwner(); // to get the controller
+	APawn* Pawn = AIOwner->GetPawn(); // to get the actor
 
 	ABaseCharacter* OwningCharacter = Cast<ABaseCharacter>(Pawn);
 
 	if (OwningCharacter)
 	{
-	 auto MovementInput =	AIOwner->MoveToLocation(TargetDestination, AcceptanceRadius);
-
-
-	 if (MovementInput == EPathFollowingRequestResult::AlreadyAtGoal)
-	 {
-		 OwningCharacter->MoveForward(0.0f);
-	 }
-	 else
-	 {
-		 OwningCharacter->MoveForward(1.0f);
-	 }
-
 		FVector OwnerLocation = OwningCharacter->GetActorLocation();
+
+		auto MovementInput = AIOwner->MoveToLocation(TargetDestination, AcceptanceRadius);
 
 		float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 

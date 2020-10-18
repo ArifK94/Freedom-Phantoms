@@ -62,7 +62,22 @@ struct FWeaponAnimSet : public FTableRowBase
 		UBlendSpace* StandAimingBS;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* StartMoveBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* StartMoveCombatBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* StopMoveBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UBlendSpace* CrouchAimingBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* CrouchStartBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* CrouchStopBS;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UBlendSpace* ProneAimingBS;

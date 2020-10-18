@@ -86,7 +86,7 @@ ABaseCharacter::ABaseCharacter()
 	isDead = false;
 	canMoveForward = false;
 	ReceeivedInitialDirection = false;
-
+	UseRootMotion = false;
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterBeginOverlap);
 	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterEndOverlap);
@@ -207,7 +207,7 @@ void ABaseCharacter::MoveForward(float Value)
 				// get forward vector
 				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-				//AddMovementInput(Direction, Value);
+				AddMovementInput(Direction, Value);
 			}
 		}
 
@@ -244,7 +244,7 @@ void ABaseCharacter::MoveRight(float Value)
 			// get right vector 
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			// add movement in that direction
-			//AddMovementInput(Direction, Value);
+			AddMovementInput(Direction, Value);
 		}
 
 		if (isTakingCover && CurrentCoverObj != nullptr)
@@ -413,11 +413,6 @@ void ABaseCharacter::AimOffset()
 
 void ABaseCharacter::UpdateCharacterMovement()
 {
-	FVector Velocity = AActor::GetVelocity();
-
-	// get the speed of the character
-	CharacterVelocity = UKismetMathLibrary::NormalizeToRange(Velocity.Size(), 0.0f, 1.0f);
-
 	UpdateSpeed();
 	UpdateDirection();
 
@@ -427,71 +422,102 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 void ABaseCharacter::UpdateSpeed()
 {
-	float TargetSpeed = FMath::Clamp(FMath::Abs(ForwardInputValue) + FMath::Abs(RightInputValue), 0.0f, 1.0f);
+	float TargetSpeed = 0.0f;
 
-	if (isSprinting)
+	if (UseRootMotion)
 	{
-		TargetSpeed = TargetSpeed * 2.0f;
-	}
+		 TargetSpeed = FMath::Clamp(FMath::Abs(ForwardInputValue) + FMath::Abs(RightInputValue), 0.0f, 1.0f);
 
-	CharacterSpeed = TargetSpeed;
+		 if (isSprinting)
+		 {
+			 TargetSpeed = TargetSpeed * 2.0f;
+		 }
 
-	if (LastForwardInputVal != ForwardInputValue || LastRightInput != RightInputValue)
-	{
-		ChangedCharacterDirection = true;
+		 if (LastForwardInputVal != ForwardInputValue || LastRightInput != RightInputValue)
+		 {
+			 ChangedCharacterDirection = true;
+		 }
+		 else
+		 {
+			 ChangedCharacterDirection = false;
+		 }
+
+		 LastForwardInputVal = ForwardInputValue;
+		 LastRightInput = RightInputValue;
 	}
 	else
 	{
-		ChangedCharacterDirection = false;
-	}
+		FVector Velocity = AActor::GetVelocity();
 
-	LastForwardInputVal = ForwardInputValue;
-	LastRightInput = RightInputValue;
+		TargetSpeed = Velocity.Size();
+
+		if (isSprinting)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed * 2.0f;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed;
+		}
+	}
+	CharacterSpeed = TargetSpeed;
+
+
 
 }
 
 void ABaseCharacter::UpdateDirection()
 {
-	// get the direction of the character
-	if (AnimInstance)
+	if (UseRootMotion)
 	{
-		//	CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
-	}
+		float x = 0.0f, y = 0.0f;
+		float Pitch = 0.0f, Yaw = 0.0f, Roll = 0.0f;
+
+		FVector InputPos = UKismetMathLibrary::MakeVector(ForwardInputValue, RightInputValue, 0.0f);
+
+		FRotator rotation = UKismetMathLibrary::MakeRotFromX(InputPos);
+
+		FRotator Rotator = UKismetMathLibrary::NormalizedDeltaRotator(FollowCamera->GetComponentRotation(), GetCapsuleComponent()->GetComponentRotation());
+		FRotator TargetRotator = UKismetMathLibrary::NormalizedDeltaRotator(rotation, Rotator);
 
 
-	float x = 0.0f, y = 0.0f;
-	float Pitch = 0.0f, Yaw = 0.0f, Roll = 0.0f;
-
-	FVector InputPos = UKismetMathLibrary::MakeVector(ForwardInputValue, RightInputValue, 0.0f);
-
-	FRotator rotation = UKismetMathLibrary::MakeRotFromX(InputPos);
-
-	FRotator Rotator = UKismetMathLibrary::NormalizedDeltaRotator(FollowCamera->GetComponentRotation(), GetCapsuleComponent()->GetComponentRotation());
-	FRotator TargetRotator = UKismetMathLibrary::NormalizedDeltaRotator(rotation, Rotator);
-
-
-	if (CharacterSpeed > 0.01f)
-	{
-		if (ReceeivedInitialDirection)
+		if (CharacterSpeed > 0.01f)
+		{
+			if (ReceeivedInitialDirection)
+			{
+				if (CharacterSpeed < 0.01f)
+				{
+					ReceeivedInitialDirection = false;
+				}
+			}
+			else
+			{
+				CharacterDirection = TargetRotator.Yaw;
+				GetWorldTimerManager().SetTimer(THandler_ResetInitialDirectionBool, this, &ABaseCharacter::ResetInitialDirectionBool, 1.0f, false, .1f);
+			}
+		}
+		else
 		{
 			if (CharacterSpeed < 0.01f)
 			{
 				ReceeivedInitialDirection = false;
 			}
 		}
-		else
-		{
-			CharacterDirection = TargetRotator.Yaw;
-			GetWorldTimerManager().SetTimer(THandler_ResetInitialDirectionBool, this, &ABaseCharacter::ResetInitialDirectionBool, 1.0f, false, .1f);
-		}
 	}
 	else
 	{
-		if (CharacterSpeed < 0.01f)
+		FVector Velocity = AActor::GetVelocity();
+
+		// get the direction of the character
+		if (AnimInstance)
 		{
-			ReceeivedInitialDirection = false;
+			CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
 		}
 	}
+
+
+
+
 }
 
 

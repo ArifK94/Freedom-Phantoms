@@ -65,6 +65,10 @@ void USelectEnemyService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 	{
 		BlackboardComp->SetValueAsObject(BB_TargetActor.SelectedKeyName, SelectedTargetActor);
 	}
+	else
+	{
+		BlackboardComp->SetValueAsObject(BB_TargetActor.SelectedKeyName, nullptr);
+	}
 
 
 }
