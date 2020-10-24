@@ -7,6 +7,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 
 #include "Characters/CombatCharacter.h"
+#include "Weapons/Weapon.h"
 
 #include "TimerManager.h"
 #include "Engine/World.h"
@@ -26,6 +27,13 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 	if (OwningCharacter)
 	{
+
+		if (OwningCharacter->GetCurrentWeapon())
+		{
+			if (!OwningCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
+				OwningCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
+		}
+
 		if (EnemyObj)
 		{
 			AActor* EnemyActor = Cast<AActor>(EnemyObj);
@@ -87,7 +95,7 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 	}
 
 
-	return EBTNodeResult::Failed;
+	return EBTNodeResult::Succeeded;
 }
 
 void UCombatTaskNode::EndFiring()

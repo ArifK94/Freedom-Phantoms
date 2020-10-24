@@ -64,7 +64,7 @@ AWeapon::AWeapon()
 	isReloading = false;
 	canShowClip = true;
 	canAutoReload = true;
-
+	HasUnlimitedAmmo = false;
 
 }
 
@@ -112,7 +112,6 @@ void AWeapon::Tick(float DeltaTime)
 	if (CurrentAmmo <= 0)
 		isFiring = false;
 
-	AmmoCount = FString::FromInt(CurrentAmmo) + " / " + FString::FromInt(MaxAmmo);
 
 	CurrentMuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocket);
 	CurrentMuzzleRotation = MeshComp->GetSocketRotation(MuzzleSocket);
@@ -367,18 +366,26 @@ void AWeapon::CameraShakeEffect()
 void AWeapon::OnReload()
 {
 	// Do we have ammo in the ammopool?
-	if (MaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip)	return;
+	if (MaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !HasUnlimitedAmmo) return;
 
-	// Do we have enough to meet what the weapon needs?
-	if (MaxAmmo < (AmmoPerClip - CurrentAmmo))
+	if (HasUnlimitedAmmo)
 	{
-		CurrentAmmo = CurrentAmmo + MaxAmmo;
-		MaxAmmo = 0;
+		CurrentAmmo = AmmoPerClip;
 	}
 	else
 	{
-		MaxAmmo = MaxAmmo - (AmmoPerClip - CurrentAmmo);
-		CurrentAmmo = AmmoPerClip;
+		// Do we have enough to meet what the weapon needs?
+		if (MaxAmmo < (AmmoPerClip - CurrentAmmo))
+		{
+			CurrentAmmo = CurrentAmmo + MaxAmmo;
+			MaxAmmo = 0;
+		}
+		else
+		{
+			MaxAmmo = MaxAmmo - (AmmoPerClip - CurrentAmmo);
+
+			CurrentAmmo = AmmoPerClip;
+		}
 	}
 }
 

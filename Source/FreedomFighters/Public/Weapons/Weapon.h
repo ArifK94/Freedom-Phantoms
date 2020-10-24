@@ -266,8 +266,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Ammo")
 		int32 AmmoPerClip;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
-		FString AmmoCount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+		bool HasUnlimitedAmmo;
 
 	FTimerHandle THandler_TimeBetweenShots;
 
@@ -362,5 +362,14 @@ public:
 
 	bool getIsReloading() { return isReloading; }
 	bool getIsFiring() { return isFiring; }
+
+	bool GetHasUnlimitedAmmo() {
+		return HasUnlimitedAmmo;
+	}
+
+	void SetUnlimitedAmmo(bool IsUnlimited) {
+		HasUnlimitedAmmo = IsUnlimited;
+	}
+
 
 };
