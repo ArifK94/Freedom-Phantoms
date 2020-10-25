@@ -87,12 +87,19 @@ private:
 	void Tick(float DeltaTime);
 
 
-
 	virtual void Fire() override;
 
 	virtual void OnReload() override;
 
 	void setHandguard();
+
+
+
+public:
+
+	bool HasLoadedShell() {
+		return hasLoadedShell;
+	}
 
 	
 };

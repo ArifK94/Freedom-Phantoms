@@ -185,4 +185,8 @@ public:
 		return CommandingOfficer;
 	}
 
+	bool IsReloading() {
+		return isReloading;
+	}
+
 };

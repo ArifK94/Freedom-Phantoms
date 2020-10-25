@@ -82,68 +82,67 @@ void AShotgun::Tick(float DeltaTime)
 
 void AShotgun::Fire()
 {
-	if (CurrentAmmo <= 0) return;
+	if (CurrentAmmo <= 0 || !hasLoadedShell) return;
 
 	// Trace world from pawn eyes to cross hair location
 	AActor* MyOwner = GetOwner();
 
 	if (MyOwner)
 	{
-		if (hasLoadedShell)
+
+		hasLoadedShell = false;
+		isFiring = true;
+
+		CurrentAmmo -= 1;
+
+		FVector EyeLocation;
+		FRotator EyeRotation;
+		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+		FVector ShotDirection = EyeRotation.Vector();
+		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(MyOwner);
+		QueryParams.AddIgnoredActor(this);
+		QueryParams.bTraceComplex = true;
+		QueryParams.bReturnPhysicalMaterial = true;
+
+		// Particle "Target" parameter
+		FVector TracerEndPoint = TraceEnd;
+
+
+		FHitResult Hit;
+		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
-			hasLoadedShell = false;
-			isFiring = true;
+			// Blocking hit! Process damage
+			AActor* HitActor = Hit.GetActor();
 
-			CurrentAmmo -= 1;
+			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
-			FVector EyeLocation;
-			FRotator EyeRotation;
-			MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-
-			FVector ShotDirection = EyeRotation.Vector();
-			FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
-
-			FCollisionQueryParams QueryParams;
-			QueryParams.AddIgnoredActor(MyOwner);
-			QueryParams.AddIgnoredActor(this);
-			QueryParams.bTraceComplex = true;
-			QueryParams.bReturnPhysicalMaterial = true;
-
-			// Particle "Target" parameter
-			FVector TracerEndPoint = TraceEnd;
-
-
-			FHitResult Hit;
-			if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
+			float ActualDamage = BulletDamage;
+			if (SurfaceType == SURFACE_FLESHVULNERABLE)
 			{
-				// Blocking hit! Process damage
-				AActor* HitActor = Hit.GetActor();
-
-				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-
-				float ActualDamage = BulletDamage;
-				if (SurfaceType == SURFACE_FLESHVULNERABLE)
-				{
-					ActualDamage *= 4.0f;
-				}
-
-				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
-
-				UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
-
-				if (SelectedEffect)
-				{
-					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
-				}
-
-				TracerEndPoint = Hit.ImpactPoint;
+				ActualDamage *= 4.0f;
 			}
 
-			PlayShotEffect(TracerEndPoint);
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
-			GetWorldTimerManager().SetTimer(pullHandguardTimeHandle, this, &AShotgun::beginHandguardPull, .3f, false);
+			UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
+
+			if (SelectedEffect)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			}
+
+			TracerEndPoint = Hit.ImpactPoint;
 		}
+
+		PlayShotEffect(TracerEndPoint);
+
+		GetWorldTimerManager().SetTimer(pullHandguardTimeHandle, this, &AShotgun::beginHandguardPull, .3f, false);
 	}
+
 }
 
 

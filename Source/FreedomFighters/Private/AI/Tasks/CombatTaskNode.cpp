@@ -8,6 +8,8 @@
 
 #include "Characters/CombatCharacter.h"
 #include "Weapons/Weapon.h"
+#include "Weapons/Shotgun.h"
+
 
 #include "TimerManager.h"
 #include "Engine/World.h"
@@ -40,7 +42,50 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 			AIOwner->SetFocus(EnemyActor);
 
-			OwningCharacter->BeginFire();
+			if (!OwningCharacter->IsReloading())
+			{
+				OwningCharacter->BeginAim();
+			}
+			else
+			{
+				OwningCharacter->EndFire();
+			}
+
+
+			// Shotguns requires bolt action rather than continious firing of weapon
+			if (OwningCharacter->GetCurrentWeapon())
+			{
+				if (OwningCharacter->GetCurrentWeapon()->GetClass()->IsChildOf(AShotgun::StaticClass()))
+				{
+					// cast this cover actor to get the object
+					auto ShotgunObj = Cast<AShotgun>(OwningCharacter->GetCurrentWeapon());
+
+					if (ShotgunObj)
+					{
+						if (ShotgunObj->getCurrentAmmo() == 0)
+						{
+							ShotgunObj->BeginReload();
+						}
+						else
+						{
+							if (ShotgunObj->HasLoadedShell())
+							{
+								OwningCharacter->BeginFire();
+							}
+							else
+							{
+								EndFiring();
+							}
+						}
+
+					}
+				}
+				else
+				{
+					OwningCharacter->BeginFire();
+				}
+			}
+
 
 			return EBTNodeResult::Succeeded;
 
@@ -48,50 +93,9 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 		else
 		{
 			OwningCharacter->EndFire();
+			OwningCharacter->EndAim();
+
 		}
-
-
-
-
-
-		/*	switch (CombatMode)
-			{
-			case CombatState::Aiming:
-				if (IsInCombat)
-				{
-					OwningCharacter->BeginAim();
-				}
-				else
-				{
-					OwningCharacter->EndAim();
-				}
-
-				return EBTNodeResult::Succeeded;
-			case CombatState::Shooting:
-
-				if (IsInCombat)
-				{
-					OwningCharacter->BeginFire();
-
-					OwningCharacter->GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &UCombatTaskNode::EndFiring, .1f, true, 0.0f);
-				}
-				else
-				{
-					OwningCharacter->EndFire();
-				}
-
-				return EBTNodeResult::Succeeded;
-			default:
-				return EBTNodeResult::Failed;
-			}*/
-
-
-
-
-
-
-
-
 	}
 
 

@@ -32,7 +32,7 @@ EBTNodeResult::Type UMovementTaskNode::ExecuteTask(UBehaviorTreeComponent& Owner
 	{
 		FVector OwnerLocation = OwningCharacter->GetActorLocation();
 
-		auto MovementInput = AIOwner->MoveToLocation(TargetDestination, AcceptanceRadius);
+		AIOwner->MoveToLocation(TargetDestination, AcceptanceRadius);
 
 		float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 
