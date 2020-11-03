@@ -87,6 +87,7 @@ ABaseCharacter::ABaseCharacter()
 	canMoveForward = false;
 	ReceeivedInitialDirection = false;
 	UseRootMotion = false;
+	CoverSelected = false;
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterBeginOverlap);
 	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterEndOverlap);
@@ -102,7 +103,7 @@ void ABaseCharacter::BeginPlay()
 
 	canMoveForward = true;
 
-	// Create Anim Instance Object
+	// Create Animation Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 }
 
@@ -116,8 +117,6 @@ void ABaseCharacter::Tick(float DeltaTime)
 	UpdateCharacterMovement();
 
 	AimOffset();
-
-	UpdateCover();
 
 	if (isDead)
 	{
@@ -138,18 +137,6 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABaseCharacter::BeginCrouch);
 
 	PlayerInputComponent->BindAction("TakeCover", IE_Pressed, this, &ABaseCharacter::TakeCover);
-
-	PlayerInputComponent->BindAction("PeakUp", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
-	PlayerInputComponent->BindAction("PeakUp", IE_Released, this, &ABaseCharacter::EndPeakAround);
-
-	//PlayerInputComponent->BindAction("PeakLeft", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
-	//PlayerInputComponent->BindAction("PeakLeft", IE_Released, this, &ABaseCharacter::EndPeakAround);
-
-	//PlayerInputComponent->BindAction("PeakDown", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
-	//PlayerInputComponent->BindAction("PeakDown", IE_Released, this, &ABaseCharacter::EndPeakAround);
-
-	//PlayerInputComponent->BindAction("PeakRight", IE_Pressed, this, &ABaseCharacter::BeginPeakAround);
-	//PlayerInputComponent->BindAction("PeakRight", IE_Released, this, &ABaseCharacter::EndPeakAround);
 
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
@@ -191,35 +178,33 @@ void ABaseCharacter::MoveForward(float Value)
 {
 	if (Controller != NULL)
 	{
-		//Controller->SetIgnoreMoveInput(false);
 		ForwardInputValue = Value;
 
 		if (Value < 0.0f || canMoveForward)
 		{
 			if (Value != 0.0f)
 			{
-				// find out which way is forward
-				const FRotator Rotation = Controller->GetControlRotation();
-				const FRotator YawRotation(0, Rotation.Yaw, 0);
+				if (!isTakingCover)
+				{
+					// find out which way is forward
+					const FRotator Rotation = Controller->GetControlRotation();
+					const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-				//EndPeakAround();
+					// get forward vector
+					const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-				// get forward vector
-				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+					AddMovementInput(Direction, Value);
+				}
+				else
+				{
+					if (Value == -1.0f)
+					{
+						EscapeCover();
+					}
+				}
 
-				AddMovementInput(Direction, Value);
-			}
-		}
 
-		if (isTakingCover && CurrentCoverObj != nullptr)
-		{
-			if (Value > 0.0f && CurrentCoverObj->getCanPeakUp())
-			{
-				PeakDirection = FVector(0.0F, 0.0F, Value);
-			}
-			else if (Value < 0.0f && CurrentCoverObj->getCanPeakDown())
-			{
-				PeakDirection = FVector(0.0F, 0.0F, -Value);
+
 			}
 		}
 	}
@@ -231,41 +216,100 @@ void ABaseCharacter::MoveRight(float Value)
 {
 	if (Controller != NULL)
 	{
-		RightInputValue = Value;
+		if (!isTakingCover || isAtCoverCorner)
+			RightInputValue = Value;
 
 		if (Value != 0.0f)
 		{
-			//find out which way is right
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
+			if (isTakingCover && !isAtCoverCorner)
+				RightInputValue = Value;
 
-			//EndPeakAround();
-
-			// get right vector 
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			// add movement in that direction
-			AddMovementInput(Direction, Value);
-		}
-
-		if (isTakingCover && CurrentCoverObj != nullptr)
-		{
-			if (CurrentCoverType == CoverCornerType::Right)
+			if (!isTakingCover)
 			{
+				//find out which way is right
+				const FRotator Rotation = Controller->GetControlRotation();
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
 
+				CoverSelected = false;
+
+				// get right vector 
+				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+				// add movement in that direction
+				AddMovementInput(Direction, Value);
 			}
-			else if (CurrentCoverType == CoverCornerType::Left)
+			else
 			{
+				// Can Move In Cover
+				float CoverDistance = 40.0f;
 
-			}
+				FVector ActorLocation = GetActorLocation();
+				FVector Start, End;
+				FRotator TargetRotation = UKismetMathLibrary::MakeRotFromXZ(UKismetMathLibrary::Multiply_VectorVector(WallNormal, FVector(-1.0f, -1.0f, 0.0f)), GetCapsuleComponent()->GetUpVector());
+
+				FVector TargetFoward = UKismetMathLibrary::GetForwardVector(TargetRotation);
+				FVector RightDirection = UKismetMathLibrary::GetRightVector(TargetRotation);
 
 
-			if (Value > 0.0f && CurrentCoverObj->getCanPeakRight())
-			{
-				PeakDirection = FVector(0.0F, Value, 0.0f);
-			}
-			else if (Value < 0.0f && CurrentCoverObj->getCanPeakLeft())
-			{
-				PeakDirection = FVector(0.0F, Value, 0.0f);
+				FVector NewForward = UKismetMathLibrary::Add_VectorVector(FVector(TargetFoward.X * 50.0f, TargetFoward.Y * 50.0f, 0.0f), ActorLocation);
+				FVector NewRight = FVector(RightDirection.X * CoverDistance, RightDirection.Y * CoverDistance, 0.0f);
+
+				FVector TargetAdd = UKismetMathLibrary::Add_VectorVector(NewForward, NewRight);
+				FVector TargetMinus = UKismetMathLibrary::Subtract_VectorVector(NewForward, NewRight);
+
+				FVector NewRightLocation = FVector(TargetAdd.X, TargetAdd.Y, ActorLocation.Z);
+				FVector NewLeftLocation = FVector(TargetMinus.X, TargetMinus.Y, ActorLocation.Z);
+
+
+
+
+				FVector CapsuleRight = GetCapsuleComponent()->GetRightVector() * CoverDistance;
+
+				if (Value == 1)
+				{
+					Start = UKismetMathLibrary::Subtract_VectorVector(ActorLocation, CapsuleRight);
+					End = NewRightLocation;
+				}
+				else
+				{
+					Start = UKismetMathLibrary::Add_VectorVector(ActorLocation, CapsuleRight);
+					End = NewLeftLocation;
+				}
+
+				FCollisionQueryParams QueryParams;
+				QueryParams.AddIgnoredActor(this);
+				QueryParams.bTraceComplex = false;
+				QueryParams.bReturnPhysicalMaterial = true;
+
+				FCollisionObjectQueryParams ObjectParams;
+				ObjectParams.AllObjects;
+
+				DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
+
+				FHitResult OutHit;
+				auto LineTrace = GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, ObjectParams, QueryParams);
+
+
+				if (LineTrace)
+				{
+					if (OutHit.bBlockingHit)
+					{
+						CoverSelected = true;
+						isAtCoverCorner = false;
+
+
+						//find out which way is right
+						const FRotator Rotation = Controller->GetControlRotation();
+						const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+						// add movement in that direction
+						AddMovementInput(RightDirection, Value);
+					}
+				}
+				else
+				{
+					isAtCoverCorner = true;
+				}
+
 			}
 		}
 	}
@@ -297,7 +341,6 @@ void ABaseCharacter::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp
 
 			if (CurrentCoverObj)
 			{
-				canTakeCover = true;
 				CoverRotation = CurrentCoverObj->getArrowDirection()->GetComponentRotation();
 				CurrentCoverType = CurrentCoverObj->getCornerType();
 
@@ -332,9 +375,8 @@ void ABaseCharacter::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp, 
 			// Check if last cover object is the same as the one just entered?
 			// if so, then get out of cover
 			// this is to prevent from coming out of cover if another cover box entered and the current has ended overlap
-			if (!PreviousCoverObj)
+			if (PreviousCoverObj == CurrentCoverObj)
 			{
-				canTakeCover = false;
 				isTakingCover = false;
 			}
 		}
@@ -426,24 +468,24 @@ void ABaseCharacter::UpdateSpeed()
 
 	if (UseRootMotion)
 	{
-		 TargetSpeed = FMath::Clamp(FMath::Abs(ForwardInputValue) + FMath::Abs(RightInputValue), 0.0f, 1.0f);
+		TargetSpeed = FMath::Clamp(FMath::Abs(ForwardInputValue) + FMath::Abs(RightInputValue), 0.0f, 1.0f);
 
-		 if (isSprinting)
-		 {
-			 TargetSpeed = TargetSpeed * 2.0f;
-		 }
+		if (isSprinting)
+		{
+			TargetSpeed = TargetSpeed * 2.0f;
+		}
 
-		 if (LastForwardInputVal != ForwardInputValue || LastRightInput != RightInputValue)
-		 {
-			 ChangedCharacterDirection = true;
-		 }
-		 else
-		 {
-			 ChangedCharacterDirection = false;
-		 }
+		if (LastForwardInputVal != ForwardInputValue || LastRightInput != RightInputValue)
+		{
+			ChangedCharacterDirection = true;
+		}
+		else
+		{
+			ChangedCharacterDirection = false;
+		}
 
-		 LastForwardInputVal = ForwardInputValue;
-		 LastRightInput = RightInputValue;
+		LastForwardInputVal = ForwardInputValue;
+		LastRightInput = RightInputValue;
 	}
 	else
 	{
@@ -521,25 +563,6 @@ void ABaseCharacter::UpdateDirection()
 }
 
 
-
-void ABaseCharacter::BeginPeakAround()
-{
-	if (isTakingCover && CurrentCoverObj->getCanPeakUp())
-	{
-		canMoveForward = false;
-		CurrentCoverPeakAction = CoverPeakAction::Up;
-	}
-}
-
-void ABaseCharacter::EndPeakAround()
-{
-	if (isTakingCover)
-	{
-		canMoveForward = true;
-		CurrentCoverPeakAction = CoverPeakAction::None;
-	}
-}
-
 void ABaseCharacter::ShowCharacterOutline(bool CanShow)
 {
 	TArray<UActorComponent*> SkeletalMeshComponents = this->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
@@ -563,16 +586,85 @@ void ABaseCharacter::TakeCover()
 {
 	if (isTakingCover)
 	{
-		isTakingCover = false;
+		EscapeCover();
 	}
 	else
 	{
-		if (isSprinting)
-			isSprinting = false;
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+		QueryParams.bTraceComplex = false;
 
-		isTakingCover = canTakeCover;
+		FCollisionObjectQueryParams ObjectParams;
+		ObjectParams.AllObjects;
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery1);
+		ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery2);
+		ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery_MAX);
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
+
+		TArray<AActor*> ActorsToIgnore;
+
+		FHitResult OutHit;
+		FVector Start = GetActorLocation();
+
+		float Distance = 150.0f;
+		FVector ForwardVector = UKismetMathLibrary::GetForwardVector(GetActorRotation());
+
+		FVector End = ((ForwardVector * Distance) + Start);
+
+		auto SphereLineTrace = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), Start, End, 50.0f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHit, true);
+
+		if (SphereLineTrace)
+		{
+			if (OutHit.bBlockingHit)
+			{
+
+				WallLocation = OutHit.ImpactPoint;
+				WallNormal = OutHit.ImpactNormal;
+
+				FVector CoverFirstPos = FVector(
+					WallLocation.X - (ForwardVector.X * 35.0f),
+					WallLocation.Y - (ForwardVector.Y * 35.0f),
+					Start.Z
+				);
+
+				FLatentActionInfo LatentInfo;
+				LatentInfo.CallbackTarget = this;
+
+				UKismetSystemLibrary::MoveComponentTo(
+					GetCapsuleComponent(),
+					CoverFirstPos,
+					UKismetMathLibrary::MakeRotFromXZ(WallNormal, GetCapsuleComponent()->GetUpVector()),
+					false,
+					false,
+					.2f,
+					false,
+					EMoveComponentAction::Type::Move,
+					LatentInfo
+				);
+
+				if (isSprinting)
+					isSprinting = false;
+
+				isTakingCover = true;
+				bUseControllerRotationYaw = false;
+				GetCharacterMovement()->bOrientRotationToMovement = false;
+				GetCharacterMovement()->bUseControllerDesiredRotation = false;
+			}
+		}
+
 	}
 
+}
+
+void ABaseCharacter::EscapeCover()
+{
+	isTakingCover = false;
+	CoverSelected = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bUseControllerRotationYaw = false;
 }
 
 bool ABaseCharacter::IsFacingCoverAngle()
@@ -587,22 +679,6 @@ bool ABaseCharacter::IsFacingCoverAngle()
 	return false;
 }
 
-void ABaseCharacter::UpdateCover()
-{
-	if (isTakingCover)
-	{
-		SetActorRotation(CoverRotation.Quaternion());
-	}
-
-	if (FVector::DotProduct(UKismetMathLibrary::GetForwardVector(GetControlRotation()), UKismetMathLibrary::GetForwardVector(CoverRotation)) > 0.9f && isTakingCover)
-	{
-		canMoveForward = false;
-	}
-	else
-	{
-		canMoveForward = true;
-	}
-}
 
 void ABaseCharacter::RenableMovementInput()
 {

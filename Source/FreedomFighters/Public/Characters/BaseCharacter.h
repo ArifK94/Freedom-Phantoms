@@ -87,9 +87,6 @@ protected:
 		bool isDead;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool canTakeCover;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isTakingCover;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -98,7 +95,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isCoveringLow;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isAtCoverCorner;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -126,10 +123,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* VoiceAudioComponent;
 
-	// Rotate body to face crosshair
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FRotator TargetTiltRotation;
-
 protected:
 
 	float defaultMaxWalkSpeed;
@@ -143,6 +136,10 @@ protected:
 	bool canMoveForward;
 
 	class ABaseCoverProp* CurrentCoverObj;
+
+	bool CoverSelected;
+	FVector WallLocation;
+	FVector WallNormal;
 
 
 private:
@@ -170,9 +167,6 @@ protected:
 
 	void UpdateCharacterMovement();
 
-	void BeginPeakAround();
-	void EndPeakAround();
-
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health", meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
@@ -189,11 +183,11 @@ protected:
 
 private:
 	void TakeCover();
+	void EscapeCover();
 
 	bool IsFacingCoverAngle();
 
 	void UpdateDirection();
-	void UpdateCover();
 
 	void RenableMovementInput();
 
