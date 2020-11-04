@@ -89,10 +89,7 @@ ABaseCharacter::ABaseCharacter()
 	UseRootMotion = false;
 	CoverSelected = false;
 
-	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterBeginOverlap);
-	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ABaseCharacter::OnCharacterEndOverlap);
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
-
 }
 
 void ABaseCharacter::BeginPlay()
@@ -202,9 +199,6 @@ void ABaseCharacter::MoveForward(float Value)
 						EscapeCover();
 					}
 				}
-
-
-
 			}
 		}
 	}
@@ -326,60 +320,6 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
-	}
-}
-
-void ABaseCharacter::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
-	{
-		// Check if we have overlapped with a cover actor
-		if (OtherActor->GetClass()->IsChildOf(ABaseCoverProp::StaticClass()))
-		{
-			// cast this cover actor to get the object
-			CurrentCoverObj = Cast<ABaseCoverProp>(OtherActor);
-
-			if (CurrentCoverObj)
-			{
-				CoverRotation = CurrentCoverObj->getArrowDirection()->GetComponentRotation();
-				CurrentCoverType = CurrentCoverObj->getCornerType();
-
-				if (CurrentCoverType != CoverCornerType::None)
-				{
-					isAtCoverCorner = true;
-
-					if (isTakingCover)
-					{
-						Controller->SetIgnoreMoveInput(true);
-						GetWorldTimerManager().SetTimer(THandler_MovemntInputDisable, this, &ABaseCharacter::RenableMovementInput, 1.0f, false, .1f);
-					}
-				}
-				else
-				{
-					isAtCoverCorner = false;
-				}
-			}
-		}
-	}
-}
-
-void ABaseCharacter::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
-	{
-		if (!OtherActor->GetClass()->IsChildOf(ABaseCoverProp::StaticClass()))
-		{
-			// cast this cover actor to get the object
-			ABaseCoverProp* PreviousCoverObj = Cast<ABaseCoverProp>(OtherActor);
-
-			// Check if last cover object is the same as the one just entered?
-			// if so, then get out of cover
-			// this is to prevent from coming out of cover if another cover box entered and the current has ended overlap
-			if (PreviousCoverObj == CurrentCoverObj)
-			{
-				isTakingCover = false;
-			}
-		}
 	}
 }
 

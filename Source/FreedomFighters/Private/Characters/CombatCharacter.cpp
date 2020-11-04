@@ -150,7 +150,7 @@ void ACombatCharacter::Tick(float DeltaTime)
 
 
 		UpdateHandGaurdIK();
-		setCharacterRotation();
+		//setCharacterRotation();
 		disableSprint();
 
 
@@ -223,7 +223,7 @@ void ACombatCharacter::UpdatePawnControl()
 {
 	if (isInCombatMode && CharacterSpeed > 0.1f && !isSprinting)
 	{
-		bUseControllerRotationYaw = true;
+	//	bUseControllerRotationYaw = true;
 	}
 	else
 	{
