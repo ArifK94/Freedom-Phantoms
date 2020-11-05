@@ -88,6 +88,7 @@ ABaseCharacter::ABaseCharacter()
 	ReceeivedInitialDirection = false;
 	UseRootMotion = false;
 	CoverSelected = false;
+	isFacingLeftCover = false;
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
@@ -134,7 +135,6 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABaseCharacter::BeginCrouch);
 
 	PlayerInputComponent->BindAction("TakeCover", IE_Pressed, this, &ABaseCharacter::TakeCover);
-
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
@@ -262,11 +262,13 @@ void ABaseCharacter::MoveRight(float Value)
 				{
 					Start = UKismetMathLibrary::Subtract_VectorVector(ActorLocation, CapsuleRight);
 					End = NewRightLocation;
+					isFacingLeftCover = true;
 				}
 				else
 				{
 					Start = UKismetMathLibrary::Add_VectorVector(ActorLocation, CapsuleRight);
 					End = NewLeftLocation;
+					isFacingLeftCover = false;
 				}
 
 				FCollisionQueryParams QueryParams;
