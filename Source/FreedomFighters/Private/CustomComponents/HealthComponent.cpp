@@ -66,8 +66,16 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 	if (Damage <= 0.0f) return;
 
-	// return if self damage & if friendly fire
-	if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))	return;
+
+	// Check if damaged actor is neutral, if not then check if friendly
+	UHealthComponent* HealthCompA = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+	if (HealthCompA->SelectedFaction != TeamFaction::Neutral)
+	{
+		// return if self damage & if friendly fire
+		if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))	return;
+	}
+
 	
 
 
@@ -124,7 +132,8 @@ bool UHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 		return true;
 	}
 
-	return HealthCompA->SelectedFaction == HealthCompB->SelectedFaction;
+	return HealthCompA->SelectedFaction == HealthCompB->SelectedFaction || 
+		HealthCompA->SelectedFaction == TeamFaction::Neutral || HealthCompB->SelectedFaction == TeamFaction::Neutral;
 }
 
 

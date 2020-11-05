@@ -83,6 +83,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float aimPitch;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float AimCameraFOV;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", ClampMin = 0.1, ClampMax = 100))
+		float AimCameraZoomSpeed;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isDead;
 
@@ -106,6 +112,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool ChangedCharacterDirection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool isAiming;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -151,6 +160,9 @@ private:
 	float LastForwardInputVal;
 	float LastRightInput;
 
+	float DefaultCameraFOV;
+
+
 	FTimerHandle THandler_MovemntInputDisable;
 
 	FTimerHandle THandler_ResetInitialDirectionBool;
@@ -190,6 +202,7 @@ private:
 
 	void ResetInitialDirectionBool();
 
+
 public:
 	void ShowCharacterOutline(bool CanShow);
 
@@ -198,6 +211,11 @@ public:
 		void BeginSprint();
 	UFUNCTION(BlueprintCallable, Category = "Character Actions")
 		void EndSprint();
+
+	UFUNCTION(BlueprintCallable, Category = "Character Actions")
+		virtual void BeginAim();
+	UFUNCTION(BlueprintCallable, Category = "Character Actions")
+		virtual void EndAim();
 
 
 protected:

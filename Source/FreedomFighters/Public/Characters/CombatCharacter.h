@@ -7,7 +7,7 @@
 #include "CombatCharacter.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
@@ -19,9 +19,6 @@ public:
 
 public:
 
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isAiming;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isFiring;
@@ -83,7 +80,7 @@ private:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	float HandGuardAlpha;
+		float HandGuardAlpha;
 
 
 	bool IsInAimOffSetRotation;
@@ -109,10 +106,8 @@ public:
 		void EndFire();
 	void UpdateFire();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
-		void BeginAim();
-	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
-		void EndAim();
+	virtual	void BeginAim() override;
+	virtual	void EndAim() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginReload();
@@ -125,7 +120,7 @@ public:
 	void UpdatePawnControl();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
-	void BeginWeaponSwap();
+		void BeginWeaponSwap();
 
 	void BeginEquipWeapon();
 	void GrabWeapon();
@@ -153,10 +148,10 @@ public:
 		void TargetFound();
 
 	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
-	ACombatCharacter* FindNearestFriendly();
+		ACombatCharacter* FindNearestFriendly();
 
 	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
-	ACombatCharacter* FindNearestEnemy(float TargetRange);
+		ACombatCharacter* FindNearestEnemy(float TargetRange);
 
 
 	void FriendlyKilled();
@@ -171,7 +166,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
-	
+
 public:
 	UFactionManager* getFactionObj()
 	{

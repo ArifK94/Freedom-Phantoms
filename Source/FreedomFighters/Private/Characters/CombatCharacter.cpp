@@ -74,9 +74,6 @@ void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ACombatCharacter::BeginAim);
-	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ACombatCharacter::EndAim);
-
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACombatCharacter::BeginFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACombatCharacter::EndFire);
 

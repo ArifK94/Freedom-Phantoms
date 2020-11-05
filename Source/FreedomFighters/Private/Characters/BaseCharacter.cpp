@@ -82,6 +82,9 @@ ABaseCharacter::ABaseCharacter()
 	CharacterSpeed = 0.0f;
 	CurrentDeltaTime = 0.0f;
 
+	AimCameraFOV = 50.0f;
+	AimCameraZoomSpeed = 20.0f;
+
 	isSprinting = false;
 	isDead = false;
 	canMoveForward = false;
@@ -98,6 +101,7 @@ void ABaseCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
+	DefaultCameraFOV = FollowCamera->FieldOfView;
 
 	canMoveForward = true;
 
@@ -128,6 +132,9 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ABaseCharacter::BeginAim);
+	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABaseCharacter::EndAim);
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ABaseCharacter::BeginSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ABaseCharacter::EndSprint);
@@ -327,22 +334,41 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 
 void ABaseCharacter::UpdateCameraView()
 {
-	if (isTakingCover)
+
+	// Camera Direction
+	float TargetX = DefaultCamSocketOffset.X;
+	float TargetY = DefaultCamSocketOffset.Y;
+	float TargetZ = DefaultCamSocketOffset.Z;
+	float Speed = 5.0f;
+
+	if (isTakingCover && isAtCoverCorner)
 	{
-		if (CurrentCoverType == CoverCornerType::Left)
+		TargetX = 0.0f;
+		if (!isFacingLeftCover)
 		{
-			CameraBoom->SocketOffset.Set(0.0f, -70.0f, 50.0f);
+			TargetY = -70.0f;
 		}
-		else if (CurrentCoverType == CoverCornerType::Right)
+		else
 		{
-			CameraBoom->SocketOffset.Set(0.0f, 70.0f, 50.0f);
+			TargetY = 70.0f;
 		}
+
+		TargetZ = 50.0f;
 	}
-	else
-	{
-		if (CameraBoom->SocketOffset != DefaultCamSocketOffset)
-			CameraBoom->SocketOffset = DefaultCamSocketOffset;
-	}
+
+	float XInterp = FMath::FInterpTo(CameraBoom->SocketOffset.X, TargetX, CurrentDeltaTime, Speed);
+	float YInterp = FMath::FInterpTo(CameraBoom->SocketOffset.Y, TargetY, CurrentDeltaTime, Speed);
+	float ZInterp = FMath::FInterpTo(CameraBoom->SocketOffset.Z, TargetZ, CurrentDeltaTime, Speed);
+
+	CameraBoom->SocketOffset.Set(XInterp, YInterp, ZInterp);
+
+
+	// Camera Zooming
+	float TargetFOV = isAiming ? AimCameraFOV : DefaultCameraFOV;
+	float ZoomInterp = FMath::FInterpTo(FollowCamera->FieldOfView, TargetFOV, CurrentDeltaTime, AimCameraZoomSpeed);
+	FollowCamera->SetFieldOfView(ZoomInterp);
+	
+
 }
 
 void ABaseCharacter::BeginSprint()
@@ -633,5 +659,15 @@ void ABaseCharacter::ResetInitialDirectionBool()
 	ReceeivedInitialDirection = true;
 	GetWorldTimerManager().ClearTimer(THandler_ResetInitialDirectionBool);
 
+}
+
+void ABaseCharacter::BeginAim()
+{
+	isAiming = true;
+}
+
+void ABaseCharacter::EndAim()
+{
+	isAiming = false;
 }
 
