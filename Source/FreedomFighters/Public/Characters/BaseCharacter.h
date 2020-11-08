@@ -13,7 +13,7 @@
 class UHealthComponent;
 class UAudioComponent;
 class UPostProcessComponent;
-
+class APlayerCameraManager;
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class CoverPeakAction : uint8
@@ -105,7 +105,7 @@ protected:
 		bool isAtCoverCorner;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isFacingLeftCover;
+		bool isFacingCoverRHS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool ReceeivedInitialDirection;
@@ -162,10 +162,15 @@ private:
 
 	float DefaultCameraFOV;
 
+	float DefaultCamViewYawMin;
+	float DefaultCamViewYawMax;
+
 
 	FTimerHandle THandler_MovemntInputDisable;
 
 	FTimerHandle THandler_ResetInitialDirectionBool;
+
+	 APlayerCameraManager* CamManager;
 
 
 protected:
@@ -201,7 +206,6 @@ private:
 	void RenableMovementInput();
 
 	void ResetInitialDirectionBool();
-
 
 public:
 	void ShowCharacterOutline(bool CanShow);

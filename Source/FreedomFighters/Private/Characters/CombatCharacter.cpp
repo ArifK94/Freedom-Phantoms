@@ -147,7 +147,7 @@ void ACombatCharacter::Tick(float DeltaTime)
 
 
 		UpdateHandGaurdIK();
-		//setCharacterRotation();
+		setCharacterRotation();
 		disableSprint();
 	}
 }
@@ -161,7 +161,7 @@ AWeapon* ACombatCharacter::GetCurrentWeapon()
 
 void ACombatCharacter::setCharacterRotation()
 {
-	if (isInCombatMode)
+	if (isInCombatMode && !isTakingCover)
 	{
 		float x = 0.0f, y = 0.0f;
 
@@ -403,6 +403,8 @@ void ACombatCharacter::BeginReload()
 	if (currentWeaponObj && !isReloading)
 	{
 		currentWeaponObj->BeginReload();
+		isAiming = false;
+		isFiring = false;
 	}
 }
 

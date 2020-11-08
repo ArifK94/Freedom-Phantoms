@@ -7,6 +7,7 @@
 
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
 
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -23,6 +24,8 @@
 #include "Animation/AnimInstance.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "Engine.h"
 
 // Sets default values
@@ -91,7 +94,7 @@ ABaseCharacter::ABaseCharacter()
 	ReceeivedInitialDirection = false;
 	UseRootMotion = false;
 	CoverSelected = false;
-	isFacingLeftCover = false;
+	isFacingCoverRHS = false;
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
@@ -99,6 +102,12 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CamManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+	DefaultCamViewYawMin = CamManager->ViewYawMin;
+	DefaultCamViewYawMax = CamManager->ViewYawMax;
+
+
 
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 	DefaultCameraFOV = FollowCamera->FieldOfView;
@@ -265,17 +274,19 @@ void ABaseCharacter::MoveRight(float Value)
 
 				FVector CapsuleRight = GetCapsuleComponent()->GetRightVector() * CoverDistance;
 
+				// Right side of cover from camera's perspective which is equal to
+				// character's left hand side
 				if (Value == 1)
 				{
 					Start = UKismetMathLibrary::Subtract_VectorVector(ActorLocation, CapsuleRight);
 					End = NewRightLocation;
-					isFacingLeftCover = true;
+					isFacingCoverRHS = true;
 				}
 				else
 				{
 					Start = UKismetMathLibrary::Add_VectorVector(ActorLocation, CapsuleRight);
 					End = NewLeftLocation;
-					isFacingLeftCover = false;
+					isFacingCoverRHS = false;
 				}
 
 				FCollisionQueryParams QueryParams;
@@ -299,6 +310,8 @@ void ABaseCharacter::MoveRight(float Value)
 						CoverSelected = true;
 						isAtCoverCorner = false;
 
+						CamManager->ViewYawMin = DefaultCamViewYawMin;
+						CamManager->ViewYawMax = DefaultCamViewYawMax;
 
 						//find out which way is right
 						const FRotator Rotation = Controller->GetControlRotation();
@@ -311,6 +324,19 @@ void ABaseCharacter::MoveRight(float Value)
 				else
 				{
 					isAtCoverCorner = true;
+
+
+					// Clamp the camera view in the Yaw
+					if (isFacingCoverRHS)
+					{
+						CamManager->ViewYawMin = -90.0f;
+						CamManager->ViewYawMax = 0.0f;
+					}
+					else
+					{
+						CamManager->ViewYawMin = -180.0f;
+						CamManager->ViewYawMax = -90.0f;
+					}
 				}
 
 			}
@@ -334,27 +360,29 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 
 void ABaseCharacter::UpdateCameraView()
 {
-
-	// Camera Direction
+	// Set Camera Fix Position when taking cover
 	float TargetX = DefaultCamSocketOffset.X;
 	float TargetY = DefaultCamSocketOffset.Y;
 	float TargetZ = DefaultCamSocketOffset.Z;
 	float Speed = 5.0f;
 
+
 	if (isTakingCover && isAtCoverCorner)
 	{
 		TargetX = 0.0f;
-		if (!isFacingLeftCover)
+
+		if (isFacingCoverRHS)
 		{
-			TargetY = -70.0f;
+			TargetY = 70.0f;
 		}
 		else
 		{
-			TargetY = 70.0f;
+			TargetY = -70.0f;
 		}
 
 		TargetZ = 50.0f;
 	}
+
 
 	float XInterp = FMath::FInterpTo(CameraBoom->SocketOffset.X, TargetX, CurrentDeltaTime, Speed);
 	float YInterp = FMath::FInterpTo(CameraBoom->SocketOffset.Y, TargetY, CurrentDeltaTime, Speed);
@@ -367,8 +395,6 @@ void ABaseCharacter::UpdateCameraView()
 	float TargetFOV = isAiming ? AimCameraFOV : DefaultCameraFOV;
 	float ZoomInterp = FMath::FInterpTo(FollowCamera->FieldOfView, TargetFOV, CurrentDeltaTime, AimCameraZoomSpeed);
 	FollowCamera->SetFieldOfView(ZoomInterp);
-	
-
 }
 
 void ABaseCharacter::BeginSprint()
@@ -419,6 +445,7 @@ void ABaseCharacter::AimOffset()
 	FRotator MoveToTarget = FMath::RInterpTo(Current, Target, CurrentDeltaTime, 15.0f);
 
 	UKismetMathLibrary::BreakRotator(MoveToTarget, MoveToTarget.Roll, aimPitch, aimYaw);
+
 }
 
 void ABaseCharacter::UpdateCharacterMovement()
@@ -630,6 +657,7 @@ void ABaseCharacter::EscapeCover()
 {
 	isTakingCover = false;
 	CoverSelected = false;
+	isAtCoverCorner = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
