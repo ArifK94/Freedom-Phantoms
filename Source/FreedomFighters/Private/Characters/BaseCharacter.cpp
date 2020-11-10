@@ -2,8 +2,7 @@
 
 
 #include "Characters/BaseCharacter.h"
-
-#include "Props/BaseCoverProp.h"
+#include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -33,8 +32,7 @@ ABaseCharacter::ABaseCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-
-	//GetCapsuleComponent()->SetCollisionResponseToChannels(COLLISION_WEAPON, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;

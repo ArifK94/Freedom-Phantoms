@@ -190,10 +190,17 @@ void AWeapon::Fire()
 				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
 				float ActualDamage = BulletDamage;
-				if (SurfaceType == SURFACE_FLESHVULNERABLE)
+				if (SurfaceType == SURFACE_HEAD)
 				{
-					ActualDamage *= 100;
+					ActualDamage = 100;
+					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Head!"));
 				}
+				else if (SurfaceType == SURFACE_FLESHVULNERABLE)
+				{
+					ActualDamage *= 5.0f;
+					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Vulnerable!"));
+				}
+
 
 				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
 
