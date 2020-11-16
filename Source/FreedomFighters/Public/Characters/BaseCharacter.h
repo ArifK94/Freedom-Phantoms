@@ -7,7 +7,6 @@
 
 #include "Props/BaseCoverProp.h"
 
-
 #include "BaseCharacter.generated.h"
 
 class UHealthComponent;
@@ -277,4 +276,5 @@ public:
 	{
 		CharacterDirection = Value;
 	}
+
 };

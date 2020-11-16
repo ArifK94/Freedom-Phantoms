@@ -3,9 +3,14 @@
 
 #include "CustomComponents/HealthComponent.h"
 
+#include "FreedomFighters/FreedomFighters.h"
+
 #include "Characters/CombatCharacter.h"
 
 #include "Kismet/KismetMathLibrary.h"
+
+#include "PhysicalMaterials/PhysicalMaterial.h"
+
 
 UHealthComponent::UHealthComponent()
 {
@@ -48,6 +53,8 @@ void UHealthComponent::BeginPlay()
 		MyOwner->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::HandleTakeAnyDamage);
 	}
 }
+
+
 
 void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -101,7 +108,6 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 		}
 	}
-
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 }

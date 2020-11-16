@@ -18,6 +18,15 @@ enum class TeamFaction : uint8
 	Russian 		UMETA(DisplayName = "Russian"),
 };
 
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class DeathType : uint8
+{
+	FleshDefault	UMETA(DisplayName = "FleshDefault"),
+	FleshVulnerable	UMETA(DisplayName = "FleshVulnerable"),
+	Head			UMETA(DisplayName = "Head"),
+	Groin 			UMETA(DisplayName = "Groin"),
+};
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UHealthComponent : public UActorComponent
@@ -55,9 +64,11 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
 		bool isAlive;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		DeathType deathType;
+
 private:
 	virtual void BeginPlay() override;
-
 
 	UFUNCTION(BlueprintCallable, Category = "Health Component")
 		void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -81,5 +92,10 @@ public:
 
 	bool IsAlive() {
 		return isAlive;
+	}
+
+	void SetDeathType(DeathType type)
+	{
+		deathType = type;
 	}
 };

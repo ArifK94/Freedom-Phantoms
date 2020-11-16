@@ -74,7 +74,7 @@ ABaseCharacter::ABaseCharacter()
 
 	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
 
-	VoiceAudioComponent->AttachTo(RootComponent);
+	VoiceAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 	CharacterOutlinePPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("CharacterOutlinePPComp"));
 
@@ -104,8 +104,6 @@ void ABaseCharacter::BeginPlay()
 	CamManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 	DefaultCamViewYawMin = CamManager->ViewYawMin;
 	DefaultCamViewYawMax = CamManager->ViewYawMax;
-
-
 
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 	DefaultCameraFOV = FollowCamera->FieldOfView;
@@ -558,14 +556,16 @@ void ABaseCharacter::UpdateDirection()
 
 void ABaseCharacter::ShowCharacterOutline(bool CanShow)
 {
-	TArray<UActorComponent*> SkeletalMeshComponents = this->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
+	TArray<USkeletalMeshComponent*> SkeletalMeshComponents;
+	GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
 	for (int32 ComponentIdx = 0; ComponentIdx < SkeletalMeshComponents.Num(); ++ComponentIdx)
 	{
 		auto currentSkel = Cast<USkeletalMeshComponent>(SkeletalMeshComponents[ComponentIdx]);
 		currentSkel->SetRenderCustomDepth(CanShow);
 	}
 
-	TArray<UActorComponent*> StaticComponents = this->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+	TArray<UStaticMeshComponent*> StaticComponents;
+	GetComponents<UStaticMeshComponent>(StaticComponents);
 	for (int32 ComponentIdx = 0; ComponentIdx < StaticComponents.Num(); ++ComponentIdx)
 	{
 		auto currentSkel = Cast<UStaticMeshComponent>(StaticComponents[ComponentIdx]);

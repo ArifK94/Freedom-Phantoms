@@ -19,6 +19,8 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/SkinnedMeshComponent.h"
+#include "CustomComponents/HealthComponent.h"
+
 
 #include "TimerManager.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
@@ -193,16 +195,38 @@ void AWeapon::Fire()
 				if (SurfaceType == SURFACE_HEAD)
 				{
 					ActualDamage = 100;
-					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Head!"));
 				}
 				else if (SurfaceType == SURFACE_FLESHVULNERABLE)
 				{
 					ActualDamage *= 5.0f;
-					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Vulnerable!"));
 				}
 
 
 				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
+
+				UHealthComponent* HealthComponent = Cast<UHealthComponent>(HitActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+				if (HealthComponent)
+				{
+					if (!HealthComponent->IsAlive())
+					{
+						DeathType type = DeathType::FleshDefault;
+						if (SurfaceType == SURFACE_HEAD)
+						{
+							type = DeathType::Head;
+						}
+						else if (SurfaceType == SURFACE_FLESHVULNERABLE)
+						{
+							type = DeathType::FleshVulnerable;
+						}
+						else
+						{
+							type = DeathType::FleshDefault;
+						}
+						HealthComponent->SetDeathType(type);
+					}
+				}
+
 
 				UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
 
