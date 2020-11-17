@@ -169,7 +169,7 @@ void AWeapon::Fire()
 			FVector ShotDirection = EyeRotation.Vector();
 
 			float HalfRad = FMath::DegreesToRadians(BulletSpread);
-			ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+			//ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
 
 			FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
@@ -198,34 +198,20 @@ void AWeapon::Fire()
 				}
 				else if (SurfaceType == SURFACE_FLESHVULNERABLE)
 				{
-					ActualDamage *= 5.0f;
+					ActualDamage *= 2.0f;
 				}
-
-
-				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
 
 				UHealthComponent* HealthComponent = Cast<UHealthComponent>(HitActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
 				if (HealthComponent)
 				{
-					if (!HealthComponent->IsAlive())
-					{
-						DeathType type = DeathType::FleshDefault;
-						if (SurfaceType == SURFACE_HEAD)
-						{
-							type = DeathType::Head;
-						}
-						else if (SurfaceType == SURFACE_FLESHVULNERABLE)
-						{
-							type = DeathType::FleshVulnerable;
-						}
-						else
-						{
-							type = DeathType::FleshDefault;
-						}
-						HealthComponent->SetDeathType(type);
-					}
+					HealthComponent->SetHitInfo(Hit);
 				}
+
+
+				UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
+
+
 
 
 				UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);

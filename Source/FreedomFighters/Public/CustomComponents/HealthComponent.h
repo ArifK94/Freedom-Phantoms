@@ -68,6 +68,10 @@ private:
 		DeathType deathType;
 
 private:
+	FHitResult HitInfo;
+
+
+private:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Health Component")
@@ -97,5 +101,10 @@ public:
 	void SetDeathType(DeathType type)
 	{
 		deathType = type;
+	}
+
+	void SetHitInfo(FHitResult Hit)
+	{
+		HitInfo = Hit;
 	}
 };

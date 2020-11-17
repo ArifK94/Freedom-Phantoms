@@ -348,7 +348,7 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 	{
 		isDead = true;
 		GetCharacterMovement()->StopMovementImmediately();
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
 	}

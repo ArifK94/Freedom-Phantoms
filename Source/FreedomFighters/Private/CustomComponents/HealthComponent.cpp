@@ -85,6 +85,27 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 	if (Health <= 0.0f)
 	{
 		isAlive = false;
+
+
+		// set death type
+		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
+
+		switch (SurfaceType)
+		{
+		case SURFACE_HEAD:
+			deathType = DeathType::Head;
+			break;
+		case SURFACE_FLESHVULNERABLE:
+			deathType = DeathType::FleshVulnerable;
+			break;
+		case SURFACE_GROIN:
+			break;
+		default:
+			deathType = DeathType::FleshDefault;
+			break;
+		}
+
+
 		if (DamageCauser->IsA(ACombatCharacter::StaticClass()))
 		{
 			ACombatCharacter* opposingChar = Cast<ACombatCharacter>(DamageCauser);
