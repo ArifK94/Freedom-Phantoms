@@ -6,9 +6,7 @@
 #include "Characters/BaseCharacter.h"
 #include "CombatCharacter.generated.h"
 
-/**
- *
- */
+class AWeapon;
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
 {
@@ -57,16 +55,16 @@ protected:
 private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class AWeapon* currentWeaponObj;
+		 AWeapon* currentWeaponObj;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class AWeapon* primaryWeaponObj;
+		 AWeapon* primaryWeaponObj;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class AWeapon* secondaryWeaponObj;
+		 AWeapon* secondaryWeaponObj;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class AWeapon* underBarrelWeaponObj;
+		 AWeapon* underBarrelWeaponObj;
 
 
 
@@ -182,6 +180,11 @@ public:
 
 	bool IsReloading() {
 		return isReloading;
+	}
+
+	AWeapon* GetSecondaryWeaponObj()
+	{
+		return secondaryWeaponObj;
 	}
 
 };

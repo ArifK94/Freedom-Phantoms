@@ -84,10 +84,9 @@ private:
 
 	virtual void BeginPlay() override;
 
-	void Tick(float DeltaTime);
-
-
 	virtual void Fire() override;
+	virtual void StartFire() override;
+	virtual void SemiFireDelay() override;
 
 	virtual void OnReload() override;
 

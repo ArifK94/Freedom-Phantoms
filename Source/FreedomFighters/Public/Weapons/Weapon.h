@@ -114,7 +114,7 @@ class FREEDOMFIGHTERS_API AWeapon : public AActor
 public:
 	AWeapon();
 
-	void StartFire();
+	virtual void StartFire();
 
 	void StopFire();
 
@@ -146,10 +146,12 @@ public:
 
 private:
 	void BurstDelay();
-	void SemiFireDelay();
 
 protected:
 	virtual void Fire();
+
+	virtual void SemiFireDelay();
+
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		virtual void OnReload();
@@ -168,9 +170,12 @@ protected:
 protected:
 	float CurrentDeltaTime;
 
+	int BurstAmmountCount;
+
 	class UGameInstanceController* gameInstanceController;
 
 	USkeletalMeshComponent* CharacterReference;
+
 
 protected:
 
@@ -328,7 +333,6 @@ protected:
 		FRotator CurrentMuzzleRotation;
 
 private:
-	int BurstAmmountCount;
 	float CurrentVerticleRecoil;
 
 public:

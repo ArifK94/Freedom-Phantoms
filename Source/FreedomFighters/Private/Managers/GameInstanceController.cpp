@@ -14,6 +14,8 @@ UParticleSystem* UGameInstanceController::CheckSurface(EPhysicalSurface SurfaceT
 {
 	switch (SurfaceType)
 	{
+	case SURFACE_HEAD:
+	case SURFACE_GROIN:
 	case SURFACE_FLESHDEFAULT:
 	case SURFACE_FLESHVULNERABLE:
 		return FleshImpactEffect;

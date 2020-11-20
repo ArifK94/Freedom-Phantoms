@@ -12,7 +12,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SceneComponent.h"
-#include "Kismet/GameplayStatics.h"
+
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Components/AudioComponent.h"
 #include "Math/Vector.h"
@@ -20,6 +20,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/Actor.h"
 
+#include "TimerManager.h"
 
 AShotgun::AShotgun()
 {
@@ -75,11 +76,6 @@ void AShotgun::BeginPlay()
 	hasLoadedShell = true;
 }
 
-void AShotgun::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime); // Call parent class tick function  
-}
-
 void AShotgun::Fire()
 {
 	if (CurrentAmmo <= 0 || !hasLoadedShell) return;
@@ -89,7 +85,6 @@ void AShotgun::Fire()
 
 	if (MyOwner)
 	{
-
 		hasLoadedShell = false;
 		isFiring = true;
 
@@ -143,6 +138,32 @@ void AShotgun::Fire()
 		GetWorldTimerManager().SetTimer(pullHandguardTimeHandle, this, &AShotgun::beginHandguardPull, .3f, false);
 	}
 
+}
+
+void AShotgun::SemiFireDelay()
+{
+	Super::SemiFireDelay();
+
+	if (BurstAmmountCount < 1)
+	{
+		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AShotgun::Fire, TimeBetweenShots, true, 0.0f);
+	}
+}
+
+void AShotgun::StartFire()
+{
+	Super::StartFire();
+
+	if (!isReloading)
+	{
+		isFiring = true;
+
+		float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
+
+		//GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AShotgun::SemiFireDelay, TimeBetweenShots, true, FirstDelay);
+
+		Fire();
+	}
 }
 
 

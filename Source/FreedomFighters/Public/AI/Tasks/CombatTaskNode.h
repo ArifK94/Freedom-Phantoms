@@ -21,6 +21,8 @@ class FREEDOMFIGHTERS_API UCombatTaskNode : public UBTTaskNode
 {
 	GENERATED_BODY()
 
+		UCombatTaskNode();
+
 		virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 private:
@@ -37,6 +39,8 @@ private:
 private:
 
 	FTimerHandle THandler_TimeBetweenShots;
+
+	float TimeBetweenShots;
 
 	ACombatCharacter* OwningCharacter;
 private:

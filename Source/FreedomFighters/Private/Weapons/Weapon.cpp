@@ -169,7 +169,7 @@ void AWeapon::Fire()
 			FVector ShotDirection = EyeRotation.Vector();
 
 			float HalfRad = FMath::DegreesToRadians(BulletSpread);
-			//ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+			ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
 
 			FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
