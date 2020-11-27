@@ -55,6 +55,7 @@ ACombatCharacter::ACombatCharacter()
 	isEquippingWeapon = false;
 	hasEquippedWeapon = false;
 	isSwappingWeapon = false;
+	CanAutoReloadWeapon = false;
 	isInCombatMode = false;
 	IsInAimOffSetRotation = false;
 	HasPlayedReloadingSound = false;
@@ -369,6 +370,11 @@ void ACombatCharacter::UpdateFire()
 		if (!hasEquippedWeapon || isSwappingWeapon || isReloading)
 		{
 			EndFire();
+		}
+
+		if (CanAutoReloadWeapon && currentWeaponObj->getCurrentAmmo() <= 0)
+		{
+			BeginReload();
 		}
 	}
 
