@@ -161,6 +161,9 @@ public:
 
 	void ResetVoiceSound();
 
+	void ShowCharacterOutline(bool CanShow) override;
+
+
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

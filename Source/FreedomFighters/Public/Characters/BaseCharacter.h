@@ -207,7 +207,7 @@ private:
 	void ResetInitialDirectionBool();
 
 public:
-	void ShowCharacterOutline(bool CanShow);
+	virtual void ShowCharacterOutline(bool CanShow);
 
 
 	UFUNCTION(BlueprintCallable, Category = "Character Actions")

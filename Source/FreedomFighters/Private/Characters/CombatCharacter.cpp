@@ -617,3 +617,25 @@ void ACombatCharacter::ResetVoiceSound()
 
 	HasPlayedEnemyKilledSound = false;
 }
+
+void ACombatCharacter::ShowCharacterOutline(bool CanShow)
+{
+	Super::ShowCharacterOutline(CanShow);
+
+	TArray<USkeletalMeshComponent*> SkeletalMeshComponents;
+	loadoutObj->GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
+	for (int32 ComponentIdx = 0; ComponentIdx < SkeletalMeshComponents.Num(); ++ComponentIdx)
+	{
+		auto currentSkel = Cast<USkeletalMeshComponent>(SkeletalMeshComponents[ComponentIdx]);
+		currentSkel->SetRenderCustomDepth(CanShow);
+	}
+
+	TArray<UStaticMeshComponent*> StaticComponents;
+	headgearObj->GetComponents<UStaticMeshComponent>(StaticComponents);
+	for (int32 ComponentIdx = 0; ComponentIdx < StaticComponents.Num(); ++ComponentIdx)
+	{
+		auto currentSkel = Cast<UStaticMeshComponent>(StaticComponents[ComponentIdx]);
+		currentSkel->SetRenderCustomDepth(CanShow);
+	}
+
+}
