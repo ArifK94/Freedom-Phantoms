@@ -75,7 +75,7 @@ void AGrenadeLauncher::Fire()
 			ShotAudioComponent->Play(0.0f);
 		}
 
-		if (CurrentAmmo <= 0 && canAutoReload)
+		if (CurrentAmmo <= 0)
 		{
 			BeginReload();
 		}

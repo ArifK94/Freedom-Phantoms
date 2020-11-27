@@ -65,7 +65,6 @@ AWeapon::AWeapon()
 
 	isReloading = false;
 	canShowClip = true;
-	canAutoReload = true;
 	HasUnlimitedAmmo = false;
 
 }
@@ -143,18 +142,8 @@ void AWeapon::Fire()
 	if (MyOwner)
 	{
 
-		if (CurrentAmmo <= 0)
-		{
-			if (canAutoReload)
-			{
-				BeginReload();
-				return;
-			}
-			else
-			{
-				return;
-			}
-		}
+		if (CurrentAmmo <= 0) return;
+		
 
 		// Trace world from pawn eyes to cross hair location
 		FVector EyeLocation;

@@ -10,11 +10,6 @@
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 
-UOrderTaskNode::UOrderTaskNode()
-{
-}
-
-
 
 EBTNodeResult::Type UOrderTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {

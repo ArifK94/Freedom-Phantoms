@@ -17,9 +17,6 @@ class FREEDOMFIGHTERS_API UOrderTaskNode : public UBTTaskNode
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
-public:
-	UOrderTaskNode();
-
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

@@ -15,11 +15,6 @@
 #include "Engine/World.h"
 #include "Kismet/KismetMathLibrary.h"
 
-UCombatTaskNode::UCombatTaskNode()
-{
-	TimeBetweenShots = FMath::RandRange(.1f, 4.0f);
-}
-
 EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
@@ -33,60 +28,56 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 	if (OwningCharacter)
 	{
+		AWeapon* CurrentWeapon = OwningCharacter->GetCurrentWeapon();
 
-		if (OwningCharacter->GetCurrentWeapon())
+		if (CurrentWeapon)
 		{
 			if (!OwningCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
 				OwningCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
-		}
-
-		if (EnemyObj)
-		{
-			AActor* EnemyActor = Cast<AActor>(EnemyObj);
-
-			AIOwner->SetFocus(EnemyActor);
 
 			if (OwningCharacter->IsReloading())
 			{
 				OwningCharacter->EndFire();
 				OwningCharacter->EndAim();
 			}
-			else
+
+
+			if (EnemyObj)
 			{
+				AActor* EnemyActor = Cast<AActor>(EnemyObj);
+
+				AIOwner->SetFocus(EnemyActor);
+
 				OwningCharacter->BeginAim();
-			}
 
-
-
-			// Shotguns requires bolt action rather than constant firing of weapon
-			if (OwningCharacter->GetCurrentWeapon())
-			{
-				AWeapon* WeaponObj = OwningCharacter->GetCurrentWeapon();
-				if (WeaponObj->getCurrentAmmo() <= 0)
+				if (CurrentWeapon->getCurrentAmmo() <= 0)
 				{
 					// check if enemy distance is close, if so then pull out pistol
 					// otherwise reload
 
-					//float PawnLocation = Pawn->GetActorLocation().Size();
-					//float EnemyLocation = EnemyActor->GetActorLocation().Size();
+					float PawnLocation = Pawn->GetActorLocation().Size();
+					float EnemyLocation = EnemyActor->GetActorLocation().Size();
 
-					//auto DistanceDiff = PawnLocation - EnemyLocation;
+					float DistanceDiff = PawnLocation - EnemyLocation;
 
-					//if (DistanceDiff < 1000.0f && OwningCharacter->GetCurrentWeapon() != OwningCharacter->GetSecondaryWeaponObj())
-					//{
-					//	OwningCharacter->EndFire();
-					//	OwningCharacter->EndAim();
-					//	OwningCharacter->swapWeapon();
-					//}
-					//else
-					//{
-					//	WeaponObj->BeginReload();
-					//}
+					float randomDistanceLimit = FMath::RandRange(50.0f, 100.0f);
+					randomDistanceLimit = 50.0f;
 
-					WeaponObj->BeginReload();
+					if ((DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCharacter->GetSecondaryWeaponObj())
+						|| ( DistanceDiff > randomDistanceLimit && CurrentWeapon == OwningCharacter->GetSecondaryWeaponObj()))
+					{
+						OwningCharacter->EndFire();
+						OwningCharacter->EndAim();
+						OwningCharacter->BeginWeaponSwap();
+					}
+					else
+					{
+						CurrentWeapon->BeginReload();
+					}
 				}
 				else
 				{
+					// Shotguns requires bolt action rather than constant firing of weapon
 					// check if using shotgun weapon type 
 					AShotgun* ShotgunObj = Cast<AShotgun>(OwningCharacter->GetCurrentWeapon());
 
@@ -103,32 +94,57 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 					}
 					else
 					{
-						//OwningCharacter->GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, OwningCharacter, &ACombatCharacter::BeginFire, 1.0f, false, 0.0f);
 						OwningCharacter->BeginFire();
+						//OwningCharacter->GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &UCombatTaskNode::EndFiring, FMath::RandRange(1.0f, 3.0f), false, 0.0f);
 					}
 				}
+
+
+			}
+			else
+			{
+
+				if (CurrentWeapon->getCurrentAmmo() <= 0) // replenish clip if finished completely
+				{
+					ReloadWeapon();
+				}
+				else if (CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // replenish if not on full clip
+				{
+					OwningCharacter->GetWorldTimerManager().SetTimer(THandler_TimeReloadWeapon, this, &UCombatTaskNode::ReloadWeapon, FMath::RandRange(5.0f, 10.0f), false, 0.0f);
+				}
+				else
+				{
+					// switch back to primary
+					if (CurrentWeapon == OwningCharacter->GetSecondaryWeaponObj())
+					{
+						OwningCharacter->BeginWeaponSwap();
+					}
+				}
+
+				OwningCharacter->EndFire();
+				OwningCharacter->EndAim();
+				OwningCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 			}
 
-
-			return EBTNodeResult::Succeeded;
-
 		}
-		else
-		{
-			OwningCharacter->EndFire();
-			OwningCharacter->EndAim();
-			OwningCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
-		}
+
+
+
 	}
-
-
 	return EBTNodeResult::Succeeded;
+
 }
+
 
 void UCombatTaskNode::EndFiring()
 {
-	OwningCharacter->BeginFire();
+	OwningCharacter->EndFire();
+	OwningCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
+}
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("%f"), TimeBetweenShots));
+void UCombatTaskNode::ReloadWeapon()
+{
+	OwningCharacter->BeginReload();
+	OwningCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeReloadWeapon);
 }

@@ -5,6 +5,7 @@
 #include "AIController.h"
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
+#include "NavFilters/NavigationQueryFilter.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -16,6 +17,7 @@
 UMovementTaskNode::UMovementTaskNode()
 {
 	AcceptanceRadius = 100.0f;
+	DistanceDiffSprint = 200.0f;
 }
 
 EBTNodeResult::Type UMovementTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -32,11 +34,11 @@ EBTNodeResult::Type UMovementTaskNode::ExecuteTask(UBehaviorTreeComponent& Owner
 	{
 		FVector OwnerLocation = OwningCharacter->GetActorLocation();
 
-		AIOwner->MoveToLocation(TargetDestination, AcceptanceRadius);
+		AIOwner->MoveToLocation(TargetDestination, AcceptanceRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
 
 		float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 
-		if (CurrentTargetDistance > 200.0f)
+		if (CurrentTargetDistance > DistanceDiffSprint)
 		{
 			OwningCharacter->BeginSprint();
 		}

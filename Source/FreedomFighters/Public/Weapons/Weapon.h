@@ -114,7 +114,7 @@ class FREEDOMFIGHTERS_API AWeapon : public AActor
 public:
 	AWeapon();
 
-	virtual void StartFire();
+	void StartFire();
 
 	void StopFire();
 
@@ -146,12 +146,10 @@ public:
 
 private:
 	void BurstDelay();
+	void SemiFireDelay();
 
 protected:
 	virtual void Fire();
-
-	virtual void SemiFireDelay();
-
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		virtual void OnReload();
@@ -206,8 +204,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
 		bool canShowClip;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		bool canAutoReload;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool isFiring;

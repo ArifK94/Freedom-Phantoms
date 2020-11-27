@@ -85,8 +85,7 @@ private:
 	virtual void BeginPlay() override;
 
 	virtual void Fire() override;
-	virtual void StartFire() override;
-	virtual void SemiFireDelay() override;
+
 
 	virtual void OnReload() override;
 

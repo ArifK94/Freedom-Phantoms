@@ -140,32 +140,6 @@ void AShotgun::Fire()
 
 }
 
-void AShotgun::SemiFireDelay()
-{
-	Super::SemiFireDelay();
-
-	if (BurstAmmountCount < 1)
-	{
-		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AShotgun::Fire, TimeBetweenShots, true, 0.0f);
-	}
-}
-
-void AShotgun::StartFire()
-{
-	Super::StartFire();
-
-	if (!isReloading)
-	{
-		isFiring = true;
-
-		float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
-
-		//GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AShotgun::SemiFireDelay, TimeBetweenShots, true, FirstDelay);
-
-		Fire();
-	}
-}
-
 
 
 
