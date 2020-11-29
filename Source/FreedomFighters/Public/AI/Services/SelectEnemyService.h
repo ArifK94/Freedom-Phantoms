@@ -17,4 +17,8 @@ class FREEDOMFIGHTERS_API USelectEnemyService : public UBTService
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FBlackboardKeySelector BB_TargetActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float TargetSightDistance = 4000.0f;
+
 };

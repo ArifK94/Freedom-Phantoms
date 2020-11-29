@@ -58,13 +58,11 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 					float PawnLocation = Pawn->GetActorLocation().Size();
 					float EnemyLocation = EnemyActor->GetActorLocation().Size();
 
-					float DistanceDiff = PawnLocation - EnemyLocation;
+					float DistanceDiff = UKismetMathLibrary::Abs(PawnLocation - EnemyLocation);
 
-					float randomDistanceLimit = FMath::RandRange(50.0f, 100.0f);
-					randomDistanceLimit = 50.0f;
+					float randomDistanceLimit = FMath::RandRange(800.0f, 1000.0f);
 
-					if ((DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCharacter->GetSecondaryWeaponObj())
-						|| ( DistanceDiff > randomDistanceLimit && CurrentWeapon == OwningCharacter->GetSecondaryWeaponObj()))
+					if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCharacter->GetSecondaryWeaponObj())
 					{
 						OwningCharacter->EndFire();
 						OwningCharacter->EndAim();

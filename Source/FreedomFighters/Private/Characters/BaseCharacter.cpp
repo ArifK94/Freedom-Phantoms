@@ -124,11 +124,6 @@ void ABaseCharacter::Tick(float DeltaTime)
 	UpdateCharacterMovement();
 
 	AimOffset();
-
-	if (isDead)
-	{
-		ShowCharacterOutline(false);
-	}
 }
 
 // Called to bind functionality to input
@@ -346,11 +341,15 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 {
 	if (Health <= 0.0f && !isDead)
 	{
-		isDead = true;
+		ShowCharacterOutline(false);
+
 		GetCharacterMovement()->StopMovementImmediately();
 		//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
+
+		isDead = true;
+
 	}
 }
 

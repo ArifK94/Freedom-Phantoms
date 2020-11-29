@@ -15,7 +15,6 @@
 
 void USelectEnemyService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	float TargetSightDistance = 1000.0f;
 
 	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
 
