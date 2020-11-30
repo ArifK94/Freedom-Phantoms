@@ -26,6 +26,7 @@ void USelectEnemyService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 	AActor* SelectedTargetActor = nullptr;
 
 	UAIPerceptionComponent* AISight = Cast<UAIPerceptionComponent>(Pawn->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
+	float TargetSightDistance = 4000.0f;
 
 	TArray<AActor*> ActorsInSight;
 

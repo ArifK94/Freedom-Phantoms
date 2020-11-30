@@ -622,20 +622,25 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 {
 	Super::ShowCharacterOutline(CanShow);
 
-	TArray<USkeletalMeshComponent*> SkeletalMeshComponents;
-	loadoutObj->GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
-	for (int32 ComponentIdx = 0; ComponentIdx < SkeletalMeshComponents.Num(); ++ComponentIdx)
+	if (loadoutObj !=  nullptr)
 	{
-		auto currentSkel = Cast<USkeletalMeshComponent>(SkeletalMeshComponents[ComponentIdx]);
-		currentSkel->SetRenderCustomDepth(CanShow);
+		TArray<USkeletalMeshComponent*> LoadoutSkeletalMeshComponents;
+		loadoutObj->GetComponents<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents);
+		for (int32 ComponentIdx = 0; ComponentIdx < LoadoutSkeletalMeshComponents.Num(); ++ComponentIdx)
+		{
+			auto currentSkel = Cast<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents[ComponentIdx]);
+			currentSkel->SetRenderCustomDepth(CanShow);
+		}
 	}
 
-	TArray<UStaticMeshComponent*> StaticComponents;
-	headgearObj->GetComponents<UStaticMeshComponent>(StaticComponents);
-	for (int32 ComponentIdx = 0; ComponentIdx < StaticComponents.Num(); ++ComponentIdx)
+	if (headgearObj != nullptr)
 	{
-		auto currentSkel = Cast<UStaticMeshComponent>(StaticComponents[ComponentIdx]);
-		currentSkel->SetRenderCustomDepth(CanShow);
+		TArray<UStaticMeshComponent*> HeadgearStaticComponents;
+		headgearObj->GetComponents<UStaticMeshComponent>(HeadgearStaticComponents);
+		for (int32 ComponentIdx = 0; ComponentIdx < HeadgearStaticComponents.Num(); ++ComponentIdx)
+		{
+			auto currentSkel = Cast<UStaticMeshComponent>(HeadgearStaticComponents[ComponentIdx]);
+			currentSkel->SetRenderCustomDepth(CanShow);
+		}
 	}
-
 }
