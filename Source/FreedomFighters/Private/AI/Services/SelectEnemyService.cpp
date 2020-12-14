@@ -39,26 +39,31 @@ void USelectEnemyService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
-		bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
-		bool IsEnemy = !UHealthComponent::IsFriendly(Pawn, CurrentActor);
-
-
-		if (IsEnemy && IsAlive)
+		if (CurrentHealth)
 		{
-			float PawnLocation = Pawn->GetActorLocation().Size();
-			float EnemyLocation = CurrentActor->GetActorLocation().Size();
+			bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
+			bool IsEnemy = !UHealthComponent::IsFriendly(Pawn, CurrentActor);
 
-			auto DistanceDiff = PawnLocation - EnemyLocation;
 
-			if (DistanceDiff < TargetSightDistance)
+			if (IsEnemy && IsAlive)
 			{
-				TargetSightDistance = DistanceDiff;
+				float PawnLocation = Pawn->GetActorLocation().Size();
+				float EnemyLocation = CurrentActor->GetActorLocation().Size();
 
-				SelectedTargetActor = CurrentActor;
+				auto DistanceDiff = PawnLocation - EnemyLocation;
 
-				OwningCharacter->TargetFound();
+				if (DistanceDiff < TargetSightDistance)
+				{
+					TargetSightDistance = DistanceDiff;
+
+					SelectedTargetActor = CurrentActor;
+
+					OwningCharacter->TargetFound();
+				}
 			}
 		}
+
+
 	}
 
 	BlackboardComp->SetValueAsObject(BB_TargetActor.SelectedKeyName, SelectedTargetActor);

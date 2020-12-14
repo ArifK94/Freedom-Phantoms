@@ -6,12 +6,14 @@
 #include "Accessories/Goggle.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+
 #include "Components/SpotLightComponent.h"
 #include "Math/UnrealMathUtility.h"
 
 AHeadgear::AHeadgear()
 {
-	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
 	Mesh->CanCharacterStepUpOn = ECB_No;
 
@@ -28,6 +30,7 @@ void AHeadgear::BeginPlay()
 
 	SpawnGoggle();
 	SpawnNVG();
+	ToggleRandomAccessory();
 }
 
 void AHeadgear::SpawnNVG()
@@ -81,50 +84,33 @@ void AHeadgear::SpawnGoggle()
 // Toggle visibility between goggles & night vision goggles
 void AHeadgear::ToggleRandomAccessory()
 {
-	int random = FMath::RandRange(0, 1);
+	int RandomAccessory = FMath::RandRange(0, 1);
 
-	switch (random)
+	switch (RandomAccessory)
 	{
-	case 0:
-	//	Nightvision_Goggles->SetVisibility(false);
+	case 1: // show nightvision goggles
+		NightVisionGoggleObj->GetMesh()->SetVisibility(true);
+		GoggleObj->GetMesh()->SetVisibility(true);
 		break;
-	case 1:
-	//	Goggles->SetVisibility(false);
-		break;
-	default:
-	//	Nightvision_Goggles->SetVisibility(false);
-		break;
-	}
-}
+	default: // show goggles
+		NightVisionGoggleObj->GetMesh()->SetVisibility(false);
+		GoggleObj->GetMesh()->SetVisibility(true);
 
-void AHeadgear::ToggleVisor()
-{
-	FRotator VisorAngle;
+		int RandomGoggleVisor = FMath::RandRange(0, 1);
 
-	if (isNightVisionOn)
-	{
-		VisorAngle.Roll = 0.0f;
-		isNightVisionOn = false;
-	}
-	else
-	{
-		VisorAngle.Roll = 140.0f;
-		isNightVisionOn = true;
+		if (RandomAccessory == 0)
+		{
+			IsGoggleOff = true;
+		}
+		else
+		{
+			IsGoggleOff = false;
+		}
+		break;
 	}
 }
 
 void AHeadgear::ToggleGoggles()
 {
-	FRotator GogglesAngle;
-
-	if (isGogglesOff)
-	{
-		GogglesAngle.Roll = 0.0f;
-		isGogglesOff = false;
-	}
-	else
-	{
-		GogglesAngle.Roll = -30.0f;
-		isGogglesOff = true;
-	}
+	IsGoggleOff = !IsGoggleOff;
 }

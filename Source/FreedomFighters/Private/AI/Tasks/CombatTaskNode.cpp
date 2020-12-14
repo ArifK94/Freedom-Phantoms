@@ -62,7 +62,7 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 					float randomDistanceLimit = FMath::RandRange(800.0f, 1000.0f);
 
-					if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCharacter->GetSecondaryWeaponObj())
+					if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCharacter->GetSecondaryWeaponObj() && !OwningCharacter->IsInHelicopter())
 					{
 						OwningCharacter->EndFire();
 						OwningCharacter->EndAim();

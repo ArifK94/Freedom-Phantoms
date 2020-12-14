@@ -51,6 +51,10 @@ public:
 
 	bool getVisorState() { return isVisorOn;  }
 
+	USkeletalMeshComponent* GetMesh() {
+		return Mesh;
+	}
+
 protected:
 
 	virtual void BeginPlay() override;

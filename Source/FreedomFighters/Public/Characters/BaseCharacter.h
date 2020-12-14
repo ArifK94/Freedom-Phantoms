@@ -115,6 +115,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isAiming;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool isInHelicopter;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int32 HelicopterSeatPosition;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
@@ -261,6 +266,19 @@ protected:
 public:
 	bool getisDead() {
 		return isDead;
+	}
+
+	bool IsInHelicopter() {
+		return isInHelicopter;
+	}
+
+
+	void SetIsInHelicopter(bool value){
+		isInHelicopter = value;
+	}
+
+	void SetHelicopterSeatPosition(int32 position) {
+		HelicopterSeatPosition = position;
 	}
 
 	UPostProcessComponent* getCharacterOutlinePPComp() {

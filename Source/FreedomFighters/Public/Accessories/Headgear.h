@@ -16,7 +16,7 @@ class FREEDOMFIGHTERS_API AHeadgear : public AAccessory
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Headgear", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Mesh;
+		USkeletalMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Headgear Attachments", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class AGoggle> Goggle;
@@ -33,18 +33,14 @@ private:
 		FName NVGSocket;
 
 
-
-
-	bool isNightVisionOn;
-	bool isGogglesOff;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Headgear", meta = (AllowPrivateAccess = "true"))
+		bool IsGoggleOff;
 
 public:	
 	AHeadgear();
 
 
 	void ToggleRandomAccessory();
-
-	void ToggleVisor();
 
 	void ToggleGoggles();
 

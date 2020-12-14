@@ -18,8 +18,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Goggles", meta = (AllowPrivateAccess = "true"))
 		UStaticMeshComponent* Mesh;
 
+
+
 protected:
 	virtual void BeginPlay() override;
 
 
+public:
+	UStaticMeshComponent* GetMesh() {
+		return Mesh;
+	}
 };
