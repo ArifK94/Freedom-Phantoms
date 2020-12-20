@@ -8,7 +8,6 @@
 #include "Weapons/Shotgun.h"
 
 #include "Kismet/KismetMathLibrary.h"
-#include "Kismet/GameplayStatics.h"
 
 #include "CustomComponents/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -24,6 +23,8 @@
 ACombatAIController::ACombatAIController()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	CurrentDeltaTime = 0.0f;
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -49,12 +50,14 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 	const AActor* parent = GetOwner();
 
-
+	BulletFireCountDown = 0.0f;
+	FiringWaitTime = 0.0f;
 }
 
 void ACombatAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	CurrentDeltaTime = DeltaTime;
 
 	if (OwningCombatCharacter)
 	{
@@ -215,7 +218,7 @@ void ACombatAIController::ShootAtEnemy()
 				{
 					if (ShotgunObj->HasLoadedShell())
 					{
-						OwningCombatCharacter->BeginFire();
+						StartFiring();
 					}
 					else
 					{
@@ -224,8 +227,7 @@ void ACombatAIController::ShootAtEnemy()
 				}
 				else
 				{
-					OwningCombatCharacter->BeginFire();
-					GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &ACombatAIController::EndFiring, FMath::RandRange(1.0f, 3.0f), false, 0.0f);
+					StartFiring();
 				}
 			}
 
@@ -253,23 +255,48 @@ void ACombatAIController::ShootAtEnemy()
 					OwningCombatCharacter->BeginWeaponSwap();
 				}
 			}
-
-
-			//OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 		}
 
 	}
 
 }
 
+void ACombatAIController::StartFiring()
+{
+	if (BulletFireCountDown > 0.0f)
+	{
+		if (!IsCoolingDown)
+		{
+			OwningCombatCharacter->BeginFire();
+			BulletFireCountDown -= CurrentDeltaTime;
+		}
+	}
+	else
+	{
+		OwningCombatCharacter->EndFire();
+		IsCoolingDown = true;
+	}
+
+	if (IsCoolingDown)
+	{
+		if (BulletFireCountDown <= FiringWaitTime)
+		{
+			BulletFireCountDown += CurrentDeltaTime;
+		}
+		else
+		{
+			IsCoolingDown = false;
+			FiringWaitTime = FMath::RandRange(1.0f, 3.0f);
+		}
+	}
+}
+
 void ACombatAIController::EndFiring()
 {
 	OwningCombatCharacter->EndFire();
-	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 }
 
 void ACombatAIController::ReloadWeapon()
 {
 	OwningCombatCharacter->BeginReload();
-	GetWorldTimerManager().ClearTimer(THandler_TimeReloadWeapon);
 }

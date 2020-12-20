@@ -25,9 +25,11 @@ private:
 	UAIPerceptionComponent* PerceptionComp;
 	AWeapon* CurrentWeapon;
 
-	FTimerHandle THandler_TimeBetweenShots;
-	FTimerHandle THandler_TimeReloadWeapon;
 
+	float CurrentDeltaTime;
+	float BulletFireCountDown;
+	float FiringWaitTime;
+	bool IsCoolingDown;
 
 public:
 	ACombatAIController();
@@ -40,6 +42,8 @@ private:
 	AActor* FindEnemy();
 
 	void ShootAtEnemy();
+
+	void StartFiring();
 
 	void EndFiring();
 
