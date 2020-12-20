@@ -172,13 +172,13 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	UFactionManager* getFactionObj()
-	{
+	UFactionManager* getFactionObj(){
 		return FactionObj;
 	}
 
-
-	void setCommandingOfficer(ACommanderCharacter* Commander) { CommandingOfficer = Commander; }
+	void setCommandingOfficer(ACommanderCharacter* Commander) { 
+		CommandingOfficer = Commander; 
+	}
 
 	ACommanderCharacter* getCommander() {
 		return CommandingOfficer;
@@ -188,8 +188,7 @@ public:
 		return isReloading;
 	}
 
-	AWeapon* GetSecondaryWeaponObj()
-	{
+	AWeapon* GetSecondaryWeaponObj(){
 		return secondaryWeaponObj;
 	}
 

@@ -20,6 +20,7 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 
+#include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -40,7 +41,9 @@
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
 
+#include "Containers/Array.h"
 
+#include "GameFramework/Controller.h"
 
 
 ACombatCharacter::ACombatCharacter()
@@ -68,9 +71,10 @@ ACombatCharacter::ACombatCharacter()
 	SecondaryWeaponHandSocket = "weapon_hand_secondary";
 }
 
+
+
 //////////////////////////////////////////////////////////////////////////
 // Input
-
 void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -150,6 +154,7 @@ void ACombatCharacter::Tick(float DeltaTime)
 		UpdateHandGaurdIK();
 		setCharacterRotation();
 		disableSprint();
+
 	}
 }
 
@@ -162,7 +167,7 @@ AWeapon* ACombatCharacter::GetCurrentWeapon()
 
 void ACombatCharacter::setCharacterRotation()
 {
-	if (isInCombatMode && !isTakingCover)
+	if (isInCombatMode && !isTakingCover && !isInHelicopter)
 	{
 		float x = 0.0f, y = 0.0f;
 
@@ -333,7 +338,7 @@ void ACombatCharacter::BeginFire()
 {
 	if (currentWeaponObj)
 	{
-		if (hasEquippedWeapon && !isReloading)
+		if (hasEquippedWeapon && !isReloading && !isFiring)
 		{
 			isFiring = true;
 			currentWeaponObj->StartFire();
@@ -367,11 +372,6 @@ void ACombatCharacter::UpdateFire()
 {
 	if (currentWeaponObj)
 	{
-		if (!hasEquippedWeapon || isSwappingWeapon || isReloading)
-		{
-			EndFire();
-		}
-
 		if (CanAutoReloadWeapon && currentWeaponObj->getCurrentAmmo() <= 0)
 		{
 			BeginReload();
@@ -622,25 +622,44 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 {
 	Super::ShowCharacterOutline(CanShow);
 
-	if (loadoutObj !=  nullptr)
+	if (loadoutObj != nullptr)
 	{
 		TArray<USkeletalMeshComponent*> LoadoutSkeletalMeshComponents;
 		loadoutObj->GetComponents<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents);
 		for (int32 ComponentIdx = 0; ComponentIdx < LoadoutSkeletalMeshComponents.Num(); ++ComponentIdx)
 		{
-			auto currentSkel = Cast<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents[ComponentIdx]);
-			currentSkel->SetRenderCustomDepth(CanShow);
+			auto currentComp = Cast<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents[ComponentIdx]);
+			currentComp->SetRenderCustomDepth(CanShow);
+		}
+
+		TArray<UStaticMeshComponent*> LoadoutStaticComponents;
+		loadoutObj->GetComponents<UStaticMeshComponent>(LoadoutStaticComponents);
+		for (int32 ComponentIdx = 0; ComponentIdx < LoadoutStaticComponents.Num(); ++ComponentIdx)
+		{
+			auto currentComp = Cast<UStaticMeshComponent>(LoadoutStaticComponents[ComponentIdx]);
+			currentComp->SetRenderCustomDepth(CanShow);
 		}
 	}
 
 	if (headgearObj != nullptr)
 	{
+		TArray<USkeletalMeshComponent*> HeadgearSkeletalMeshComponents;
+		loadoutObj->GetComponents<USkeletalMeshComponent>(HeadgearSkeletalMeshComponents);
+		for (int32 ComponentIdx = 0; ComponentIdx < HeadgearSkeletalMeshComponents.Num(); ++ComponentIdx)
+		{
+			auto currentComp = Cast<USkeletalMeshComponent>(HeadgearSkeletalMeshComponents[ComponentIdx]);
+			currentComp->SetRenderCustomDepth(CanShow);
+		}
+
+
 		TArray<UStaticMeshComponent*> HeadgearStaticComponents;
 		headgearObj->GetComponents<UStaticMeshComponent>(HeadgearStaticComponents);
 		for (int32 ComponentIdx = 0; ComponentIdx < HeadgearStaticComponents.Num(); ++ComponentIdx)
 		{
-			auto currentSkel = Cast<UStaticMeshComponent>(HeadgearStaticComponents[ComponentIdx]);
-			currentSkel->SetRenderCustomDepth(CanShow);
+			auto currentComp = Cast<UStaticMeshComponent>(HeadgearStaticComponents[ComponentIdx]);
+			currentComp->SetRenderCustomDepth(CanShow);
 		}
 	}
 }
+
+

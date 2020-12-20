@@ -13,6 +13,7 @@ class UHealthComponent;
 class UAudioComponent;
 class UPostProcessComponent;
 class APlayerCameraManager;
+class AAIController;
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class CoverPeakAction : uint8
@@ -53,7 +54,6 @@ public:
 
 
 protected:
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement", meta = (AllowPrivateAccess = "true"))
 		bool UseRootMotion;
@@ -139,6 +139,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* VoiceAudioComponent;
 
+
 protected:
 
 	float defaultMaxWalkSpeed;
@@ -174,7 +175,7 @@ private:
 
 	FTimerHandle THandler_ResetInitialDirectionBool;
 
-	 APlayerCameraManager* CamManager;
+	APlayerCameraManager* CamManager;
 
 
 protected:
@@ -294,5 +295,4 @@ public:
 	{
 		CharacterDirection = Value;
 	}
-
 };

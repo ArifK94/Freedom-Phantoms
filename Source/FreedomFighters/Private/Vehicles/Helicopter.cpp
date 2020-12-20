@@ -4,13 +4,13 @@
 #include "Vehicles/Helicopter.h"
 
 #include "Characters/BaseCharacter.h"
+#include "Camera/CameraComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 
 #include "Components/AudioComponent.h"
-
-#include "Kismet/KismetStringLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AHelicopter::AHelicopter()
 {
@@ -25,8 +25,6 @@ AHelicopter::AHelicopter()
 
 	RotorAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("RotorAudio"));
 	RotorAudio->AttachTo(HelicopterMesh);
-
-	PassengerSeatPrefix = "DoorSitPos";
 }
 
 void AHelicopter::BeginPlay()
@@ -43,35 +41,28 @@ void AHelicopter::Tick(float DeltaTime)
 
 void AHelicopter::SpawnPassenger()
 {
-	if (PassengerCharacter)
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	for (int i = 0; i < HelicopterSeating.Num(); i++) 
 	{
-		const TArray<USkeletalMeshSocket*> AllSockets = HelicopterMesh->SkeletalMesh->GetActiveSocketList();
+		FHelicopterSeating HeliSeat = HelicopterSeating[i];
 
-		for (int32 SocketIdx = 0; SocketIdx < AllSockets.Num(); ++SocketIdx)
+		HeliSeat.CharacterObj = GetWorld()->SpawnActor<ABaseCharacter>(HeliSeat.Character, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+		if (HeliSeat.CharacterObj)
 		{
-			FName socketName = AllSockets[SocketIdx]->SocketName;
-			FString socketNameString = UKismetStringLibrary::Conv_NameToString(socketName);
+			HeliSeat.CharacterObj->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
+			HeliSeat.CharacterObj->SetIsInHelicopter(true);
+			HeliSeat.CharacterObj->SetHelicopterSeatPosition(HeliSeat.SeatPosition);
 
-			if (socketNameString.Contains(UKismetStringLibrary::Conv_NameToString(PassengerSeatPrefix)))
-			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			FRotator CamRotation = HeliSeat.CharacterObj->FollowCamera->GetComponentRotation();
 
+			float TargetYaw = FMath::Clamp(CamRotation.Yaw, HeliSeat.CameraViewYawMin, HeliSeat.CameraViewYawMax);
 
-				FTransform SeatTransform = HelicopterMesh->GetSocketTransform(socketName, ERelativeTransformSpace::RTS_World);
-
-				PassengerCharacterObj = GetWorld()->SpawnActor<ABaseCharacter>(PassengerCharacter, SeatTransform.GetLocation(), SeatTransform.GetRotation().Rotator(), SpawnParams);
-
-				if (PassengerCharacterObj)
-				{
-					PassengerCharacterObj->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, socketName);
-					PassengerCharacterObj->SetIsInHelicopter(true);
-
-					// get the position number which is the suffix
-					FString position = UKismetStringLibrary::GetSubstring(socketNameString, socketNameString.Len() - 1, 1);
-					PassengerCharacterObj->SetHelicopterSeatPosition(UKismetStringLibrary::Conv_StringToInt(position));
-				}
-			}
+			FRotator TargetRotation = UKismetMathLibrary::MakeRotator(CamRotation.Roll, CamRotation.Pitch, TargetYaw);
+		//	HeliSeat.CharacterObj->FollowCamera->SetWorldRotation(TargetRotation);
 		}
+
 	}
 }

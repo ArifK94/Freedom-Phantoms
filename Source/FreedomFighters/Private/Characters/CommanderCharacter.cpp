@@ -96,10 +96,11 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 
 void ACommanderCharacter::CheckRecruit()
 {
-	if (GetCurrentTraceHit().bBlockingHit)
+	FHitResult HitResult = GetCurrentTraceHit();
+	if (HitResult.bBlockingHit)
 	{
 
-		auto CurrentTargetActor = GetCurrentTraceHit().GetActor();
+		auto CurrentTargetActor = HitResult.GetActor();
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
 		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
 
