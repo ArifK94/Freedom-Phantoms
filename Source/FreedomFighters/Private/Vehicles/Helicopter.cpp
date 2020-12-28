@@ -16,6 +16,9 @@
 #include "Components/TimelineComponent.h"
 #include "Components/SplineComponent.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/EngineTypes.h"
+
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -42,11 +45,11 @@ void AHelicopter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SpawnPassenger();
+
 	FindPath();
 
 	HelicopterMesh->OnComponentBeginOverlap.AddDynamic(this, &AHelicopter::OnOverlapBegin);
-
-	SpawnPassenger();
 }
 
 void AHelicopter::Tick(float DeltaTime)
@@ -109,7 +112,7 @@ void AHelicopter::FindPath()
 			{
 				AircraftPath = Cast<AAircraftSplinePath>(Actor);
 
-				// setup timeline for following the path
+				// setup time line for following the path
 				if (CurveFloat)
 				{
 					FOnTimelineFloat TimelineProgress;
@@ -152,11 +155,19 @@ void AHelicopter::SpawnPassenger()
 
 			if (HeliSeat.CharacterObj)
 			{
-				HeliSeat.CharacterObj->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
-				HeliSeat.CharacterObj->SetIsInHelicopter(true);
-				HeliSeat.CharacterObj->SetHelicopterSeatPosition(HeliSeat.SeatPosition);
+				ABaseCharacter* Character = HeliSeat.CharacterObj;
+
+				Character->GetCharacterMovement()->DefaultLandMovementMode = EMovementMode::MOVE_Flying;
+				Character->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
+				Character->SetActorRelativeLocation(FVector::ZeroVector);
+				Character->SetActorRelativeRotation(FRotator::ZeroRotator);
+				Character->SetIsInHelicopter(true);
+				Character->SetHelicopterSeatPosition(HeliSeat.SeatPosition);
 				HeliSeat.OwningHelicopter = this;
-				HeliSeat.CharacterObj->SetHelicopterSeating(HeliSeat);
+
+
+
+				Character->SetHelicopterSeating(HeliSeat);
 
 
 				FRotator CamRotation = HeliSeat.CharacterObj->FollowCamera->GetComponentRotation();

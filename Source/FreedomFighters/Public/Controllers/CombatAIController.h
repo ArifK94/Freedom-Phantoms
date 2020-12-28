@@ -35,6 +35,9 @@ public:
 	ACombatAIController();
 
 private:
+
+	void UpdateCharacterMovement();
+
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
 
 	void SetVisionAngle();
@@ -45,9 +48,8 @@ private:
 
 	void StartFiring();
 
-	void EndFiring();
-
-	void ReloadWeapon();
+protected:
+	virtual void BeginPlay() override;
 
 private:
 	virtual void OnPossess(APawn* InPawn) override;

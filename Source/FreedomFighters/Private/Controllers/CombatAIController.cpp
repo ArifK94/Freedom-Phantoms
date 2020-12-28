@@ -13,6 +13,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/EngineTypes.h"
 
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig.h"
@@ -23,8 +25,15 @@
 ACombatAIController::ACombatAIController()
 {
 	PrimaryActorTick.bCanEverTick = true;
+}
+
+void ACombatAIController::BeginPlay()
+{
+	Super::BeginPlay();
 
 	CurrentDeltaTime = 0.0f;
+	BulletFireCountDown = 0.0f;
+	FiringWaitTime = FMath::RandRange(1.0f, 3.0f);
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -34,8 +43,9 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	// get owning character
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
 
-
 	if (OwningCombatCharacter) {
+
+		UpdateCharacterMovement();
 
 		// grab the AI Perception component
 		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
@@ -48,10 +58,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	}
 
 
-	const AActor* parent = GetOwner();
-
-	BulletFireCountDown = 0.0f;
-	FiringWaitTime = 0.0f;
 }
 
 void ACombatAIController::Tick(float DeltaTime)
@@ -64,12 +70,26 @@ void ACombatAIController::Tick(float DeltaTime)
 		// set the camera to always be placed by the head
 		OwningCombatCharacter->FollowCamera->SetWorldLocation(OwningCombatCharacter->GetMesh()->GetBoneLocation("j_head", EBoneSpaces::WorldSpace));
 
+		UpdateCharacterMovement();
 
 		if (PerceptionComp != nullptr)
 		{
 			SetVisionAngle();
 			ShootAtEnemy();
 		}
+	}
+}
+
+
+void ACombatAIController::UpdateCharacterMovement()
+{
+	if (OwningCombatCharacter->IsInHelicopter())
+	{
+		OwningCombatCharacter->GetCharacterMovement()->DefaultLandMovementMode = EMovementMode::MOVE_Flying;
+	}
+	else
+	{
+		OwningCombatCharacter->GetCharacterMovement()->DefaultLandMovementMode = EMovementMode::MOVE_Walking;
 	}
 }
 
@@ -166,6 +186,7 @@ void ACombatAIController::ShootAtEnemy()
 	{
 		OwningCombatCharacter->EndFire();
 		OwningCombatCharacter->EndAim();
+		OwningCombatCharacter->IsInCombatMode(false);
 		return;
 	}
 
@@ -212,7 +233,7 @@ void ACombatAIController::ShootAtEnemy()
 				}
 				else
 				{
-					CurrentWeapon->BeginReload();
+					OwningCombatCharacter->BeginReload();
 				}
 			}
 			else
@@ -248,7 +269,7 @@ void ACombatAIController::ShootAtEnemy()
 
 			if (CurrentWeapon->getCurrentAmmo() <= 0) // replenish clip if finished completely
 			{
-				ReloadWeapon();
+				OwningCombatCharacter->BeginReload();
 			}
 			else if (CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // replenish if not on full clip
 			{
@@ -296,14 +317,4 @@ void ACombatAIController::StartFiring()
 			FiringWaitTime = FMath::RandRange(1.0f, 3.0f);
 		}
 	}
-}
-
-void ACombatAIController::EndFiring()
-{
-	OwningCombatCharacter->EndFire();
-}
-
-void ACombatAIController::ReloadWeapon()
-{
-	OwningCombatCharacter->BeginReload();
 }

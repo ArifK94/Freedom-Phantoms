@@ -123,6 +123,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float PathFollowDuration;
 
+
+	FTimeline CurveTimeline;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UCurveFloat* CurveFloat;
 public:
 	AHelicopter();
 
@@ -135,15 +140,6 @@ private:
 	UFUNCTION()
 		void FollowSplinePath(float Value);
 
-	FTimeline CurveTimeline;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	UCurveFloat* CurveFloat;
-
-
-
-
-	void FollowSpline();
 
 	void SpawnPassenger();
 

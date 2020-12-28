@@ -192,4 +192,8 @@ public:
 		return secondaryWeaponObj;
 	}
 
+	void IsInCombatMode(bool Value) {
+		isInCombatMode = Value;
+	}
+
 };
