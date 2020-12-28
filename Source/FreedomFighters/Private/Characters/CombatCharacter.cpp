@@ -357,7 +357,7 @@ void ACombatCharacter::EndFire()
 
 void ACombatCharacter::UpdateCombatMode()
 {
-	if (currentWeaponObj && hasEquippedWeapon && !isReloading)
+	if (currentWeaponObj && hasEquippedWeapon && !isReloading && !isRepellingDown)
 	{
 		if (isAiming || isFiring)
 			isInCombatMode = true;
@@ -372,8 +372,11 @@ void ACombatCharacter::UpdateFire()
 {
 	if (currentWeaponObj)
 	{
-		if (CanAutoReloadWeapon && currentWeaponObj->getCurrentAmmo() <= 0)
-		{
+		if (isSwappingWeapon || isReloading || isRepellingDown) {
+			EndFire();
+		}
+
+		if (CanAutoReloadWeapon && currentWeaponObj->getCurrentAmmo() <= 0) {
 			BeginReload();
 		}
 	}

@@ -5,7 +5,6 @@
 
 #include "Weapons//Weapon.h"
 #include "Weapons//WeaponClip.h"
-#include "Managers/GameInstanceController.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -123,7 +122,7 @@ void AShotgun::Fire()
 
 			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
-			UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
+			UParticleSystem* SelectedEffect = CheckSurface(SurfaceType);
 
 			if (SelectedEffect)
 			{

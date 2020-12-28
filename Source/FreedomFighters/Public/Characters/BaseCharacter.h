@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 
 #include "Props/BaseCoverProp.h"
+#include "Vehicles/Helicopter.h"
 
 #include "BaseCharacter.generated.h"
 
@@ -100,6 +101,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isCoveringLow;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool isRepellingDown;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isAtCoverCorner;
 
@@ -139,6 +143,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* VoiceAudioComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FHelicopterSeating currentSeating;
 
 protected:
 
@@ -273,9 +279,16 @@ public:
 		return isInHelicopter;
 	}
 
+	bool IsRepellingDown() {
+		return isRepellingDown;
+	}
 
 	void SetIsInHelicopter(bool value){
 		isInHelicopter = value;
+	}
+
+	void SetIsRepellingDown(bool value) {
+		isRepellingDown = value;
 	}
 
 	void SetHelicopterSeatPosition(int32 position) {
@@ -286,13 +299,19 @@ public:
 		return  CharacterOutlinePPComp;
 	}
 
-	UAudioComponent* getVoiceAudioComponent()
-	{
+	UAudioComponent* getVoiceAudioComponent(){
 		return VoiceAudioComponent;
 	}
 
-	void SetCharacterDirection(float Value)
-	{
+	void SetCharacterDirection(float Value){
 		CharacterDirection = Value;
+	}
+
+	void SetHelicopterSeating(FHelicopterSeating CurrentSeating){
+		currentSeating = CurrentSeating;
+	}
+
+	FHelicopterSeating CurrentSeating() {
+		return currentSeating;
 	}
 };

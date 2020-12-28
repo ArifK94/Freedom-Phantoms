@@ -4,7 +4,6 @@
 #include "Weapons/WeaponAttachmentManager.h"
 
 #include "FreedomFighters/FreedomFighters.h"
-#include "Managers/GameInstanceController.h"
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
@@ -88,10 +87,6 @@ FVector AWeapon::getMuzzleLocation()
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-
-	UWorld* world = GetWorld();
-	UGameInstance* instance = UGameplayStatics::GetGameInstance(world);
-	gameInstanceController = Cast<UGameInstanceController>(instance);
 
 	SpawnMagazine();
 	ConfigSetup();
@@ -203,7 +198,7 @@ void AWeapon::Fire()
 
 
 
-				UParticleSystem* SelectedEffect = gameInstanceController->CheckSurface(SurfaceType);
+				UParticleSystem* SelectedEffect = CheckSurface(SurfaceType);
 
 				if (SelectedEffect)
 				{
@@ -326,14 +321,14 @@ void AWeapon::PlayShotEffect(FVector TracerEndPoint)
 
 void AWeapon::BeginFireEffect(FVector TraceEnd)
 {
-	if (gameInstanceController->MuzzleEffect)
+	if (MuzzleEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), gameInstanceController->MuzzleEffect, getMuzzleLocation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleEffect, getMuzzleLocation());
 	}
 
-	if (gameInstanceController->TracerEffect)
+	if (TracerEffect)
 	{
-		UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), gameInstanceController->TracerEffect, getMuzzleLocation());
+		UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, getMuzzleLocation());
 
 		if (TracerComp)
 		{
@@ -343,7 +338,22 @@ void AWeapon::BeginFireEffect(FVector TraceEnd)
 
 
 	CameraShakeEffect();
+}
 
+UParticleSystem* AWeapon::CheckSurface(EPhysicalSurface SurfaceType)
+{
+	switch (SurfaceType)
+	{
+	case SURFACE_HEAD:
+	case SURFACE_GROIN:
+	case SURFACE_FLESHDEFAULT:
+	case SURFACE_FLESHVULNERABLE:
+		return FleshImpactEffect;
+		break;
+	default:
+		return DefaultImpactEffect;
+		break;
+	}
 }
 
 void AWeapon::BeginShellEffect()
@@ -364,7 +374,7 @@ void AWeapon::CameraShakeEffect()
 
 		if (PC)
 		{
-			PC->ClientPlayCameraShake(gameInstanceController->FireCamShake);
+			PC->ClientPlayCameraShake(FireCamShake);
 		}
 	}
 }

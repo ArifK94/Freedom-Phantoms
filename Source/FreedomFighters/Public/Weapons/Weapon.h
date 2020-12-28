@@ -25,6 +25,7 @@ class UAnimationAsset;
 class UAnimMontage;
 class UAnimSequence;
 class UAimOffsetBlendSpace;
+class UCameraShake;
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class WeaponType : uint8
@@ -148,6 +149,7 @@ private:
 	void BurstDelay();
 	void SemiFireDelay();
 
+
 protected:
 	virtual void Fire();
 
@@ -164,13 +166,12 @@ protected:
 
 	void PlayShotEffect(FVector TracerEndPoint);
 
+	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
 
 protected:
 	float CurrentDeltaTime;
 
 	int BurstAmmountCount;
-
-	class UGameInstanceController* gameInstanceController;
 
 	USkeletalMeshComponent* CharacterReference;
 
@@ -317,6 +318,22 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* ShellEjectEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* MuzzleEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* DefaultImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* FleshImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* TracerEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UCameraShake> FireCamShake;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Damage")
 		float BulletDamage;

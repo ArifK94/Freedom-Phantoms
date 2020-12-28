@@ -105,7 +105,7 @@ void ACombatAIController::SetVisionAngle()
 		// Set Vision angle based whether character is in the helicopter
 		if (OwningCombatCharacter->IsInHelicopter())
 		{
-			ConfigSight->PeripheralVisionAngleDegrees = 70.0f;
+			ConfigSight->PeripheralVisionAngleDegrees = 60.0f;
 		}
 		else
 		{
@@ -162,6 +162,13 @@ AActor* ACombatAIController::FindEnemy()
 
 void ACombatAIController::ShootAtEnemy()
 {
+	if (OwningCombatCharacter->IsRepellingDown())
+	{
+		OwningCombatCharacter->EndFire();
+		OwningCombatCharacter->EndAim();
+		return;
+	}
+
 	CurrentWeapon = OwningCombatCharacter->GetCurrentWeapon();
 
 	if (CurrentWeapon)
