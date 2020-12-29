@@ -393,21 +393,23 @@ void ABaseCharacter::UpdateCameraView()
 
 void ABaseCharacter::BeginSprint()
 {
-	if (CharacterSpeed > 0.1f)
+	if (!isSprinting)
 	{
-		if (isTakingCover)
+		if (CharacterSpeed > 0.1f)
 		{
-			isTakingCover = false;
-		}
+			if (isTakingCover)
+			{
+				isTakingCover = false;
+			}
 
-		isSprinting = true;
+			isSprinting = true;
 
-		if (GetCharacterMovement()->IsCrouching())
-		{
-			UnCrouch();
+			if (GetCharacterMovement()->IsCrouching())
+			{
+				UnCrouch();
+			}
 		}
 	}
-
 }
 
 void ABaseCharacter::EndSprint()

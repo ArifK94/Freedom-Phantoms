@@ -109,9 +109,14 @@ void ACommanderCharacter::CheckRecruit()
 			ResetTargetActor();
 
 			PotentialRecruit = Cast<ACombatCharacter>(CurrentTargetActor);
-			PotentialRecruit->ShowCharacterOutline(true);
-			PotentialRecruit->setCommandingOfficer(this);
-			LastRecruit = PotentialRecruit;
+
+			if (PotentialRecruit != nullptr && !PotentialRecruit->IsInHelicopter())
+			{
+				PotentialRecruit->ShowCharacterOutline(true);
+				PotentialRecruit->setCommandingOfficer(this);
+				LastRecruit = PotentialRecruit;
+
+			}
 		}
 	}
 	else

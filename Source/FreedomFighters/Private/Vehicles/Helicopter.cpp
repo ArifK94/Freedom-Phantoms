@@ -16,9 +16,6 @@
 #include "Components/TimelineComponent.h"
 #include "Components/SplineComponent.h"
 
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Engine/EngineTypes.h"
-
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -137,13 +134,12 @@ void AHelicopter::FollowSplinePath(float Value)
 	FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
 
 	SetActorLocationAndRotation(TargetLocation, TargetRotation);
-
 }
 
 void AHelicopter::SpawnPassenger()
 {
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	for (int i = 0; i < HelicopterSeating.Num(); i++)
 	{
@@ -156,11 +152,7 @@ void AHelicopter::SpawnPassenger()
 			if (HeliSeat.CharacterObj)
 			{
 				ABaseCharacter* Character = HeliSeat.CharacterObj;
-
-				Character->GetCharacterMovement()->DefaultLandMovementMode = EMovementMode::MOVE_Flying;
 				Character->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
-				Character->SetActorRelativeLocation(FVector::ZeroVector);
-				Character->SetActorRelativeRotation(FRotator::ZeroRotator);
 				Character->SetIsInHelicopter(true);
 				Character->SetHelicopterSeatPosition(HeliSeat.SeatPosition);
 				HeliSeat.OwningHelicopter = this;

@@ -58,6 +58,9 @@ private:
 	void UpdatePointIndex();
 	void UpdateCollisionBox();
 
+protected:
+	virtual void BeginPlay() override;
+
 public:
 
 	USplineComponent* GetSplinePathComp() {

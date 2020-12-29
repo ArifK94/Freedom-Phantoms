@@ -4,6 +4,7 @@
 #include "Controllers/CombatAIController.h"
 
 #include "Characters/CombatCharacter.h"
+#include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/Shotgun.h"
 
@@ -25,15 +26,36 @@
 ACombatAIController::ACombatAIController()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	AcceptanceRadius = 100.0f;
+	DistanceDiffSprint = 200.0f;
+}
+
+void ACombatAIController::Init()
+{
+	if (OwningCombatCharacter) {
+		UpdateCharacterMovement();
+
+		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
+	}
 }
 
 void ACombatAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	OwningCombatCharacter = Cast<ACombatCharacter>(AController::GetPawn());
+
+	Init();
+
 	CurrentDeltaTime = 0.0f;
 	BulletFireCountDown = 0.0f;
 	FiringWaitTime = FMath::RandRange(1.0f, 3.0f);
+
+	// run behavior tree if specified
+	if (BTAsset) {
+		AAIController::RunBehaviorTree(BTAsset);
+	}
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -43,21 +65,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	// get owning character
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
 
-	if (OwningCombatCharacter) {
-
-		UpdateCharacterMovement();
-
-		// grab the AI Perception component
-		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
-	}
-
-
-	// run behavior tree if specified
-	if (BTAsset) {
-		AAIController::RunBehaviorTree(BTAsset);
-	}
-
-
+	Init();
 }
 
 void ACombatAIController::Tick(float DeltaTime)
@@ -72,6 +80,8 @@ void ACombatAIController::Tick(float DeltaTime)
 
 		UpdateCharacterMovement();
 
+		FollowCommanderOrder();
+
 		if (PerceptionComp != nullptr)
 		{
 			SetVisionAngle();
@@ -85,11 +95,11 @@ void ACombatAIController::UpdateCharacterMovement()
 {
 	if (OwningCombatCharacter->IsInHelicopter())
 	{
-		OwningCombatCharacter->GetCharacterMovement()->DefaultLandMovementMode = EMovementMode::MOVE_Flying;
+		OwningCombatCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
 	}
 	else
 	{
-		OwningCombatCharacter->GetCharacterMovement()->DefaultLandMovementMode = EMovementMode::MOVE_Walking;
+		OwningCombatCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
 	}
 }
 
@@ -317,4 +327,54 @@ void ACombatAIController::StartFiring()
 			FiringWaitTime = FMath::RandRange(1.0f, 3.0f);
 		}
 	}
+}
+
+void ACombatAIController::MoveToTarget()
+{
+	if (OwningCombatCharacter->IsInHelicopter()) {
+		return;
+	}
+
+	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
+
+	MoveToLocation(TargetDestination, AcceptanceRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
+
+	float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
+
+	if (CurrentTargetDistance > DistanceDiffSprint)
+	{
+		OwningCombatCharacter->BeginSprint();
+	}
+	else
+	{
+		OwningCombatCharacter->EndSprint();
+	}
+}
+
+void ACombatAIController::FindCover()
+{
+}
+
+void ACombatAIController::FollowCommanderOrder()
+{
+	if (OwningCombatCharacter->getCommander() == nullptr) {
+		return;
+	}
+	FCommanderRecruit CommanderRecruit = OwningCombatCharacter->getCommander()->GetRecruitInfo(OwningCombatCharacter);
+
+	if (CommanderRecruit.Recruit == OwningCombatCharacter)
+	{
+		switch (CommanderRecruit.CurrentCommand)
+		{
+		case  CommanderOrders::Attack:
+		case CommanderOrders::Defend:
+		case CommanderOrders::Follow:
+			CommanderRecruit.TargetLocation = OwningCombatCharacter->getCommander()->GetActorLocation();
+			break;
+		}
+
+		TargetDestination = CommanderRecruit.TargetLocation;
+		MoveToTarget();
+	}
+
 }

@@ -22,6 +22,34 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UBehaviorTree* BTAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float AcceptanceRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float DistanceDiffSprint;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class UNavigationQueryFilter> FilterClass;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool StopOnOverlap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool UsePathfinding;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool ProjectDestinationToNavigation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool CanStrafe;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool AllowPartialPaths;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FVector TargetDestination;
+
 	UAIPerceptionComponent* PerceptionComp;
 	AWeapon* CurrentWeapon;
 
@@ -36,6 +64,8 @@ public:
 
 private:
 
+	void Init();
+
 	void UpdateCharacterMovement();
 
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
@@ -48,11 +78,17 @@ private:
 
 	void StartFiring();
 
+	void MoveToTarget();
+
+	void FindCover();
+
+	void FollowCommanderOrder();
+
 protected:
 	virtual void BeginPlay() override;
 
-private:
 	virtual void OnPossess(APawn* InPawn) override;
 
+private:
 	virtual void Tick(float DeltaTime) override;
 };

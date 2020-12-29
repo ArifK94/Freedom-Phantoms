@@ -19,6 +19,13 @@ AAircraftSplinePath::AAircraftSplinePath()
 	SplinePathComp = CreateDefaultSubobject<USplineComponent>("SplinePathComp");
 }
 
+void AAircraftSplinePath::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UpdateCollisionBox();
+}
+
 FVehicleSplinePoint AAircraftSplinePath::GetVehicleSplinePoint(FVector TargetLocation)
 {
 	for (int i = 0; i < SplinePathComp->GetNumberOfSplinePoints(); i++)
