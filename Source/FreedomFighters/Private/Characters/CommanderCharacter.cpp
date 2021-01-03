@@ -99,7 +99,6 @@ void ACommanderCharacter::CheckRecruit()
 	FHitResult HitResult = GetCurrentTraceHit();
 	if (HitResult.bBlockingHit)
 	{
-
 		auto CurrentTargetActor = HitResult.GetActor();
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
 		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
@@ -315,6 +314,7 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 
 void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, FCommanderRecruit TargetRecruit)
 {
+	// Play acknowledged sound after commander's voice sound has finished playing the order
 	if (FactionObj != nullptr && SoundBase != nullptr)
 	{
 		VoiceAudioComponent->Sound = SoundBase;

@@ -7,6 +7,8 @@
 #include "CombatCharacter.generated.h"
 
 class AWeapon;
+class UFactionManager;
+class ACommanderCharacter;
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
 {
@@ -47,13 +49,13 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class UFactionManager> FactionClass;
+		TSubclassOf<UFactionManager> FactionClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		UFactionManager* FactionObj;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
-		class ACommanderCharacter* CommandingOfficer;
+		ACommanderCharacter* CommandingOfficer;
 
 private:
 
@@ -172,6 +174,11 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 public:
+	bool IsFiring() {
+		return isFiring;
+	}
+
+
 	UFactionManager* getFactionObj(){
 		return FactionObj;
 	}

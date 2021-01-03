@@ -7,6 +7,7 @@
 #include "CombatAIController.generated.h"
 
 class ACombatCharacter;
+class ACommanderCharacter;
 class UAISenseConfig;
 class UAISense;
 class UAIPerceptionComponent;
@@ -47,17 +48,38 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool AllowPartialPaths;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FVector TargetDestination;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		AActor* EnemyActor;
 
 	UAIPerceptionComponent* PerceptionComp;
 	AWeapon* CurrentWeapon;
 
+	ACommanderCharacter* Commander;
 
 	float CurrentDeltaTime;
 	float BulletFireCountDown;
 	float FiringWaitTime;
 	bool IsCoolingDown;
+	bool StayCombatAlert;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TArray<FVector> CoverLocationPoints;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector ClosestCoverPoint;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float CoverRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AActor> WeaponClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
+		AActor* WeaponObj;
+
 
 public:
 	ACombatAIController();
@@ -67,6 +89,8 @@ private:
 	void Init();
 
 	void UpdateCharacterMovement();
+
+	void UpdatCombatAlert();
 
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
 
@@ -78,11 +102,14 @@ private:
 
 	void StartFiring();
 
-	void MoveToTarget();
+	UFUNCTION(BlueprintCallable)
+		EPathFollowingRequestResult::Type MoveToTarget();
 
-	void FindCover();
+	void CheckCommanderOrder();
 
-	void FollowCommanderOrder();
+	void FindCover(AActor* TargetActor);
+
+	FVector GetClosestCoverPoint(AActor* TargetActor);
 
 protected:
 	virtual void BeginPlay() override;

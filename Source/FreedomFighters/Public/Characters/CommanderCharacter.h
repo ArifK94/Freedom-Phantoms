@@ -9,6 +9,7 @@
 
 #include "CommanderCharacter.generated.h"
 
+class ABaseCharacter;
 class ACombatCharacter;
 class AOrderIcon;
 
@@ -27,6 +28,9 @@ struct FCommanderRecruit : public FTableRowBase
 
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		ACombatCharacter* Recruit;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		ABaseCharacter* HighValueTarget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		CommanderOrders CurrentCommand;

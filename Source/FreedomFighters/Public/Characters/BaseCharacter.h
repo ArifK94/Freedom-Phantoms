@@ -191,8 +191,6 @@ protected:
 
 	void UpdateSpeed();
 
-	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-		void BeginCrouch();
 
 	void AimOffset();
 
@@ -221,16 +219,13 @@ private:
 public:
 	virtual void ShowCharacterOutline(bool CanShow);
 
+	void BeginCrouch();
 
-	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-		void BeginSprint();
-	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-		void EndSprint();
+	void BeginSprint();
+	void EndSprint();
 
-	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-		virtual void BeginAim();
-	UFUNCTION(BlueprintCallable, Category = "Character Actions")
-		virtual void EndAim();
+	virtual void BeginAim();
+	virtual void EndAim();
 
 
 protected:
@@ -271,6 +266,15 @@ protected:
 
 
 public:
+
+	bool IsSprinting() {
+		return isSprinting;
+	}
+
+	bool IsAiming() {
+		return isAiming;
+	}
+
 	bool getisDead() {
 		return isDead;
 	}
@@ -283,7 +287,16 @@ public:
 		return isRepellingDown;
 	}
 
-	void SetIsInHelicopter(bool value){
+	bool IsTakingCover() {
+		return isTakingCover;
+	}
+
+
+	void IsTakingCover(bool Value) {
+		isTakingCover = Value;
+	}
+
+	void SetIsInHelicopter(bool value) {
 		isInHelicopter = value;
 	}
 
@@ -299,15 +312,15 @@ public:
 		return  CharacterOutlinePPComp;
 	}
 
-	UAudioComponent* getVoiceAudioComponent(){
+	UAudioComponent* getVoiceAudioComponent() {
 		return VoiceAudioComponent;
 	}
 
-	void SetCharacterDirection(float Value){
+	void SetCharacterDirection(float Value) {
 		CharacterDirection = Value;
 	}
 
-	void SetHelicopterSeating(FHelicopterSeating CurrentSeating){
+	void SetHelicopterSeating(FHelicopterSeating CurrentSeating) {
 		currentSeating = CurrentSeating;
 	}
 
