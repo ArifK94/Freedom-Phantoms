@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "CombatAIController.generated.h"
 
 class ACombatCharacter;
@@ -64,21 +65,31 @@ private:
 	float FiringWaitTime;
 	bool IsCoolingDown;
 	bool StayCombatAlert;
+	bool HasChosenCover;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<FVector> CoverLocationPoints;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FVector ClosestCoverPoint;
+		float CoverRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float CoverRadius;
+		int NumberOfCoverTraces;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AActor> WeaponClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		AActor* WeaponObj;
+
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+		UEnvQuery* FindHidingSpotEQS;
+
+	UFUNCTION(BlueprintCallable)
+		void FindHidingSpot();
+
+	void MoveToQueryResult(TSharedPtr<FEnvQueryResult> result);
 
 
 public:
@@ -103,13 +114,15 @@ private:
 	void StartFiring();
 
 	UFUNCTION(BlueprintCallable)
-		EPathFollowingRequestResult::Type MoveToTarget();
+		EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius);
 
 	void CheckCommanderOrder();
 
 	void FindCover(AActor* TargetActor);
 
 	FVector GetClosestCoverPoint(AActor* TargetActor);
+
+	void TakeCover();
 
 protected:
 	virtual void BeginPlay() override;

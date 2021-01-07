@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 
-#include "Props/BaseCoverProp.h"
 #include "Vehicles/Helicopter.h"
 
 #include "BaseCharacter.generated.h"
@@ -17,14 +16,29 @@ class APlayerCameraManager;
 class AAIController;
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
-enum class CoverPeakAction : uint8
+enum class CoverType : uint8
 {
-	None		UMETA(DisplayName = "None"),
-	Up			UMETA(DisplayName = "Up"),
-	Down 		UMETA(DisplayName = "Down"),
-	Left		UMETA(DisplayName = "Left"),
-	Right		UMETA(DisplayName = "Right")
+	Default			UMETA(DisplayName = "Default"),
+	CornerLeft		UMETA(DisplayName = "CornerLeft"),
+	CornerRight 	UMETA(DisplayName = "CornerRight")
 };
+
+USTRUCT(BlueprintType)
+struct FCoverPoint : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FVector Location;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsOccupied;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		CoverType TypeOfCover;
+};
+
 
 
 UCLASS(config = Game)
@@ -132,10 +146,7 @@ protected:
 		FVector PeakDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		CoverCornerType CurrentCoverType;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		CoverPeakAction CurrentCoverPeakAction;
+		FCoverPoint ChosenCoverPoint;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Highlight", meta = (AllowPrivateAccess = "true"))
 		UPostProcessComponent* CharacterOutlinePPComp;
@@ -206,6 +217,7 @@ protected:
 
 private:
 	void TakeCover();
+	void CheckCoverType();
 	void EscapeCover();
 
 	bool IsFacingCoverAngle();

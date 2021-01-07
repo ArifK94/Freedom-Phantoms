@@ -15,5 +15,11 @@
 				"AIModule"
 			]
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "CoverGenerator",
+			"Enabled": false
+		}
 	]
 }

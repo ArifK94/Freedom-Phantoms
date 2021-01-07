@@ -20,6 +20,7 @@
 #include "NavigationSystem.h"
 #include "NavFilters/NavigationQueryFilter.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "EnvironmentQuery/EnvQueryManager.h"
 
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig.h"
@@ -35,7 +36,8 @@ ACombatAIController::ACombatAIController()
 
 	AcceptanceRadius = 300.0f;
 	DistanceDiffSprint = 200.0f;
-	CoverRadius = 5000.0f;
+	CoverRadius = 10000.0f;
+	NumberOfCoverTraces = 35.0f;
 }
 
 void ACombatAIController::Init()
@@ -100,14 +102,15 @@ void ACombatAIController::Tick(float DeltaTime)
 		}
 
 
-
+		//FindHidingSpot();
 
 		if (EnemyActor != nullptr) {
 			FindCover(EnemyActor);
 		}
 		else
 		{
-			if (!OwningCombatCharacter->IsTakingCover()) {
+			// pick a random cover point
+			if (!HasChosenCover) {
 				FindCover(OwningCombatCharacter);
 			}
 		}
@@ -371,7 +374,7 @@ void ACombatAIController::StartFiring()
 	}
 }
 
-EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget()
+EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius)
 {
 	if (OwningCombatCharacter->IsInHelicopter()) {
 		return EPathFollowingRequestResult::Failed;
@@ -379,7 +382,7 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget()
 
 	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
 
-	EPathFollowingRequestResult::Type Movment = MoveToLocation(TargetDestination, AcceptanceRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
+	EPathFollowingRequestResult::Type Movment = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
 
 	float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 
@@ -395,22 +398,55 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget()
 	return Movment;
 }
 
+void ACombatAIController::FindHidingSpot()
+{
+	FEnvQueryRequest HidingSpotQueryRequest = FEnvQueryRequest(FindHidingSpotEQS, GetPawn());
+	HidingSpotQueryRequest.Execute(EEnvQueryRunMode::SingleResult, this, &ACombatAIController::MoveToQueryResult);
+}
+
+void ACombatAIController::MoveToQueryResult(TSharedPtr<FEnvQueryResult> result)
+{
+	if (result->IsSuccsessful()) {
+		TargetDestination = result->GetItemAsLocation(0);
+		//MoveToLocation(result->GetItemAsLocation(0));
+
+		EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
+
+		if (Movment == EPathFollowingRequestResult::AlreadyAtGoal)
+		{
+			//	OwningCombatCharacter->IsTakingCover(true);
+		}
+
+	}
+}
+
 void ACombatAIController::FindCover(AActor* TargetActor)
 {
-	if (TargetActor == nullptr) return;
+	if (TargetActor == nullptr) {
+		return;
+	}
+
+	CoverLocationPoints.Empty();
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.bTraceComplex = true;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+	float factor = 360.0f / NumberOfCoverTraces;
 
 	// 360 degrees line trace around character
-	for (int i = 0; i < 35; i++)
+	for (int i = 0; i < NumberOfCoverTraces; i++)
 	{
-		CoverLocationPoints.Empty();
-
 
 		FNavLocation NavLocation;
 		bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(TargetActor->GetActorLocation(), NavLocation);
 
 		if (bOnNavMesh)
 		{
-			const FQuat CharacterTopRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, i * 10.0f).Quaternion();
+			const FQuat CharacterTopRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, i * factor).Quaternion();
 			FVector Foward = UKismetMathLibrary::Quat_RotateVector(CharacterTopRotation, FVector(1.0f, 0.0f, 0.0f));
 
 			FVector Start = (Foward * CoverRadius) + NavLocation.Location;
@@ -424,41 +460,107 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 			{
 				FVector LocationSet = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
 
-				float directionValue = FVector::DotProduct(LocationSet, TargetActor->GetActorLocation());
-
-				if (directionValue > .5f)
+				if (TargetActor == OwningCombatCharacter)
 				{
-					FActorSpawnParameters SpawnParams;
-					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-					WeaponObj = GetWorld()->SpawnActor<AActor>(WeaponClass, LocationSet, FRotator::ZeroRotator, SpawnParams);
-
 					CoverLocationPoints.Add(LocationSet);
+				}
+				else
+				{
+					bool CanSeeTarget = false;
+					float directionValue = FVector::DotProduct(LocationSet, TargetActor->GetActorLocation());
+
+					float Offset = 50.0f;
+					FHitResult HitTargetResult1, HitTargetResult2, HitTargetResult3;
+					bool bTargetHit1 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult1, LocationSet + FVector(Offset, 0.0f, 0.0f), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
+					bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationSet + FVector(0.0f, Offset, 0.0f), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
+					bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationSet + FVector(0.0f, 0.0f, Offset), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
+
+
+					//if (bTargetHit1)
+					//{
+					//	if (Cast<ACombatCharacter>(HitTargetResult1.GetActor())) {
+					//		CanSeeTarget = true;
+					//	}
+					//}
+
+					if (bTargetHit2)
+					{
+						if (Cast<ACombatCharacter>(HitTargetResult2.GetActor())) {
+							CanSeeTarget = true;
+						}
+					}
+
+
+					if (bTargetHit3)
+					{
+						if (Cast<ACombatCharacter>(HitTargetResult3.GetActor())) {
+							CanSeeTarget = true;
+						}
+					}
+
+					if (CanSeeTarget)
+					{
+						CoverLocationPoints.Add(LocationSet);
+					}
 				}
 			}
 		}
 	}
 
-	if (CoverLocationPoints.Num() < 0)
+
+	if (CoverLocationPoints.Num() > 0) {
+		TargetDestination = GetClosestCoverPoint(TargetActor);
+		HasChosenCover = true;
+	}
+
+	TakeCover();
+}
+
+FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
+{
+	FVector ClosestPoint;
+	float minDist = CoverRadius;
+
+	for (int i = 0; i < CoverLocationPoints.Num(); i++)
 	{
-		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->BeginCrouch();
+		FVector Point = CoverLocationPoints[i];
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		WeaponObj = GetWorld()->SpawnActor<AActor>(WeaponClass, Point, FRotator::ZeroRotator, SpawnParams);
+		WeaponObj->SetLifeSpan(1.0f);
+
+		float Distance = FVector::Dist(OwningCombatCharacter->GetActorLocation(), Point);
+
+		if (Distance < minDist)
+		{
+			ClosestPoint = Point;
+			minDist = Distance;
+		}
+	}
+	return ClosestPoint;
+}
+
+void ACombatAIController::TakeCover()
+{
+	if (CoverLocationPoints.Num() <= 0)
+	{
+		//if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+		//	OwningCombatCharacter->BeginCrouch();
 	}
 	else
 	{
-		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->BeginCrouch();
+		//if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+		//	OwningCombatCharacter->BeginCrouch();
 
-		TargetDestination = GetClosestCoverPoint(TargetActor);
-		EPathFollowingRequestResult::Type Movment = MoveToTarget();
+		EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
 
 		if (Movment == EPathFollowingRequestResult::AlreadyAtGoal)
 		{
-			OwningCombatCharacter->IsTakingCover(true);
+			if (!OwningCombatCharacter->IsTakingCover())
+				OwningCombatCharacter->IsTakingCover(true);
 		}
 	}
-
-
 }
 
 void ACombatAIController::CheckCommanderOrder()
@@ -486,32 +588,7 @@ void ACombatAIController::CheckCommanderOrder()
 			break;
 		}
 
-		MoveToTarget();
+		MoveToTarget(AcceptanceRadius);
 	}
 
-}
-
-FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
-{
-	FVector ClosestPoint;
-	float minDist = CoverRadius;
-
-	// Loop through the sortedList and see if the hit normal doesn't point towards the enemy.
-// If it doesn't point towards the enemy, navigate the agent to that position and break the loop as this is the closest cover for the agent. (Because the list is sorted on distance)
-	for (int i = 0; i < CoverLocationPoints.Num(); i++)
-	{
-		FVector Point = CoverLocationPoints[i];
-
-
-		float Distance = FVector::Dist(EnemyActor->GetActorLocation(), Point);
-
-		if (Distance > minDist)
-		{
-			ClosestPoint = Point;
-			minDist = Distance;
-		}
-
-	}
-
-	return ClosestPoint;
 }

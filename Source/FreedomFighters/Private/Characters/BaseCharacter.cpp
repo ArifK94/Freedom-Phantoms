@@ -346,7 +346,7 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 		ShowCharacterOutline(false);
 
 		GetCharacterMovement()->StopMovementImmediately();
-		//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
 	}
@@ -606,7 +606,7 @@ void ABaseCharacter::TakeCover()
 
 		FVector End = ((ForwardVector * Distance) + Start);
 
-		auto SphereLineTrace = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), Start, End, 50.0f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHit, true);
+		auto SphereLineTrace = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), Start, End, 50.0f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::None, OutHit, true);
 
 		if (SphereLineTrace)
 		{
@@ -644,11 +644,83 @@ void ABaseCharacter::TakeCover()
 				bUseControllerRotationYaw = false;
 				GetCharacterMovement()->bOrientRotationToMovement = false;
 				GetCharacterMovement()->bUseControllerDesiredRotation = false;
+
+				CheckCoverType();
 			}
 		}
 
 	}
 
+}
+
+void ABaseCharacter::CheckCoverType()
+{
+	// Can Move In Cover
+	float CoverDistance = 60.0f;
+
+
+
+	FVector ActorLocation = WallLocation;
+	FRotator TargetRotation = UKismetMathLibrary::MakeRotFromXZ(UKismetMathLibrary::Multiply_VectorVector(WallNormal, FVector(-1.0f, -1.0f, 0.0f)), FVector(0.0f, 0.0f, WallLocation.Z));
+
+	FVector TargetFoward = UKismetMathLibrary::GetForwardVector(TargetRotation);
+	FVector RightDirection = UKismetMathLibrary::GetRightVector(TargetRotation);
+
+
+	FVector NewForward = UKismetMathLibrary::Add_VectorVector(FVector(TargetFoward.X * 50.0f, TargetFoward.Y * 50.0f, 0.0f), ActorLocation);
+	FVector NewRight = FVector(RightDirection.X * CoverDistance, RightDirection.Y * CoverDistance, 0.0f);
+
+	FVector TargetAdd = UKismetMathLibrary::Add_VectorVector(NewForward, NewRight);
+	FVector TargetMinus = UKismetMathLibrary::Subtract_VectorVector(NewForward, NewRight);
+
+	FVector NewRightLocation = FVector(TargetAdd.X, TargetAdd.Y, ActorLocation.Z);
+	FVector NewLeftLocation = FVector(TargetMinus.X, TargetMinus.Y, ActorLocation.Z);
+
+	FVector StartLeft = FVector(NewLeftLocation.X + 100.0f, NewLeftLocation.Y, NewLeftLocation.Z);
+	FVector StartRight = FVector(NewRightLocation.X + 100.0f, NewRightLocation.Y, NewRightLocation.Z);
+
+	DrawDebugDirectionalArrow(GetWorld(), StartLeft, NewLeftLocation, 120.f, FColor::Magenta, true, 30.0f, 0, 5.f);
+	DrawDebugDirectionalArrow(GetWorld(), StartRight, NewRightLocation, 120.f, FColor::Red, true, 30.0f, 0, 5.f);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.bTraceComplex = false;
+	QueryParams.bReturnPhysicalMaterial = true;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+	FHitResult OutHitLeft, OutHitRight;
+	bool LineTraceLeft = GetWorld()->LineTraceSingleByObjectType(OutHitLeft, StartLeft, NewLeftLocation, ObjectParams, QueryParams);
+
+	bool LineTraceRight = GetWorld()->LineTraceSingleByObjectType(OutHitRight, StartRight, NewRightLocation, ObjectParams, QueryParams);
+
+
+	if (!LineTraceLeft)	// if no line trace on left side then it is facing the left cover corner
+	{
+		isAtCoverCorner = true;
+		isFacingCoverRHS = false;
+		CamManager->ViewYawMin = -180.0f;
+		CamManager->ViewYawMax = -90.0f;
+	}
+	else if (!LineTraceRight)
+	{
+		isAtCoverCorner = true;
+		isFacingCoverRHS = true;
+		CamManager->ViewYawMin = -90.0f;
+		CamManager->ViewYawMax = 0.0f;
+	}
+	else
+	{
+		if (OutHitLeft.bBlockingHit && OutHitRight.bBlockingHit)
+		{
+			CoverSelected = true;
+			isAtCoverCorner = false;
+
+			CamManager->ViewYawMin = DefaultCamViewYawMin;
+			CamManager->ViewYawMax = DefaultCamViewYawMax;
+		}
+	}
 }
 
 void ABaseCharacter::EscapeCover()
@@ -659,6 +731,9 @@ void ABaseCharacter::EscapeCover()
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
+
+	CamManager->ViewYawMin = DefaultCamViewYawMin;
+	CamManager->ViewYawMax = DefaultCamViewYawMax;
 }
 
 bool ABaseCharacter::IsFacingCoverAngle()
