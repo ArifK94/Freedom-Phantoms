@@ -470,18 +470,10 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 					float directionValue = FVector::DotProduct(LocationSet, TargetActor->GetActorLocation());
 
 					float Offset = 50.0f;
-					FHitResult HitTargetResult1, HitTargetResult2, HitTargetResult3;
-					bool bTargetHit1 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult1, LocationSet + FVector(Offset, 0.0f, 0.0f), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
+					FHitResult HitTargetResult2, HitTargetResult3;
 					bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationSet + FVector(0.0f, Offset, 0.0f), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
 					bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationSet + FVector(0.0f, 0.0f, Offset), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
 
-
-					//if (bTargetHit1)
-					//{
-					//	if (Cast<ACombatCharacter>(HitTargetResult1.GetActor())) {
-					//		CanSeeTarget = true;
-					//	}
-					//}
 
 					if (bTargetHit2)
 					{
@@ -545,20 +537,25 @@ void ACombatAIController::TakeCover()
 {
 	if (CoverLocationPoints.Num() <= 0)
 	{
-		//if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-		//	OwningCombatCharacter->BeginCrouch();
+		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+			OwningCombatCharacter->BeginCrouch();
 	}
 	else
 	{
-		//if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-		//	OwningCombatCharacter->BeginCrouch();
+		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+			OwningCombatCharacter->BeginCrouch();
 
 		EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
 
 		if (Movment == EPathFollowingRequestResult::AlreadyAtGoal)
 		{
 			if (!OwningCombatCharacter->IsTakingCover())
-				OwningCombatCharacter->IsTakingCover(true);
+				OwningCombatCharacter->TakeCover();
+		}
+		else
+		{
+			if (OwningCombatCharacter->IsTakingCover())
+				OwningCombatCharacter->EscapeCover();
 		}
 	}
 }

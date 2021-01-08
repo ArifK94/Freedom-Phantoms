@@ -187,6 +187,9 @@ private:
 	float DefaultCamViewYawMin;
 	float DefaultCamViewYawMax;
 
+	FVector CoverStart;
+	FVector CoverForwardAxis;
+
 
 	FTimerHandle THandler_MovemntInputDisable;
 
@@ -216,15 +219,9 @@ protected:
 
 
 private:
-	void TakeCover();
 	void CheckCoverType();
-	void EscapeCover();
-
-	bool IsFacingCoverAngle();
 
 	void UpdateDirection();
-
-	void RenableMovementInput();
 
 	void ResetInitialDirectionBool();
 
@@ -239,6 +236,9 @@ public:
 	virtual void BeginAim();
 	virtual void EndAim();
 
+	void TakeCover();
+	void MoveToCover();
+	void EscapeCover();
 
 protected:
 

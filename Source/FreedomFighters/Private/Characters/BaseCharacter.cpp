@@ -298,6 +298,9 @@ void ABaseCharacter::MoveRight(float Value)
 				{
 					if (OutHit.bBlockingHit)
 					{
+						CoverStart = Start;
+						WallLocation = OutHit.ImpactPoint;
+
 						CoverSelected = true;
 						isAtCoverCorner = false;
 
@@ -320,13 +323,13 @@ void ABaseCharacter::MoveRight(float Value)
 					// Clamp the camera view in the Yaw
 					if (isFacingCoverRHS)
 					{
-						CamManager->ViewYawMin = -90.0f;
-						CamManager->ViewYawMax = 0.0f;
+						//CamManager->ViewYawMin = -90.0f;
+						//CamManager->ViewYawMax = 0.0f;
 					}
 					else
 					{
-						CamManager->ViewYawMin = -180.0f;
-						CamManager->ViewYawMax = -90.0f;
+						//CamManager->ViewYawMin = -180.0f;
+						//CamManager->ViewYawMax = -90.0f;
 					}
 				}
 
@@ -599,14 +602,14 @@ void ABaseCharacter::TakeCover()
 		TArray<AActor*> ActorsToIgnore;
 
 		FHitResult OutHit;
-		FVector Start = GetActorLocation();
+		CoverStart = GetActorLocation();
 
 		float Distance = 150.0f;
-		FVector ForwardVector = UKismetMathLibrary::GetForwardVector(GetActorRotation());
+		CoverForwardAxis = UKismetMathLibrary::GetForwardVector(GetActorRotation());
 
-		FVector End = ((ForwardVector * Distance) + Start);
+		FVector End = ((CoverForwardAxis * Distance) + CoverStart);
 
-		auto SphereLineTrace = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), Start, End, 50.0f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::None, OutHit, true);
+		auto SphereLineTrace = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), CoverStart, End, 50.0f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::None, OutHit, true);
 
 		if (SphereLineTrace)
 		{
@@ -616,41 +619,45 @@ void ABaseCharacter::TakeCover()
 				WallLocation = OutHit.ImpactPoint;
 				WallNormal = OutHit.ImpactNormal;
 
-				FVector CoverFirstPos = FVector(
-					WallLocation.X - (ForwardVector.X * 35.0f),
-					WallLocation.Y - (ForwardVector.Y * 35.0f),
-					Start.Z
-				);
-
-				FLatentActionInfo LatentInfo;
-				LatentInfo.CallbackTarget = this;
-
-				UKismetSystemLibrary::MoveComponentTo(
-					GetCapsuleComponent(),
-					CoverFirstPos,
-					UKismetMathLibrary::MakeRotFromXZ(WallNormal, GetCapsuleComponent()->GetUpVector()),
-					false,
-					false,
-					.2f,
-					false,
-					EMoveComponentAction::Type::Move,
-					LatentInfo
-				);
+				MoveToCover();
 
 				if (isSprinting)
 					isSprinting = false;
 
 				isTakingCover = true;
-				bUseControllerRotationYaw = false;
 				GetCharacterMovement()->bOrientRotationToMovement = false;
 				GetCharacterMovement()->bUseControllerDesiredRotation = false;
 
 				CheckCoverType();
 			}
 		}
-
 	}
+}
 
+void ABaseCharacter::MoveToCover()
+{
+	FVector CoverFirstPos = FVector(
+		WallLocation.X - (CoverForwardAxis.X * 35.0f),
+		WallLocation.Y - (CoverForwardAxis.Y * 35.0f),
+		CoverStart.Z
+	);
+
+	FLatentActionInfo LatentInfo;
+	LatentInfo.CallbackTarget = this;
+
+	UKismetSystemLibrary::MoveComponentTo(
+		GetCapsuleComponent(),
+		CoverFirstPos,
+		UKismetMathLibrary::MakeRotFromXZ(WallNormal, GetCapsuleComponent()->GetUpVector()),
+		false,
+		false,
+		.2f,
+		false,
+		EMoveComponentAction::Type::Move,
+		LatentInfo
+	);
+
+	bUseControllerRotationYaw = false;
 }
 
 void ABaseCharacter::CheckCoverType()
@@ -700,15 +707,15 @@ void ABaseCharacter::CheckCoverType()
 	{
 		isAtCoverCorner = true;
 		isFacingCoverRHS = false;
-		CamManager->ViewYawMin = -180.0f;
-		CamManager->ViewYawMax = -90.0f;
+		//CamManager->ViewYawMin = -180.0f;
+		//CamManager->ViewYawMax = -90.0f;
 	}
 	else if (!LineTraceRight)
 	{
 		isAtCoverCorner = true;
 		isFacingCoverRHS = true;
-		CamManager->ViewYawMin = -90.0f;
-		CamManager->ViewYawMax = 0.0f;
+		//CamManager->ViewYawMin = -90.0f;
+		//CamManager->ViewYawMax = 0.0f;
 	}
 	else
 	{
@@ -734,25 +741,6 @@ void ABaseCharacter::EscapeCover()
 
 	CamManager->ViewYawMin = DefaultCamViewYawMin;
 	CamManager->ViewYawMax = DefaultCamViewYawMax;
-}
-
-bool ABaseCharacter::IsFacingCoverAngle()
-{
-	float differenceAngle = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(GetActorRotation()), UKismetMathLibrary::GetForwardVector(CoverRotation));
-
-	float facingAngle = UKismetMathLibrary::DegAcos(differenceAngle);
-
-	if (facingAngle < 55.0f)
-		return true;
-
-	return false;
-}
-
-
-void ABaseCharacter::RenableMovementInput()
-{
-	Controller->SetIgnoreMoveInput(false);
-	GetWorldTimerManager().ClearTimer(THandler_MovemntInputDisable);
 }
 
 void ABaseCharacter::ResetInitialDirectionBool()
