@@ -46,6 +46,8 @@ void ACombatAIController::Init()
 		UpdateCharacterMovement();
 
 		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
+
+		OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 	}
 }
 
@@ -106,6 +108,7 @@ void ACombatAIController::Tick(float DeltaTime)
 
 		if (EnemyActor != nullptr) {
 			FindCover(EnemyActor);
+			HasChosenCover = false;
 		}
 		else
 		{
