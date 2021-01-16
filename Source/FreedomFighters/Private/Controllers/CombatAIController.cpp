@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Controllers/CombatAIController.h"
 
+#include "Managers/GameModeManager.h"
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
@@ -12,6 +12,7 @@
 
 #include "CustomComponents/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/SphereComponent.h"
 #include "Camera/CameraComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
@@ -20,7 +21,6 @@
 #include "NavigationSystem.h"
 #include "NavFilters/NavigationQueryFilter.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "EnvironmentQuery/EnvQueryManager.h"
 
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig.h"
@@ -38,11 +38,13 @@ ACombatAIController::ACombatAIController()
 	DistanceDiffSprint = 200.0f;
 	CoverRadius = 10000.0f;
 	NumberOfCoverTraces = 35.0f;
+	TargetSightRadius = 5000.0f;
 }
 
 void ACombatAIController::Init()
 {
-	if (OwningCombatCharacter) {
+	if (OwningCombatCharacter)
+	{
 		UpdateCharacterMovement();
 
 		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
@@ -55,6 +57,8 @@ void ACombatAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
+
 	OwningCombatCharacter = Cast<ACombatCharacter>(AController::GetPawn());
 
 	StayCombatAlert = false;
@@ -66,8 +70,18 @@ void ACombatAIController::BeginPlay()
 	FiringWaitTime = FMath::RandRange(3.0f, 5.0f);
 
 	// run behavior tree if specified
-	if (BTAsset) {
+	if (BTAsset)
+	{
 		AAIController::RunBehaviorTree(BTAsset);
+	}
+
+	TargetSightSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+	if (TargetSightSphere)
+	{
+		TargetSightSphere->RegisterComponent();
+		TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		TargetSightSphere->SetSphereRadius(TargetSightRadius);
+		TargetSightSphere->SetCollisionProfileName(TEXT("OverlapAll"));
 	}
 }
 
@@ -103,23 +117,21 @@ void ACombatAIController::Tick(float DeltaTime)
 			ShootAtEnemy();
 		}
 
-
-		//FindHidingSpot();
-
-		if (EnemyActor != nullptr) {
+		if (EnemyActor != nullptr)
+		{
 			FindCover(EnemyActor);
 			HasChosenCover = false;
 		}
 		else
 		{
 			// pick a random cover point
-			if (!HasChosenCover) {
+			if (!HasChosenCover)
+			{
 				FindCover(OwningCombatCharacter);
 			}
 		}
 	}
 }
-
 
 void ACombatAIController::UpdateCharacterMovement()
 {
@@ -135,11 +147,13 @@ void ACombatAIController::UpdateCharacterMovement()
 
 void ACombatAIController::UpdatCombatAlert()
 {
-	if (OwningCombatCharacter->IsFiring()) {
+	if (OwningCombatCharacter->IsFiring())
+	{
 		StayCombatAlert = true;
 	}
 
-	if (OwningCombatCharacter->IsReloading() || OwningCombatCharacter->IsSprinting()) {
+	if (OwningCombatCharacter->IsReloading() || OwningCombatCharacter->IsSprinting())
+	{
 		StayCombatAlert = false;
 	}
 
@@ -170,7 +184,6 @@ UAISenseConfig* ACombatAIController::GetPerceptionSenseConfig(TSubclassOf<UAISen
 	return result;
 }
 
-
 void ACombatAIController::SetVisionAngle()
 {
 	UAISenseConfig* Config = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
@@ -194,50 +207,80 @@ void ACombatAIController::SetVisionAngle()
 
 		PerceptionComp->RequestStimuliListenerUpdate();
 	}
-
 }
 
 AActor* ACombatAIController::FindEnemy()
 {
-	float TargetSightDistance = 4000.0f;
-
+	AActor* CurrentActor = nullptr;
 	TArray<AActor*> ActorsInSight;
+	float TargetSightDistance = TargetSightRadius;
 
-	PerceptionComp->GetKnownPerceivedActors(TSubclassOf<UAISense_Sight>(), ActorsInSight);
-
+	if (TargetSightSphere) {
+		TargetSightSphere->GetOverlappingActors(ActorsInSight, ABaseCharacter::StaticClass());
+	}
+	else if (PerceptionComp)
+	{
+		PerceptionComp->GetKnownPerceivedActors(TSubclassOf<UAISense_Sight>(), ActorsInSight);
+	}
+	else {
+		return CurrentActor;
+	}
 
 	for (int index = 0; index < ActorsInSight.Num(); index++)
 	{
-		AActor* CurrentActor = ActorsInSight[index];
+		AActor* PotentialEnemy = ActorsInSight[index];
 
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentActor->GetComponentByClass(UHealthComponent::StaticClass()));
+		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(PotentialEnemy->GetComponentByClass(UHealthComponent::StaticClass()));
 
-		if (CurrentHealth)
+		if (CurrentHealth && CurrentHealth->IsAlive())
 		{
-			bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
-			bool IsEnemy = !UHealthComponent::IsFriendly(OwningCombatCharacter, CurrentActor);
+			bool IsEnemy = !UHealthComponent::IsFriendly(OwningCombatCharacter, PotentialEnemy);
 
-
-			if (IsEnemy && IsAlive)
+			// is target alive & an enemy
+			if (IsEnemy)
 			{
-				float PawnLocation = OwningCombatCharacter->GetActorLocation().Size();
-				float EnemyLocation = CurrentActor->GetActorLocation().Size();
+				FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
+				FVector EnemyLocation = PotentialEnemy->GetActorLocation();
 
-				auto DistanceDiff = PawnLocation - EnemyLocation;
 
-				if (DistanceDiff < TargetSightDistance)
+				// check if can see the target
+				FHitResult HitTargetResult;
+
+				FCollisionQueryParams QueryParams;
+				QueryParams.AddIgnoredActor(OwningCombatCharacter);
+				QueryParams.bTraceComplex = true;
+
+				FCollisionObjectQueryParams ObjectParams;
+				ObjectParams.AllObjects;
+
+				bool bTargetHit = GetWorld()->LineTraceSingleByObjectType(
+					HitTargetResult, 
+					OwningCombatCharacter->FollowCamera->GetComponentLocation(), 
+					EnemyLocation, 
+					ObjectParams, 
+					QueryParams);
+
+				if (bTargetHit)
 				{
-					TargetSightDistance = DistanceDiff;
+					if (HitTargetResult.GetActor() == PotentialEnemy)
+					{
+						// get closest enemy
+						float DistanceDiff = FVector::Dist(OwnerLocation, EnemyLocation);
 
-					OwningCombatCharacter->TargetFound();
+						if (DistanceDiff < TargetSightDistance)
+						{
+							TargetSightDistance = DistanceDiff;
+							CurrentActor = PotentialEnemy;
 
-					return CurrentActor;
+							OwningCombatCharacter->TargetFound();
+						}
+					}
+
 				}
 			}
 		}
 	}
-
-	return nullptr;
+	return CurrentActor;
 }
 
 void ACombatAIController::ShootAtEnemy()
@@ -263,7 +306,6 @@ void ACombatAIController::ShootAtEnemy()
 			OwningCombatCharacter->EndFire();
 			OwningCombatCharacter->EndAim();
 		}
-
 
 		EnemyActor = FindEnemy();
 
@@ -299,7 +341,7 @@ void ACombatAIController::ShootAtEnemy()
 			else
 			{
 				// Shotguns requires bolt action rather than constant firing of weapon
-				// check if using shotgun weapon type 
+				// check if using shotgun weapon type
 				AShotgun* ShotgunObj = Cast<AShotgun>(OwningCombatCharacter->GetCurrentWeapon());
 
 				if (ShotgunObj)
@@ -318,11 +360,10 @@ void ACombatAIController::ShootAtEnemy()
 					StartFiring();
 				}
 			}
-
-
 		}
 		else
 		{
+			ClearFocus(EAIFocusPriority::Gameplay);
 			OwningCombatCharacter->EndFire();
 
 			if (CurrentWeapon->getCurrentAmmo() <= 0) // replenish clip if finished completely
@@ -342,9 +383,7 @@ void ACombatAIController::ShootAtEnemy()
 				}
 			}
 		}
-
 	}
-
 }
 
 void ACombatAIController::StartFiring()
@@ -379,7 +418,8 @@ void ACombatAIController::StartFiring()
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius)
 {
-	if (OwningCombatCharacter->IsInHelicopter()) {
+	if (OwningCombatCharacter->IsInHelicopter())
+	{
 		return EPathFollowingRequestResult::Failed;
 	}
 
@@ -401,31 +441,10 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 	return Movment;
 }
 
-void ACombatAIController::FindHidingSpot()
-{
-	FEnvQueryRequest HidingSpotQueryRequest = FEnvQueryRequest(FindHidingSpotEQS, GetPawn());
-	HidingSpotQueryRequest.Execute(EEnvQueryRunMode::SingleResult, this, &ACombatAIController::MoveToQueryResult);
-}
-
-void ACombatAIController::MoveToQueryResult(TSharedPtr<FEnvQueryResult> result)
-{
-	if (result->IsSuccsessful()) {
-		TargetDestination = result->GetItemAsLocation(0);
-		//MoveToLocation(result->GetItemAsLocation(0));
-
-		EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
-
-		if (Movment == EPathFollowingRequestResult::AlreadyAtGoal)
-		{
-			//	OwningCombatCharacter->IsTakingCover(true);
-		}
-
-	}
-}
-
 void ACombatAIController::FindCover(AActor* TargetActor)
 {
-	if (TargetActor == nullptr) {
+	if (TargetActor == nullptr)
+	{
 		return;
 	}
 
@@ -457,7 +476,6 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 			FHitResult HitResult;
 			bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, NavLocation.Location, ECC_Visibility);
 
-
 			// get all hit results which hit an obstacle
 			if (bHit)
 			{
@@ -477,18 +495,18 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 					bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationSet + FVector(0.0f, Offset, 0.0f), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
 					bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationSet + FVector(0.0f, 0.0f, Offset), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
 
-
 					if (bTargetHit2)
 					{
-						if (Cast<ACombatCharacter>(HitTargetResult2.GetActor())) {
+						if (Cast<ACombatCharacter>(HitTargetResult2.GetActor()))
+						{
 							CanSeeTarget = true;
 						}
 					}
 
-
 					if (bTargetHit3)
 					{
-						if (Cast<ACombatCharacter>(HitTargetResult3.GetActor())) {
+						if (Cast<ACombatCharacter>(HitTargetResult3.GetActor()))
+						{
 							CanSeeTarget = true;
 						}
 					}
@@ -502,8 +520,8 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 		}
 	}
 
-
-	if (CoverLocationPoints.Num() > 0) {
+	if (CoverLocationPoints.Num() > 0)
+	{
 		TargetDestination = GetClosestCoverPoint(TargetActor);
 		HasChosenCover = true;
 	}
@@ -520,10 +538,10 @@ FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
 	{
 		FVector Point = CoverLocationPoints[i];
 
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		WeaponObj = GetWorld()->SpawnActor<AActor>(WeaponClass, Point, FRotator::ZeroRotator, SpawnParams);
-		WeaponObj->SetLifeSpan(1.0f);
+		//FActorSpawnParameters SpawnParams;
+		//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		//WeaponObj = GetWorld()->SpawnActor<AActor>(WeaponClass, Point, FRotator::ZeroRotator, SpawnParams);
+		//WeaponObj->SetLifeSpan(1.0f);
 
 		float Distance = FVector::Dist(OwningCombatCharacter->GetActorLocation(), Point);
 
@@ -540,26 +558,26 @@ void ACombatAIController::TakeCover()
 {
 	if (CoverLocationPoints.Num() <= 0)
 	{
-		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->BeginCrouch();
+		// if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+		// 	OwningCombatCharacter->BeginCrouch();
 	}
 	else
 	{
-		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->BeginCrouch();
+		// if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+		// 	OwningCombatCharacter->BeginCrouch();
 
-		EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
+		//EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
 
-		if (Movment == EPathFollowingRequestResult::AlreadyAtGoal)
-		{
-			if (!OwningCombatCharacter->IsTakingCover())
-				OwningCombatCharacter->TakeCover();
-		}
-		else
-		{
-			if (OwningCombatCharacter->IsTakingCover())
-				OwningCombatCharacter->EscapeCover();
-		}
+		// if (Movment == EPathFollowingRequestResult::AlreadyAtGoal)
+		// {
+		// 	if (!OwningCombatCharacter->IsTakingCover())
+		// 		OwningCombatCharacter->TakeCover();
+		// }
+		// else
+		// {
+		// 	if (OwningCombatCharacter->IsTakingCover())
+		// 		OwningCombatCharacter->EscapeCover();
+		// }
 	}
 }
 
@@ -567,7 +585,8 @@ void ACombatAIController::CheckCommanderOrder()
 {
 	Commander = OwningCombatCharacter->getCommander();
 
-	if (Commander == nullptr) {
+	if (Commander == nullptr)
+	{
 		return;
 	}
 
@@ -579,7 +598,7 @@ void ACombatAIController::CheckCommanderOrder()
 
 		switch (CommanderRecruit.CurrentCommand)
 		{
-		case  CommanderOrders::Attack:
+		case CommanderOrders::Attack:
 		case CommanderOrders::Defend:
 			TargetDestination = CommanderRecruit.TargetLocation;
 			break;
@@ -590,5 +609,4 @@ void ACombatAIController::CheckCommanderOrder()
 
 		MoveToTarget(AcceptanceRadius);
 	}
-
 }

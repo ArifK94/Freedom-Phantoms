@@ -11,10 +11,6 @@
 #include "Containers/Array.h"
 #include "Engine.h"
 
-#include "Kismet/KismetSystemLibrary.h"
-
-
-
 ACommanderCharacter::ACommanderCharacter()
 {
 	CurrentRecruitIndex = 0;
@@ -54,25 +50,12 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 	FCollisionObjectQueryParams ObjectParams;
 	ObjectParams.AllObjects;
 
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery1);
-	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery2);
-	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery_MAX);
-	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
 
-	TArray<AActor*> ActorsToIgnore;
-
-	FVector MyLocation = this->GetActorLocation();
 	FHitResult OutHit;
-	FVector Start = this->GetActorLocation();
+	FVector Start = GetActorLocation();
 
 	FVector ForwardVector = FollowCamera->GetForwardVector();
 	FVector End = ((ForwardVector * Length) + Start);
-
-	//DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
-
-
-	//auto SphereLineTrace = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), Start, End, 50.0f, ObjectTypes, true, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHit, true);
 
 	auto LineTrace = GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, ObjectParams, QueryParams);
 

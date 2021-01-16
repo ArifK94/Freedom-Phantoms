@@ -4,22 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
-#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "CombatAIController.generated.h"
 
+class AGameModeManager;
 class ACombatCharacter;
 class ACommanderCharacter;
 class UAISenseConfig;
 class UAISense;
 class UAIPerceptionComponent;
 class AWeapon;
+class USphereComponent;
 UCLASS()
-	class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
+class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 {
 	GENERATED_BODY()
 
 private:
+
+	AGameModeManager* GameModeManager;
 	ACombatCharacter* OwningCombatCharacter;
+	USphereComponent* TargetSightSphere;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UBehaviorTree* BTAsset;
@@ -52,8 +56,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FVector TargetDestination;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		AActor* EnemyActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float TargetSightRadius;
+
+	AActor* EnemyActor;
 
 	UAIPerceptionComponent* PerceptionComp;
 	AWeapon* CurrentWeapon;
@@ -66,6 +72,8 @@ private:
 	bool IsCoolingDown;
 	bool StayCombatAlert;
 	bool HasChosenCover;
+
+	FVector ChosenCoverPoint;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<FVector> CoverLocationPoints;
@@ -83,20 +91,10 @@ private:
 		AActor* WeaponObj;
 
 
-	UPROPERTY(EditAnywhere, Category = "AI")
-		UEnvQuery* FindHidingSpotEQS;
-
-	UFUNCTION(BlueprintCallable)
-		void FindHidingSpot();
-
-	void MoveToQueryResult(TSharedPtr<FEnvQueryResult> result);
-
-
 public:
 	ACombatAIController();
 
 private:
-
 	void Init();
 
 	void UpdateCharacterMovement();
@@ -113,8 +111,7 @@ private:
 
 	void StartFiring();
 
-	UFUNCTION(BlueprintCallable)
-		EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius);
+	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius);
 
 	void CheckCommanderOrder();
 
