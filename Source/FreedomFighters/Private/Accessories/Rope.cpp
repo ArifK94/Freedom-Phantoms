@@ -31,6 +31,7 @@ void ARope::DropRope()
 {
 	ropeMeshComp->PhysicsAssetOverride = RopeDropPhysics;
 	ropeMeshComp->SetSimulatePhysics(true);
+	SetLifeSpan(5);
 }
 
 void ARope::CreateCollisionPoints()

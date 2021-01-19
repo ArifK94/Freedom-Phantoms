@@ -10,6 +10,8 @@
 
 #include "Camera/CameraComponent.h"
 
+
+#include "CustomComponents/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AudioComponent.h"
@@ -56,6 +58,8 @@ void AHelicopter::Tick(float DeltaTime)
 	CurveTimeline.TickTimeline(DeltaTime);
 
 	WaitForRepelling();
+
+	UpdateOccupiedSeats();
 }
 
 
@@ -73,7 +77,6 @@ void AHelicopter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 
 			if (CurrentSplinePoint.PointIndex != -1)
 			{
-				FVehicleSplinePoint NextSplinePoint = CollidedPath->GetNextSplinePoint(CurrentSplinePoint.PointIndex);
 
 				switch (CurrentSplinePoint.MovementType)
 				{
@@ -90,6 +93,12 @@ void AHelicopter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 				default:
 					CurrentMovement = HelicopterMovement::Grounded;
 					break;
+				}
+
+				/// destroy the helicopter once reached the last path point
+				if (CurrentSplinePoint.PointIndex >= CollidedPath->GetSplinePathComp()->GetNumberOfSplinePoints() - 1)
+				{
+					Destroy();
 				}
 			}
 		}
@@ -157,8 +166,6 @@ void AHelicopter::SpawnPassenger()
 				Character->SetHelicopterSeatPosition(HeliSeat.SeatPosition);
 				HeliSeat.OwningHelicopter = this;
 
-
-
 				Character->SetHelicopterSeating(HeliSeat);
 
 
@@ -209,7 +216,6 @@ void AHelicopter::WaitForRepelling()
 
 		for (int i = 0; i < OccupiedSeating.Num(); i++)
 		{
-
 			if (OccupiedSeating[i].Role == HelicopterRole::SideGunner)
 			{
 				FHelicopterSeating Passenger = OccupiedSeating[i];
@@ -219,24 +225,28 @@ void AHelicopter::WaitForRepelling()
 				}
 				else
 				{
-					if (Passenger.isRopeLeftSide)
+					if (!Passenger.CharacterObj->IsRepellingDown())
 					{
-						if (!isLeftRappelOccupied)
+						if (Passenger.isRopeLeftSide)
 						{
-							Passenger.CharacterObj->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
-							Passenger.CharacterObj->SetIsRepellingDown(true);
-							//	isLeftRappelOccupied = true;
+							if (!isLeftRappelOccupied)
+							{
+								Passenger.CharacterObj->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
+								Passenger.CharacterObj->SetIsRepellingDown(true);
+								isLeftRappelOccupied = true;
+							}
+						}
+						else
+						{
+							if (!isRightRappelOccupied)
+							{
+								Passenger.CharacterObj->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
+								Passenger.CharacterObj->SetIsRepellingDown(true);
+								isRightRappelOccupied = true;
+							}
 						}
 					}
-					else
-					{
-						if (!isRightRappelOccupied)
-						{
-							Passenger.CharacterObj->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
-							Passenger.CharacterObj->SetIsRepellingDown(true);
-							//	isRightRappelOccupied = true;
-						}
-					}
+
 				}
 			}
 		}
@@ -256,4 +266,26 @@ void AHelicopter::WaitForRepelling()
 
 		CurrentMovement = HelicopterMovement::MovingForward;
 	}
+}
+
+void AHelicopter::UpdateOccupiedSeats()
+{
+	// check if passengers still alive
+	for (int i = 0; i < OccupiedSeating.Num(); i++)
+	{
+		if (OccupiedSeating[i].Role == HelicopterRole::SideGunner)
+		{
+			FHelicopterSeating Passenger = OccupiedSeating[i];
+			if (Passenger.CharacterObj) {
+
+				UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Passenger.CharacterObj->GetComponentByClass(UHealthComponent::StaticClass()));
+
+				if (!CurrentHealth->IsAlive())
+				{
+					OccupiedSeating.RemoveAt(i);
+				}
+			}
+		}
+	}
+
 }

@@ -145,6 +145,8 @@ private:
 
 	void WaitForRepelling();
 
+	void UpdateOccupiedSeats();
+
 protected:
 	virtual void BeginPlay() override;
 

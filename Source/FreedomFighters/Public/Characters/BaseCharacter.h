@@ -215,7 +215,7 @@ protected:
 		UHealthComponent* HealthComp;
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
-		void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+		virtual void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 
 private:

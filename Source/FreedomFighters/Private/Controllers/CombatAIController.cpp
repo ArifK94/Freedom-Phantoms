@@ -38,7 +38,7 @@ ACombatAIController::ACombatAIController()
 	DistanceDiffSprint = 200.0f;
 	CoverRadius = 10000.0f;
 	NumberOfCoverTraces = 35.0f;
-	TargetSightRadius = 5000.0f;
+	TargetSightRadius = 7000.0f;
 }
 
 void ACombatAIController::Init()
@@ -50,6 +50,19 @@ void ACombatAIController::Init()
 		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
 
 		OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
+
+		if (TargetSightSphere == nullptr)
+		{
+			TargetSightSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+			if (TargetSightSphere)
+			{
+				TargetSightSphere->RegisterComponent();
+				TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+				TargetSightSphere->SetSphereRadius(TargetSightRadius);
+				TargetSightSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+			}
+		}
+
 	}
 }
 
@@ -75,14 +88,7 @@ void ACombatAIController::BeginPlay()
 		AAIController::RunBehaviorTree(BTAsset);
 	}
 
-	TargetSightSphere = NewObject<USphereComponent>(OwningCombatCharacter);
-	if (TargetSightSphere)
-	{
-		TargetSightSphere->RegisterComponent();
-		TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		TargetSightSphere->SetSphereRadius(TargetSightRadius);
-		TargetSightSphere->SetCollisionProfileName(TEXT("OverlapAll"));
-	}
+
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -117,19 +123,19 @@ void ACombatAIController::Tick(float DeltaTime)
 			ShootAtEnemy();
 		}
 
-		if (EnemyActor != nullptr)
-		{
-			FindCover(EnemyActor);
-			HasChosenCover = false;
-		}
-		else
-		{
-			// pick a random cover point
-			if (!HasChosenCover)
-			{
-				FindCover(OwningCombatCharacter);
-			}
-		}
+		//if (EnemyActor != nullptr)
+		//{
+		//	FindCover(EnemyActor);
+		//	HasChosenCover = false;
+		//}
+		//else
+		//{
+		//	// pick a random cover point
+		//	if (!HasChosenCover)
+		//	{
+		//		FindCover(OwningCombatCharacter);
+		//	}
+		//}
 	}
 }
 
@@ -254,10 +260,10 @@ AActor* ACombatAIController::FindEnemy()
 				ObjectParams.AllObjects;
 
 				bool bTargetHit = GetWorld()->LineTraceSingleByObjectType(
-					HitTargetResult, 
-					OwningCombatCharacter->FollowCamera->GetComponentLocation(), 
-					EnemyLocation, 
-					ObjectParams, 
+					HitTargetResult,
+					OwningCombatCharacter->FollowCamera->GetComponentLocation(),
+					EnemyLocation,
+					ObjectParams,
 					QueryParams);
 
 				if (bTargetHit)
@@ -325,7 +331,7 @@ void ACombatAIController::ShootAtEnemy()
 
 				float DistanceDiff = UKismetMathLibrary::Abs(PawnLocation - EnemyLocation);
 
-				float randomDistanceLimit = FMath::RandRange(800.0f, 1000.0f);
+				float randomDistanceLimit = FMath::RandRange(0.0f, 200.0f);
 
 				if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->IsInHelicopter())
 				{
@@ -366,13 +372,13 @@ void ACombatAIController::ShootAtEnemy()
 			ClearFocus(EAIFocusPriority::Gameplay);
 			OwningCombatCharacter->EndFire();
 
-			if (CurrentWeapon->getCurrentAmmo() <= 0) // replenish clip if finished completely
+			if (CurrentWeapon->getCurrentAmmo() <= 0) // reload clip if finished completely
 			{
 				OwningCombatCharacter->BeginReload();
 			}
-			else if (CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // replenish if not on full clip
+			else if (CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // reload if not on full clip
 			{
-				//GetWorldTimerManager().SetTimer(THandler_TimeReloadWeapon, this, &ACombatAIController::ReloadWeapon, FMath::RandRange(5.0f, 10.0f), false, 0.0f);
+				OwningCombatCharacter->BeginReload();
 			}
 			else
 			{
@@ -479,41 +485,48 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 			// get all hit results which hit an obstacle
 			if (bHit)
 			{
-				FVector LocationSet = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
+				FVector LocationPoint = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
 
-				if (TargetActor == OwningCombatCharacter)
+				FWorldCoverPoint CoverLocation = FWorldCoverPoint();
+				CoverLocation.Location = LocationPoint;
+				CoverLocation.Owner = OwningCombatCharacter;
+
+				if (!GameModeManager->IsCoverPointTaken(CoverLocation))
 				{
-					CoverLocationPoints.Add(LocationSet);
-				}
-				else
-				{
-					bool CanSeeTarget = false;
-					float directionValue = FVector::DotProduct(LocationSet, TargetActor->GetActorLocation());
-
-					float Offset = 50.0f;
-					FHitResult HitTargetResult2, HitTargetResult3;
-					bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationSet + FVector(0.0f, Offset, 0.0f), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
-					bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationSet + FVector(0.0f, 0.0f, Offset), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
-
-					if (bTargetHit2)
+					if (TargetActor == OwningCombatCharacter)
 					{
-						if (Cast<ACombatCharacter>(HitTargetResult2.GetActor()))
-						{
-							CanSeeTarget = true;
-						}
+						CoverLocationPoints.Add(LocationPoint);
 					}
-
-					if (bTargetHit3)
+					else
 					{
-						if (Cast<ACombatCharacter>(HitTargetResult3.GetActor()))
+						bool CanSeeTarget = false;
+						float directionValue = FVector::DotProduct(LocationPoint, TargetActor->GetActorLocation());
+
+						float Offset = 50.0f;
+						FHitResult HitTargetResult2, HitTargetResult3;
+						bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationPoint + FVector(0.0f, Offset, 0.0f), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
+						bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationPoint + FVector(0.0f, 0.0f, Offset), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
+
+						if (bTargetHit2)
 						{
-							CanSeeTarget = true;
+							if (Cast<ACombatCharacter>(HitTargetResult2.GetActor()))
+							{
+								CanSeeTarget = true;
+							}
 						}
-					}
 
-					if (CanSeeTarget)
-					{
-						CoverLocationPoints.Add(LocationSet);
+						if (bTargetHit3)
+						{
+							if (Cast<ACombatCharacter>(HitTargetResult3.GetActor()))
+							{
+								CanSeeTarget = true;
+							}
+						}
+
+						if (CanSeeTarget)
+						{
+							CoverLocationPoints.Add(LocationPoint);
+						}
 					}
 				}
 			}
@@ -526,7 +539,7 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 		HasChosenCover = true;
 	}
 
-	TakeCover();
+	//TakeCover();
 }
 
 FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
@@ -538,11 +551,6 @@ FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
 	{
 		FVector Point = CoverLocationPoints[i];
 
-		//FActorSpawnParameters SpawnParams;
-		//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		//WeaponObj = GetWorld()->SpawnActor<AActor>(WeaponClass, Point, FRotator::ZeroRotator, SpawnParams);
-		//WeaponObj->SetLifeSpan(1.0f);
-
 		float Distance = FVector::Dist(OwningCombatCharacter->GetActorLocation(), Point);
 
 		if (Distance < minDist)
@@ -551,6 +559,21 @@ FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
 			minDist = Distance;
 		}
 	}
+
+	// update current cover point, 
+	FWorldCoverPoint CoverLocation = FWorldCoverPoint();
+	CoverLocation.Owner = OwningCombatCharacter;
+
+	// remove previous cover point from the list
+	CoverLocation.Location = ChosenCoverPoint;
+	GameModeManager->RemoveCoverPoint(CoverLocation);
+
+	// add the new cover point
+	CoverLocation.Location = ClosestPoint;
+	GameModeManager->AddCoverPoint(CoverLocation);
+
+	ChosenCoverPoint = ClosestPoint;
+
 	return ClosestPoint;
 }
 
@@ -566,7 +589,7 @@ void ACombatAIController::TakeCover()
 		// if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
 		// 	OwningCombatCharacter->BeginCrouch();
 
-		//EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
+		EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
 
 		// if (Movment == EPathFollowingRequestResult::AlreadyAtGoal)
 		// {

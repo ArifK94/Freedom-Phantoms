@@ -36,7 +36,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
-
 #include "GameFramework/Actor.h"
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
@@ -156,6 +155,22 @@ void ACombatCharacter::Tick(float DeltaTime)
 		disableSprint();
 
 	}
+}
+
+void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser);
+
+	if (isDead)
+	{
+		if (currentWeaponObj) {
+			currentWeaponObj->getMeshComp()->SetCollisionProfileName(TEXT("Weapon"));
+			currentWeaponObj->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			currentWeaponObj->getMeshComp()->SetSimulatePhysics(true);
+		}
+	}
+
+
 }
 
 AWeapon* ACombatCharacter::GetCurrentWeapon()

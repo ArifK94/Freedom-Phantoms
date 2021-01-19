@@ -32,7 +32,7 @@ FVehicleSplinePoint AAircraftSplinePath::GetVehicleSplinePoint(FVector TargetLoc
 	{
 		const FVector StartPoint = SplinePathComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::World);
 
-		if (UKismetMathLibrary::EqualEqual_VectorVector(StartPoint, TargetLocation, 100.0f)) {
+		if (UKismetMathLibrary::EqualEqual_VectorVector(StartPoint, TargetLocation, 1000.0f)) {
 			return VehicleSplinePoints[i];
 		}
 	}
@@ -61,6 +61,7 @@ void AAircraftSplinePath::OnConstruction(const FTransform& Transform)
 	const int32 TotalSplinePoints = SplinePathComp->GetNumberOfSplinePoints();
 
 	// creating list of aircraft points dynamically
+	// start the first index from the list so adding to an existing spline will not duplicate the current items within the list
 	for (int SplineCount = VehicleSplinePoints.Num(); SplineCount < TotalSplinePoints; SplineCount++)
 	{
 		// define the positions of the points and tangents
@@ -117,28 +118,36 @@ void AAircraftSplinePath::UpdateCollisionBox()
 	{
 		const FVector StartPoint = SplinePathComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::World);
 
-		UBoxComponent* CollisionBox = NewObject<UBoxComponent>(this, UBoxComponent::StaticClass());
+		UBoxComponent* CollisionBox = NewObject<UBoxComponent>(this);
+		CollisionBox->RegisterComponent();
 		CollisionBox->SetWorldLocation(StartPoint);
+		CollisionBox->SetCollisionProfileName(TEXT("OverlapAll"));
 
-		USphereComponent* CollisionSphere = NewObject<USphereComponent>(this, USphereComponent::StaticClass());
-		CollisionSphere->InitSphereRadius(500.0f);
+		USphereComponent* CollisionSphere = NewObject<USphereComponent>(this);
+		CollisionSphere->RegisterComponent();
+		CollisionSphere->SetSphereRadius(500.0f);
 		CollisionSphere->SetWorldLocation(StartPoint);
+		CollisionSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+
 
 		FVehicleSplinePoint VehicleSplinePoint = VehicleSplinePoints[i];
-		
+		FColor ColliderColour;
+
 		switch (VehicleSplinePoint.MovementType)
 		{
 		case AircraftSplineMovement::Throttling:
-			CollisionBox->ShapeColor = FColor(0, 0, 255, 255);
+			ColliderColour = FColor(0, 0, 255, 255);
 			break;
 		case AircraftSplineMovement::Hovering:
-			CollisionBox->ShapeColor = FColor(0, 255, 0, 255);
+			ColliderColour = FColor(0, 255, 0, 255);
 			break;
 		default:
-			CollisionBox->ShapeColor = FColor(0, 0, 255, 255);
+			ColliderColour = FColor(0, 0, 255, 255);
 			break;
 		}
 
+		CollisionBox->ShapeColor = ColliderColour;
+		CollisionSphere->ShapeColor = ColliderColour;
 	}
 
 }
