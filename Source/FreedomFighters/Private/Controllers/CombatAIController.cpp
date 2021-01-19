@@ -619,17 +619,20 @@ void ACombatAIController::CheckCommanderOrder()
 	{
 		StayCombatAlert = true;
 
+		float TargetRadius = AcceptanceRadius;
+
 		switch (CommanderRecruit.CurrentCommand)
 		{
 		case CommanderOrders::Attack:
 		case CommanderOrders::Defend:
 			TargetDestination = CommanderRecruit.TargetLocation;
+			TargetRadius = 0.0f;
 			break;
 		case CommanderOrders::Follow:
 			TargetDestination = Commander->GetActorLocation();
 			break;
 		}
 
-		MoveToTarget(AcceptanceRadius);
+		MoveToTarget(TargetRadius);
 	}
 }
