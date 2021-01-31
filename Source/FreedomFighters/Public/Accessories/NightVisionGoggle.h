@@ -8,12 +8,13 @@
 
 class USkeletalMeshComponent;
 class UAudioComponent;
+class AGameHUDController;
 UCLASS()
 class FREEDOMFIGHTERS_API ANightVisionGoggle : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	ANightVisionGoggle();
 
 	void SetVisorState();
@@ -23,17 +24,17 @@ private:
 		USkeletalMeshComponent* Mesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Night Vision Goggles", meta = (AllowPrivateAccess = "true"))
-	class UPostProcessComponent* VisionPPComp;
+		class UPostProcessComponent* VisionPPComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Night Vision Goggles", meta = (AllowPrivateAccess = "true"))
-	bool isVisorOn;
+		bool isVisorOn;
 
-	class AGameHUDController* gameHUDController;
+	AGameHUDController* gameHUDController;
 
 	FTimerHandle UnusedHandle;
 
 
-	 UAudioComponent* NVGAudioComponent;
+	UAudioComponent* NVGAudioComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Night Vision Goggles Sounds", meta = (AllowPrivateAccess = "true"))
 		USoundBase* NVGOnSound;
@@ -44,12 +45,12 @@ private:
 
 	bool canToggle;
 
-public:	
+public:
 
 	UFUNCTION(BlueprintCallable, Category = "NVG")
-	void ToggleVision();
+		void ToggleVision();
 
-	bool getVisorState() { return isVisorOn;  }
+	bool getVisorState() { return isVisorOn; }
 
 	USkeletalMeshComponent* GetMesh() {
 		return Mesh;

@@ -15,13 +15,13 @@ AOrderIcon::AOrderIcon()
 	RootComponent = Root;
 
 	Floor = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Floor"));
-	Floor->AttachTo(Root);
+	Floor->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 	Floor->SetCollisionProfileName(TEXT("NoCollision"));
 	Floor->CanCharacterStepUpOn = ECB_No;
 	Floor->SetGenerateOverlapEvents(false);
 
 	Head = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Head"));
-	Head->AttachTo(Floor);
+	Head->AttachToComponent(Floor, FAttachmentTransformRules::KeepRelativeTransform);
 	Head->SetCollisionProfileName(TEXT("NoCollision"));
 	Head->CanCharacterStepUpOn = ECB_No;
 	Head->SetGenerateOverlapEvents(false);

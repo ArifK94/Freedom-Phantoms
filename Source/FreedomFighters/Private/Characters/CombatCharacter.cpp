@@ -483,7 +483,7 @@ void ACombatCharacter::UpdateHandGaurdIK()
 {
 	if (currentWeaponObj)
 	{
-		currentWeaponObj->SetHandGuardIK(GetMesh());
+		currentWeaponObj->SetHandGuardIK(GetMesh(), RightHandSocket);
 
 		if (isInCombatMode && !isReloading)
 		{

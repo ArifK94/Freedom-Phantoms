@@ -1,7 +1,7 @@
 
 
 #include "Props/CoverActor.h"
-#include "Characters/BaseCharacter.h"
+//#include "Characters/BaseCharacter.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Components/BoxComponent.h"
@@ -11,7 +11,7 @@ void ACoverActor::OnCompBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor
 	if (OtherActor->IsA<ABaseCharacter>())
 	{
 		//Inform the player that he is able to take cover
-		ABaseCharacter* Char = Cast<ABaseCharacter>(OtherActor);
+		//ABaseCharacter* Char = Cast<ABaseCharacter>(OtherActor);
 		//Char->SetCanTakeCover(true, this);
 	}
 }
@@ -21,7 +21,7 @@ void ACoverActor::OnCompEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* 
 	if (OtherActor->IsA<ABaseCharacter>())
 	{
 		//Inform the player that he isn't able to take cover
-		ABaseCharacter* Char = Cast<ABaseCharacter>(OtherActor);
+		//ABaseCharacter* Char = Cast<ABaseCharacter>(OtherActor);
 	//	Char->SetCanTakeCover(false, nullptr);
 	}
 }

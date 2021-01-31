@@ -10,9 +10,6 @@
 
 #include "GameHUDController.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class FREEDOMFIGHTERS_API AGameHUDController : public AHUD
 {

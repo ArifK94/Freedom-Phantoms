@@ -14,7 +14,7 @@ AWeaponLaser::AWeaponLaser()
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->CanCharacterStepUpOn = ECB_No;
-	MeshComp->AttachTo(RootComponent);
+	MeshComp->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 	LightComp = CreateDefaultSubobject<USpotLightComponent>(TEXT("LightComp"));
 	LightComp->Intensity = 30000.0f;

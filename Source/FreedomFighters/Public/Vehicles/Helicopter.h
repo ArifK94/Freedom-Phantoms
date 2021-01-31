@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Actor.h"
+
+#include "Engine/DataTable.h"
+
 #include "Helicopter.generated.h"
 
 class ABaseCharacter;

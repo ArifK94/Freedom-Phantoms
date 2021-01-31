@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+
+#include "Engine/DataTable.h"
+
 #include "GameModeManager.generated.h"
 
 USTRUCT(BlueprintType)

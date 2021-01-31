@@ -94,6 +94,9 @@ ABaseCharacter::ABaseCharacter()
 	CoverSelected = false;
 	isFacingCoverRHS = false;
 
+	HeadSocket = "j_head";
+	RightHandSocket = "j_wrist_ri";
+
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
 

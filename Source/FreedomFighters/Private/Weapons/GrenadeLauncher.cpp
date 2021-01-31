@@ -42,7 +42,6 @@ void AGrenadeLauncher::Fire()
 
 	if (MyOwner)
 	{
-
 		FVector EyeLocation;
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
@@ -50,16 +49,11 @@ void AGrenadeLauncher::Fire()
 		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocket);
 
 		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
+		SpawnParams.Owner = MyOwner;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 		UWorld* world = GetWorld();
 		AWeaponBullet* bulletObj = world->SpawnActor<AWeaponBullet>(weaponClipObj->getBulletClass(), MuzzleLocation, EyeRotation, SpawnParams);
-		if (bulletObj)
-		{
-			bulletObj->SetOwner(this);
-		}
-
 
 		BeginShellEffect();
 

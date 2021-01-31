@@ -1,14 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "WeaponBullet.generated.h"
 
-class UCapsuleComponent;
+class UArrowComponent;
+class USphereComponent;
 class UParticleSystem;
 class USoundBase;
+class UDamageType;
+class UProjectileMovementComponent;
 
 UCLASS()
 class FREEDOMFIGHTERS_API AWeaponBullet : public AActor
@@ -22,23 +23,34 @@ public:
 
 private:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
-		UCapsuleComponent* Root;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
+		USphereComponent* CapsuleComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
 		UStaticMeshComponent* Mesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* ImpactParticle;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
+		UProjectileMovementComponent* BulletMovement;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* ExplosionParticle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* DefaultImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* FleshImpactEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
 		USoundBase* ImpactSound;
 
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
-	class UProjectileMovementComponent* BulletMovement;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
+		bool isAnExplosive;
 
-	FTimerHandle THandler_TimeBetweenShots;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UDamageType> DamageType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		float DamageAmount;
@@ -46,23 +58,27 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		float DamageRadius;
 
+	FTimerHandle THandler_TimeBetweenShots;
 
-	UFUNCTION(BlueprintCallable, Category = "Collision")
+
+private:
+	UFUNCTION()
 		void OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
+
+	void SetDestructableHit(AActor* OtherActor);
 
 protected:
 	virtual void BeginPlay() override;
 
 public:	
-	virtual void Tick(float DeltaTime) override;
-
 
 	float getDamageAmount() {
 		return DamageAmount;
 	}
 
-	UStaticMeshComponent* getMesh()
-	{
+	UStaticMeshComponent* getMesh() {
 		return Mesh;
 	}
 };

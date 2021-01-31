@@ -25,7 +25,8 @@ class UAnimationAsset;
 class UAnimMontage;
 class UAnimSequence;
 class UAimOffsetBlendSpace;
-class UCameraShake;
+class AWeaponClip;
+class AWeaponBullet;
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class WeaponType : uint8
@@ -119,12 +120,6 @@ public:
 
 	void StopFire();
 
-	void BeginFireEffect(FVector TraceEnd);
-
-	void BeginShellEffect();
-
-	void CameraShakeEffect();
-
 	void BeginReload();
 
 	void EndReload();
@@ -141,7 +136,7 @@ public:
 
 	void SpawnWeaponAttachments();
 
-	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh);
+	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
 	bool IsFacingCrosshair();
 
 
@@ -149,9 +144,10 @@ private:
 	void BurstDelay();
 	void SemiFireDelay();
 
-
 protected:
 	virtual void Fire();
+
+	void CreateBullet();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		virtual void OnReload();
@@ -164,9 +160,9 @@ protected:
 
 	virtual FVector getMuzzleLocation();
 
-	void PlayShotEffect(FVector TracerEndPoint);
+	void BeginShellEffect();
 
-	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
+	void PlayShotEffect(FVector TracerEndPoint);
 
 protected:
 	float CurrentDeltaTime;
@@ -186,10 +182,12 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class AWeaponClip> weaponClip;
-	class AWeaponClip* weaponClipObj;
+		TSubclassOf<AWeaponClip> weaponClip;
+	 AWeaponClip* weaponClipObj;
 
-	class AWeaponBullet* BulletObj;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AWeaponBullet> BulletClass;
+	 AWeaponBullet* BulletObj;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		TSubclassOf<UDamageType> DamageType;
@@ -331,9 +329,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* TracerEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UCameraShake> FireCamShake;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Damage")
 		float BulletDamage;
@@ -349,13 +344,9 @@ private:
 	float CurrentVerticleRecoil;
 
 public:
-
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
-
-
-
 
 public:
 

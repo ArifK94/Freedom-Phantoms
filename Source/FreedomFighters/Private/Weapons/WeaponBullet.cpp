@@ -3,9 +3,12 @@
 
 #include "Weapons/WeaponBullet.h"
 
+#include "FreedomFighters/FreedomFighters.h"
+#include "CustomComponents/HealthComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
-#include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
+//#include "DestructibleComponent.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "TimerManager.h"
@@ -17,28 +20,36 @@
 
 AWeaponBullet::AWeaponBullet()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
-	Root = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Root"));
-	RootComponent = Root;
-	Root->SetCollisionProfileName(TEXT("WeaponProjectile"));
-	Root->CanCharacterStepUpOn = ECB_No;
+	CapsuleComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CapsuleComponent"));
+	RootComponent = CapsuleComponent;
+	CapsuleComponent->SetNotifyRigidBodyCollision(true);
+	CapsuleComponent->SetCollisionProfileName(TEXT("WeaponProjectile"));
+	CapsuleComponent->CanCharacterStepUpOn = ECB_No;
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	Mesh->AttachTo(Root);
+	Mesh->AttachToComponent(CapsuleComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	Mesh->SetNotifyRigidBodyCollision(true);
 	Mesh->SetCollisionProfileName(TEXT("WeaponProjectile"));
 	Mesh->CanCharacterStepUpOn = ECB_No;
 
 	BulletMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("BulletMovement"));
-	BulletMovement->InitialSpeed = 2000.0f;
-	BulletMovement->MaxSpeed = 2000.0f;
+	BulletMovement->InitialSpeed = 12000.0;
+	BulletMovement->MaxSpeed = 15000.0;
 
-
-	DamageAmount = 5.0f;
+	DamageAmount = 15.0f;
 	DamageRadius = 10.0f;
-
-
 }
+
+void AWeaponBullet::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CapsuleComponent->OnComponentHit.AddDynamic(this, &AWeaponBullet::OnBulletHit);
+	Mesh->OnComponentHit.AddDynamic(this, &AWeaponBullet::OnBulletHit);
+}
+
 
 void AWeaponBullet::Explode()
 {
@@ -47,16 +58,6 @@ void AWeaponBullet::Explode()
 	if (world)
 	{
 		//DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, -1, 0, 1);
-
-		if (ImpactParticle != NULL)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorLocation());
-		}
-
-		if (ImpactSound != NULL)
-		{
-			UGameplayStatics::PlaySoundAtLocation(world, ImpactSound, GetActorLocation(), 1.0f);
-		}
 
 		TArray<AActor*> ignoredActors;
 		UGameplayStatics::ApplyRadialDamage(world, DamageAmount, GetActorLocation(), DamageRadius, NULL, ignoredActors, this, AActor::GetInstigatorController());
@@ -92,7 +93,7 @@ void AWeaponBullet::Explode()
 			}
 		}
 
-			Destroy();
+		Destroy();
 	}
 
 
@@ -100,24 +101,86 @@ void AWeaponBullet::Explode()
 
 void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+	if (OtherActor != NULL && OtherActor != this)
 	{
-		Explode();
+
+		float ActualDamage = DamageAmount;
+		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+		if (SurfaceType == SURFACE_HEAD)
+		{
+			ActualDamage = 100;
+		}
+		else if (SurfaceType == SURFACE_FLESHVULNERABLE)
+		{
+			ActualDamage *= 2.0f;
+		}
+
+
+
+		UHealthComponent* HealthComponent = Cast<UHealthComponent>(OtherActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+		if (HealthComponent)
+		{
+			HealthComponent->SetHitInfo(Hit);
+		}
+
+		AActor* MyOwner = GetOwner();
+		if (MyOwner)
+		{
+			UGameplayStatics::ApplyPointDamage(OtherActor, ActualDamage, FVector::ZeroVector, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
+		}
+
+		SetDestructableHit(OtherActor);
+
+		if (ExplosionParticle != NULL)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, Hit.ImpactPoint);
+		}
+
+		if (ImpactSound != NULL)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, Hit.ImpactPoint, 1.0f);
+		}
+
+		if (isAnExplosive) {
+			Explode();
+		}
+		else
+		{
+			Destroy();
+		}
+
+		UParticleSystem* ImpactParticle = CheckSurface(SurfaceType);
+		if (ImpactParticle)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+		}
+
 	}
 }
 
-void AWeaponBullet::BeginPlay()
+UParticleSystem* AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 {
-	Super::BeginPlay();
-
-	Root->OnComponentHit.AddDynamic(this, &AWeaponBullet::OnBulletHit);
-
+	switch (SurfaceType)
+	{
+	case SURFACE_HEAD:
+	case SURFACE_GROIN:
+	case SURFACE_FLESHDEFAULT:
+	case SURFACE_FLESHVULNERABLE:
+		return FleshImpactEffect;
+		break;
+	default:
+		return DefaultImpactEffect;
+		break;
+	}
 }
 
-void AWeaponBullet::Tick(float DeltaTime)
+
+void AWeaponBullet::SetDestructableHit(AActor* OtherActor)
 {
-	Super::Tick(DeltaTime);
+	//UDestructibleComponent* DestructibleComponent = Cast<UDestructibleComponent>(OtherActor->GetComponentByClass(UDestructibleComponent::StaticClass()));
+
+	//if (DestructibleComponent) {
+	//	DestructibleComponent->SetSimulatePhysics(true);
+	//}
 }
-
-
-

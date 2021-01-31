@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/DataTable.h"
 #include "AircraftSplinePath.generated.h"
 
 class USplineComponent;
@@ -53,7 +54,10 @@ public:
 private:
 	void OnConstruction(const FTransform& Transform) override;
 
-	void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
+//
+//#if WITH_EDITOR
+//	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+//#endif
 
 	void UpdatePointIndex();
 	void UpdateCollisionBox();

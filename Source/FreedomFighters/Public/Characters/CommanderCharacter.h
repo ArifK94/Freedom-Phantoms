@@ -65,7 +65,8 @@ private:
 		uint8 CurrentRecruitIndex;
 
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		uint8 MaxRecruits;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Order Icon", meta = (AllowPrivateAccess = "true"))
 		UMaterialInterface* AttackMaterial;

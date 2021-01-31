@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "4.25",
+	"EngineAssociation": "4.26",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -20,6 +20,10 @@
 		{
 			"Name": "CoverGenerator",
 			"Enabled": false
+		},
+		{
+			"Name": "ApexDestruction",
+			"Enabled": true
 		}
 	]
 }

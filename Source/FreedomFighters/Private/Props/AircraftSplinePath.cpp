@@ -91,13 +91,17 @@ void AAircraftSplinePath::OnConstruction(const FTransform& Transform)
 
 }
 
-void AAircraftSplinePath::PostEditChangeProperty(FPropertyChangedEvent& e)
-{
-	Super::PostEditChangeProperty(e);
 
-	UpdateCollisionBox();
-	UpdatePointIndex();
-}
+//#if WITH_EDITOR
+//void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+//{
+//	Super::PostEditChangeProperty(PropertyChangedEvent);
+//
+//	UpdateCollisionBox();
+//	UpdatePointIndex();
+//}
+//#endif
+
 
 void AAircraftSplinePath::UpdatePointIndex()
 {

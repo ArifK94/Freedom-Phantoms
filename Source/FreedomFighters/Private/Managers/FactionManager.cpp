@@ -96,10 +96,3 @@ ALoadout* UFactionManager::SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Ow
 	}
 	return nullptr;
 }
-
-void AddOperative(ACombatCharacter* CombatCharacter)
-{
-	if (CombatCharacter)
-	{
-	}
-}

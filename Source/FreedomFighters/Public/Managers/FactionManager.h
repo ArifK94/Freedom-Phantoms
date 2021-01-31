@@ -13,8 +13,6 @@ class UWeaponSet;
 class USoundBase;
 class AHeadgear;
 class ALoadout;
-class ACombatCharacter;
-
 
 USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase
@@ -64,9 +62,6 @@ struct FSquadSet : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		uint8 MaxOperatives;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TArray<TSubclassOf< ACombatCharacter>> Operatives;
 
 };
 
@@ -130,5 +125,5 @@ public:
 	AHeadgear* SpawnHelmet(USkeletalMeshComponent* Mesh, AActor* Owner);
 	ALoadout* SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Owner);
 
-	void AddOperative(ACombatCharacter* CombatCharacter);
+	//void AddOperative(ACombatCharacter* CombatCharacter);
 };

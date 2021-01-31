@@ -8,12 +8,18 @@ public class FreedomFighters : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "GameplayTasks", "AnimGraph", "AnimGraphRuntime", "NavigationSystem" });
-
-        PrivateDependencyModuleNames.AddRange(new string[] {
-              "UnrealED",
-              "AnimGraph",
-              "AnimGraphRuntime",
-              "BlueprintGraph"});
+        PublicDependencyModuleNames.AddRange(new string[] {
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "InputCore",
+            "HeadMountedDisplay",
+            "GameplayTasks",
+            "UMG",
+            "AIModule",
+            "NavigationSystem",
+            "PhysicsCore",
+            "ApexDestruction"
+        });
     }
 }

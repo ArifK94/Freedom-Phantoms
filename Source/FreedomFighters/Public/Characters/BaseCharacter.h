@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 
+#include "Engine/DataTable.h"
 #include "Vehicles/Helicopter.h"
 
 #include "BaseCharacter.generated.h"
@@ -21,22 +22,6 @@ enum class CoverType : uint8
 	Default			UMETA(DisplayName = "Default"),
 	CornerLeft		UMETA(DisplayName = "CornerLeft"),
 	CornerRight 	UMETA(DisplayName = "CornerRight")
-};
-
-USTRUCT(BlueprintType)
-struct FCoverPoint : public FTableRowBase
-{
-	GENERATED_USTRUCT_BODY()
-
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FVector Location;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool IsOccupied;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		CoverType TypeOfCover;
 };
 
 
@@ -69,6 +54,12 @@ public:
 
 
 protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName HeadSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName RightHandSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement", meta = (AllowPrivateAccess = "true"))
 		bool UseRootMotion;
@@ -146,9 +137,6 @@ protected:
 		FVector PeakDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FCoverPoint ChosenCoverPoint;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Highlight", meta = (AllowPrivateAccess = "true"))
 		UPostProcessComponent* CharacterOutlinePPComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -278,6 +266,10 @@ protected:
 
 
 public:
+
+	FName GetHeadSocket() {
+		return HeadSocket;
+	}
 
 	bool IsSprinting() {
 		return isSprinting;

@@ -70,6 +70,9 @@ private:
 private:
 	FHitResult HitInfo;
 
+	bool HasTakenDamage;
+	float RegenerationDelayAmount;
+	float CurrentRegenerationDelay;
 
 private:
 	virtual void BeginPlay() override;

@@ -24,26 +24,17 @@ UHealthComponent::UHealthComponent()
 	isAlive = false;
 
 	HasUnlimitedHealth = false;
+	HasTakenDamage = false;
+
+	RegenerationDelayAmount = 5.0f;
 }
 
-
-void UHealthComponent::RegenerateHealth()
-{
-	if (Health < MaxHealth && isAlive)
-	{
-		Health++;
-		//Health = FMath::Clamp((Health + RegenPerSecond) * mDeltaTime, 0.0f, MaxHealth);
-
-		OnHealthChanged.Broadcast(this, Health, 0, 0, 0, 0);
-	}
-}
-
-// Called when the game starts
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
 	Health = MaxHealth;
+	CurrentRegenerationDelay = RegenerationDelayAmount;
 	isAlive = true;
 
 	AActor* MyOwner = GetOwner();
@@ -58,11 +49,17 @@ void UHealthComponent::BeginPlay()
 
 void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (isAlive) {
 
-	mDeltaTime = DeltaTime;
+		Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	//RegenerateHealth();
+		mDeltaTime = DeltaTime;
+
+		if (CanRegenerateHealth)
+		{
+			RegenerateHealth();
+		}
+	}
 }
 
 void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
@@ -76,10 +73,14 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 	// return if self damage & if friendly fire
 	if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))	return;
 
-
-
 	// Update health clamp
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
+
+	// update the regeneration if taken damage as well as the delay time to wait again for another x seconds
+	if (CanRegenerateHealth) {
+		CurrentRegenerationDelay = RegenerationDelayAmount;
+		HasTakenDamage = true;
+	}
 
 
 	if (Health <= 0.0f)
@@ -99,6 +100,7 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 			deathType = DeathType::FleshVulnerable;
 			break;
 		case SURFACE_GROIN:
+			deathType = DeathType::FleshVulnerable;
 			break;
 		default:
 			deathType = DeathType::FleshDefault;
@@ -132,6 +134,33 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 }
+
+void UHealthComponent::RegenerateHealth()
+{
+	if (HasTakenDamage)
+	{
+		// delay regeneration if more than 0
+		if (CurrentRegenerationDelay > 0.0f)
+		{
+			CurrentRegenerationDelay -= mDeltaTime;
+		}
+		else // delay has finished countdown so ready to regenerate health
+		{
+			CurrentRegenerationDelay = RegenerationDelayAmount;
+			HasTakenDamage = false;
+		}
+	}
+	else // regenerating the health
+	{
+		if (Health < MaxHealth)
+		{
+			Health = FMath::Clamp(Health + RegenPerSecond * mDeltaTime, 0.0f, MaxHealth);
+
+			OnHealthChanged.Broadcast(this, Health, 0, 0, 0, 0);
+		}
+	}
+}
+
 
 bool UHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 {

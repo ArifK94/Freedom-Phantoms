@@ -14,6 +14,7 @@
 ACommanderCharacter::ACommanderCharacter()
 {
 	CurrentRecruitIndex = 0;
+	MaxRecruits = 9;
 }
 
 void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -37,7 +38,9 @@ void ACommanderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CheckRecruit();
+	if (ActiveRecruits.Num() < MaxRecruits) {
+		CheckRecruit();
+	}
 }
 
 
@@ -71,7 +74,6 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 		}
 	}
 
-
 	return FHitResult();
 }
 
@@ -97,7 +99,6 @@ void ACommanderCharacter::CheckRecruit()
 				PotentialRecruit->ShowCharacterOutline(true);
 				PotentialRecruit->setCommandingOfficer(this);
 				LastRecruit = PotentialRecruit;
-
 			}
 		}
 	}

@@ -109,7 +109,7 @@ void ACombatAIController::Tick(float DeltaTime)
 	if (OwningCombatCharacter)
 	{
 		// set the camera to always be placed by the head
-		OwningCombatCharacter->FollowCamera->SetWorldLocation(OwningCombatCharacter->GetMesh()->GetBoneLocation("j_head", EBoneSpaces::WorldSpace));
+		OwningCombatCharacter->FollowCamera->SetWorldLocation(OwningCombatCharacter->GetMesh()->GetBoneLocation(OwningCombatCharacter->GetHeadSocket(), EBoneSpaces::WorldSpace));
 
 		UpdateCharacterMovement();
 
@@ -123,20 +123,45 @@ void ACombatAIController::Tick(float DeltaTime)
 			ShootAtEnemy();
 		}
 
-		//if (EnemyActor != nullptr)
-		//{
-		//	FindCover(EnemyActor);
-		//	HasChosenCover = false;
-		//}
-		//else
-		//{
-		//	// pick a random cover point
-		//	if (!HasChosenCover)
-		//	{
-		//		FindCover(OwningCombatCharacter);
-		//	}
-		//}
+		if (EnemyActor != nullptr)
+		{
+			FindCover(EnemyActor);
+			HasChosenCover = false;
+		}
+		else
+		{
+			// pick a random cover point
+			if (!HasChosenCover)
+			{
+				FindCover(OwningCombatCharacter);
+			}
+		}
 	}
+}
+
+EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius)
+{
+	if (OwningCombatCharacter->IsInHelicopter())
+	{
+		return EPathFollowingRequestResult::Failed;
+	}
+
+	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
+
+	EPathFollowingRequestResult::Type Movment = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
+
+	float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
+
+	if (CurrentTargetDistance > (AcceptanceRadius * 2.5f))
+	{
+		OwningCombatCharacter->BeginSprint();
+	}
+	else
+	{
+		OwningCombatCharacter->EndSprint();
+	}
+
+	return Movment;
 }
 
 void ACombatAIController::UpdateCharacterMovement()
@@ -422,31 +447,6 @@ void ACombatAIController::StartFiring()
 	}
 }
 
-EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius)
-{
-	if (OwningCombatCharacter->IsInHelicopter())
-	{
-		return EPathFollowingRequestResult::Failed;
-	}
-
-	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
-
-	EPathFollowingRequestResult::Type Movment = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
-
-	float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
-
-	if (CurrentTargetDistance > (AcceptanceRadius * 2.5f))
-	{
-		OwningCombatCharacter->BeginSprint();
-	}
-	else
-	{
-		OwningCombatCharacter->EndSprint();
-	}
-
-	return Movment;
-}
-
 void ACombatAIController::FindCover(AActor* TargetActor)
 {
 	if (TargetActor == nullptr)
@@ -539,7 +539,7 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 		HasChosenCover = true;
 	}
 
-	//TakeCover();
+	TakeCover();
 }
 
 FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
