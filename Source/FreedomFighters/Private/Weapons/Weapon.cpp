@@ -56,6 +56,7 @@ AWeapon::AWeapon()
 	MaxAmmo = 120;
 	RateOfFire = 600.0f;
 	BulletDamage = 20.0f;
+	CooldownReload = 0.0f;
 
 	RecoilAmount = 5.0f;
 	VerticleRecoil = 0.05f;
@@ -71,9 +72,17 @@ AWeapon::AWeapon()
 void AWeapon::ConfigSetup()
 {
 	HandguardMesh = MeshComp;
+	
+	if (weaponClipObj)
+	{
+		AmmoPerClip = weaponClipObj->GetAmmoCapacity();
+		CurrentAmmo = AmmoPerClip;
+	}
+	else
+	{
+		CurrentAmmo = AmmoPerClip;
+	}
 
-	AmmoPerClip = weaponClipObj->GetAmmoCapacity();
-	CurrentAmmo = AmmoPerClip;
 
 	TimeBetweenShots = 60 / RateOfFire;
 }
@@ -90,6 +99,8 @@ void AWeapon::BeginPlay()
 	SpawnMagazine();
 	ConfigSetup();
 	SpawnWeaponAttachments();
+
+	CurrentCountdownReload = CooldownReload;
 
 }
 
@@ -127,12 +138,13 @@ void AWeapon::Tick(float DeltaTime)
 			StopFire();
 		}
 	}
+
+	AutoReload();
 }
 
 void AWeapon::Fire()
 {
 	if (CurrentAmmo <= 0) return;
-
 
 	isFiring = true;
 
@@ -349,7 +361,9 @@ void AWeapon::BeginReload()
 	isFiring = false;
 	isReloading = true;
 
-	weaponClipObj->getClipMesh()->SetVisibility(false);
+	if (weaponClipObj) {
+		weaponClipObj->getClipMesh()->SetVisibility(false);
+	}
 
 }
 
@@ -385,7 +399,7 @@ void AWeapon::ClipOut()
 	}
 
 	// Drop magazine
-	if (weaponClip && canShowClip)
+	if (weaponClipObj && weaponClip && canShowClip)
 	{
 		weaponClipObj->DropClip(MeshComp, ClipSocket, weaponClip);
 	}
@@ -442,13 +456,17 @@ void AWeapon::Recoil()
 
 void AWeapon::SetMagazineSocket()
 {
-	weaponClipObj->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+	if (weaponClipObj) {
+		weaponClipObj->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+	}
 }
 
 void AWeapon::SetClipSocket(USkeletalMeshComponent* meshComponent)
 {
-	weaponClipObj->getClipMesh()->SetVisibility(true);
-	weaponClipObj->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ReloadClipHandSocket);
+	if (weaponClipObj) {
+		weaponClipObj->getClipMesh()->SetVisibility(true);
+		weaponClipObj->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ReloadClipHandSocket);
+	}
 }
 
 
@@ -489,3 +507,18 @@ void AWeapon::SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName Trigge
 	HandguardOffset.SetRotation(TargetRotation.Quaternion());
 }
 
+void AWeapon::AutoReload()
+{
+	if (CooldownReload > 0.0f && CurrentAmmo <= 0.0f)
+	{
+		if (CurrentCountdownReload > 0.0f)
+		{
+			CurrentCountdownReload -= CurrentDeltaTime;
+		}
+		else
+		{
+			OnReload();
+			CurrentCountdownReload = CooldownReload;
+		}
+	}
+}

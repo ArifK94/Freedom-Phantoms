@@ -144,6 +144,8 @@ private:
 	void BurstDelay();
 	void SemiFireDelay();
 
+	void AutoReload();
+
 protected:
 	virtual void Fire();
 
@@ -252,6 +254,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Hand Offsets", meta = (AllowPrivateAccess = "true"))
 		FTransform HandguardOffset;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		float CooldownReload;
+	float CurrentCountdownReload;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		float RateOfFire;
@@ -263,7 +268,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
 		int32 MaxAmmo;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Ammo")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
 		int32 AmmoPerClip;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
@@ -333,12 +338,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Damage")
 		float BulletDamage;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")
 		FVector CurrentMuzzleLocation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")
 		FRotator CurrentMuzzleRotation;
+
 
 private:
 	float CurrentVerticleRecoil;

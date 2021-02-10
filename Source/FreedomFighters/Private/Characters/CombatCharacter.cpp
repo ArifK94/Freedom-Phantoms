@@ -78,8 +78,8 @@ void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACombatCharacter::BeginFire);
-	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACombatCharacter::EndFire);
+	//PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACombatCharacter::BeginFire);
+	//PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACombatCharacter::EndFire);
 
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACombatCharacter::BeginReload);
 

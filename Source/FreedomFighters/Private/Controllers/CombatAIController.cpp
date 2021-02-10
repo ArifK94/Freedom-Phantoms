@@ -123,19 +123,19 @@ void ACombatAIController::Tick(float DeltaTime)
 			ShootAtEnemy();
 		}
 
-		if (EnemyActor != nullptr)
-		{
-			FindCover(EnemyActor);
-			HasChosenCover = false;
-		}
-		else
-		{
-			// pick a random cover point
-			if (!HasChosenCover)
-			{
-				FindCover(OwningCombatCharacter);
-			}
-		}
+		//if (EnemyActor != nullptr)
+		//{
+		//	FindCover(EnemyActor);
+		//	HasChosenCover = false;
+		//}
+		//else
+		//{
+		//	// pick a random cover point
+		//	if (!HasChosenCover)
+		//	{
+		//		FindCover(OwningCombatCharacter);
+		//	}
+		//}
 	}
 }
 

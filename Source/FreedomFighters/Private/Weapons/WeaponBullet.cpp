@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Weapons/WeaponBullet.h"
 
 #include "FreedomFighters/FreedomFighters.h"
@@ -8,7 +5,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
-//#include "DestructibleComponent.h"
+#include "DestructibleComponent.h"
+
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "TimerManager.h"
@@ -130,7 +129,14 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 			UGameplayStatics::ApplyPointDamage(OtherActor, ActualDamage, FVector::ZeroVector, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
 		}
 
-		SetDestructableHit(OtherActor);
+		//SetDestructableHit(HitComp);
+
+		UDestructibleComponent* DestructibleComponent = Cast<UDestructibleComponent>(OtherActor->GetComponentByClass(UDestructibleComponent::StaticClass()));
+
+		if (DestructibleComponent) {
+			//DestructibleComponent->SetCollisionProfileName(TEXT("Destructible"));
+			DestructibleComponent->SetSimulatePhysics(true);
+		}
 
 		if (ExplosionParticle != NULL)
 		{
@@ -159,6 +165,22 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 	}
 }
 
+
+
+
+void AWeaponBullet::SetDestructableHit(UPrimitiveComponent* OtherComp)
+{
+	UDestructibleComponent* DestructibleComponent = Cast<UDestructibleComponent>(OtherComp);
+
+	if (DestructibleComponent) {
+		//DestructibleComponent->SetCollisionProfileName(TEXT("Destructible"));
+		DestructibleComponent->SetSimulatePhysics(true);
+
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("Some debug message!"));
+
+	}
+}
+
 UParticleSystem* AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 {
 	switch (SurfaceType)
@@ -173,14 +195,4 @@ UParticleSystem* AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 		return DefaultImpactEffect;
 		break;
 	}
-}
-
-
-void AWeaponBullet::SetDestructableHit(AActor* OtherActor)
-{
-	//UDestructibleComponent* DestructibleComponent = Cast<UDestructibleComponent>(OtherActor->GetComponentByClass(UDestructibleComponent::StaticClass()));
-
-	//if (DestructibleComponent) {
-	//	DestructibleComponent->SetSimulatePhysics(true);
-	//}
 }

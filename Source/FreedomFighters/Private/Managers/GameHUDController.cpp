@@ -1,7 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Managers/GameHUDController.h"
+
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 AGameHUDController::AGameHUDController()
 {
@@ -9,16 +8,47 @@ AGameHUDController::AGameHUDController()
 }
 
 
+void AGameHUDController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CreateAC130Widget();
+}
+
 void AGameHUDController::CreateNVGWidget()
 {
-	if (HitComboWidgetClass)
+	if (NVGWidgetClass)
 	{
-		HitComboWidget = CreateWidget<UUserWidget>(GetWorld(), HitComboWidgetClass);
-		/** Make sure widget was created */
-		if (HitComboWidget)
+		NVGWidget = CreateWidget<UUserWidget>(GetWorld(), NVGWidgetClass);
+		if (NVGWidget)
 		{
-			/** Add it to the viewport */
-			HitComboWidget->AddToViewport();
+			NVGWidget->AddToViewport();
 		}
+	}
+}
+
+void AGameHUDController::CreateAC130Widget()
+{
+	if (AC130WidgetClass)
+	{
+		AC130Widget = CreateWidget<UUserWidget>(GetWorld(), AC130WidgetClass);
+	}
+}
+
+void AGameHUDController::AddAC130ViewPort()
+{
+	CreateAC130Widget();
+
+	if (AC130Widget)
+	{
+		UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
+		AC130Widget->AddToViewport();
+	}
+}
+void AGameHUDController::RemoveAC130ViewPort()
+{
+	if (AC130Widget)
+	{
+		AC130Widget->RemoveFromViewport();
 	}
 }

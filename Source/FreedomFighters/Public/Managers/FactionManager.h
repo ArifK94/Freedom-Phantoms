@@ -13,6 +13,7 @@ class UWeaponSet;
 class USoundBase;
 class AHeadgear;
 class ALoadout;
+class AAircraft;
 
 USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase
@@ -85,7 +86,7 @@ private:
 
 
 	UPROPERTY(EditAnywhere, Category = "Accessories")
-		TArray<TSubclassOf< ALoadout>> Loadouts;
+		TArray<TSubclassOf<ALoadout>> Loadouts;
 	ALoadout* loadoutObj;
 
 	UPROPERTY(EditAnywhere, Category = "Accessories")
@@ -99,6 +100,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Squads", meta = (AllowPrivateAccess = "true"))
 		TArray<FSquadSet> SquadSet;
 	FSquadSet SelectedSquad;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vehicles", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AAircraft> AC130Class;
 
 
 private:
@@ -125,5 +130,8 @@ public:
 	AHeadgear* SpawnHelmet(USkeletalMeshComponent* Mesh, AActor* Owner);
 	ALoadout* SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Owner);
 
-	//void AddOperative(ACombatCharacter* CombatCharacter);
+
+	TSubclassOf<AAircraft> GetAC130Class() {
+		return AC130Class;
+	}
 };

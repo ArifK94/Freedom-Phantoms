@@ -67,7 +67,7 @@ private:
 
 	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
 
-	void SetDestructableHit(AActor* OtherActor);
+	void SetDestructableHit(UPrimitiveComponent* OtherComp);
 
 protected:
 	virtual void BeginPlay() override;

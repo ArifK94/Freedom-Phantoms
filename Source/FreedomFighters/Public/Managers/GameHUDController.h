@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -17,10 +15,13 @@ class FREEDOMFIGHTERS_API AGameHUDController : public AHUD
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Interactive")
-		TSubclassOf<UUserWidget> HitComboWidgetClass;
+		TSubclassOf<UUserWidget> NVGWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Vehicles")
+		TSubclassOf<UUserWidget> AC130WidgetClass;
 private:
-	UUserWidget* HitComboWidget;
+	UUserWidget* NVGWidget;
+	UUserWidget* AC130Widget;
 
 
 public:
@@ -28,4 +29,13 @@ public:
 
 	void CreateNVGWidget();
 	
+	void AddAC130ViewPort();
+	void RemoveAC130ViewPort();
+
+private:
+	virtual void BeginPlay() override;
+
+	void CreateAC130Widget();
+
+
 };
