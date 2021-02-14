@@ -63,16 +63,35 @@ void AWeaponBullet::BeginPlay()
 }
 
 
-void AWeaponBullet::Explode()
+void AWeaponBullet::Explode(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	UWorld* world = GetWorld();
+	UWorld* World = GetWorld();
 
-	if (world)
+	if (World)
 	{
-		DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, -1, 0, 1);
+		DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, 5.0f, 0, 2);
 
-		TArray<AActor*> ignoredActors;
-		UGameplayStatics::ApplyRadialDamage(world, DamageAmount, GetActorLocation(), DamageRadius, NULL, ignoredActors, this, AActor::GetInstigatorController());
+
+		AActor* MyOwner = GetOwner();
+
+		if (MyOwner)
+		{
+			TArray<AActor*> ignoredActors;
+
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				World,
+				DamageAmount, 
+				DamageAmount / 2.f,
+				GetActorLocation(), 
+				DamageAmount, 
+				DamageAmount / 2.f, 
+				1.5f,
+				DamageType, 
+				ignoredActors, 
+				this, // damage does not work if assiginng the owner, therefore health component will need to get the owner of this bullet class
+				MyOwner->GetInstigatorController()
+			);
+		}
 
 		// create tarray for hit results
 		TArray<FHitResult> OutHits;
@@ -115,6 +134,7 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 {
 	if (OtherActor != NULL && OtherActor != this)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("You are hitting: %s"), *OtherActor->GetName()));
 
 		float ActualDamage = DamageAmount;
 		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
@@ -139,19 +159,17 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 			HealthComponent->SetHitInfo(Hit);
 		}
 
-		AActor* MyOwner = GetOwner();
-		if (MyOwner)
-		{
-			UGameplayStatics::ApplyPointDamage(OtherActor, ActualDamage, FVector::ZeroVector, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
+		if (isAnExplosive) {
+			Explode(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 		}
-
-		//SetDestructableHit(HitComp);
-
-		UDestructibleComponent* DestructibleComponent = Cast<UDestructibleComponent>(OtherActor->GetComponentByClass(UDestructibleComponent::StaticClass()));
-
-		if (DestructibleComponent) {
-			//DestructibleComponent->SetCollisionProfileName(TEXT("Destructible"));
-			DestructibleComponent->SetSimulatePhysics(true);
+		else
+		{
+			AActor* MyOwner = GetOwner();
+			if (MyOwner)
+			{
+				UGameplayStatics::ApplyPointDamage(OtherActor, ActualDamage, FVector::ZeroVector, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
+			}
+			Destroy();
 		}
 
 		if (ExplosionParticle != NULL)
@@ -164,18 +182,19 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, Hit.ImpactPoint, 1.0f);
 		}
 
-		if (isAnExplosive) {
-			Explode();
-		}
-		else
-		{
-			Destroy();
-		}
-
 		UParticleSystem* ImpactParticle = CheckSurface(SurfaceType);
 		if (ImpactParticle)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+		}
+
+		//SetDestructableHit(HitComp);
+
+		UDestructibleComponent* DestructibleComponent = Cast<UDestructibleComponent>(OtherActor->GetComponentByClass(UDestructibleComponent::StaticClass()));
+
+		if (DestructibleComponent) {
+			//DestructibleComponent->SetCollisionProfileName(TEXT("Destructible"));
+			DestructibleComponent->SetSimulatePhysics(true);
 		}
 
 	}
@@ -191,9 +210,6 @@ void AWeaponBullet::SetDestructableHit(UPrimitiveComponent* OtherComp)
 	if (DestructibleComponent) {
 		//DestructibleComponent->SetCollisionProfileName(TEXT("Destructible"));
 		DestructibleComponent->SetSimulatePhysics(true);
-
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("Some debug message!"));
-
 	}
 }
 

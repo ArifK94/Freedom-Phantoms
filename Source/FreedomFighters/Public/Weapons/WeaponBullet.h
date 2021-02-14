@@ -21,8 +21,6 @@ class FREEDOMFIGHTERS_API AWeaponBullet : public AActor
 public:	
 	AWeaponBullet();
 
-	void Explode();
-
 private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
@@ -73,6 +71,8 @@ private:
 private:
 	UFUNCTION()
 		void OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	void Explode(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
 

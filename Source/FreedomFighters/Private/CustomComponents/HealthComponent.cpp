@@ -42,6 +42,7 @@ void UHealthComponent::BeginPlay()
 	if (MyOwner)
 	{
 		MyOwner->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::HandleTakeAnyDamage);
+		MyOwner->OnTakeRadialDamage.AddDynamic(this, &UHealthComponent::OnRadialDamage);
 	}
 }
 
@@ -64,17 +65,38 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
+	OnDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+}
+
+void UHealthComponent::OnRadialDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, FVector Origin, FHitResult Hit, AController* InstigatedBy, AActor* DamageCauser)
+{
+	AActor* MyOwner = DamageCauser->GetOwner();
+
+	OnDamage(DamagedActor, Damage, DamageType, InstigatedBy, MyOwner);
+}
+
+void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
 	if (HasUnlimitedHealth) return;
 
 	if (!isAlive) return;
 
 	if (Damage <= 0.0f) return;
 
-	// return if self damage & if friendly fire
-	if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))	return;
+	if (DamageCauser != DamagedActor)
+	{
+		if (IsFriendly(DamagedActor, DamageCauser)) {
+			return;
+		}
+	}
 
 	// Update health clamp
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
+
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("%lld"), Damage));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("%f"), Health));
+
 
 	// update the regeneration if taken damage as well as the delay time to wait again for another x seconds
 	if (CanRegenerateHealth) {
