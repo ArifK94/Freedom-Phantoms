@@ -10,6 +10,8 @@ class UParticleSystem;
 class USoundBase;
 class UDamageType;
 class UProjectileMovementComponent;
+class UAudioComponent;
+
 
 UCLASS()
 class FREEDOMFIGHTERS_API AWeaponBullet : public AActor
@@ -29,6 +31,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
 		UStaticMeshComponent* Mesh;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* BulletMovementAudio;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
 		UProjectileMovementComponent* BulletMovement;
 
@@ -44,6 +49,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
 		USoundBase* ImpactSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+		USoundBase* TravelSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
 		bool isAnExplosive;
@@ -59,6 +66,8 @@ private:
 		float DamageRadius;
 
 	FTimerHandle THandler_TimeBetweenShots;
+
+
 
 
 private:
@@ -81,4 +90,5 @@ public:
 	UStaticMeshComponent* getMesh() {
 		return Mesh;
 	}
+
 };

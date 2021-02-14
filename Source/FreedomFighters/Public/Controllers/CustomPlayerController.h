@@ -8,6 +8,7 @@
 class ACombatCharacter;
 class AAircraft;
 class AGameHUDController;
+class AWeapon;
 UCLASS()
 class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
 {
@@ -18,6 +19,7 @@ private:
 	ACombatCharacter* OwningCombatCharacter;
 	AGameHUDController* GameHUDController;
 
+	AWeapon* CurrentWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		AAircraft* ControlledAircraft;
@@ -30,12 +32,16 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		float BaseLookUpRate;
 	
+public:
+	ACustomPlayerController();
+
 private:
 	virtual void SetupInputComponent() override;
 
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
@@ -46,7 +52,7 @@ private:
 	void SwitchWeapon();
 
 	void BeginFire();
-
+	void EndFire();
 
 
 	void SpawnAC130();

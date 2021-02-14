@@ -1,10 +1,14 @@
 #include "Vehicles/Aircraft.h"
 #include "Props/AircraftSplinePath.h"
 
+#include "Characters/BaseCharacter.h"
+
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/SplineComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/PostProcessComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -26,7 +30,13 @@ AAircraft::AAircraft()
 	EngineAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineAudio"));
 	EngineAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 
+	PilotAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("PilotAudio"));
+	PilotAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
+
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+
+	NightVisionPPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("NightVisionPPComp"));
+	NightVisionPPComp->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
 
 	WingRotationSpeed = 100000.0;
 
@@ -49,6 +59,8 @@ void AAircraft::BeginPlay()
 		SpawnWeapon();
 	}
 
+	NightVisionPPComp->bEnabled = false;
+	ShowOutlines();
 }
 
 void AAircraft::Tick(float DeltaTime)
@@ -149,18 +161,19 @@ void AAircraft::SpawnWeapon()
 
 	for (FAircraftWeapon AircraftWeapon : AircraftWeapons)
 	{
-		AircraftWeapon.WeaponObj = GetWorld()->SpawnActor<AWeapon>(AircraftWeapon.Weapon, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(AircraftWeapon.Weapon, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-		if (AircraftWeapon.WeaponObj)
+		if (Weapon)
 		{
-			AircraftWeapon.WeaponObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AircraftWeapon.WeaponSocketName);
-			WeaponObjs.Add(AircraftWeapon.WeaponObj);
+			Weapon->SetComponentEyeViewPoint(FollowCamera);
+			Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AircraftWeapon.WeaponSocketName);
+			Weapon->GetClipAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+			WeaponObjs.Add(Weapon);
 		}
 	}
 
-	CurrentAircraftWeapon = AircraftWeapons[CurrentWeaponIndex];
-	CurrentWeaponObj = WeaponObjs[CurrentWeaponIndex]; // set the current weapon to first weapon by default
-	FollowCamera->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentAircraftWeapon.CameraSocketName);
+	UpdateWeaponView();
 }
 
 void AAircraft::ChangeWeapon()
@@ -176,11 +189,24 @@ void AAircraft::ChangeWeapon()
 		CurrentWeaponIndex = 0;
 	}
 
+	if (CurrentWeaponObj) {
+		CurrentWeaponObj->StopFire(); // stop firing current weapon before switching to another
+	}
 
+	UpdateWeaponView();
+}
+
+void AAircraft::UpdateWeaponView()
+{
 	CurrentAircraftWeapon = AircraftWeapons[CurrentWeaponIndex]; // set the current weapon to first weapon by default
 	CurrentWeaponObj = WeaponObjs[CurrentWeaponIndex];
-	//FollowCamera->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentAircraftWeapon.CameraSocketName);
 
+
+	FollowCamera->AttachToComponent(CurrentWeaponObj->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeaponObj->GetMuzzleSocket()); // Attach to weapon muzzle
+	FollowCamera->SetRelativeRotation(RotationInput); // set the follow camera to rotation input
+
+
+	FollowCamera->SetFieldOfView(CurrentWeaponObj->GetZoomFOV());
 	OnUpdateWeaponUI.Broadcast(this);
 }
 
@@ -191,11 +217,33 @@ void AAircraft::SetPlayerControl(APlayerController* OurPlayerController)
 
 void AAircraft::AddControllerPitchInput(float Val)
 {
-	RotationInput.Pitch += Val;
+	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, CurrentAircraftWeapon.PitchMin, CurrentAircraftWeapon.PitchMax);
+	RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
+
 	FollowCamera->SetRelativeRotation(RotationInput);
 }
 void AAircraft::AddControllerYawInput(float Val)
 {
-	RotationInput.Yaw += Val;
+	RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, CurrentAircraftWeapon.YawMin, CurrentAircraftWeapon.YawMax);
+	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
+
+
 	FollowCamera->SetRelativeRotation(RotationInput);
+
+}
+
+void AAircraft::ShowOutlines()
+{
+	TArray<AActor*> Characters;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseCharacter::StaticClass(), Characters);
+
+	for (AActor* Actor : Characters)
+	{
+		ABaseCharacter* Character = Cast<ABaseCharacter>(Actor);
+
+		if (Character != nullptr)
+		{
+			Character->ShowCharacterOutline(true);
+		}
+	}
 }

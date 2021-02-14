@@ -42,8 +42,6 @@ void AGrenadeLauncher::Fire()
 
 	if (MyOwner)
 	{
-		FVector EyeLocation;
-		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocket);

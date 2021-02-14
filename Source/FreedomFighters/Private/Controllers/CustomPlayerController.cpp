@@ -6,11 +6,18 @@
 #include "Characters/CombatCharacter.h"
 
 #include "Weapons/Weapon.h"
+#include "Weapons/WeaponBullet.h"
 
 #include "Vehicles/Aircraft.h"
 
 #include "Components/InputComponent.h"
+
 #include "Kismet/GameplayStatics.h"
+
+ACustomPlayerController::ACustomPlayerController()
+{
+	PrimaryActorTick.bCanEverTick = true;
+}
 
 void ACustomPlayerController::SetupInputComponent()
 {
@@ -25,7 +32,7 @@ void ACustomPlayerController::SetupInputComponent()
 	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
 
 	InputComponent->BindAction("Fire", IE_Pressed, this, &ACustomPlayerController::BeginFire);
-	InputComponent->BindAction("Fire", IE_Released, OwningCombatCharacter, &ACombatCharacter::EndFire);
+	InputComponent->BindAction("Fire", IE_Released, this, &ACustomPlayerController::EndFire);
 }
 
 void ACustomPlayerController::OnPossess(APawn* InPawn)
@@ -46,6 +53,11 @@ void ACustomPlayerController::BeginPlay()
 	GameHUDController = Cast<AGameHUDController>(GetWorld()->GetFirstPlayerController()->GetHUD());
 
 	SpawnAC130();
+}
+
+void ACustomPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 }
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
@@ -100,14 +112,23 @@ void ACustomPlayerController::BeginFire()
 {
 	if (ControlledAircraft)
 	{
-		AWeapon* Weapon = ControlledAircraft->GetCurrentWeaponObj();
-		if (Weapon) {
-			Weapon->StartFire();
+		CurrentWeapon = ControlledAircraft->GetCurrentWeaponObj();
+		if (CurrentWeapon) {
+			CurrentWeapon->StartFire();
 		}
 	}
 	else
 	{
+		CurrentWeapon = OwningCombatCharacter->GetCurrentWeaponObj();
 		OwningCombatCharacter->BeginFire();
+	}
+}
+
+void ACustomPlayerController::EndFire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->StopFire();
 	}
 }
 

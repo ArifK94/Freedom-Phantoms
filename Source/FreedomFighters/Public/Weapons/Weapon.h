@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -137,7 +135,6 @@ public:
 	void SpawnWeaponAttachments();
 
 	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
-	bool IsFacingCrosshair();
 
 
 private:
@@ -173,6 +170,9 @@ protected:
 
 	USkeletalMeshComponent* CharacterReference;
 
+	FVector EyeLocation;
+	FRotator EyeRotation;
+
 
 protected:
 
@@ -185,11 +185,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponClip> weaponClip;
-	 AWeaponClip* weaponClipObj;
+	AWeaponClip* weaponClipObj;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponBullet> BulletClass;
-	 AWeaponBullet* BulletObj;
+	AWeaponBullet* BulletObj;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		TSubclassOf<UDamageType> DamageType;
@@ -212,6 +212,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		bool hasRecoil;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		WeaponType weaponType;
@@ -281,6 +283,9 @@ protected:
 
 	float LastFireTime;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
+		float ZoomFOV;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float BulletSpread;
 
@@ -304,12 +309,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ReloadClipOutSound;
+	bool HasPlayedClipOut;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ReloadClipInSound;
+	bool HasPlayedClipIn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ReloadEndSound;
+
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
@@ -348,6 +356,9 @@ protected:
 private:
 	float CurrentVerticleRecoil;
 
+	USceneComponent* EyeViewPointComponent; // used for vehicles rather than pawns
+
+
 public:
 	virtual void BeginPlay() override;
 
@@ -367,6 +378,7 @@ public:
 	int32 getMaxAmmo() { return MaxAmmo; }
 	int32 getAmmoPerClip() { return AmmoPerClip; }
 
+	FName GetMuzzleSocket() { return MuzzleSocket; }
 	FName getHolsterSocket() { return HolsterSocket; }
 	FName getParentHolderSocket() { return ParentHolderSocket; }
 	FName getOpticsSocket() { return OpticsSocket; }
@@ -384,5 +396,20 @@ public:
 		HasUnlimitedAmmo = IsUnlimited;
 	}
 
+	void SetComponentEyeViewPoint(USceneComponent* Comp) {
+		EyeViewPointComponent = Comp;
+	}
 
+
+	float GetZoomFOV() {
+		return ZoomFOV;
+	}
+
+	AWeaponBullet* GetBulletObj() {
+		return BulletObj;
+	}
+
+	UAudioComponent* GetClipAudioComponent() {
+		return ClipAudioComponent;
+	}
 };

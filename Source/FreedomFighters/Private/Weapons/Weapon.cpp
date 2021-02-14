@@ -17,6 +17,7 @@
 #include "Components/AudioComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Components/SceneComponent.h"
 #include "Components/SkinnedMeshComponent.h"
 #include "CustomComponents/HealthComponent.h"
 
@@ -62,17 +63,21 @@ AWeapon::AWeapon()
 	VerticleRecoil = 0.05f;
 	HorizontalRecoil = 0.01f;
 	BulletSpread = 2.0f;
+	ZoomFOV = 90.0f;
 
 	isReloading = false;
 	canShowClip = true;
 	HasUnlimitedAmmo = false;
+	hasRecoil = true;
 
+	HasPlayedClipIn = false;
+	HasPlayedClipOut = false;
 }
 
 void AWeapon::ConfigSetup()
 {
 	HandguardMesh = MeshComp;
-	
+
 	if (weaponClipObj)
 	{
 		AmmoPerClip = weaponClipObj->GetAmmoCapacity();
@@ -96,12 +101,14 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+
 	SpawnMagazine();
 	ConfigSetup();
 	SpawnWeaponAttachments();
 
 	CurrentCountdownReload = CooldownReload;
-
 }
 
 void AWeapon::Tick(float DeltaTime)
@@ -153,8 +160,6 @@ void AWeapon::Fire()
 	CreateBullet();
 
 	BurstAmmountCount++;
-
-
 }
 
 void AWeapon::CreateBullet()
@@ -164,14 +169,24 @@ void AWeapon::CreateBullet()
 	if (!MyOwner) return;
 
 	// Trace world from pawn eyes to cross hair location
-	FVector EyeLocation;
-	FRotator EyeRotation;
-	MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	if (EyeViewPointComponent)
+	{
+		EyeLocation = EyeViewPointComponent->GetComponentLocation();
+		EyeRotation = EyeViewPointComponent->GetComponentRotation();
+	}
+	else
+	{
+		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	}
 
 	FVector ShotDirection = EyeRotation.Vector();
 
-	float HalfRad = FMath::DegreesToRadians(BulletSpread);
-	ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+	if (hasRecoil)
+	{
+		float HalfRad = FMath::DegreesToRadians(BulletSpread);
+		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+	}
+
 
 	FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
@@ -284,9 +299,6 @@ void AWeapon::StartFire()
 	}
 }
 
-
-
-
 void AWeapon::StopFire()
 {
 	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
@@ -295,37 +307,7 @@ void AWeapon::StopFire()
 
 	CurrentVerticleRecoil = 0.0f;
 	BurstAmmountCount = 0;
-
 }
-
-bool AWeapon::IsFacingCrosshair()
-{
-	return true;
-
-	AActor* MyOwner = GetOwner();
-
-	if (MyOwner)
-	{
-		FVector EyeLocation;
-		FRotator EyeRotation;
-		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-
-		// Dot product allows to check if muzzle is facing in same direction as the camera view
-		float directionValue = FVector::DotProduct(UKismetMathLibrary::GetForwardVector(EyeRotation), UKismetMathLibrary::GetForwardVector(CurrentMuzzleRotation));
-
-		FVector locationValue = UKismetMathLibrary::Subtract_VectorVector(CurrentMuzzleLocation, EyeLocation);
-
-		float limit = 50.0f;
-		if (UKismetMathLibrary::Abs(directionValue) <= 0.5f && (UKismetMathLibrary::Abs(locationValue.X) <= limit || UKismetMathLibrary::Abs(locationValue.Y) <= limit || UKismetMathLibrary::Abs(locationValue.Z) <= limit))
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-
 
 
 void AWeapon::OnReload()
@@ -372,18 +354,21 @@ void AWeapon::EndReload()
 	if (ReloadEndSound != NULL)
 	{
 		ClipAudioComponent->Sound = ReloadEndSound;
-		ClipAudioComponent->Play(0.0f);
+		ClipAudioComponent->Play();
 	}
 
 	isReloading = false;
+	HasPlayedClipIn = false;
+	HasPlayedClipOut = false;
 }
 
 void AWeapon::ClipIn()
 {
-	if (ReloadClipInSound != NULL)
+	if (!HasPlayedClipIn && ReloadClipInSound != NULL)
 	{
 		ClipAudioComponent->Sound = ReloadClipInSound;
-		ClipAudioComponent->Play(0.0f);
+		ClipAudioComponent->Play();
+		HasPlayedClipIn = true;
 	}
 
 	OnReload();
@@ -392,17 +377,22 @@ void AWeapon::ClipIn()
 
 void AWeapon::ClipOut()
 {
-	if (ReloadClipOutSound != NULL)
+
+	if (!HasPlayedClipOut && ReloadClipOutSound != NULL)
 	{
 		ClipAudioComponent->Sound = ReloadClipOutSound;
-		ClipAudioComponent->Play(0.0f);
+		ClipAudioComponent->Play();
+		HasPlayedClipOut = true;
 	}
+
 
 	// Drop magazine
 	if (weaponClipObj && weaponClip && canShowClip)
 	{
 		weaponClipObj->DropClip(MeshComp, ClipSocket, weaponClip);
 	}
+
+
 }
 
 void AWeapon::SpawnMagazine()
@@ -514,11 +504,29 @@ void AWeapon::AutoReload()
 		if (CurrentCountdownReload > 0.0f)
 		{
 			CurrentCountdownReload -= CurrentDeltaTime;
+
+			isReloading = true;
+
+			if (CurrentCountdownReload > (CooldownReload / 2)) // if countdown is half way through, change sound clip
+			{
+				ClipOut();
+			}
+			else
+			{
+				if (!HasPlayedClipIn && ReloadClipInSound != NULL)
+				{
+					ClipAudioComponent->Sound = ReloadClipInSound;
+					ClipAudioComponent->Play();
+					HasPlayedClipIn = true;
+				}
+			}
 		}
 		else
 		{
 			OnReload();
+			EndReload();
 			CurrentCountdownReload = CooldownReload;
+			isReloading = false;
 		}
 	}
 }

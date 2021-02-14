@@ -14,6 +14,7 @@ class UCurveFloat;
 class UCapsuleComponent;
 class UCameraComponent;
 class UUserWidget;
+class UPostProcessComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChangeSignature, AAircraft*, Aircraft);
 
@@ -35,8 +36,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<AWeapon> Weapon;
-	AWeapon* WeaponObj;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		FName WeaponSocketName;
@@ -64,7 +63,7 @@ class FREEDOMFIGHTERS_API AAircraft : public AActor
 {
 	GENERATED_BODY()
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CapsuleComponent;
 
@@ -74,8 +73,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* EngineAudio;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* PilotAudio;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UPostProcessComponent* NightVisionPPComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AircraftMovement CurrentAircraftMovement;
@@ -108,7 +113,6 @@ protected:
 		float CurrentWingSpeed;
 
 
-private:
 	FTimeline CurveTimeline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -116,6 +120,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FRotator RotationInput;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		AWeapon* CurrentWeaponObj;
 
 public:
 	AAircraft();
@@ -130,8 +137,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Weapon UI")
 		FOnWeaponChangeSignature OnUpdateWeaponUI;
 
-	TArray<AWeapon*> WeaponObjs;
-	AWeapon* CurrentWeaponObj;
+	TArray<AWeapon*> WeaponObjs; // holding this variable in the FAircraftWeapon returns null after weapon spawning
+
+
 
 
 private:
@@ -144,6 +152,10 @@ private:
 		void FollowSplinePath(float Value);
 
 	void SpawnWeapon();
+
+	void UpdateWeaponView();
+
+	void ShowOutlines();
 
 protected:
 	virtual void BeginPlay() override;

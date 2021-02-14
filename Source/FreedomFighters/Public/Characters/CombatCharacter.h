@@ -57,7 +57,6 @@ protected:
 		ACommanderCharacter* CommandingOfficer;
 
 private:
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		 AWeapon* currentWeaponObj;
 
@@ -194,6 +193,10 @@ public:
 
 	bool IsReloading() {
 		return isReloading;
+	}
+
+	AWeapon* GetCurrentWeaponObj() {
+		return currentWeaponObj;
 	}
 
 	AWeapon* GetSecondaryWeaponObj(){

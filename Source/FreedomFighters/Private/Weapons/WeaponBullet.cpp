@@ -5,6 +5,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/AudioComponent.h"
+
 #include "DestructibleComponent.h"
 
 #include "PhysicalMaterials/PhysicalMaterial.h"
@@ -37,6 +39,8 @@ AWeaponBullet::AWeaponBullet()
 	BulletMovement->InitialSpeed = 12000.0;
 	BulletMovement->MaxSpeed = 15000.0;
 
+	BulletMovementAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("BulletMovementAudio"));
+
 	DamageAmount = 15.0f;
 	DamageRadius = 10.0f;
 }
@@ -47,6 +51,15 @@ void AWeaponBullet::BeginPlay()
 
 	CapsuleComponent->OnComponentHit.AddDynamic(this, &AWeaponBullet::OnBulletHit);
 	Mesh->OnComponentHit.AddDynamic(this, &AWeaponBullet::OnBulletHit);
+
+	BulletMovementAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
+	BulletMovementAudio->SetRelativeLocation(FVector::ZeroVector);
+
+	if (TravelSound != NULL)
+	{
+		BulletMovementAudio->Sound = TravelSound;
+		BulletMovementAudio->Play();
+	}
 }
 
 
@@ -56,7 +69,7 @@ void AWeaponBullet::Explode()
 
 	if (world)
 	{
-		//DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, -1, 0, 1);
+		DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, -1, 0, 1);
 
 		TArray<AActor*> ignoredActors;
 		UGameplayStatics::ApplyRadialDamage(world, DamageAmount, GetActorLocation(), DamageRadius, NULL, ignoredActors, this, AActor::GetInstigatorController());
@@ -114,7 +127,10 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 			ActualDamage *= 2.0f;
 		}
 
-
+		if (BulletMovementAudio->IsPlaying())
+		{
+			BulletMovementAudio->Stop();
+		}
 
 		UHealthComponent* HealthComponent = Cast<UHealthComponent>(OtherActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
