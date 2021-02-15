@@ -15,6 +15,8 @@ class UCapsuleComponent;
 class UCameraComponent;
 class UUserWidget;
 class UPostProcessComponent;
+class ABaseCharacter;
+class ATargetSystemMarker;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChangeSignature, AAircraft*, Aircraft);
 
@@ -58,13 +60,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;
 };
+
+
+
+USTRUCT(BlueprintType)
+struct FREEDOMFIGHTERS_API FTargetSystemNode
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+			ABaseCharacter* Character;
+
+		UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+			ATargetSystemMarker* Marker; // the marker class containing the widget component
+
+		FTargetSystemNode()
+		{
+
+		}
+};
+
+
+
 UCLASS()
 class FREEDOMFIGHTERS_API AAircraft : public AActor
 {
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CapsuleComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -124,6 +149,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AWeapon* CurrentWeaponObj;
 
+		TArray<FTargetSystemNode*> TargetSystemNodes;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Target System", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ATargetSystemMarker> TargetMarkerClass;
+
+
 public:
 	AAircraft();
 
@@ -141,7 +172,6 @@ public:
 
 
 
-
 private:
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -156,6 +186,8 @@ private:
 	void UpdateWeaponView();
 
 	void ShowOutlines();
+
+	void SetTargetSystem();
 
 protected:
 	virtual void BeginPlay() override;

@@ -412,6 +412,10 @@ public:
 		return BulletObj;
 	}
 
+	UAudioComponent* GetShotAudioComponent() {
+		return ShotAudioComponent;
+	}
+
 	UAudioComponent* GetClipAudioComponent() {
 		return ClipAudioComponent;
 	}

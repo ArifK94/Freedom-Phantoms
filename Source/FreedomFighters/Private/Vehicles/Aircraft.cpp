@@ -3,12 +3,15 @@
 
 #include "Characters/BaseCharacter.h"
 
+#include "Props/TargetSystemMarker.h"
+
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/SplineComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/PostProcessComponent.h"
+#include "CustomComponents/HealthComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -69,6 +72,8 @@ void AAircraft::Tick(float DeltaTime)
 	CurveTimeline.TickTimeline(DeltaTime);
 
 	CurrentWingSpeed = WingRotationSpeed * DeltaTime;
+
+	SetTargetSystem();
 }
 
 void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -168,6 +173,7 @@ void AAircraft::SpawnWeapon()
 			Weapon->SetComponentEyeViewPoint(FollowCamera);
 			Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AircraftWeapon.WeaponSocketName);
 			Weapon->GetClipAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			Weapon->GetShotAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 			WeaponObjs.Add(Weapon);
 		}
@@ -201,10 +207,8 @@ void AAircraft::UpdateWeaponView()
 	CurrentAircraftWeapon = AircraftWeapons[CurrentWeaponIndex]; // set the current weapon to first weapon by default
 	CurrentWeaponObj = WeaponObjs[CurrentWeaponIndex];
 
-
 	FollowCamera->AttachToComponent(CurrentWeaponObj->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeaponObj->GetMuzzleSocket()); // Attach to weapon muzzle
 	FollowCamera->SetRelativeRotation(RotationInput); // set the follow camera to rotation input
-
 
 	FollowCamera->SetFieldOfView(CurrentWeaponObj->GetZoomFOV());
 	OnUpdateWeaponUI.Broadcast(this);
@@ -246,4 +250,97 @@ void AAircraft::ShowOutlines()
 			Character->ShowCharacterOutline(true);
 		}
 	}
+}
+
+void AAircraft::SetTargetSystem()
+{
+	AActor* MyOwner = GetOwner();
+
+	if (!MyOwner) {
+		return;
+	}
+
+	TArray<AActor*> Characters;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseCharacter::StaticClass(), Characters);
+
+	// adding characters to targetting
+	for (AActor* Actor : Characters)
+	{
+		ABaseCharacter* Character = Cast<ABaseCharacter>(Actor);
+
+		if (Character != nullptr)
+		{
+			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			if (CurrentHealth)
+			{
+				bool isFriendly = UHealthComponent::IsFriendly(MyOwner, Character);
+
+				if (!isFriendly && CurrentHealth->IsAlive())
+				{
+					if (TargetSystemNodes.Num() <= 0)
+					{
+						FTargetSystemNode* TargetNode = new FTargetSystemNode;
+						TargetNode->Character = Character;
+						TargetNode->Marker = nullptr;
+						TargetSystemNodes.Add(TargetNode);
+					}
+					else
+					{
+						// prevent from readding characters
+						for (FTargetSystemNode* Node : TargetSystemNodes)
+						{
+							if (Node->Character != Character)
+							{
+								FTargetSystemNode* TargetNode = new FTargetSystemNode;
+								TargetNode->Character = Character;
+								TargetNode->Marker = nullptr;
+								TargetSystemNodes.Add(TargetNode);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+
+	if (TargetSystemNodes.Num() > 0)
+	{
+		for (int i = 0; i < TargetSystemNodes.Num(); i++)
+		{
+			FTargetSystemNode* TargetNode = TargetSystemNodes[i];
+
+			// add or update target marker based on character location
+			FActorSpawnParameters SpawnParams;
+
+			if (TargetNode->Marker == nullptr)
+			{
+				if (TargetMarkerClass) {
+					TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(TargetMarkerClass, TargetNode->Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
+				}
+			}
+			else
+			{
+				TargetNode->Marker->SetActorLocation(TargetNode->Character->GetActorLocation());
+			}
+
+
+			// remove dead characters from the targetting system
+			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(TargetNode->Character->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			if (CurrentHealth)
+			{
+				if (!CurrentHealth->IsAlive())
+				{
+					if (TargetNode->Marker) {
+						TargetNode->Marker->Destroy();
+					}
+					TargetSystemNodes.RemoveAt(i);
+				}
+			}
+		}
+	}
+
 }
