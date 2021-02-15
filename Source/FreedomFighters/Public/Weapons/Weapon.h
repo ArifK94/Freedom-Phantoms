@@ -212,8 +212,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		bool hasRecoil;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		WeaponType weaponType;
@@ -285,6 +284,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float ZoomFOV;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true"))
+		bool hasRecoil;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float BulletSpread;

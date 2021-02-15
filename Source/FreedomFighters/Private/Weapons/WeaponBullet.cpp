@@ -43,6 +43,8 @@ AWeaponBullet::AWeaponBullet()
 
 	DamageAmount = 15.0f;
 	DamageRadius = 10.0f;
+
+	ShowExplosionRadius = false;
 }
 
 void AWeaponBullet::BeginPlay()
@@ -69,7 +71,10 @@ void AWeaponBullet::Explode(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 	if (World)
 	{
-		DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, 5.0f, 0, 2);
+		if (ShowExplosionRadius)
+		{
+			DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, 5.0f, 0, 2);
+		}
 
 
 		AActor* MyOwner = GetOwner();
@@ -134,8 +139,6 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 {
 	if (OtherActor != NULL && OtherActor != this)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("You are hitting: %s"), *OtherActor->GetName()));
-
 		float ActualDamage = DamageAmount;
 		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 		if (SurfaceType == SURFACE_HEAD)

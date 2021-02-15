@@ -66,6 +66,9 @@ private:
 	FTimerHandle THandler_TimeBetweenShots;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		bool ShowExplosionRadius;
+
 
 
 private:

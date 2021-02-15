@@ -94,10 +94,6 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
 
 
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("%lld"), Damage));
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("%f"), Health));
-
-
 	// update the regeneration if taken damage as well as the delay time to wait again for another x seconds
 	if (CanRegenerateHealth) {
 		CurrentRegenerationDelay = RegenerationDelayAmount;
