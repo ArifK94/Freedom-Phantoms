@@ -496,7 +496,7 @@ void ACombatCharacter::UpdateHandGaurdIK()
 
 void ACombatCharacter::ToggleLaser()
 {
-	if (currentWeaponObj && currentWeaponObj->getWeaponAttachmentObj()->getLaserObj() != nullptr)
+	if (currentWeaponObj && currentWeaponObj->getWeaponAttachmentObj() != nullptr && currentWeaponObj->getWeaponAttachmentObj()->getLaserObj() != nullptr)
 	{
 		currentWeaponObj->getWeaponAttachmentObj()->getLaserObj()->ToggleBeam();
 	}

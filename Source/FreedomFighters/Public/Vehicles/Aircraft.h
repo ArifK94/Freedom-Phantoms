@@ -105,7 +105,7 @@ private:
 		UCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UPostProcessComponent* NightVisionPPComp;
+		UPostProcessComponent* ThermalVisionPPComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AircraftMovement CurrentAircraftMovement;
@@ -154,6 +154,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Target System", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ATargetSystemMarker> TargetMarkerClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FLIR", meta = (AllowPrivateAccess = "true"))
+		TArray<UMaterialInterface*> ThermalMaterials;
+	int CurrentThermalMat;
+
 
 public:
 	AAircraft();
@@ -170,7 +174,7 @@ public:
 
 	TArray<AWeapon*> WeaponObjs; // holding this variable in the FAircraftWeapon returns null after weapon spawning
 
-
+	void ChangeThermalVision();
 
 private:
 	UFUNCTION()
@@ -190,6 +194,9 @@ private:
 	void SetTargetSystem();
 
 	bool IfNodeExists(AActor* TargetActor);
+
+
+	void UpdateCurrentThermalVision();
 
 protected:
 	virtual void BeginPlay() override;

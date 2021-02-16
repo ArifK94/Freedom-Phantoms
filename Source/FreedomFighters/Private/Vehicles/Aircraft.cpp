@@ -15,6 +15,7 @@
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMaterialLibrary.h"
 
 #include "Weapons/Weapon.h"
 
@@ -38,8 +39,8 @@ AAircraft::AAircraft()
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 
-	NightVisionPPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("NightVisionPPComp"));
-	NightVisionPPComp->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
+	ThermalVisionPPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("ThermalVisionPPComp"));
+	ThermalVisionPPComp->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
 
 	WingRotationSpeed = 100000.0;
 
@@ -53,6 +54,8 @@ void AAircraft::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ThermalVisionPPComp->bEnabled = false;
+
 	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AAircraft::OnOverlapBegin);
 	Mesh->OnComponentBeginOverlap.AddDynamic(this, &AAircraft::OnOverlapBegin);
 
@@ -61,9 +64,6 @@ void AAircraft::BeginPlay()
 	if (AircraftWeapons.Num() > 0) {
 		SpawnWeapon();
 	}
-
-	NightVisionPPComp->bEnabled = false;
-	ShowOutlines();
 }
 
 void AAircraft::Tick(float DeltaTime)
@@ -217,6 +217,10 @@ void AAircraft::UpdateWeaponView()
 void AAircraft::SetPlayerControl(APlayerController* OurPlayerController)
 {
 	OurPlayerController->SetViewTargetWithBlend(this, .5f);
+
+	ThermalVisionPPComp->bEnabled = true;
+	ShowOutlines();
+	UpdateCurrentThermalVision();
 }
 
 void AAircraft::AddControllerPitchInput(float Val)
@@ -231,9 +235,7 @@ void AAircraft::AddControllerYawInput(float Val)
 	RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, CurrentAircraftWeapon.YawMin, CurrentAircraftWeapon.YawMax);
 	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
 
-
 	FollowCamera->SetRelativeRotation(RotationInput);
-
 }
 
 void AAircraft::ShowOutlines()
@@ -340,4 +342,29 @@ bool AAircraft::IfNodeExists(AActor* TargetActor)
 	}
 
 	return false;
+}
+
+void AAircraft::ChangeThermalVision()
+{
+	if (ThermalMaterials.Num() <= 0) {
+		return;
+	}
+
+	if (CurrentThermalMat < ThermalMaterials.Num() - 1)
+	{
+		CurrentThermalMat++;
+	}
+	else
+	{
+		CurrentThermalMat = 0;
+	}
+
+	UpdateCurrentThermalVision();
+}
+
+
+void AAircraft::UpdateCurrentThermalVision()
+{
+	UMaterialInstanceDynamic* MaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(GetWorld(), ThermalMaterials[CurrentThermalMat]);
+	ThermalVisionPPComp->AddOrUpdateBlendable(MaterialInstance, 1.0f);
 }

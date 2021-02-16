@@ -49,11 +49,12 @@ private:
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 
-	void SwitchWeapon();
-
 	void BeginFire();
 	void EndFire();
 
-
 	void SpawnAC130();
+
+	void SwitchWeapon();
+	void ToggleThermalVision();
+
 };

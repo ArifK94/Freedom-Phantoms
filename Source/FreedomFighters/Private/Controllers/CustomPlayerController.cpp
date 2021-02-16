@@ -29,10 +29,12 @@ void ACustomPlayerController::SetupInputComponent()
 	InputComponent->BindAxis("LookUp", this, &ACustomPlayerController::AddControllerPitchInput);
 	InputComponent->BindAxis("LookUpRate", this, &ACustomPlayerController::LookUpAtRate);
 
-	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
-
 	InputComponent->BindAction("Fire", IE_Pressed, this, &ACustomPlayerController::BeginFire);
 	InputComponent->BindAction("Fire", IE_Released, this, &ACustomPlayerController::EndFire);
+
+	// number keys
+	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
+	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
 }
 
 void ACustomPlayerController::OnPossess(APawn* InPawn)
@@ -100,14 +102,6 @@ void ACustomPlayerController::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ACustomPlayerController::SwitchWeapon()
-{
-	if (ControlledAircraft)
-	{
-		ControlledAircraft->ChangeWeapon();
-	}
-}
-
 void ACustomPlayerController::BeginFire()
 {
 	if (ControlledAircraft)
@@ -143,5 +137,22 @@ void ACustomPlayerController::SpawnAC130()
 		ControlledAircraft = GetWorld()->SpawnActor<AAircraft>(OwningCombatCharacter->getFactionObj()->GetAC130Class(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 		ControlledAircraft->SetPlayerControl(this);
 		GameHUDController->AddAC130ViewPort();
+	}
+}
+
+void ACustomPlayerController::SwitchWeapon()
+{
+	if (ControlledAircraft)
+	{
+		ControlledAircraft->ChangeWeapon();
+	}
+}
+
+
+void ACustomPlayerController::ToggleThermalVision()
+{
+	if (ControlledAircraft)
+	{
+		ControlledAircraft->ChangeThermalVision();
 	}
 }
