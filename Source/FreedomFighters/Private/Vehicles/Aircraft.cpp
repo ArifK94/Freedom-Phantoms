@@ -278,26 +278,12 @@ void AAircraft::SetTargetSystem()
 
 				if (!isFriendly && CurrentHealth->IsAlive())
 				{
-					if (TargetSystemNodes.Num() <= 0)
+					if (!IfNodeExists(Character))
 					{
 						FTargetSystemNode* TargetNode = new FTargetSystemNode;
 						TargetNode->Character = Character;
 						TargetNode->Marker = nullptr;
 						TargetSystemNodes.Add(TargetNode);
-					}
-					else
-					{
-						// prevent from readding characters
-						for (FTargetSystemNode* Node : TargetSystemNodes)
-						{
-							if (Node->Character != Character)
-							{
-								FTargetSystemNode* TargetNode = new FTargetSystemNode;
-								TargetNode->Character = Character;
-								TargetNode->Marker = nullptr;
-								TargetSystemNodes.Add(TargetNode);
-							}
-						}
 					}
 				}
 			}
@@ -343,4 +329,15 @@ void AAircraft::SetTargetSystem()
 		}
 	}
 
+}
+
+bool AAircraft::IfNodeExists(AActor* TargetActor)
+{
+	for (FTargetSystemNode* node : TargetSystemNodes)
+	{
+		if (node->Character == TargetActor)
+			return true;
+	}
+
+	return false;
 }

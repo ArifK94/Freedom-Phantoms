@@ -189,6 +189,8 @@ private:
 
 	void SetTargetSystem();
 
+	bool IfNodeExists(AActor* TargetActor);
+
 protected:
 	virtual void BeginPlay() override;
 
