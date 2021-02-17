@@ -55,6 +55,7 @@ void AAircraft::BeginPlay()
 	Super::BeginPlay();
 
 	ThermalVisionPPComp->bEnabled = false;
+	CreateThermalMatInstances();
 
 	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AAircraft::OnOverlapBegin);
 	Mesh->OnComponentBeginOverlap.AddDynamic(this, &AAircraft::OnOverlapBegin);
@@ -64,6 +65,7 @@ void AAircraft::BeginPlay()
 	if (AircraftWeapons.Num() > 0) {
 		SpawnWeapon();
 	}
+
 }
 
 void AAircraft::Tick(float DeltaTime)
@@ -220,7 +222,7 @@ void AAircraft::SetPlayerControl(APlayerController* OurPlayerController)
 
 	ThermalVisionPPComp->bEnabled = true;
 	ShowOutlines();
-	UpdateCurrentThermalVision();
+	UpdateCurrentThermalVision(1.0f);
 }
 
 void AAircraft::AddControllerPitchInput(float Val)
@@ -344,27 +346,39 @@ bool AAircraft::IfNodeExists(AActor* TargetActor)
 	return false;
 }
 
+
+void AAircraft::CreateThermalMatInstances()
+{
+	for (int i = 0; i < ThermalMaterials.Num(); i++)
+	{
+		UMaterialInstanceDynamic* MaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(GetWorld(), ThermalMaterials[i]);
+		ThermalVisionPPComp->AddOrUpdateBlendable(MaterialInstance, 0.0f); // set all to invisible
+		ThermalMaterialInstances.Add(MaterialInstance);
+	}
+}
+
+void AAircraft::UpdateCurrentThermalVision(float InWeight)
+{
+	ThermalVisionPPComp->AddOrUpdateBlendable(ThermalMaterialInstances[CurrentThermalMatIndex], InWeight);
+}
+
 void AAircraft::ChangeThermalVision()
 {
 	if (ThermalMaterials.Num() <= 0) {
 		return;
 	}
 
-	if (CurrentThermalMat < ThermalMaterials.Num() - 1)
+	UpdateCurrentThermalVision(0.0f); // disable current material
+
+	if (CurrentThermalMatIndex < ThermalMaterialInstances.Num() - 1)
 	{
-		CurrentThermalMat++;
+		CurrentThermalMatIndex++;
 	}
 	else
 	{
-		CurrentThermalMat = 0;
+		CurrentThermalMatIndex = 0;
 	}
 
-	UpdateCurrentThermalVision();
-}
+	UpdateCurrentThermalVision(1.0f);
 
-
-void AAircraft::UpdateCurrentThermalVision()
-{
-	UMaterialInstanceDynamic* MaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(GetWorld(), ThermalMaterials[CurrentThermalMat]);
-	ThermalVisionPPComp->AddOrUpdateBlendable(MaterialInstance, 1.0f);
 }

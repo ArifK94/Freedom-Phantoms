@@ -63,23 +63,41 @@ public:
 
 
 
+//USTRUCT(BlueprintType)
+//struct FREEDOMFIGHTERS_API FThermalMaterial // don't want to create a new material everytime the post processing material is added or updated
+//{
+//	GENERATED_USTRUCT_BODY()
+//
+//public:
+//	UPROPERTY()
+//		UMaterialInstanceDynamic* MaterialInstance;
+//
+//	UPROPERTY()
+//		UMaterialInterface* Material;
+//
+//	FThermalMaterial()
+//	{
+//	}
+//};
+
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FTargetSystemNode
 {
 	GENERATED_USTRUCT_BODY()
 
 public:
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-			ABaseCharacter* Character;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		ABaseCharacter* Character;
 
-		UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-			ATargetSystemMarker* Marker; // the marker class containing the widget component
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		ATargetSystemMarker* Marker; // the marker class containing the widget component
 
-		FTargetSystemNode()
-		{
+	FTargetSystemNode()
+	{
 
-		}
+	}
 };
+
 
 
 
@@ -156,7 +174,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FLIR", meta = (AllowPrivateAccess = "true"))
 		TArray<UMaterialInterface*> ThermalMaterials;
-	int CurrentThermalMat;
+	TArray<UMaterialInstanceDynamic*> ThermalMaterialInstances;
+	int CurrentThermalMatIndex;
 
 
 public:
@@ -195,8 +214,9 @@ private:
 
 	bool IfNodeExists(AActor* TargetActor);
 
+	void UpdateCurrentThermalVision(float InWeight);
 
-	void UpdateCurrentThermalVision();
+	void CreateThermalMatInstances();
 
 protected:
 	virtual void BeginPlay() override;

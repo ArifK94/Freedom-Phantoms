@@ -45,6 +45,7 @@ AWeaponBullet::AWeaponBullet()
 	DamageRadius = 10.0f;
 
 	ShowExplosionRadius = false;
+	DebugExplosionLifeTime = 5.0f;
 }
 
 void AWeaponBullet::BeginPlay()
@@ -73,7 +74,7 @@ void AWeaponBullet::Explode(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 	{
 		if (ShowExplosionRadius)
 		{
-			DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, 5.0f, 0, 2);
+			DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 20, FColor::Purple, false, DebugExplosionLifeTime, 0, 2);
 		}
 
 
@@ -83,16 +84,13 @@ void AWeaponBullet::Explode(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		{
 			TArray<AActor*> ignoredActors;
 
-			UGameplayStatics::ApplyRadialDamageWithFalloff(
+			UGameplayStatics::ApplyRadialDamage(
 				World,
-				DamageAmount, 
-				DamageAmount / 2.f,
-				GetActorLocation(), 
-				DamageAmount, 
-				DamageAmount / 2.f, 
-				1.5f,
-				DamageType, 
-				ignoredActors, 
+				DamageAmount,
+				GetActorLocation(),
+				DamageRadius,
+				DamageType,
+				ignoredActors,
 				this, // damage does not work if assiginng the owner, therefore health component will need to get the owner of this bullet class
 				MyOwner->GetInstigatorController()
 			);

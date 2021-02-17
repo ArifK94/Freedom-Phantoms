@@ -63,12 +63,15 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		float DamageRadius;
 
+
 	FTimerHandle THandler_TimeBetweenShots;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		bool ShowExplosionRadius;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		float DebugExplosionLifeTime;
 
 
 private:
