@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "CustomComponents/HealthComponent.h"
 
 #include "FreedomFighters/FreedomFighters.h"
@@ -11,6 +8,8 @@
 
 #include "PhysicalMaterials/PhysicalMaterial.h"
 
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 UHealthComponent::UHealthComponent()
 {
@@ -45,8 +44,6 @@ void UHealthComponent::BeginPlay()
 		MyOwner->OnTakeRadialDamage.AddDynamic(this, &UHealthComponent::OnRadialDamage);
 	}
 }
-
-
 
 void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {

@@ -1,6 +1,5 @@
 #include "Controllers/CustomPlayerController.h"
 
-#include "Managers/GameHUDController.h"
 #include "Managers/FactionManager.h"
 
 #include "Characters/CombatCharacter.h"
@@ -10,9 +9,9 @@
 
 #include "Vehicles/Aircraft.h"
 
-#include "Components/InputComponent.h"
-
 #include "Kismet/GameplayStatics.h"
+
+#include "Blueprint/UserWidget.h"
 
 ACustomPlayerController::ACustomPlayerController()
 {
@@ -29,6 +28,22 @@ void ACustomPlayerController::SetupInputComponent()
 	InputComponent->BindAxis("LookUp", this, &ACustomPlayerController::AddControllerPitchInput);
 	InputComponent->BindAxis("LookUpRate", this, &ACustomPlayerController::LookUpAtRate);
 
+	InputComponent->BindAxis("MoveForward", this, &ACustomPlayerController::MoveForward);
+	InputComponent->BindAxis("MoveRight", this, &ACustomPlayerController::MoveRight);
+
+	InputComponent->BindAction("Jump", IE_Pressed, this, &ACustomPlayerController::BeginJump);
+	InputComponent->BindAction("Jump", IE_Released, this, &ACustomPlayerController::EndJump);
+
+	InputComponent->BindAction("Aim", IE_Pressed, this, &ACustomPlayerController::BeginAim);
+	InputComponent->BindAction("Aim", IE_Released, this, &ACustomPlayerController::EndAim);
+
+	InputComponent->BindAction("Sprint", IE_Pressed, this, &ACustomPlayerController::BeginSprint);
+	InputComponent->BindAction("Sprint", IE_Released, this, &ACustomPlayerController::EndSprint);
+
+	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::BeginCrouch);
+
+	InputComponent->BindAction("TakeCover", IE_Pressed, this, &ACustomPlayerController::TakeCover);
+
 	InputComponent->BindAction("Fire", IE_Pressed, this, &ACustomPlayerController::BeginFire);
 	InputComponent->BindAction("Fire", IE_Released, this, &ACustomPlayerController::EndFire);
 
@@ -37,6 +52,7 @@ void ACustomPlayerController::SetupInputComponent()
 	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
 }
 
+
 void ACustomPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -44,23 +60,63 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	OwningPawn = InPawn;
 
 	OwningCombatCharacter = Cast<ACombatCharacter>(OwningPawn);
-
-
+	AddUIWidgets();
 }
 
 void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GameHUDController = Cast<AGameHUDController>(GetWorld()->GetFirstPlayerController()->GetHUD());
-
 	SpawnAC130();
 }
 
-void ACustomPlayerController::Tick(float DeltaTime)
+void ACustomPlayerController::AddUIWidgets()
 {
-	Super::Tick(DeltaTime);
+	UWorld* World = GetWorld();
+
+	if (!World) return;
+
+	// Weapon Ammo
+	if (WeaponAmmoWidgetClass)
+	{
+		WeaponAmmoWidget = CreateWidget<UUserWidget>(World, WeaponAmmoWidgetClass);
+
+		if (WeaponAmmoWidget)
+		{
+			WeaponAmmoWidget->AddToViewport();
+		}
+	}
+
+	// Weapon Crosshairs
+	if (WeaponCrosshairhWidgetClass)
+	{
+		WeaponCrosshairWidget = CreateWidget<UUserWidget>(World, WeaponCrosshairhWidgetClass);
+
+		if (WeaponCrosshairWidget)
+		{
+			WeaponCrosshairWidget->AddToViewport();
+		}
+	}
+
+	if (HealthWidgetClass)
+	{
+		HealthWidget = CreateWidget<UUserWidget>(World, HealthWidgetClass);
+
+		if (HealthWidget)
+		{
+			HealthWidget->AddToViewport();
+		}
+	}
 }
+
+
+void ACustomPlayerController::OnAircraftDestroy(AAircraft* CurrentControlledAircraft)
+{
+	AddUIWidgets();
+	ControlledAircraft = nullptr;
+	OwningCombatCharacter->EnableInput(this);
+}
+
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
 {
@@ -102,27 +158,128 @@ void ACustomPlayerController::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+
+void ACustomPlayerController::MoveForward(float Value)
+{
+	if (Value != 0.0f)
+	{
+		if (!OwningCombatCharacter->IsTakingCover())
+		{
+			// find out which way is forward
+			const FRotator Rotation = GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			// get forward vector
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+			OwningCombatCharacter->AddMovementInput(Direction, Value);
+		}
+		else
+		{
+			if (Value == -1.0f)
+			{
+				OwningCombatCharacter->EscapeCover();
+			}
+		}
+	}
+}
+
+void ACustomPlayerController::MoveRight(float Value)
+{
+	//if (!isTakingCover || isAtCoverCorner)
+	//	RightInputValue = Value;
+
+	if (Value == 0.0f) {
+		return;
+	}
+	//if (isTakingCover && !isAtCoverCorner)
+	//	RightInputValue = Value;
+
+	if (!OwningCombatCharacter->IsTakingCover())
+	{
+		//find out which way is right
+		const FRotator Rotation = GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		// get right vector 
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		// add movement in that direction
+		OwningCombatCharacter->AddMovementInput(Direction, Value);
+	}
+	else
+	{
+		OwningCombatCharacter->CoverMovement(Value);
+	}
+}
+
+void ACustomPlayerController::BeginCrouch()
+{
+	OwningCombatCharacter->BeginCrouch();
+}
+
+void ACustomPlayerController::BeginJump()
+{
+	OwningCombatCharacter->Jump();
+}
+
+void ACustomPlayerController::EndJump()
+{
+	OwningCombatCharacter->StopJumping();
+}
+
+void ACustomPlayerController::BeginSprint()
+{
+	OwningCombatCharacter->BeginSprint();
+
+}
+void ACustomPlayerController::EndSprint()
+{
+	OwningCombatCharacter->EndSprint();
+
+}
+
+void ACustomPlayerController::BeginAim()
+{
+	OwningCombatCharacter->BeginAim();
+}
+
+void ACustomPlayerController::EndAim()
+{
+	OwningCombatCharacter->EndAim();
+}
+
+void ACustomPlayerController::TakeCover()
+{
+
+}
+
 void ACustomPlayerController::BeginFire()
 {
 	if (ControlledAircraft)
 	{
-		CurrentWeapon = ControlledAircraft->GetCurrentWeaponObj();
+		AWeapon* CurrentWeapon = ControlledAircraft->GetCurrentWeaponObj();
 		if (CurrentWeapon) {
 			CurrentWeapon->StartFire();
 		}
 	}
 	else
 	{
-		CurrentWeapon = OwningCombatCharacter->GetCurrentWeaponObj();
 		OwningCombatCharacter->BeginFire();
 	}
 }
 
 void ACustomPlayerController::EndFire()
 {
-	if (CurrentWeapon)
+	if (ControlledAircraft)
 	{
-		CurrentWeapon->StopFire();
+		AWeapon* CurrentWeapon = ControlledAircraft->GetCurrentWeaponObj();
+		if (CurrentWeapon) {
+			CurrentWeapon->StopFire();
+		}
+	}
+	else
+	{
+		OwningCombatCharacter->EndFire();
 	}
 }
 
@@ -135,8 +292,9 @@ void ACustomPlayerController::SpawnAC130()
 	if (OwningCombatCharacter->getFactionObj())
 	{
 		ControlledAircraft = GetWorld()->SpawnActor<AAircraft>(OwningCombatCharacter->getFactionObj()->GetAC130Class(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		OwningCombatCharacter->DisableInput(this);
 		ControlledAircraft->SetPlayerControl(this);
-		GameHUDController->AddAC130ViewPort();
+		ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
 	}
 }
 

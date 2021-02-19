@@ -19,6 +19,7 @@ class ABaseCharacter;
 class ATargetSystemMarker;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChangeSignature, AAircraft*, Aircraft);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestorySignature, AAircraft*, Aircraft);
 
 UENUM(BlueprintType)
 enum class AircraftMovement : uint8
@@ -60,25 +61,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;
 };
-
-
-
-//USTRUCT(BlueprintType)
-//struct FREEDOMFIGHTERS_API FThermalMaterial // don't want to create a new material everytime the post processing material is added or updated
-//{
-//	GENERATED_USTRUCT_BODY()
-//
-//public:
-//	UPROPERTY()
-//		UMaterialInstanceDynamic* MaterialInstance;
-//
-//	UPROPERTY()
-//		UMaterialInterface* Material;
-//
-//	FThermalMaterial()
-//	{
-//	}
-//};
 
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FTargetSystemNode
@@ -135,6 +117,9 @@ private:
 		FAircraftWeapon CurrentAircraftWeapon;
 	int CurrentWeaponIndex;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> HUDWidgetClass;
+	UUserWidget* HUDWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AAircraftSplinePath* AircraftPath;
@@ -147,6 +132,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		uint8 TotalLaps;
+	uint8 CurrentLap;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -177,7 +163,6 @@ private:
 	TArray<UMaterialInstanceDynamic*> ThermalMaterialInstances;
 	int CurrentThermalMatIndex;
 
-
 public:
 	AAircraft();
 
@@ -191,11 +176,19 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Weapon UI")
 		FOnWeaponChangeSignature OnUpdateWeaponUI;
 
+	UPROPERTY(BlueprintAssignable)
+		FOnDestorySignature OnAircraftDestroy;
+	
+
 	TArray<AWeapon*> WeaponObjs; // holding this variable in the FAircraftWeapon returns null after weapon spawning
 
 	void ChangeThermalVision();
 
 private:
+
+	void AddUIWidget();
+	void RemoveUIWidget();
+
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
@@ -208,7 +201,7 @@ private:
 
 	void UpdateWeaponView();
 
-	void ShowOutlines();
+	void ShowOutlines(bool CanShow);
 
 	void SetTargetSystem();
 
@@ -217,6 +210,8 @@ private:
 	void UpdateCurrentThermalVision(float InWeight);
 
 	void CreateThermalMatInstances();
+
+	void OnDestroy();
 
 protected:
 	virtual void BeginPlay() override;

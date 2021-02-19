@@ -1,9 +1,11 @@
 #include "Vehicles/Aircraft.h"
-#include "Props/AircraftSplinePath.h"
 
 #include "Characters/BaseCharacter.h"
 
+#include "Props/AircraftSplinePath.h"
 #include "Props/TargetSystemMarker.h"
+
+#include "Weapons/Weapon.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -17,7 +19,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 
-#include "Weapons/Weapon.h"
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 
 AAircraft::AAircraft()
@@ -49,6 +52,38 @@ AAircraft::AAircraft()
 
 	CurrentWeaponIndex = 0;
 }
+
+void AAircraft::AddUIWidget()
+{
+	UWorld* World = GetWorld();
+
+	if (!World) return;
+
+	if (HUDWidgetClass)
+	{
+		HUDWidget = CreateWidget<UUserWidget>(World, HUDWidgetClass);
+
+		if (HUDWidget)
+		{
+			UWidgetLayoutLibrary::RemoveAllWidgets(World);
+			HUDWidget->AddToViewport();
+		}
+	}
+}
+
+void AAircraft::RemoveUIWidget()
+{
+	UWorld* World = GetWorld();
+
+	if (!World) return;
+
+	if (HUDWidget)
+	{
+		UWidgetLayoutLibrary::RemoveAllWidgets(World);
+		HUDWidget = nullptr;
+	}
+}
+
 
 void AAircraft::BeginPlay()
 {
@@ -108,12 +143,6 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 					CurrentAircraftMovement = AircraftMovement::Grounded;
 					break;
 				}
-
-				/// destroy the helicopter once reached the last path point
-	/*			if (CurrentSplinePoint.PointIndex >= CollidedPath->GetSplinePathComp()->GetNumberOfSplinePoints() - 1)
-				{
-					Destroy();
-				}*/
 			}
 		}
 	}
@@ -158,6 +187,22 @@ void AAircraft::FollowSplinePath(float Value)
 	FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
 
 	SetActorLocationAndRotation(TargetLocation, TargetRotation);
+
+
+	// if reached the end
+	if (Alpha >= SplinePathComp->GetSplineLength())
+	{
+		if (CurrentLap < TotalLaps) // restart the lap if laps remaining
+		{
+			CurrentLap++;
+			CurveTimeline.PlayFromStart();
+		}
+		else
+		{
+			OnDestroy();
+		}
+	}
+
 }
 
 void AAircraft::SpawnWeapon()
@@ -216,15 +261,6 @@ void AAircraft::UpdateWeaponView()
 	OnUpdateWeaponUI.Broadcast(this);
 }
 
-void AAircraft::SetPlayerControl(APlayerController* OurPlayerController)
-{
-	OurPlayerController->SetViewTargetWithBlend(this, .5f);
-
-	ThermalVisionPPComp->bEnabled = true;
-	ShowOutlines();
-	UpdateCurrentThermalVision(1.0f);
-}
-
 void AAircraft::AddControllerPitchInput(float Val)
 {
 	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, CurrentAircraftWeapon.PitchMin, CurrentAircraftWeapon.PitchMax);
@@ -240,7 +276,7 @@ void AAircraft::AddControllerYawInput(float Val)
 	FollowCamera->SetRelativeRotation(RotationInput);
 }
 
-void AAircraft::ShowOutlines()
+void AAircraft::ShowOutlines(bool CanShow)
 {
 	TArray<AActor*> Characters;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseCharacter::StaticClass(), Characters);
@@ -251,7 +287,7 @@ void AAircraft::ShowOutlines()
 
 		if (Character != nullptr)
 		{
-			Character->ShowCharacterOutline(true);
+			Character->ShowCharacterOutline(CanShow);
 		}
 	}
 }
@@ -380,5 +416,36 @@ void AAircraft::ChangeThermalVision()
 	}
 
 	UpdateCurrentThermalVision(1.0f);
+}
+
+
+void AAircraft::SetPlayerControl(APlayerController* OurPlayerController)
+{
+	OurPlayerController->SetViewTargetWithBlend(this, .5f);
+
+	ThermalVisionPPComp->bEnabled = true;
+	ShowOutlines(true);
+	UpdateCurrentThermalVision(1.0f);
+	AddUIWidget();
+}
+
+void AAircraft::OnDestroy()
+{
+	RemoveUIWidget();
+	ShowOutlines(false);
+
+	OnAircraftDestroy.Broadcast(this);
+
+
+	// desttroy all attached actors to this aircraft
+	TArray<AActor*> AttachedActors;
+	GetAttachedActors(AttachedActors);
+
+	for (AActor* ChildActor : AttachedActors)
+	{
+		ChildActor->Destroy();
+	}
+
+	Destroy();
 
 }
