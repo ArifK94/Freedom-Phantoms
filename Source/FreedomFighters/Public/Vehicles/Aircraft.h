@@ -101,6 +101,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* PilotAudio;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* ThermalToggleAudio;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FollowCamera;
 
@@ -153,10 +156,16 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AWeapon* CurrentWeaponObj;
 
-		TArray<FTargetSystemNode*> TargetSystemNodes;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Target System", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ATargetSystemMarker> FriendlyMarkerClass;
+	TArray<FTargetSystemNode*> FriendlyMarkerNodes;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Target System", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<ATargetSystemMarker> TargetMarkerClass;
+		TSubclassOf<ATargetSystemMarker> EnemyMarkerClass;
+	TArray<FTargetSystemNode*> EnemySystemNodes;
+
+
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FLIR", meta = (AllowPrivateAccess = "true"))
 		TArray<UMaterialInterface*> ThermalMaterials;
@@ -205,7 +214,11 @@ private:
 
 	void SetTargetSystem();
 
-	bool IfNodeExists(AActor* TargetActor);
+	void UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubclassOf<ATargetSystemMarker> MarkerClass);
+
+	bool DoesFriendlyNodeExists(AActor* TargetActor);
+	bool DoesEnemyNodeExists(AActor* TargetActor);
+
 
 	void UpdateCurrentThermalVision(float InWeight);
 

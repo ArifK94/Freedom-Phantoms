@@ -37,13 +37,18 @@ AAircraft::AAircraft()
 	EngineAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineAudio"));
 	EngineAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 
-	PilotAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("PilotAudio"));
-	PilotAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
-
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 
 	ThermalVisionPPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("ThermalVisionPPComp"));
 	ThermalVisionPPComp->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
+
+	// follow will contain any interior sounds so these sounds cannot be heard outside of the aircraft
+	PilotAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("PilotAudio"));
+	PilotAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
+
+	ThermalToggleAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("ThermalToggleAudio"));
+	ThermalToggleAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
+
 
 	WingRotationSpeed = 100000.0;
 
@@ -100,7 +105,7 @@ void AAircraft::BeginPlay()
 	if (AircraftWeapons.Num() > 0) {
 		SpawnWeapon();
 	}
-
+	EngineAudio->Play();
 }
 
 void AAircraft::Tick(float DeltaTime)
@@ -222,6 +227,9 @@ void AAircraft::SpawnWeapon()
 			Weapon->GetClipAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			Weapon->GetShotAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
+			PilotAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			ThermalToggleAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
 			WeaponObjs.Add(Weapon);
 		}
 	}
@@ -290,6 +298,33 @@ void AAircraft::ShowOutlines(bool CanShow)
 			Character->ShowCharacterOutline(CanShow);
 		}
 	}
+
+	TArray<AActor*> SkeletalMeahComps;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), USkeletalMeshComponent::StaticClass(), SkeletalMeahComps);
+
+	for (AActor* Actor : SkeletalMeahComps)
+	{
+		USkeletalMeshComponent* currentSkel = Cast<USkeletalMeshComponent>(Actor);
+
+		if (currentSkel != nullptr)
+		{
+			currentSkel->SetRenderCustomDepth(CanShow);
+		}
+	}
+
+	TArray<AActor*> StaticComponents;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), UStaticMeshComponent::StaticClass(), StaticComponents);
+
+	for (AActor* Actor : StaticComponents)
+	{
+		UStaticMeshComponent* currentstatic = Cast<UStaticMeshComponent>(Actor);
+
+		if (currentstatic != nullptr)
+		{
+			currentstatic->SetRenderCustomDepth(CanShow);
+		}
+	}
+
 }
 
 void AAircraft::SetTargetSystem()
@@ -316,20 +351,43 @@ void AAircraft::SetTargetSystem()
 			{
 				bool isFriendly = UHealthComponent::IsFriendly(MyOwner, Character);
 
-				if (!isFriendly && CurrentHealth->IsAlive())
+				if (CurrentHealth->IsAlive())
 				{
-					if (!IfNodeExists(Character))
+					if (isFriendly)
 					{
-						FTargetSystemNode* TargetNode = new FTargetSystemNode;
-						TargetNode->Character = Character;
-						TargetNode->Marker = nullptr;
-						TargetSystemNodes.Add(TargetNode);
+						if (!DoesFriendlyNodeExists(Character))
+						{
+							FTargetSystemNode* TargetNode = new FTargetSystemNode;
+							TargetNode->Character = Character;
+							TargetNode->Marker = nullptr;
+							FriendlyMarkerNodes.Add(TargetNode);
+						}
+					}
+					else
+					{
+						if (!DoesEnemyNodeExists(Character))
+						{
+							FTargetSystemNode* TargetNode = new FTargetSystemNode;
+							TargetNode->Character = Character;
+							TargetNode->Marker = nullptr;
+							EnemySystemNodes.Add(TargetNode);
+						}
 					}
 				}
 			}
 		}
 	}
 
+	UpdateMarker(FriendlyMarkerNodes, FriendlyMarkerClass);
+	UpdateMarker(EnemySystemNodes, EnemyMarkerClass);
+}
+
+// add or update the marker UI
+void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubclassOf<ATargetSystemMarker> MarkerClass)
+{
+	if (MarkerClass == nullptr) {
+		return;
+	}
 
 
 	if (TargetSystemNodes.Num() > 0)
@@ -343,9 +401,8 @@ void AAircraft::SetTargetSystem()
 
 			if (TargetNode->Marker == nullptr)
 			{
-				if (TargetMarkerClass) {
-					TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(TargetMarkerClass, TargetNode->Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
-				}
+					TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, TargetNode->Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
+				
 			}
 			else
 			{
@@ -368,12 +425,11 @@ void AAircraft::SetTargetSystem()
 			}
 		}
 	}
-
 }
 
-bool AAircraft::IfNodeExists(AActor* TargetActor)
+bool AAircraft::DoesFriendlyNodeExists(AActor* TargetActor)
 {
-	for (FTargetSystemNode* node : TargetSystemNodes)
+	for (FTargetSystemNode* node : FriendlyMarkerNodes)
 	{
 		if (node->Character == TargetActor)
 			return true;
@@ -382,6 +438,16 @@ bool AAircraft::IfNodeExists(AActor* TargetActor)
 	return false;
 }
 
+bool AAircraft::DoesEnemyNodeExists(AActor* TargetActor)
+{
+	for (FTargetSystemNode* node : EnemySystemNodes)
+	{
+		if (node->Character == TargetActor)
+			return true;
+	}
+
+	return false;
+}
 
 void AAircraft::CreateThermalMatInstances()
 {
@@ -415,6 +481,8 @@ void AAircraft::ChangeThermalVision()
 		CurrentThermalMatIndex = 0;
 	}
 
+	ThermalToggleAudio->Play();
+
 	UpdateCurrentThermalVision(1.0f);
 }
 
@@ -427,6 +495,9 @@ void AAircraft::SetPlayerControl(APlayerController* OurPlayerController)
 	ShowOutlines(true);
 	UpdateCurrentThermalVision(1.0f);
 	AddUIWidget();
+
+	PilotAudio->Play();
+
 }
 
 void AAircraft::OnDestroy()

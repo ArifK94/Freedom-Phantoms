@@ -130,182 +130,8 @@ void ABaseCharacter::Tick(float DeltaTime)
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent);
-	//PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	//PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-
-	//PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ABaseCharacter::BeginAim);
-	//PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABaseCharacter::EndAim);
-
-	//PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ABaseCharacter::BeginSprint);
-	//PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ABaseCharacter::EndSprint);
-
-	//PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABaseCharacter::BeginCrouch);
-
-	//PlayerInputComponent->BindAction("TakeCover", IE_Pressed, this, &ABaseCharacter::TakeCover);
-
-	//PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
-	//PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
 }
 
-//void ABaseCharacter::MoveForward(float Value)
-//{
-//	if (Controller != NULL)
-//	{
-//		ForwardInputValue = Value;
-//
-//		if (Value < 0.0f || canMoveForward)
-//		{
-//			if (Value != 0.0f)
-//			{
-//				if (!isTakingCover)
-//				{
-//					// find out which way is forward
-//					const FRotator Rotation = Controller->GetControlRotation();
-//					const FRotator YawRotation(0, Rotation.Yaw, 0);
-//
-//					// get forward vector
-//					const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-//
-//					AddMovementInput(Direction, Value);
-//				}
-//				else
-//				{
-//					if (Value == -1.0f)
-//					{
-//						EscapeCover();
-//					}
-//				}
-//			}
-//		}
-//	}
-//
-//
-//}
-//
-//void ABaseCharacter::MoveRight(float Value)
-//{
-//	if (Controller != NULL)
-//	{
-//		if (!isTakingCover || isAtCoverCorner)
-//			RightInputValue = Value;
-//
-//		if (Value != 0.0f)
-//		{
-//			if (isTakingCover && !isAtCoverCorner)
-//				RightInputValue = Value;
-//
-//			if (!isTakingCover)
-//			{
-//				//find out which way is right
-//				const FRotator Rotation = Controller->GetControlRotation();
-//				const FRotator YawRotation(0, Rotation.Yaw, 0);
-//
-//				CoverSelected = false;
-//
-//				// get right vector 
-//				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-//				// add movement in that direction
-//				AddMovementInput(Direction, Value);
-//			}
-//			else
-//			{
-//				// Can Move In Cover
-//				float CoverDistance = 40.0f;
-//
-//				FVector ActorLocation = GetActorLocation();
-//				FVector Start, End;
-//				FRotator TargetRotation = UKismetMathLibrary::MakeRotFromXZ(UKismetMathLibrary::Multiply_VectorVector(WallNormal, FVector(-1.0f, -1.0f, 0.0f)), GetCapsuleComponent()->GetUpVector());
-//
-//				FVector TargetFoward = UKismetMathLibrary::GetForwardVector(TargetRotation);
-//				FVector RightDirection = UKismetMathLibrary::GetRightVector(TargetRotation);
-//
-//
-//				FVector NewForward = UKismetMathLibrary::Add_VectorVector(FVector(TargetFoward.X * 50.0f, TargetFoward.Y * 50.0f, 0.0f), ActorLocation);
-//				FVector NewRight = FVector(RightDirection.X * CoverDistance, RightDirection.Y * CoverDistance, 0.0f);
-//
-//				FVector TargetAdd = UKismetMathLibrary::Add_VectorVector(NewForward, NewRight);
-//				FVector TargetMinus = UKismetMathLibrary::Subtract_VectorVector(NewForward, NewRight);
-//
-//				FVector NewRightLocation = FVector(TargetAdd.X, TargetAdd.Y, ActorLocation.Z);
-//				FVector NewLeftLocation = FVector(TargetMinus.X, TargetMinus.Y, ActorLocation.Z);
-//
-//
-//
-//
-//				FVector CapsuleRight = GetCapsuleComponent()->GetRightVector() * CoverDistance;
-//
-//				// Right side of cover from camera's perspective which is equal to
-//				// character's left hand side
-//				if (Value == 1)
-//				{
-//					Start = UKismetMathLibrary::Subtract_VectorVector(ActorLocation, CapsuleRight);
-//					End = NewRightLocation;
-//					isFacingCoverRHS = true;
-//				}
-//				else
-//				{
-//					Start = UKismetMathLibrary::Add_VectorVector(ActorLocation, CapsuleRight);
-//					End = NewLeftLocation;
-//					isFacingCoverRHS = false;
-//				}
-//
-//				FCollisionQueryParams QueryParams;
-//				QueryParams.AddIgnoredActor(this);
-//				QueryParams.bTraceComplex = false;
-//				QueryParams.bReturnPhysicalMaterial = true;
-//
-//				FCollisionObjectQueryParams ObjectParams;
-//				ObjectParams.AllObjects;
-//
-//				DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
-//
-//				FHitResult OutHit;
-//				auto LineTrace = GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, ObjectParams, QueryParams);
-//
-//
-//				if (LineTrace)
-//				{
-//					if (OutHit.bBlockingHit)
-//					{
-//						CoverStart = Start;
-//						WallLocation = OutHit.ImpactPoint;
-//
-//						CoverSelected = true;
-//						isAtCoverCorner = false;
-//
-//						CamManager->ViewYawMin = DefaultCamViewYawMin;
-//						CamManager->ViewYawMax = DefaultCamViewYawMax;
-//
-//						//find out which way is right
-//						const FRotator Rotation = Controller->GetControlRotation();
-//						const FRotator YawRotation(0, Rotation.Yaw, 0);
-//
-//						// add movement in that direction
-//						AddMovementInput(RightDirection, Value);
-//					}
-//				}
-//				else
-//				{
-//					isAtCoverCorner = true;
-//
-//
-//					// Clamp the camera view in the Yaw
-//					if (isFacingCoverRHS)
-//					{
-//						//CamManager->ViewYawMin = -90.0f;
-//						//CamManager->ViewYawMax = 0.0f;
-//					}
-//					else
-//					{
-//						//CamManager->ViewYawMin = -180.0f;
-//						//CamManager->ViewYawMax = -90.0f;
-//					}
-//				}
-//
-//			}
-//		}
-//	}
-//}
 
 // Firing from the center of camera
 FVector ABaseCharacter::GetPawnViewLocation() const
@@ -477,9 +303,6 @@ void ABaseCharacter::UpdateSpeed()
 		}
 	}
 	CharacterSpeed = TargetSpeed;
-
-
-
 }
 
 void ABaseCharacter::UpdateDirection()
@@ -547,8 +370,8 @@ void ABaseCharacter::ShowCharacterOutline(bool CanShow)
 	GetComponents<UStaticMeshComponent>(StaticComponents);
 	for (int32 ComponentIdx = 0; ComponentIdx < StaticComponents.Num(); ++ComponentIdx)
 	{
-		auto currentSkel = Cast<UStaticMeshComponent>(StaticComponents[ComponentIdx]);
-		currentSkel->SetRenderCustomDepth(CanShow);
+		auto currentStatic = Cast<UStaticMeshComponent>(StaticComponents[ComponentIdx]);
+		currentStatic->SetRenderCustomDepth(CanShow);
 	}
 }
 
