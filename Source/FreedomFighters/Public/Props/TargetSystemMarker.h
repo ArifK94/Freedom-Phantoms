@@ -17,5 +17,8 @@ private:
 public:	
 	ATargetSystemMarker();
 
+	UWidgetComponent* GetMarkerComponent() {
+		return MarkerComponent;
+	}
 
 };

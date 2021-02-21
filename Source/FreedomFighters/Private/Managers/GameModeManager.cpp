@@ -10,7 +10,7 @@ bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 		{
 			FVector CoverPoint = CoverPoints[i].Location;
 
-			if (CoverLocation.Owner != CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 20.0f)) {
+			if (CoverLocation.Owner != CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 40.0f)) {
 				return true;
 			}
 		}

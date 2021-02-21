@@ -123,19 +123,19 @@ void ACombatAIController::Tick(float DeltaTime)
 			ShootAtEnemy();
 		}
 
-		//if (EnemyActor != nullptr)
-		//{
-		//	FindCover(EnemyActor);
-		//	HasChosenCover = false;
-		//}
-		//else
-		//{
-		//	// pick a random cover point
-		//	if (!HasChosenCover)
-		//	{
-		//		FindCover(OwningCombatCharacter);
-		//	}
-		//}
+		if (EnemyActor != nullptr)
+		{
+			FindCover(EnemyActor);
+			HasChosenCover = false;
+		}
+		else
+		{
+			// pick a random cover point
+			if (!HasChosenCover)
+			{
+				FindCover(OwningCombatCharacter);
+			}
+		}
 	}
 }
 
@@ -581,26 +581,34 @@ void ACombatAIController::TakeCover()
 {
 	if (CoverLocationPoints.Num() <= 0)
 	{
-		// if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-		// 	OwningCombatCharacter->BeginCrouch();
+		//if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+		//	OwningCombatCharacter->BeginCrouch();
 	}
 	else
 	{
-		// if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-		// 	OwningCombatCharacter->BeginCrouch();
+		//if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+		//	OwningCombatCharacter->BeginCrouch();
 
-		EPathFollowingRequestResult::Type Movment = MoveToTarget(0.0f);
+		if (!HasChosenLocation)
+		{
+			CurrentMovement = MoveToTarget(0.0f);
+		}
 
-		// if (Movment == EPathFollowingRequestResult::AlreadyAtGoal)
-		// {
-		// 	if (!OwningCombatCharacter->IsTakingCover())
-		// 		OwningCombatCharacter->TakeCover();
-		// }
-		// else
-		// {
-		// 	if (OwningCombatCharacter->IsTakingCover())
-		// 		OwningCombatCharacter->EscapeCover();
-		// }
+
+		switch (CurrentMovement)
+		{
+		case EPathFollowingRequestResult::Failed:
+			HasChosenLocation = false;
+			break;
+		case EPathFollowingRequestResult::AlreadyAtGoal:
+			HasChosenLocation = false;
+			break;
+		case EPathFollowingRequestResult::RequestSuccessful:
+			HasChosenLocation = true;
+			break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -633,6 +641,24 @@ void ACombatAIController::CheckCommanderOrder()
 			break;
 		}
 
-		MoveToTarget(TargetRadius);
+		if (!HasChosenLocation)
+		{
+			CurrentMovement = MoveToTarget(TargetRadius);
+		}
+
+		switch (CurrentMovement)
+		{
+		case EPathFollowingRequestResult::Failed:
+			HasChosenLocation = false;
+			break;
+		case EPathFollowingRequestResult::AlreadyAtGoal:
+			HasChosenLocation = false;
+			break;
+		case EPathFollowingRequestResult::RequestSuccessful:
+			HasChosenLocation = true;
+			break;
+		default:
+			break;
+		}
 	}
 }

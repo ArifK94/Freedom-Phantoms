@@ -72,6 +72,8 @@ private:
 	bool IsCoolingDown;
 	bool StayCombatAlert;
 	bool HasChosenCover;
+	bool HasChosenLocation;
+	EPathFollowingRequestResult::Type CurrentMovement;
 
 	FVector ChosenCoverPoint;
 

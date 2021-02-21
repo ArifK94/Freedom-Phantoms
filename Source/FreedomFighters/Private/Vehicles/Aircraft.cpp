@@ -7,13 +7,14 @@
 
 #include "Weapons/Weapon.h"
 
+#include "CustomComponents/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/SplineComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/PostProcessComponent.h"
-#include "CustomComponents/HealthComponent.h"
+#include "Components/WidgetComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -396,31 +397,32 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 		{
 			FTargetSystemNode* TargetNode = TargetSystemNodes[i];
 
-			// add or update target marker based on character location
-			FActorSpawnParameters SpawnParams;
-
-			if (TargetNode->Marker == nullptr)
-			{
-					TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, TargetNode->Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
-				
-			}
-			else
-			{
-				TargetNode->Marker->SetActorLocation(TargetNode->Character->GetActorLocation());
-			}
-
-
 			// remove dead characters from the targetting system
 			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(TargetNode->Character->GetComponentByClass(UHealthComponent::StaticClass()));
 
 			if (CurrentHealth)
 			{
-				if (!CurrentHealth->IsAlive())
+				if (CurrentHealth->IsAlive())
+				{
+					// add or update target marker based on character location
+					FActorSpawnParameters SpawnParams;
+
+					if (TargetNode->Marker == nullptr)
+					{
+						TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, TargetNode->Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
+
+					}
+					else
+					{
+						TargetNode->Marker->SetActorLocation(TargetNode->Character->GetActorLocation());
+					}
+				}
+				else
 				{
 					if (TargetNode->Marker) {
-						TargetNode->Marker->Destroy();
+						TargetNode->Marker->GetMarkerComponent()->SetHiddenInGame(true);
 					}
-					TargetSystemNodes.RemoveAt(i);
+					//TargetSystemNodes.RemoveAt(i);
 				}
 			}
 		}
