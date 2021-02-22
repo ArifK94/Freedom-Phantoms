@@ -7,6 +7,8 @@
 #include "WeaponClip.generated.h"
 
 class AWeaponBullet;
+class USoundAttenuation;
+
 UCLASS()
 class FREEDOMFIGHTERS_API AWeaponClip : public AActor
 {
@@ -27,7 +29,10 @@ private:
 	int CurrentAmmo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
-	USoundBase* HighImpactSound;
+		USoundBase* HighImpactSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundAttenuation* ClipAttenuationSettings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Bullet", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf< AWeaponBullet> WeaponBulletClass;

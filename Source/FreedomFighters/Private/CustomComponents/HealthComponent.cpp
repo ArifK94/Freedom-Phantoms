@@ -62,14 +62,18 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	OnDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+	if (DamageCauser) {
+		OnDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+	}
 }
 
 void UHealthComponent::OnRadialDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, FVector Origin, FHitResult Hit, AController* InstigatedBy, AActor* DamageCauser)
 {
 	AActor* MyOwner = DamageCauser->GetOwner();
 
-	OnDamage(DamagedActor, Damage, DamageType, InstigatedBy, MyOwner);
+	if (MyOwner) {
+		OnDamage(DamagedActor, Damage, DamageType, InstigatedBy, MyOwner);
+	}
 }
 
 void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)

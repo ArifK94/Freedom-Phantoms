@@ -72,7 +72,7 @@ private:
 	bool IsCoolingDown;
 	bool StayCombatAlert;
 	bool HasChosenCover;
-	bool HasChosenLocation;
+	bool CanFindCover;
 	EPathFollowingRequestResult::Type CurrentMovement;
 
 	FVector ChosenCoverPoint;
@@ -86,12 +86,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int NumberOfCoverTraces;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<AActor> WeaponClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
-		AActor* WeaponObj;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		float MovementDebugSphereRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		float MovementDebugLifetTime;
 
 public:
 	ACombatAIController();
@@ -102,6 +100,8 @@ private:
 	void UpdateCharacterMovement();
 
 	void UpdatCombatAlert();
+
+	void UpdateSprint();
 
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
 
@@ -116,8 +116,8 @@ private:
 	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius);
 
 	void CheckCommanderOrder();
-
-	void FindCover(AActor* TargetActor);
+	
+	void GenerateCoverPoints(AActor* TargetActor);
 
 	FVector GetClosestCoverPoint(AActor* TargetActor);
 

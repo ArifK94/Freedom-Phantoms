@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "Controllers/CombatAIController.h"
 
 #include "Managers/GameModeManager.h"
@@ -39,6 +37,9 @@ ACombatAIController::ACombatAIController()
 	CoverRadius = 10000.0f;
 	NumberOfCoverTraces = 35.0f;
 	TargetSightRadius = 7000.0f;
+
+	MovementDebugSphereRadius = 10.0f;
+	MovementDebugLifetTime = 1.0f;
 }
 
 void ACombatAIController::Init()
@@ -99,6 +100,8 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
 
 	Init();
+
+	CanFindCover = true;
 }
 
 void ACombatAIController::Tick(float DeltaTime)
@@ -120,22 +123,42 @@ void ACombatAIController::Tick(float DeltaTime)
 		if (PerceptionComp != nullptr)
 		{
 			SetVisionAngle();
-			ShootAtEnemy();
 		}
 
-		if (EnemyActor != nullptr)
+		ShootAtEnemy();
+
+		if (CanFindCover)
 		{
-			FindCover(EnemyActor);
-			HasChosenCover = false;
-		}
-		else
-		{
-			// pick a random cover point
-			if (!HasChosenCover)
+			if (EnemyActor)
 			{
-				FindCover(OwningCombatCharacter);
+				if (!HasChosenCover)
+				{
+					GenerateCoverPoints(EnemyActor);
+				}
 			}
+			else
+			{
+				// pick a random cover point
+				if (!HasChosenCover)
+				{
+					GenerateCoverPoints(OwningCombatCharacter);
+				}
+			}
+
+			//// check if current cover has been taken,
+			//// if so, then find another cover point
+			//FWorldCoverPoint CoverLocation = FWorldCoverPoint();
+			//CoverLocation.Location = TargetDestination;
+			//CoverLocation.Owner = OwningCombatCharacter;
+
+			//if (GameModeManager->IsCoverPointTaken(CoverLocation))
+			//{
+			//	HasChosenCover = false;
+			//}
 		}
+
+
+		UpdateSprint();
 	}
 }
 
@@ -146,13 +169,19 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 		return EPathFollowingRequestResult::Failed;
 	}
 
-	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
-
 	EPathFollowingRequestResult::Type Movment = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
+
+	return Movment;
+}
+
+
+void ACombatAIController::UpdateSprint()
+{
+	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
 
 	float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 
-	if (CurrentTargetDistance > (AcceptanceRadius * 2.5f))
+	if (CurrentTargetDistance > AcceptanceRadius)
 	{
 		OwningCombatCharacter->BeginSprint();
 	}
@@ -160,8 +189,6 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 	{
 		OwningCombatCharacter->EndSprint();
 	}
-
-	return Movment;
 }
 
 void ACombatAIController::UpdateCharacterMovement()
@@ -183,7 +210,7 @@ void ACombatAIController::UpdatCombatAlert()
 		StayCombatAlert = true;
 	}
 
-	if (OwningCombatCharacter->IsReloading() || OwningCombatCharacter->IsSprinting())
+	if (OwningCombatCharacter->IsReloading() || (OwningCombatCharacter->IsSprinting() && EnemyActor == nullptr))
 	{
 		StayCombatAlert = false;
 	}
@@ -306,7 +333,6 @@ AActor* ACombatAIController::FindEnemy()
 							OwningCombatCharacter->TargetFound();
 						}
 					}
-
 				}
 			}
 		}
@@ -447,7 +473,7 @@ void ACombatAIController::StartFiring()
 	}
 }
 
-void ACombatAIController::FindCover(AActor* TargetActor)
+void ACombatAIController::GenerateCoverPoints(AActor* TargetActor)
 {
 	if (TargetActor == nullptr)
 	{
@@ -536,7 +562,10 @@ void ACombatAIController::FindCover(AActor* TargetActor)
 	if (CoverLocationPoints.Num() > 0)
 	{
 		TargetDestination = GetClosestCoverPoint(TargetActor);
-		HasChosenCover = true;
+		DrawDebugSphere(GetWorld(), TargetDestination, MovementDebugSphereRadius, 20, FColor::Purple, false, MovementDebugLifetTime, 0, 2);
+
+		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+			OwningCombatCharacter->GetCharacterMovement()->UnCrouch();
 	}
 
 	TakeCover();
@@ -581,30 +610,27 @@ void ACombatAIController::TakeCover()
 {
 	if (CoverLocationPoints.Num() <= 0)
 	{
-		//if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-		//	OwningCombatCharacter->BeginCrouch();
+		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+			OwningCombatCharacter->BeginCrouch();
 	}
 	else
 	{
-		//if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-		//	OwningCombatCharacter->BeginCrouch();
+		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+			OwningCombatCharacter->GetCharacterMovement()->UnCrouch();
 
-		if (!HasChosenLocation)
-		{
-			CurrentMovement = MoveToTarget(0.0f);
-		}
-
+		CurrentMovement = MoveToTarget(0.0f);
 
 		switch (CurrentMovement)
 		{
 		case EPathFollowingRequestResult::Failed:
-			HasChosenLocation = false;
+			HasChosenCover = false;
 			break;
 		case EPathFollowingRequestResult::AlreadyAtGoal:
-			HasChosenLocation = false;
+			if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+				OwningCombatCharacter->BeginCrouch();
 			break;
 		case EPathFollowingRequestResult::RequestSuccessful:
-			HasChosenLocation = true;
+			HasChosenCover = true;
 			break;
 		default:
 			break;
@@ -632,33 +658,21 @@ void ACombatAIController::CheckCommanderOrder()
 		switch (CommanderRecruit.CurrentCommand)
 		{
 		case CommanderOrders::Attack:
+			TargetDestination = CommanderRecruit.TargetLocation;
+			CanFindCover = true;
+			break;
 		case CommanderOrders::Defend:
 			TargetDestination = CommanderRecruit.TargetLocation;
 			TargetRadius = 0.0f;
+			CanFindCover = true;
 			break;
 		case CommanderOrders::Follow:
 			TargetDestination = Commander->GetActorLocation();
+			CanFindCover = false;
 			break;
 		}
 
-		if (!HasChosenLocation)
-		{
-			CurrentMovement = MoveToTarget(TargetRadius);
-		}
 
-		switch (CurrentMovement)
-		{
-		case EPathFollowingRequestResult::Failed:
-			HasChosenLocation = false;
-			break;
-		case EPathFollowingRequestResult::AlreadyAtGoal:
-			HasChosenLocation = false;
-			break;
-		case EPathFollowingRequestResult::RequestSuccessful:
-			HasChosenLocation = true;
-			break;
-		default:
-			break;
-		}
+		CurrentMovement = MoveToTarget(TargetRadius);
 	}
 }

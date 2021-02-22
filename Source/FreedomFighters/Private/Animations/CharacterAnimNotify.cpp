@@ -2,6 +2,7 @@
 
 #include "Characters/BaseCharacter.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
 
 void UCharacterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
@@ -13,6 +14,12 @@ void UCharacterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		{
 			if (MoveBackToCover) {
 				Character->MoveToCover();
+			}
+
+			if (ShouldCrouch)
+			{
+				if (!Character->GetCharacterMovement()->IsCrouching())
+					Character->BeginCrouch();
 			}
 		}
 	}

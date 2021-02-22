@@ -66,8 +66,6 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	SpawnAC130();
 }
 
 void ACustomPlayerController::AddUIWidgets()

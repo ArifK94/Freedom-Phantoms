@@ -7,8 +7,6 @@
 #include "Components/SphereComponent.h"
 #include "Components/AudioComponent.h"
 
-#include "DestructibleComponent.h"
-
 #include "PhysicalMaterials/PhysicalMaterial.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -16,8 +14,6 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "DrawDebugHelpers.h"
-
-#include <array>
 
 AWeaponBullet::AWeaponBullet()
 {
@@ -188,29 +184,6 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 		}
-
-		//SetDestructableHit(HitComp);
-
-		UDestructibleComponent* DestructibleComponent = Cast<UDestructibleComponent>(OtherActor->GetComponentByClass(UDestructibleComponent::StaticClass()));
-
-		if (DestructibleComponent) {
-			//DestructibleComponent->SetCollisionProfileName(TEXT("Destructible"));
-			DestructibleComponent->SetSimulatePhysics(true);
-		}
-
-	}
-}
-
-
-
-
-void AWeaponBullet::SetDestructableHit(UPrimitiveComponent* OtherComp)
-{
-	UDestructibleComponent* DestructibleComponent = Cast<UDestructibleComponent>(OtherComp);
-
-	if (DestructibleComponent) {
-		//DestructibleComponent->SetCollisionProfileName(TEXT("Destructible"));
-		DestructibleComponent->SetSimulatePhysics(true);
 	}
 }
 

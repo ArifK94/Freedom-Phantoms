@@ -54,7 +54,6 @@ void AWeaponClip::DropClip(USkeletalMeshComponent* MeshComp, FName ClipSocket, T
 			DroppedClip->getClipMesh()->SetCollisionProfileName("WeaponProjectile");
 			DroppedClip->getClipMesh()->OnComponentHit.AddDynamic(this, &AWeaponClip::OnClipHit);
 			DroppedClip->SetLifeSpan(10);
-
 		}
 	}
 }
@@ -63,8 +62,6 @@ void AWeaponClip::OnClipHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
-		//	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("I Hit: %s"), *OtherActor->GetName()));
-
 		UWorld* world = GetWorld();
 
 		float x = 0.0f, y = 0.0f, z = 0.0f;
@@ -75,7 +72,7 @@ void AWeaponClip::OnClipHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		{
 			if (HighImpactSound != NULL)
 			{
-				UGameplayStatics::PlaySoundAtLocation(world, HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), .5f);
+				UGameplayStatics::PlaySoundAtLocation(world, HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), .5f, 1.f,0.f, ClipAttenuationSettings);
 			}
 		}
 

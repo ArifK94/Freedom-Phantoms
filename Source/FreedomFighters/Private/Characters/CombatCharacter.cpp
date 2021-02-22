@@ -128,6 +128,10 @@ void ACombatCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (isDead) {
+		return;
+	}
+
 	if (currentWeaponObj)
 	{
 		UpdateCombatMode();
@@ -147,7 +151,6 @@ void ACombatCharacter::Tick(float DeltaTime)
 		UpdateHandGaurdIK();
 		setCharacterRotation();
 		disableSprint();
-
 	}
 }
 
@@ -157,14 +160,18 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 	if (isDead)
 	{
+		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().DeathSound != NULL)
+		{
+			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().DeathSound;
+			VoiceAudioComponent->Play();
+		}
+
 		if (currentWeaponObj) {
 			currentWeaponObj->getMeshComp()->SetCollisionProfileName(TEXT("Weapon"));
 			currentWeaponObj->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			currentWeaponObj->getMeshComp()->SetSimulatePhysics(true);
 		}
 	}
-
-
 }
 
 AWeapon* ACombatCharacter::GetCurrentWeapon()
@@ -609,6 +616,10 @@ void ACombatCharacter::FriendlyKilled()
 
 void ACombatCharacter::EnemyKilled()
 {
+	if (!isDead) {
+		return;
+	}
+
 	if (!HasPlayedEnemyKilledSound && !isDead)
 	{
 		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().EnemyDownSound != NULL)

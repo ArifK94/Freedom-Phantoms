@@ -4,13 +4,29 @@
 
 bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 {
+
 	if (CoverPoints.Num() > 0)
 	{
+		int DuplicateAmount = -1;
+		ACharacter* PlayerCharacter = nullptr;
+
 		for (int i = 0; i < CoverPoints.Num(); i++)
 		{
 			FVector CoverPoint = CoverPoints[i].Location;
 
-			if (CoverLocation.Owner != CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 40.0f)) {
+			if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 2.0f))
+			{
+				DuplicateAmount++;
+			}
+
+			if (DuplicateAmount > 0)
+			{
+				return true;
+			}
+
+
+			if (CoverLocation.Owner != CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 15.0f)) 
+			{
 				return true;
 			}
 		}
