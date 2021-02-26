@@ -117,4 +117,8 @@ public:
 	{
 		HitInfo = Hit;
 	}
+
+	TeamFaction GetSelectedFaction() {
+		return SelectedFaction;
+	}
 };

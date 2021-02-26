@@ -93,8 +93,9 @@ void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (FactionClass)
+	if (FactionClass) {
 		FactionObj = NewObject<UFactionManager>((UObject*)GetTransientPackage(), FactionClass);
+	}
 
 	if (FactionObj)
 	{

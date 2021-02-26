@@ -14,6 +14,8 @@ class USoundBase;
 class AHeadgear;
 class ALoadout;
 class AAircraft;
+class ACombatCharacter;
+class ACommanderCharacter;
 
 USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase
@@ -59,21 +61,6 @@ struct FVoiceClipSet : public FTableRowBase
 
 
 
-USTRUCT(BlueprintType)
-struct FSquadSet : public FTableRowBase
-{
-	GENERATED_BODY()
-		
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		FName Name;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		uint8 MaxOperatives;
-
-};
-
-
-
 
 UCLASS(Blueprintable)
 class FREEDOMFIGHTERS_API UFactionManager : public UObject
@@ -103,14 +90,17 @@ private:
 		TArray<FVoiceClipSet> VoiceClips;
 	FVoiceClipSet SelectedVoiceClipSet;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Squads", meta = (AllowPrivateAccess = "true"))
-		TArray<FSquadSet> SquadSet;
-	FSquadSet SelectedSquad;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Characters", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ACombatCharacter> OperativeCharacterClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Characters", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ACommanderCharacter> CommanderCharacterClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vehicles", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AAircraft> AC130Class;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Props", meta = (AllowPrivateAccess = "true"))
+		UMaterialInterface* FlagMaterial;
 
 private:
 	UWorld* CurrentWorld;
@@ -137,7 +127,19 @@ public:
 	ALoadout* SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Owner);
 
 
+	TSubclassOf<ACombatCharacter> GetOperativeCharacterClass() {
+		return OperativeCharacterClass;
+	}
+	TSubclassOf<ACommanderCharacter> GetCommanderCharacterClass() {
+		return CommanderCharacterClass;
+	}
+
 	TSubclassOf<AAircraft> GetAC130Class() {
 		return AC130Class;
+	}
+
+	UMaterialInterface* GetFlagMaterial() {
+		return FlagMaterial;
+
 	}
 };
