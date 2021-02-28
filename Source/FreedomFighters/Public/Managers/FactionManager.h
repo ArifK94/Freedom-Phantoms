@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -57,6 +55,9 @@ struct FVoiceClipSet : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* DeathFallSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* StrongholdCaptureSound;
 };
 
 

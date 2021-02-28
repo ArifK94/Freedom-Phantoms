@@ -9,12 +9,14 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/BoxComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "NavigationSystem.h"
+
 
 AStronghold::AStronghold()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	Root = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
 
 	StrongholdArea = CreateDefaultSubobject<UBoxComponent>(TEXT("StrongholdArea"));
@@ -130,7 +132,8 @@ void AStronghold::SpawnCharacter()
 	{
 		UBoxComponent* SpawnArea = SpawnAreas[i];
 
-		FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
+		//FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
+		FVector Location = UNavigationSystemV1::GetRandomReachablePointInRadius(GetWorld(), SpawnArea->GetComponentLocation(), 100.0f);
 
 		ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionManager->GetOperativeCharacterClass(), Location, SpawnArea->GetComponentRotation(), SpawnParams);
 

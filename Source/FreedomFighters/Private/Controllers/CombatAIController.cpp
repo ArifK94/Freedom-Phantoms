@@ -142,6 +142,7 @@ void ACombatAIController::Tick(float DeltaTime)
 				if (!HasChosenCover)
 				{
 					GenerateCoverPoints(OwningCombatCharacter);
+					HasChosenCover = true;
 				}
 			}
 
@@ -508,10 +509,15 @@ void ACombatAIController::GenerateCoverPoints(AActor* TargetActor)
 			FHitResult HitResult;
 			bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, NavLocation.Location, ECC_Visibility);
 
+
+			DrawDebugLine(GetWorld(), Start, NavLocation.Location, FColor::Emerald, true, 5.0f, 0, 1.0f);
+
 			// get all hit results which hit an obstacle
 			if (bHit)
 			{
 				FVector LocationPoint = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
+
+				DrawDebugLine(GetWorld(), Start, LocationPoint, FColor::Magenta, true, 5.0f, 0, 1.0f);
 
 				FWorldCoverPoint CoverLocation = FWorldCoverPoint();
 				CoverLocation.Location = LocationPoint;
