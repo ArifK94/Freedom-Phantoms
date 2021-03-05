@@ -1,5 +1,3 @@
-
-
 #include "GUI/OrderIcon.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -9,7 +7,6 @@
 AOrderIcon::AOrderIcon()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
@@ -26,9 +23,9 @@ AOrderIcon::AOrderIcon()
 	Head->CanCharacterStepUpOn = ECB_No;
 	Head->SetGenerateOverlapEvents(false);
 
-	CanAnimate = true;
-
 	DisplayCountDown = 5.0f;
+	TargetPosAmountZ = 3.0f;
+
 }
 
 void AOrderIcon::SetRotation(AActor* TargetActor)
@@ -40,6 +37,7 @@ void AOrderIcon::SetRotation(AActor* TargetActor)
 	TargetRotation = UKismetMathLibrary::MakeRotator(90.0f, 0.0f, Yaw + 90.0f);
 
 	Head->SetWorldRotation(TargetRotation);
+
 }
 
 void AOrderIcon::BeginPlay()
@@ -47,20 +45,16 @@ void AOrderIcon::BeginPlay()
 	Super::BeginPlay();
 
 	OrginalPos = Head->GetRelativeLocation();
+	TargetPos = OrginalPos;
+	TargetPos.Z = OrginalPos.Z * TargetPosAmountZ;
 }
 
 void AOrderIcon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	CurveTimeline.TickTimeline(DeltaTime);
 
 	SetRotation(GetOwner());
-
-	if (CanAnimate && Root->IsVisible())
-	{
-		//FVector handguardLoadTarget = UKismetMathLibrary::VInterpTo(OrginalPos, FVector(0, 0, OrginalPos.Z * 10.0f), DeltaTime, 5.0f);
-		//Head->SetRelativeLocation(handguardLoadTarget);
-	}
-
 }
 
 
@@ -73,6 +67,25 @@ void AOrderIcon::BeginCountDown()
 	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &AOrderIcon::HideIcon, 1.0f, false, DisplayCountDown);
 }
 
+// transitioning the head component back and fourth
+void AOrderIcon::BeginAnimation(float Value)
+{
+	FVector handguardLoadTarget = UKismetMathLibrary::VLerp(OrginalPos, TargetPos, Value);
+	Head->SetRelativeLocation(handguardLoadTarget);
+
+	// if reached the end then reverse
+	if (Value >= .9f)
+	{
+		CurveTimeline.Reverse();
+	}
+
+	// if reached near the start again then start
+	if (Value <= .1f)
+	{
+		CurveTimeline.Play();
+	}
+}
+
 void AOrderIcon::ShowIcon()
 {
 	// save CPU time if root is already visible
@@ -81,6 +94,17 @@ void AOrderIcon::ShowIcon()
 	}
 
 	Root->SetVisibility(true, true);
+
+	// start the animation if the curve float has been provided
+	if (CurveFloat)
+	{
+		FOnTimelineFloat TimelineProgress;
+		TimelineProgress.BindUFunction(this, FName("BeginAnimation"));
+		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+		CurveTimeline.SetLooping(false);
+		CurveTimeline.SetPlayRate(1.0f / 2.0f);
+		CurveTimeline.PlayFromStart();
+	}
 
 	BeginCountDown();
 }
@@ -101,4 +125,5 @@ void AOrderIcon::HideIcon()
 
 	Root->SetVisibility(false, true);
 	GetWorldTimerManager().ClearTimer(THandler_Countdown);
+	CurveTimeline.Stop();
 }
