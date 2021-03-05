@@ -4,7 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CustomPlayerController.generated.h"
 
-
+class ACommanderCharacter;
 class ACombatCharacter;
 class AAircraft;
 class AWeapon;
@@ -16,6 +16,7 @@ class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
 private:
 	APawn* OwningPawn;
 	ACombatCharacter* OwningCombatCharacter;
+	ACommanderCharacter* OwningCommander;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		AAircraft* ControlledAircraft;

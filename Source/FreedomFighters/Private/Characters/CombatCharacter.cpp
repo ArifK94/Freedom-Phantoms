@@ -509,7 +509,7 @@ void ACombatCharacter::ToggleLaser()
 
 void ACombatCharacter::ToggleLight()
 {
-	if (currentWeaponObj)
+	if (currentWeaponObj && currentWeaponObj->getWeaponAttachmentObj() && currentWeaponObj->getWeaponAttachmentObj()->getTorchLight())
 	{
 		currentWeaponObj->getWeaponAttachmentObj()->getTorchLight()->ToggleBeam();
 	}

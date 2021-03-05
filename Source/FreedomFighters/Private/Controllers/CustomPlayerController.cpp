@@ -3,6 +3,7 @@
 #include "Managers/FactionManager.h"
 
 #include "Characters/CombatCharacter.h"
+#include "Characters/CommanderCharacter.h"
 
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponBullet.h"
@@ -10,7 +11,6 @@
 #include "Vehicles/Aircraft.h"
 
 #include "Kismet/GameplayStatics.h"
-
 #include "Blueprint/UserWidget.h"
 
 ACustomPlayerController::ACustomPlayerController()
@@ -60,6 +60,8 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	OwningPawn = InPawn;
 
 	OwningCombatCharacter = Cast<ACombatCharacter>(OwningPawn);
+	OwningCommander = Cast<ACommanderCharacter>(OwningPawn);
+
 	AddUIWidgets();
 }
 
@@ -104,6 +106,12 @@ void ACustomPlayerController::AddUIWidgets()
 		{
 			HealthWidget->AddToViewport();
 		}
+	}
+
+	// Commander UI
+	if (OwningCommander)
+	{
+		OwningCommander->AddUIWidget();
 	}
 }
 

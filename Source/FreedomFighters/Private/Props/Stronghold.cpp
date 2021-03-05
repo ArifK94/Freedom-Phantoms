@@ -132,8 +132,8 @@ void AStronghold::SpawnCharacter()
 	{
 		UBoxComponent* SpawnArea = SpawnAreas[i];
 
-		//FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
-		FVector Location = UNavigationSystemV1::GetRandomReachablePointInRadius(GetWorld(), SpawnArea->GetComponentLocation(), 100.0f);
+		FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
+		//FVector Location = UNavigationSystemV1::GetRandomReachablePointInRadius(GetWorld(), SpawnArea->GetComponentLocation(), 100.0f);
 
 		ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionManager->GetOperativeCharacterClass(), Location, SpawnArea->GetComponentRotation(), SpawnParams);
 

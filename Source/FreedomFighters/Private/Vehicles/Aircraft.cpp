@@ -422,7 +422,6 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 					if (TargetNode->Marker) {
 						TargetNode->Marker->GetMarkerComponent()->SetHiddenInGame(true);
 					}
-					//TargetSystemNodes.RemoveAt(i);
 				}
 			}
 		}

@@ -26,19 +26,19 @@ EBTNodeResult::Type UOrderTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 		{
 			auto CommanderRecruit = OwningCharacter->getCommander()->GetRecruitInfo(Pawn);
 
-			if (CommanderRecruit.Recruit == Pawn)
+			if (CommanderRecruit->Recruit == Pawn)
 			{
-				switch (CommanderRecruit.CurrentCommand)
+				switch (CommanderRecruit->CurrentCommand)
 				{
 				case  CommanderOrders::Attack:
-					AttackOrder(CommanderRecruit.TargetLocation);
+					AttackOrder(CommanderRecruit->TargetLocation);
 					return EBTNodeResult::Succeeded;
 				case CommanderOrders::Defend:
-					DefendOrder(CommanderRecruit.TargetLocation);
+					DefendOrder(CommanderRecruit->TargetLocation);
 					return EBTNodeResult::Succeeded;
 				case CommanderOrders::Follow:
-					CommanderRecruit.TargetLocation = OwningCharacter->getCommander()->GetActorLocation();
-					FollowOrder(CommanderRecruit.TargetLocation);
+					CommanderRecruit->TargetLocation = OwningCharacter->getCommander()->GetActorLocation();
+					FollowOrder(CommanderRecruit->TargetLocation);
 					return EBTNodeResult::Succeeded;
 				}
 			}

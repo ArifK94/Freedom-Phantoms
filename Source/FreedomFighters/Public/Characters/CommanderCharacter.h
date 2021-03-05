@@ -12,6 +12,7 @@
 class ABaseCharacter;
 class ACombatCharacter;
 class AOrderIcon;
+class UUserWidget;
 
 UENUM(BlueprintType)
 enum class CommanderOrders : uint8
@@ -21,12 +22,16 @@ enum class CommanderOrders : uint8
 	Follow		UMETA(DisplayName = "Follow")
 };
 
-USTRUCT(BlueprintType)
-struct FCommanderRecruit : public FTableRowBase
+UCLASS(Blueprintable)
+class FREEDOMFIGHTERS_API UCommanderRecruit : public UObject
 {
 	GENERATED_BODY()
 
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+protected:
+	virtual bool IsSupportedForNetworking() const override { return true; };
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		ACombatCharacter* Recruit;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -35,14 +40,30 @@ struct FCommanderRecruit : public FTableRowBase
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		CommanderOrders CurrentCommand;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		FVector TargetLocation;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		FTimerHandle THandler_ResponseSound;
 
-};
 
+	// the array will contain all the order icons so only one icon is displayed at a time
+	// the arrays will be seperated between overhead and posotion icons as the expected result can have both types of icons displaying at the same time
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		TArray<AOrderIcon*> OrderIconArray;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		TArray<AOrderIcon*> OverheadIconArray;
+
+
+	AOrderIcon* AttackPositionIcon;
+	AOrderIcon* HighValueTargetOverheadIcon; // this icon of HVT acts like a position icon overhead of an enemy
+	AOrderIcon* DefendPositionIcon;
+
+	AOrderIcon* AttackOverheadIcon;
+	AOrderIcon* DefendOverheadIcon;
+	AOrderIcon* FollowOverheadIcon;
+};
 
 UCLASS()
 class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter
@@ -51,12 +72,10 @@ class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
-		TArray<FCommanderRecruit> ActiveRecruits;
+		TArray<UCommanderRecruit*> ActiveRecruits;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
-		FCommanderRecruit CurrentRecruit;
-
-	ACombatCharacter* LastRecruit;
+		UCommanderRecruit* CurrentRecruit;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		ACombatCharacter* PotentialRecruit;
@@ -68,27 +87,38 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		uint8 MaxRecruits;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Order Icon", meta = (AllowPrivateAccess = "true"))
-		UMaterialInterface* AttackMaterial;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Order Icon", meta = (AllowPrivateAccess = "true"))
-		UMaterialInterface* DefendMaterial;
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> CommanderHUDWidgetClass;
+	UUserWidget* CommanderHUDWidget;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<AOrderIcon> OrderIcon;
-	AOrderIcon* OrderIconObj;
+		TSubclassOf<AOrderIcon> AttackPositionIconClass;
 
-	TArray<AOrderIcon*> OrderIconArray;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AOrderIcon> HighValueTargetOverheadClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AOrderIcon> DefendIconPositionClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AOrderIcon> AttackOverheadClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AOrderIcon> DefendOverheadClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AOrderIcon> FollowOverheadClass;
 
 
 public:
 	ACommanderCharacter();
 
 	UFUNCTION(BlueprintCallable, Category = "Commander")
-		FCommanderRecruit GetRecruitInfo(AActor* TargetActor);
+		UCommanderRecruit* GetRecruitInfo(AActor* TargetActor);
+
+	void AddUIWidget();
 
 private:
 
@@ -110,16 +140,17 @@ private:
 
 	void FollowCommander();
 
-	void SpawnIcon(UMaterialInterface* Material);
+	void UpdateOverheadIcon();
 
-	bool HasOrderIcon();
+	void SpawnIcon(TSubclassOf<AOrderIcon> IconClass, AOrderIcon*& Icon);
+	void DisplayPositionIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons, FVector Location);
+	void DisplayOverheadIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons);
 
 	void IncrementCurrentRecruit();
 
-	void PlayVoiceSound(USoundBase* SoundBase, FCommanderRecruit TargetRecruit);
+	void PlayVoiceSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit);
 
-	void PlayAcknowledgeSound(FCommanderRecruit TargetRecruit);
-
+	void PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit);
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -127,9 +158,4 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
-
-public:
-	FCommanderRecruit GetCurrentRecruit() {
-		return  CurrentRecruit;
-	}
 };

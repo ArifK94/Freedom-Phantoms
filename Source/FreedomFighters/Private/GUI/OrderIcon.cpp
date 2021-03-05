@@ -25,6 +25,8 @@ AOrderIcon::AOrderIcon()
 	Head->SetCollisionProfileName(TEXT("NoCollision"));
 	Head->CanCharacterStepUpOn = ECB_No;
 	Head->SetGenerateOverlapEvents(false);
+
+	CanAnimate = true;
 }
 
 void AOrderIcon::SetRotation(AActor* TargetActor)
@@ -51,10 +53,10 @@ void AOrderIcon::Tick(float DeltaTime)
 
 	SetRotation(GetOwner());
 
-	if (Root->IsVisible())
+	if (CanAnimate && Root->IsVisible())
 	{
-		FVector handguardLoadTarget = UKismetMathLibrary::VInterpTo(OrginalPos, FVector(0, 0, OrginalPos.Z * 10.0f), DeltaTime, 5.0f);
-		Head->SetRelativeLocation(handguardLoadTarget);
+		//FVector handguardLoadTarget = UKismetMathLibrary::VInterpTo(OrginalPos, FVector(0, 0, OrginalPos.Z * 10.0f), DeltaTime, 5.0f);
+		//Head->SetRelativeLocation(handguardLoadTarget);
 	}
 
 }
@@ -65,30 +67,32 @@ void AOrderIcon::BeginCountDown()
 	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &AOrderIcon::HideIcon, 1.0f, false, 3.0f);
 }
 
-void AOrderIcon::ShowIcon(FVector Location)
+void AOrderIcon::ShowIcon()
 {
-	SetActorLocation(Location);
+	// save CPU time if root is already visible
+	if (Root->IsVisible()) {
+		return;
+	}
 
 	Root->SetVisibility(true, true);
 
 	BeginCountDown();
 }
 
+void AOrderIcon::ShowIcon(FVector Location)
+{
+	SetActorLocation(Location);
+
+	ShowIcon();
+}
+
 void AOrderIcon::HideIcon()
 {
-	Root->SetVisibility(false, true);
+	// save CPU time if root is already not visible
+	if (!Root->IsVisible()) {
+		return;
+	}
 
+	Root->SetVisibility(false, true);
 	GetWorldTimerManager().ClearTimer(THandler_Countdown);
 }
-
-void AOrderIcon::SetIconMaterial(UMaterialInterface* Material)
-{
-	Head->SetMaterial(0, Material);
-
-}
-
-void AOrderIcon::AnimateTransform()
-{
-
-}
-

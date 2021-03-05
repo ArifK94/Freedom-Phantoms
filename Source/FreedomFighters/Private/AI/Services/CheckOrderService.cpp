@@ -20,8 +20,8 @@ void UCheckOrderService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Node
 
 	if (Commander != nullptr)
 	{
-		FCommanderRecruit Recruit = Commander->GetRecruitInfo(Pawn);
+		//UCommanderRecruit* Recruit = Commander->GetRecruitInfo(Pawn);
 
-		BlackboardComp->SetValueAsEnum(BB_OrderType.SelectedKeyName, (uint8)Recruit.CurrentCommand);
+		//BlackboardComp->SetValueAsEnum(BB_OrderType.SelectedKeyName, (uint8)Recruit->CurrentCommand);
 	}
 }

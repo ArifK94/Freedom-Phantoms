@@ -10,6 +10,7 @@
 
 #include "Containers/Array.h"
 #include "Engine.h"
+#include "Components/WidgetComponent.h"
 
 ACommanderCharacter::ACommanderCharacter()
 {
@@ -29,6 +30,23 @@ void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 
 
+void ACommanderCharacter::AddUIWidget()
+{
+	UWorld* World = GetWorld();
+
+	if (!World) return;
+
+	if (CommanderHUDWidgetClass)
+	{
+		CommanderHUDWidget = CreateWidget<UUserWidget>(World, CommanderHUDWidgetClass);
+
+		if (CommanderHUDWidget)
+		{
+			CommanderHUDWidget->AddToViewport();
+		}
+	}
+}
+
 void ACommanderCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -41,6 +59,8 @@ void ACommanderCharacter::Tick(float DeltaTime)
 	if (ActiveRecruits.Num() <= MaxRecruits) {
 		CheckRecruit();
 	}
+
+	UpdateOverheadIcon();
 }
 
 
@@ -66,10 +86,6 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 	{
 		if (OutHit.bBlockingHit)
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("You are hitting: %s"), *OutHit.GetActor()->GetName()));
-			//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Impact Point: %s"), *OutHit.ImpactPoint.ToString()));
-			//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Normal Point: %s"), *OutHit.ImpactNormal.ToString()));
-
 			return OutHit;
 		}
 	}
@@ -98,7 +114,6 @@ void ACommanderCharacter::CheckRecruit()
 			{
 				PotentialRecruit->ShowCharacterOutline(true);
 				PotentialRecruit->setCommandingOfficer(this);
-				LastRecruit = PotentialRecruit;
 			}
 		}
 	}
@@ -112,20 +127,54 @@ void ACommanderCharacter::Recruit()
 {
 	if (PotentialRecruit != nullptr)
 	{
-		FCommanderRecruit follower = FCommanderRecruit();
-		follower.Recruit = PotentialRecruit;
-		follower.CurrentCommand = CommanderOrders::Follow;
-		follower.TargetLocation = GetActorLocation();
+		UCommanderRecruit* follower = NewObject<UCommanderRecruit>(this);
+		follower->Recruit = PotentialRecruit;
+		follower->CurrentCommand = CommanderOrders::Follow;
+		follower->TargetLocation = GetActorLocation();
+
+		SpawnIcon(AttackOverheadClass, follower->AttackOverheadIcon);
+		SpawnIcon(AttackPositionIconClass, follower->AttackPositionIcon);
+		SpawnIcon(HighValueTargetOverheadClass, follower->HighValueTargetOverheadIcon);
+		SpawnIcon(DefendIconPositionClass, follower->DefendPositionIcon);
+		SpawnIcon(DefendOverheadClass, follower->DefendOverheadIcon);
+		SpawnIcon(FollowOverheadClass, follower->FollowOverheadIcon);
+
+		TArray<AOrderIcon*> OrderIconArray;
+		OrderIconArray.Add(follower->AttackPositionIcon);
+		OrderIconArray.Add(follower->HighValueTargetOverheadIcon);
+		OrderIconArray.Add(follower->DefendPositionIcon);
+
+		TArray<AOrderIcon*> OverheadIconArray;
+		OverheadIconArray.Add(follower->AttackOverheadIcon);
+		OverheadIconArray.Add(follower->DefendOverheadIcon);
+		OverheadIconArray.Add(follower->FollowOverheadIcon);
+
+		// set the overhead to attach to its head socket location
+		// so the position can follow the character without updating the position every frame
+		FVector HeadLocation = follower->Recruit->GetMesh()->GetSocketLocation(follower->Recruit->GetHeadSocket());
+
+		for (AOrderIcon* OverheadIcon : OverheadIconArray)
+		{
+			OverheadIcon->AttachToComponent(follower->Recruit->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+			OverheadIcon->SetActorLocation(HeadLocation);
+		}
+
+		follower->OrderIconArray = OrderIconArray;
+		follower->OverheadIconArray = OverheadIconArray;
+
+		// display the follow overhead icon each time someone has been recruited
+		DisplayOverheadIcon(follower->FollowOverheadIcon, OverheadIconArray);
 
 		ActiveRecruits.Add(follower);
 
-		if (ActiveRecruits.Num() == 0)
+		if (ActiveRecruits.Num() <= 0)
 		{
 			CurrentRecruitIndex = 0;
 			CurrentRecruit = follower;
 		}
 
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().RecruitSound, ActiveRecruits[CurrentRecruitIndex]);
+		CurrentRecruit = follower;
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().RecruitSound, follower);
 
 		ResetTargetActor();
 	}
@@ -137,150 +186,195 @@ bool ACommanderCharacter::IfAlreadyRecruited(AActor* TargetActor)
 {
 	for (auto follower : ActiveRecruits)
 	{
-		if (follower.Recruit == TargetActor)
+		if (follower->Recruit == TargetActor)
 			return true;
 	}
 
 	return false;
 }
 
-FCommanderRecruit ACommanderCharacter::GetRecruitInfo(AActor* TargetActor)
+UCommanderRecruit* ACommanderCharacter::GetRecruitInfo(AActor* TargetActor)
 {
 	for (auto follower : ActiveRecruits)
 	{
-		if (follower.Recruit == TargetActor)
+		if (follower->Recruit == TargetActor)
 		{
 			return follower;
 		}
 	}
 
-	return FCommanderRecruit();
+	return nullptr;
 }
 
 void ACommanderCharacter::Attack()
 {
+	if (ActiveRecruits.Num() <= 0) {
+		return;
+	}
+
+	FHitResult HitResult = GetCurrentTraceHit(50000.0f);
+
+	if (HitResult.bBlockingHit)
+	{
+		AActor* CurrentTargetActor = HitResult.GetActor();
+
+		ABaseCharacter* Character = Cast<ABaseCharacter>(CurrentTargetActor);
+		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
+		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
+
+		CurrentRecruit->CurrentCommand = CommanderOrders::Attack;
+		DisplayOverheadIcon(CurrentRecruit->AttackOverheadIcon, CurrentRecruit->OverheadIconArray);
+
+		if (Character && CurrentHealth && CurrentHealth->IsAlive() && !isFriendly) // if hit result is an enemy character
+		{
+			CurrentRecruit->HighValueTarget = Character;
+			CurrentRecruit->TargetLocation = CurrentTargetActor->GetActorLocation();
+
+			DisplayPositionIcon(CurrentRecruit->HighValueTargetOverheadIcon, CurrentRecruit->OrderIconArray, CurrentRecruit->TargetLocation);
+		}
+		else // show the attack position 
+		{
+			CurrentRecruit->HighValueTarget = nullptr;
+			CurrentRecruit->TargetLocation = HitResult.ImpactPoint;
+
+			DisplayPositionIcon(CurrentRecruit->AttackPositionIcon, CurrentRecruit->OrderIconArray, CurrentRecruit->TargetLocation);
+		}
+	}
+
+	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().AttackSound, CurrentRecruit);
+
+	IncrementCurrentRecruit();
+}
+
+// overhead icons need to be updated to get the respective character's position every frame
+void ACommanderCharacter::UpdateOverheadIcon()
+{
 	if (ActiveRecruits.Num() > 0)
 	{
-		FHitResult HitResult = GetCurrentTraceHit(50000.0f);
-
-		if (HitResult.bBlockingHit)
+		for (int i = 0; i < ActiveRecruits.Num(); i++)
 		{
-			AActor* CurrentTargetActor = HitResult.GetActor();
-			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
-			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
 
-			if (CurrentHealth && CurrentHealth->IsAlive() && !isFriendly)
+			if (ActiveRecruits[i]->CurrentCommand == CommanderOrders::Attack)
 			{
-				ActiveRecruits[CurrentRecruitIndex].TargetLocation = CurrentTargetActor->GetActorLocation();
-			}
-			else
-			{
-				ActiveRecruits[CurrentRecruitIndex].TargetLocation = HitResult.ImpactPoint;
+				ABaseCharacter* TargetCharacter = ActiveRecruits[i]->HighValueTarget;
+
+				if (TargetCharacter != nullptr)
+				{
+					UHealthComponent* TargetHealth = Cast<UHealthComponent>(TargetCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
+
+					if (TargetHealth->IsAlive())
+					{
+						FVector HeadLocation = TargetCharacter->GetMesh()->GetSocketLocation(TargetCharacter->GetHeadSocket());
+
+						//CurrentRecruit->HighValueTargetOverheadIcon->ShowIcon(HeadLocation);
+					}
+					else
+					{
+						//ActiveRecruits[i]->HighValueTargetOverheadIcon->HideIcon();
+					}
+				}
 			}
 		}
-
-		ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Attack;
-		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
-
-
-		SpawnIcon(AttackMaterial);
-
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().AttackSound, ActiveRecruits[CurrentRecruitIndex]);
-
-		IncrementCurrentRecruit();
 	}
 }
 
 void ACommanderCharacter::DefendArea()
 {
-	if (ActiveRecruits.Num() > 0)
-	{
-		if (isAiming)
-		{
-			FHitResult HitResult = GetCurrentTraceHit(50000.0f);
-
-			if (HitResult.bBlockingHit)
-			{
-				ActiveRecruits[CurrentRecruitIndex].TargetLocation = HitResult.ImpactPoint;
-			}
-		}
-		else
-		{
-			ActiveRecruits[CurrentRecruitIndex].TargetLocation = GetActorLocation();
-		}
-
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound, ActiveRecruits[CurrentRecruitIndex]);
-
-		ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Defend;
-		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
-
-
-		SpawnIcon(DefendMaterial);
-
-		IncrementCurrentRecruit();
+	if (ActiveRecruits.Num() <= 0) {
+		return;
 	}
 
+	if (isAiming)
+	{
+		FHitResult HitResult = GetCurrentTraceHit(50000.0f);
+
+		if (HitResult.bBlockingHit)
+		{
+			CurrentRecruit->TargetLocation = HitResult.ImpactPoint;
+		}
+	}
+	else
+	{
+		CurrentRecruit->TargetLocation = GetActorLocation();
+	}
+
+	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound, CurrentRecruit);
+
+	CurrentRecruit->CurrentCommand = CommanderOrders::Defend;
+
+	DisplayPositionIcon(CurrentRecruit->DefendPositionIcon, CurrentRecruit->OrderIconArray, CurrentRecruit->TargetLocation);
+	DisplayOverheadIcon(CurrentRecruit->DefendOverheadIcon, CurrentRecruit->OverheadIconArray);
+
+	IncrementCurrentRecruit();
 }
 
 void ACommanderCharacter::FollowCommander()
 {
 	if (ActiveRecruits.Num() > 0)
 	{
-		ActiveRecruits[CurrentRecruitIndex].CurrentCommand = CommanderOrders::Follow;
-		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
+		CurrentRecruit->CurrentCommand = CommanderOrders::Follow;
 
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().FollowSound, ActiveRecruits[CurrentRecruitIndex]);
+		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().FollowSound, CurrentRecruit);
 
-		ActiveRecruits[CurrentRecruitIndex].TargetLocation = GetActorLocation();
+		CurrentRecruit->TargetLocation = GetActorLocation();
+
+		DisplayOverheadIcon(CurrentRecruit->FollowOverheadIcon, CurrentRecruit->OverheadIconArray);
 
 		IncrementCurrentRecruit();
 	}
 }
 
-void ACommanderCharacter::SpawnIcon(UMaterialInterface* Material)
+
+
+void ACommanderCharacter::SpawnIcon(TSubclassOf<AOrderIcon> IconClass, AOrderIcon*& Icon)
 {
-	if (HasOrderIcon())
-	{
-		OrderIconArray[CurrentRecruitIndex]->SetIconMaterial(Material);
-		OrderIconArray[CurrentRecruitIndex]->ShowIcon(ActiveRecruits[CurrentRecruitIndex].TargetLocation);
-	}
-	else
-	{
-		UWorld* world = GetWorld();
+	UWorld* World = GetWorld();
 
-		if (world)
-		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = this;
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-			OrderIconObj = world->SpawnActor<AOrderIcon>(OrderIcon, ActiveRecruits[CurrentRecruitIndex].TargetLocation, FRotator::ZeroRotator, SpawnParams);
-
-			if (OrderIconObj)
-			{
-				OrderIconArray.Add(OrderIconObj);
-				OrderIconObj->SetIconMaterial(Material);
-				OrderIconObj->ShowIcon(ActiveRecruits[CurrentRecruitIndex].TargetLocation);
-			}
-		}
+	if (!World) {
+		return;
 	}
 
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	Icon = World->SpawnActor<AOrderIcon>(IconClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (Icon)
+	{
+		Icon->HideIcon();
+	}
 }
 
-bool ACommanderCharacter::HasOrderIcon()
+
+void ACommanderCharacter::DisplayPositionIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons, FVector Location)
 {
-	if (OrderIconArray.Num() == ActiveRecruits.Num())
+	for (AOrderIcon* Icon : Icons)
 	{
-		for (int i = 0; i < OrderIconArray.Num(); i++)
+		if (Icon == SelectedIcon)
 		{
-			if (OrderIconArray[CurrentRecruitIndex] == OrderIconArray[i])
-			{
-				return true;
-			}
+			Icon->ShowIcon(Location);
+		}
+		else
+		{
+			Icon->HideIcon();
 		}
 	}
+}
 
-	return false;
+void ACommanderCharacter::DisplayOverheadIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons)
+{
+	for (AOrderIcon* Icon : Icons)
+	{
+		if (Icon == SelectedIcon)
+		{
+			Icon->ShowIcon();
+		}
+		else
+		{
+			Icon->HideIcon();
+		}
+	}
 }
 
 void ACommanderCharacter::IncrementCurrentRecruit()
@@ -294,9 +388,11 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 		CurrentRecruitIndex = 0;
 	}
 
+	CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
+
 }
 
-void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, FCommanderRecruit TargetRecruit)
+void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit)
 {
 	// Play acknowledged sound after commander's voice sound has finished playing the order
 	if (FactionObj != nullptr && SoundBase != nullptr)
@@ -305,14 +401,15 @@ void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, FCommanderRecrui
 		VoiceAudioComponent->Play();
 	}
 
+	GetWorldTimerManager().ClearTimer(TargetRecruit->THandler_ResponseSound);
 	FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(this, &ACommanderCharacter::PlayAcknowledgeSound, TargetRecruit);
-	GetWorldTimerManager().SetTimer(TargetRecruit.THandler_ResponseSound, RespawnDelegate, 1.0f, false, SoundBase->GetDuration());
+	GetWorldTimerManager().SetTimer(TargetRecruit->THandler_ResponseSound, RespawnDelegate, 1.0f, false, SoundBase->GetDuration());
 }
 
-void ACommanderCharacter::PlayAcknowledgeSound(FCommanderRecruit TargetRecruit)
+void ACommanderCharacter::PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit)
 {
-	TargetRecruit.Recruit->getVoiceAudioComponent()->Sound = TargetRecruit.Recruit->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
-	TargetRecruit.Recruit->getVoiceAudioComponent()->Play();
+	TargetRecruit->Recruit->getVoiceAudioComponent()->Sound = TargetRecruit->Recruit->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
+	TargetRecruit->Recruit->getVoiceAudioComponent()->Play();
 }
 
 void ACommanderCharacter::ResetTargetActor()

@@ -125,38 +125,38 @@ void ACombatAIController::Tick(float DeltaTime)
 			SetVisionAngle();
 		}
 
-		ShootAtEnemy();
+		//ShootAtEnemy();
 
-		if (CanFindCover)
-		{
-			if (EnemyActor)
-			{
-				if (!HasChosenCover)
-				{
-					GenerateCoverPoints(EnemyActor);
-				}
-			}
-			else
-			{
-				// pick a random cover point
-				if (!HasChosenCover)
-				{
-					GenerateCoverPoints(OwningCombatCharacter);
-					HasChosenCover = true;
-				}
-			}
+		//if (CanFindCover)
+		//{
+		//	if (EnemyActor)
+		//	{
+		//		if (!HasChosenCover)
+		//		{
+		//			GenerateCoverPoints(EnemyActor);
+		//		}
+		//	}
+		//	else
+		//	{
+		//		// pick a random cover point
+		//		if (!HasChosenCover)
+		//		{
+		//			GenerateCoverPoints(OwningCombatCharacter);
+		//			HasChosenCover = true;
+		//		}
+		//	}
 
-			//// check if current cover has been taken,
-			//// if so, then find another cover point
-			//FWorldCoverPoint CoverLocation = FWorldCoverPoint();
-			//CoverLocation.Location = TargetDestination;
-			//CoverLocation.Owner = OwningCombatCharacter;
+		//	//// check if current cover has been taken,
+		//	//// if so, then find another cover point
+		//	//FWorldCoverPoint CoverLocation = FWorldCoverPoint();
+		//	//CoverLocation.Location = TargetDestination;
+		//	//CoverLocation.Owner = OwningCombatCharacter;
 
-			//if (GameModeManager->IsCoverPointTaken(CoverLocation))
-			//{
-			//	HasChosenCover = false;
-			//}
-		}
+		//	//if (GameModeManager->IsCoverPointTaken(CoverLocation))
+		//	//{
+		//	//	HasChosenCover = false;
+		//	//}
+		//}
 
 
 		UpdateSprint();
@@ -653,22 +653,22 @@ void ACombatAIController::CheckCommanderOrder()
 		return;
 	}
 
-	FCommanderRecruit CommanderRecruit = Commander->GetRecruitInfo(OwningCombatCharacter);
+	UCommanderRecruit* CommanderRecruit = Commander->GetRecruitInfo(OwningCombatCharacter);
 
-	if (CommanderRecruit.Recruit != nullptr && CommanderRecruit.Recruit == OwningCombatCharacter)
+	if (CommanderRecruit != nullptr && CommanderRecruit->Recruit != nullptr && CommanderRecruit->Recruit == OwningCombatCharacter)
 	{
 		StayCombatAlert = true;
 
 		float TargetRadius = AcceptanceRadius;
 
-		switch (CommanderRecruit.CurrentCommand)
+		switch (CommanderRecruit->CurrentCommand)
 		{
 		case CommanderOrders::Attack:
-			TargetDestination = CommanderRecruit.TargetLocation;
+			TargetDestination = CommanderRecruit->TargetLocation;
 			CanFindCover = true;
 			break;
 		case CommanderOrders::Defend:
-			TargetDestination = CommanderRecruit.TargetLocation;
+			TargetDestination = CommanderRecruit->TargetLocation;
 			TargetRadius = 0.0f;
 			CanFindCover = true;
 			break;
