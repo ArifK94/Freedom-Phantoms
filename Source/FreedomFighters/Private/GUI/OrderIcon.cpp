@@ -27,6 +27,8 @@ AOrderIcon::AOrderIcon()
 	Head->SetGenerateOverlapEvents(false);
 
 	CanAnimate = true;
+
+	DisplayCountDown = 5.0f;
 }
 
 void AOrderIcon::SetRotation(AActor* TargetActor)
@@ -64,7 +66,11 @@ void AOrderIcon::Tick(float DeltaTime)
 
 void AOrderIcon::BeginCountDown()
 {
-	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &AOrderIcon::HideIcon, 1.0f, false, 3.0f);
+	if (DisplayCountDown <= 0.0f) {
+		return;
+	}
+
+	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &AOrderIcon::HideIcon, 1.0f, false, DisplayCountDown);
 }
 
 void AOrderIcon::ShowIcon()

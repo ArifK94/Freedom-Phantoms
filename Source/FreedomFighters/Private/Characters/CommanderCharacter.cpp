@@ -1,16 +1,13 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Characters/CommanderCharacter.h"
 #include "GUI/OrderIcon.h"
-
 #include "Managers/FactionManager.h"
-
 #include "CustomComponents/HealthComponent.h"
 
 #include "Containers/Array.h"
 #include "Engine.h"
 #include "Components/WidgetComponent.h"
+#include "NavigationSystem.h"
+
 
 ACommanderCharacter::ACommanderCharacter()
 {
@@ -59,8 +56,7 @@ void ACommanderCharacter::Tick(float DeltaTime)
 	if (ActiveRecruits.Num() <= MaxRecruits) {
 		CheckRecruit();
 	}
-
-	UpdateOverheadIcon();
+	UpdateActiveRecruits();
 }
 
 
@@ -216,26 +212,30 @@ void ACommanderCharacter::Attack()
 
 	if (HitResult.bBlockingHit)
 	{
-		AActor* CurrentTargetActor = HitResult.GetActor();
+		AActor* TargetActor = HitResult.GetActor();
 
-		ABaseCharacter* Character = Cast<ABaseCharacter>(CurrentTargetActor);
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
-		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
+		ABaseCharacter* EnemyCharacter = Cast<ABaseCharacter>(TargetActor);
+		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(TargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
+		bool isFriendly = UHealthComponent::IsFriendly(this, TargetActor);
 
 		CurrentRecruit->CurrentCommand = CommanderOrders::Attack;
 		DisplayOverheadIcon(CurrentRecruit->AttackOverheadIcon, CurrentRecruit->OverheadIconArray);
 
-		if (Character && CurrentHealth && CurrentHealth->IsAlive() && !isFriendly) // if hit result is an enemy character
+		if (EnemyCharacter && CurrentHealth && CurrentHealth->IsAlive() && !isFriendly) // if hit result is an enemy character
 		{
-			CurrentRecruit->HighValueTarget = Character;
-			CurrentRecruit->TargetLocation = CurrentTargetActor->GetActorLocation();
+			CurrentRecruit->HighValueTarget = EnemyCharacter;
+			CurrentRecruit->TargetLocation = GetPositionToNav(TargetActor->GetActorLocation()).Location;
 
-			DisplayPositionIcon(CurrentRecruit->HighValueTargetOverheadIcon, CurrentRecruit->OrderIconArray, CurrentRecruit->TargetLocation);
+
+			// attach the HVT overhead icon to the target head, rather than updating the location every frame of the enemy's head position
+			FVector HeadLocation = EnemyCharacter->GetMesh()->GetSocketLocation(EnemyCharacter->GetHeadSocket());
+			CurrentRecruit->HighValueTargetOverheadIcon->AttachToComponent(EnemyCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+			DisplayPositionIcon(CurrentRecruit->HighValueTargetOverheadIcon, CurrentRecruit->OrderIconArray, HeadLocation);
 		}
 		else // show the attack position 
 		{
 			CurrentRecruit->HighValueTarget = nullptr;
-			CurrentRecruit->TargetLocation = HitResult.ImpactPoint;
+			CurrentRecruit->TargetLocation = GetPositionToNav(HitResult.ImpactPoint).Location;
 
 			DisplayPositionIcon(CurrentRecruit->AttackPositionIcon, CurrentRecruit->OrderIconArray, CurrentRecruit->TargetLocation);
 		}
@@ -244,38 +244,6 @@ void ACommanderCharacter::Attack()
 	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().AttackSound, CurrentRecruit);
 
 	IncrementCurrentRecruit();
-}
-
-// overhead icons need to be updated to get the respective character's position every frame
-void ACommanderCharacter::UpdateOverheadIcon()
-{
-	if (ActiveRecruits.Num() > 0)
-	{
-		for (int i = 0; i < ActiveRecruits.Num(); i++)
-		{
-
-			if (ActiveRecruits[i]->CurrentCommand == CommanderOrders::Attack)
-			{
-				ABaseCharacter* TargetCharacter = ActiveRecruits[i]->HighValueTarget;
-
-				if (TargetCharacter != nullptr)
-				{
-					UHealthComponent* TargetHealth = Cast<UHealthComponent>(TargetCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
-
-					if (TargetHealth->IsAlive())
-					{
-						FVector HeadLocation = TargetCharacter->GetMesh()->GetSocketLocation(TargetCharacter->GetHeadSocket());
-
-						//CurrentRecruit->HighValueTargetOverheadIcon->ShowIcon(HeadLocation);
-					}
-					else
-					{
-						//ActiveRecruits[i]->HighValueTargetOverheadIcon->HideIcon();
-					}
-				}
-			}
-		}
-	}
 }
 
 void ACommanderCharacter::DefendArea()
@@ -290,12 +258,12 @@ void ACommanderCharacter::DefendArea()
 
 		if (HitResult.bBlockingHit)
 		{
-			CurrentRecruit->TargetLocation = HitResult.ImpactPoint;
+			CurrentRecruit->TargetLocation = GetPositionToNav(HitResult.ImpactPoint).Location;
 		}
 	}
 	else
 	{
-		CurrentRecruit->TargetLocation = GetActorLocation();
+		CurrentRecruit->TargetLocation = GetPositionToNav(GetActorLocation()).Location;
 	}
 
 	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound, CurrentRecruit);
@@ -324,7 +292,68 @@ void ACommanderCharacter::FollowCommander()
 	}
 }
 
+/// <summary>
+/// Ensures the target position is on the navmesh as well as the icons being placed on the nav
+/// </summary>
+/// <param name="Position"></param>
+/// <returns></returns>
+FNavLocation ACommanderCharacter::GetPositionToNav(FVector Position)
+{
+	FNavLocation NavLocation;
 
+	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+
+	bool navResult = NavigationArea->ProjectPointToNavigation(Position, NavLocation);
+
+	return NavLocation;
+}
+
+// Remove dead recuits
+// Remove any icons if recuit or HVT character are dead
+void ACommanderCharacter::UpdateActiveRecruits()
+{
+	if (ActiveRecruits.Num() <= 0) {
+		return;
+	}
+
+	for (int i = 0; i < ActiveRecruits.Num(); i++)
+	{
+		UCommanderRecruit* Recruit = ActiveRecruits[i];
+		ACombatCharacter* RecruitCharacter = Recruit->Recruit;
+
+
+		UHealthComponent* RecruitHealth = Cast<UHealthComponent>(RecruitCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
+
+		if (RecruitHealth->IsAlive())
+		{
+			ABaseCharacter* TargetCharacter = Recruit->HighValueTarget;
+
+			// check if HVT is alive
+			// if not, then remove the overhead icon
+			if (TargetCharacter != nullptr)
+			{
+				UHealthComponent* TargetHealth = Cast<UHealthComponent>(TargetCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
+
+				if (!TargetHealth->IsAlive())
+				{
+					// remove the HVT overhead icon from the target character's head position
+					Recruit->HighValueTargetOverheadIcon->HideIcon();
+
+					// remove target character from memory
+					Recruit->HighValueTarget = nullptr;
+				}
+			}
+		}
+		else
+		{
+			// remove all icons on display, if any
+			HideAllIcons(Recruit->OrderIconArray);
+			HideAllIcons(Recruit->OverheadIconArray);
+
+			ActiveRecruits.RemoveAt(i);
+		}
+	}
+}
 
 void ACommanderCharacter::SpawnIcon(TSubclassOf<AOrderIcon> IconClass, AOrderIcon*& Icon)
 {
@@ -374,6 +403,14 @@ void ACommanderCharacter::DisplayOverheadIcon(AOrderIcon* SelectedIcon, TArray<A
 		{
 			Icon->HideIcon();
 		}
+	}
+}
+
+void ACommanderCharacter::HideAllIcons(TArray<AOrderIcon*> Icons)
+{
+	for (AOrderIcon* Icon : Icons)
+	{
+		Icon->HideIcon();
 	}
 }
 

@@ -24,6 +24,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Order Icon", meta = (AllowPrivateAccess = "true"))
 		bool CanAnimate;
 
+	/** Anything less or equal to 0.0f will be considered as unlimited */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Order Icon", meta = (AllowPrivateAccess = "true"))
+		float DisplayCountDown;
+
 private:
 	FTimerHandle THandler_Countdown;
 

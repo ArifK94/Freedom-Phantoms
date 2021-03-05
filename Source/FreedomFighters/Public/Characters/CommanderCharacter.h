@@ -140,11 +140,15 @@ private:
 
 	void FollowCommander();
 
-	void UpdateOverheadIcon();
+	void UpdateActiveRecruits();
+
+	// modify target position so it is placed on the nav bounds
+	FNavLocation GetPositionToNav(FVector Position);
 
 	void SpawnIcon(TSubclassOf<AOrderIcon> IconClass, AOrderIcon*& Icon);
 	void DisplayPositionIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons, FVector Location);
 	void DisplayOverheadIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons);
+	void HideAllIcons(TArray<AOrderIcon*> Icons);
 
 	void IncrementCurrentRecruit();
 
