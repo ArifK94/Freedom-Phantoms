@@ -14,6 +14,8 @@ class ACombatCharacter;
 class AOrderIcon;
 class UUserWidget;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRemoveRecruitSignature, ACommanderCharacter*, Commander, int, Index);
+
 UENUM(BlueprintType)
 enum class CommanderOrders : uint8
 {
@@ -132,6 +134,9 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "Commander")
 		bool IfAlreadyRecruited(AActor* TargetActor);
 
+	UPROPERTY(BlueprintAssignable, Category = "Commander")
+		FOnRemoveRecruitSignature OnRemoveRecruit;
+
 	void ResetTargetActor();
 
 	void Attack();
@@ -141,6 +146,9 @@ private:
 	void FollowCommander();
 
 	void UpdateActiveRecruits();
+
+	// Each time a recruit dies, the array needs to be sorted by shifting all elements to previous empty elements
+	void SortActiveRecruits(int StartingPoint);
 
 	// modify target position so it is placed on the nav bounds
 	FNavLocation GetPositionToNav(FVector Position);

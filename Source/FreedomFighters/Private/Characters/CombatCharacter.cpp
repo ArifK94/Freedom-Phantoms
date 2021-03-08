@@ -157,8 +157,6 @@ void ACombatCharacter::Tick(float DeltaTime)
 
 void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser);
-
 	if (isDead)
 	{
 		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().DeathSound != NULL)
@@ -173,6 +171,8 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 			currentWeaponObj->getMeshComp()->SetSimulatePhysics(true);
 		}
 	}
+
+	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser);
 }
 
 AWeapon* ACombatCharacter::GetCurrentWeapon()
@@ -387,16 +387,18 @@ void ACombatCharacter::UpdateCombatMode()
 
 void ACombatCharacter::UpdateFire()
 {
-	if (currentWeaponObj)
-	{
-		if (isSwappingWeapon || isReloading || isRepellingDown) {
-			EndFire();
-		}
-
-		if (CanAutoReloadWeapon && currentWeaponObj->getCurrentAmmo() <= 0) {
-			BeginReload();
-		}
+	if (currentWeaponObj == nullptr) {
+		return;
 	}
+
+	if (isSwappingWeapon || isReloading || isRepellingDown || isDead) {
+		EndFire();
+	}
+
+	if (CanAutoReloadWeapon && currentWeaponObj->getCurrentAmmo() <= 0) {
+		BeginReload();
+	}
+
 
 }
 
@@ -446,20 +448,22 @@ void ACombatCharacter::EndReload()
 
 void ACombatCharacter::UpdateReload()
 {
-	if (currentWeaponObj)
-	{
-		isReloading = currentWeaponObj->getIsReloading();
-
-		if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
-		{
-			HasPlayedReloadingSound = true;
-			if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
-			{
-				VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
-				VoiceAudioComponent->Play();
-			}
-		}
+	if (isDead || currentWeaponObj == nullptr) {
+		return;
 	}
+
+	isReloading = currentWeaponObj->getIsReloading();
+
+	//if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
+	//{
+	//	HasPlayedReloadingSound = true;
+	//	if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
+	//	{
+	//		VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
+	//		VoiceAudioComponent->Play();
+	//	}
+	//}
+
 }
 
 
@@ -605,14 +609,16 @@ ACombatCharacter* ACombatCharacter::FindNearestEnemy(float TargetRange)
 
 void ACombatCharacter::FriendlyKilled()
 {
-	if (!isDead)
-	{
-		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().FriendlyDownSound != NULL)
-		{
-			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().FriendlyDownSound;
-			VoiceAudioComponent->Play();
-		}
+	if (isDead) {
+		return;
 	}
+
+	//if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().FriendlyDownSound != NULL)
+	//{
+	//	VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().FriendlyDownSound;
+	//	VoiceAudioComponent->Play();
+	//}
+
 }
 
 void ACombatCharacter::EnemyKilled()

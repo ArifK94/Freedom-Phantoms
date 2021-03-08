@@ -163,13 +163,12 @@ void ACommanderCharacter::Recruit()
 
 		ActiveRecruits.Add(follower);
 
-		if (ActiveRecruits.Num() <= 0)
+		if (ActiveRecruits.Num() <= 1)
 		{
 			CurrentRecruitIndex = 0;
-			CurrentRecruit = follower;
+			CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
 		}
 
-		CurrentRecruit = follower;
 		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().RecruitSound, follower);
 
 		ResetTargetActor();
@@ -350,9 +349,76 @@ void ACommanderCharacter::UpdateActiveRecruits()
 			HideAllIcons(Recruit->OrderIconArray);
 			HideAllIcons(Recruit->OverheadIconArray);
 
-			ActiveRecruits.RemoveAt(i);
+			// if the current recruit died,
+			if (CurrentRecruit == Recruit)
+			{
+				// then update the current recruit to the next recruit in the list
+				if (i + 1 < ActiveRecruits.Num())
+				{
+					CurrentRecruit = ActiveRecruits[i + 1];
+				}
+				else // otherwise update the current recruit back to the first recruit in the list
+				{
+					// check if there is another recruit in the list 
+					if (ActiveRecruits.Num() > 0)
+					{
+						CurrentRecruit = ActiveRecruits[0];
+					}
+					else
+					{
+						CurrentRecruit = nullptr;
+					}
+				}
+			}
+
+			SortActiveRecruits(i);
 		}
 	}
+}
+
+/// <summary>
+/// Shift all elements to the left
+/// removing any dead/ empty UI recruit elements by shifting them to the right
+/// </summary>
+/// <param name="StartingPoint"></param>
+void ACommanderCharacter::SortActiveRecruits(int StartingPoint)
+{
+	// NewPosition is used to send the new index for the OnRemoveRecruit event to be used in the UI Widget since Current index is used to mark the current recruit on the UI
+	int NewPosition = StartingPoint;
+
+	for (int i = StartingPoint; i < ActiveRecruits.Num(); i++) // start the from index of the recruit who is dead
+	{
+
+		// When swapping, if the CurrentRecruitIndex is after the starting point then this needs to be updated
+		if (CurrentRecruitIndex == i)
+		{
+			// update the current index & current recruit
+			if (i - 1 > -1)
+			{
+				CurrentRecruitIndex = i - 1;
+			}
+			else
+			{
+				CurrentRecruitIndex = 0;
+			}
+
+			CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
+		}
+
+		// Only swap if there is another element afterwards
+		int nextElement = i + 1;
+		if (nextElement < ActiveRecruits.Num())
+		{
+			ActiveRecruits.Swap(i, nextElement);
+			NewPosition = nextElement;
+		}
+
+	}
+
+	ActiveRecruits.RemoveAt(NewPosition);
+
+
+	OnRemoveRecruit.Broadcast(this, NewPosition);
 }
 
 void ACommanderCharacter::SpawnIcon(TSubclassOf<AOrderIcon> IconClass, AOrderIcon*& Icon)
@@ -445,6 +511,10 @@ void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, UCommanderRecrui
 
 void ACommanderCharacter::PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit)
 {
+	if (TargetRecruit == nullptr || TargetRecruit->Recruit == nullptr || TargetRecruit->Recruit->getFactionObj() == nullptr) {
+		return;
+	}
+
 	TargetRecruit->Recruit->getVoiceAudioComponent()->Sound = TargetRecruit->Recruit->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
 	TargetRecruit->Recruit->getVoiceAudioComponent()->Play();
 }

@@ -125,7 +125,7 @@ void ACombatAIController::Tick(float DeltaTime)
 			SetVisionAngle();
 		}
 
-		//ShootAtEnemy();
+		ShootAtEnemy();
 
 		//if (CanFindCover)
 		//{
