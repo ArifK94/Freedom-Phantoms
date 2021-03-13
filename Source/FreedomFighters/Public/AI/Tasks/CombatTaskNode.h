@@ -14,23 +14,17 @@ class FREEDOMFIGHTERS_API UCombatTaskNode : public UBTTaskNode
 {
 	GENERATED_BODY()
 		
-		virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
 private:
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FBlackboardKeySelector BB_EnemyActor;
 
-private:
+	ACombatCharacter* OwningCombatCharacter;
 
 	FTimerHandle THandler_TimeBetweenShots;
-	FTimerHandle THandler_TimeReloadWeapon;
 
-
-	ACombatCharacter* OwningCharacter;
 private:
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
 	void EndFiring();
 
-	void ReloadWeapon();
-	
 };

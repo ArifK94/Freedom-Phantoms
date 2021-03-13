@@ -40,6 +40,9 @@ ACombatAIController::ACombatAIController()
 
 	MovementDebugSphereRadius = 10.0f;
 	MovementDebugLifetTime = 1.0f;
+
+	TimeBetweenShotsMin = 2.0f;
+	TimeBetweenShotsMax = 3.0f;
 }
 
 void ACombatAIController::Init()
@@ -79,17 +82,11 @@ void ACombatAIController::BeginPlay()
 
 	Init();
 
-	CurrentDeltaTime = 0.0f;
-	BulletFireCountDown = 0.0f;
-	FiringWaitTime = FMath::RandRange(3.0f, 5.0f);
-
 	// run behavior tree if specified
 	if (BTAsset)
 	{
 		AAIController::RunBehaviorTree(BTAsset);
 	}
-
-
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -102,6 +99,9 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	Init();
 
 	CanFindCover = true;
+
+	GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &ACombatAIController::ShootAtEnemy, 1.0f, true, 0.0f);
+	GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true, 0.0f);
 }
 
 void ACombatAIController::Tick(float DeltaTime)
@@ -125,7 +125,7 @@ void ACombatAIController::Tick(float DeltaTime)
 			SetVisionAngle();
 		}
 
-		ShootAtEnemy();
+		FindEnemy();
 
 		//if (CanFindCover)
 		//{
@@ -222,7 +222,10 @@ void ACombatAIController::UpdatCombatAlert()
 	}
 	else
 	{
-		OwningCombatCharacter->EndAim();
+		if (EnemyActor == nullptr)
+		{
+			OwningCombatCharacter->EndAim();
+		}
 	}
 }
 
@@ -268,7 +271,7 @@ void ACombatAIController::SetVisionAngle()
 	}
 }
 
-AActor* ACombatAIController::FindEnemy()
+void ACombatAIController::FindEnemy()
 {
 	AActor* CurrentActor = nullptr;
 	TArray<AActor*> ActorsInSight;
@@ -277,13 +280,13 @@ AActor* ACombatAIController::FindEnemy()
 	if (TargetSightSphere) {
 		TargetSightSphere->GetOverlappingActors(ActorsInSight, ABaseCharacter::StaticClass());
 	}
-	else if (PerceptionComp)
-	{
-		PerceptionComp->GetKnownPerceivedActors(TSubclassOf<UAISense_Sight>(), ActorsInSight);
-	}
-	else {
-		return CurrentActor;
-	}
+	//else if (PerceptionComp)
+	//{
+	//	PerceptionComp->GetKnownPerceivedActors(TSubclassOf<UAISense_Sight>(), ActorsInSight);
+	//}
+	//else {
+	//	return CurrentActor;
+	//}
 
 	for (int index = 0; index < ActorsInSight.Num(); index++)
 	{
@@ -338,11 +341,17 @@ AActor* ACombatAIController::FindEnemy()
 			}
 		}
 	}
-	return CurrentActor;
+
+	EnemyActor = CurrentActor;
 }
 
 void ACombatAIController::ShootAtEnemy()
 {
+	if (EnemyActor == nullptr) {
+		return;
+	}
+
+
 	if (OwningCombatCharacter->IsRepellingDown())
 	{
 		OwningCombatCharacter->EndFire();
@@ -353,124 +362,107 @@ void ACombatAIController::ShootAtEnemy()
 
 	CurrentWeapon = OwningCombatCharacter->GetCurrentWeapon();
 
-	if (CurrentWeapon)
+	if (CurrentWeapon == nullptr) {
+		return;
+	}
+
+	// set unlimited ammo
+	if (!OwningCombatCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
+		OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
+
+	if (OwningCombatCharacter->IsReloading())
 	{
-		// set unlimited ammo
-		if (!OwningCombatCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
-			OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
+		OwningCombatCharacter->EndFire();
+		OwningCombatCharacter->EndAim();
+	}
 
-		if (OwningCombatCharacter->IsReloading())
+	if (EnemyActor)
+	{
+		SetFocus(EnemyActor);
+
+		OwningCombatCharacter->BeginAim();
+
+		if (CurrentWeapon->getCurrentAmmo() <= 0)
 		{
-			OwningCombatCharacter->EndFire();
-			OwningCombatCharacter->EndAim();
-		}
+			// check if enemy distance is close, if so then pull out pistol
+			// otherwise reload
+			float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
 
-		EnemyActor = FindEnemy();
+			float randomDistanceLimit = FMath::RandRange(0.0f, 20.0f);
 
-		if (EnemyActor)
-		{
-			SetFocus(EnemyActor);
-
-			OwningCombatCharacter->BeginAim();
-
-			if (CurrentWeapon->getCurrentAmmo() <= 0)
+			if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->IsInHelicopter())
 			{
-				// check if enemy distance is close, if so then pull out pistol
-				// otherwise reload
-
-				float PawnLocation = OwningCombatCharacter->GetActorLocation().Size();
-				float EnemyLocation = EnemyActor->GetActorLocation().Size();
-
-				float DistanceDiff = UKismetMathLibrary::Abs(PawnLocation - EnemyLocation);
-
-				float randomDistanceLimit = FMath::RandRange(0.0f, 200.0f);
-
-				if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->IsInHelicopter())
-				{
-					OwningCombatCharacter->EndFire();
-					OwningCombatCharacter->EndAim();
-					OwningCombatCharacter->BeginWeaponSwap();
-				}
-				else
-				{
-					OwningCombatCharacter->BeginReload();
-				}
+				OwningCombatCharacter->EndFire();
+				OwningCombatCharacter->EndAim();
+				OwningCombatCharacter->BeginWeaponSwap();
 			}
 			else
 			{
-				// Shotguns requires bolt action rather than constant firing of weapon
-				// check if using shotgun weapon type
-				AShotgun* ShotgunObj = Cast<AShotgun>(OwningCombatCharacter->GetCurrentWeapon());
-
-				if (ShotgunObj)
-				{
-					if (ShotgunObj->HasLoadedShell())
-					{
-						StartFiring();
-					}
-					else
-					{
-						OwningCombatCharacter->EndFire();
-					}
-				}
-				else
-				{
-					StartFiring();
-				}
+				OwningCombatCharacter->BeginReload();
 			}
 		}
 		else
 		{
-			ClearFocus(EAIFocusPriority::Gameplay);
-			OwningCombatCharacter->EndFire();
+			// Shotguns requires bolt action rather than constant firing of weapon
+			// check if using shotgun weapon type
+			ShotgunObj = Cast<AShotgun>(OwningCombatCharacter->GetCurrentWeapon());
 
-			if (CurrentWeapon->getCurrentAmmo() <= 0) // reload clip if finished completely
+			if (ShotgunObj)
 			{
-				OwningCombatCharacter->BeginReload();
-			}
-			else if (CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // reload if not on full clip
-			{
-				OwningCombatCharacter->BeginReload();
+				if (ShotgunObj->HasLoadedShell())
+				{
+					OwningCombatCharacter->BeginFire();
+				}
+				else
+				{
+					OwningCombatCharacter->EndFire();
+				}
 			}
 			else
 			{
-				// switch back to primary
-				if (CurrentWeapon == OwningCombatCharacter->GetSecondaryWeaponObj())
-				{
-					OwningCombatCharacter->BeginWeaponSwap();
-				}
+				OwningCombatCharacter->BeginFire();
 			}
-		}
-	}
-}
-
-void ACombatAIController::StartFiring()
-{
-	if (BulletFireCountDown > 0.0f)
-	{
-		if (!IsCoolingDown)
-		{
-			OwningCombatCharacter->BeginFire();
-			BulletFireCountDown -= CurrentDeltaTime;
 		}
 	}
 	else
 	{
+		ClearFocus(EAIFocusPriority::Gameplay);
 		OwningCombatCharacter->EndFire();
-		IsCoolingDown = true;
-	}
 
-	if (IsCoolingDown)
-	{
-		if (BulletFireCountDown <= FiringWaitTime)
+		if (CurrentWeapon->getCurrentAmmo() <= 0) // reload clip if finished completely
 		{
-			BulletFireCountDown += CurrentDeltaTime;
+			OwningCombatCharacter->BeginReload();
+		}
+		else if (CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // reload if not on full clip
+		{
+			OwningCombatCharacter->BeginReload();
 		}
 		else
 		{
-			IsCoolingDown = false;
-			FiringWaitTime = FMath::RandRange(1.0f, 3.0f);
+			// switch back to primary
+			if (CurrentWeapon == OwningCombatCharacter->GetSecondaryWeaponObj())
+			{
+				OwningCombatCharacter->BeginWeaponSwap();
+			}
 		}
+	}
+
+}
+
+// End fire for non pump-action weapons like shotguns
+void ACombatAIController::EndFiring()
+{
+	if (OwningCombatCharacter == nullptr) {
+		return;
+	}
+
+	if (ShotgunObj) {
+		return;
+	}
+
+	if (OwningCombatCharacter->IsFiring())
+	{
+		OwningCombatCharacter->EndFire();
 	}
 }
 

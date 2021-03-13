@@ -18,131 +18,119 @@
 EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
-	auto EnemyObj = MyBlackboard->GetValueAsObject(BB_EnemyActor.SelectedKeyName);
+	UObject* EnemyObj = MyBlackboard->GetValueAsObject(BB_EnemyActor.SelectedKeyName);
 
+	AActor* EnemyActor = Cast<AActor>(EnemyObj);
+
+	if (EnemyActor == nullptr) {
+		return EBTNodeResult::Failed;
+	}
 
 	AAIController* AIOwner = OwnerComp.GetAIOwner(); // to get the controller
 	APawn* Pawn = AIOwner->GetPawn(); // to get the actor
 
-	OwningCharacter = Cast<ACombatCharacter>(Pawn);
+	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
 
-	if (OwningCharacter)
+	if (OwningCombatCharacter == nullptr) {
+		return EBTNodeResult::Failed;
+	}
+
+	AWeapon* CurrentWeapon = OwningCombatCharacter->GetCurrentWeapon();
+
+	if (CurrentWeapon == nullptr) {
+		return EBTNodeResult::Failed;
+	}
+
+	// set unlimited ammo
+	if (!OwningCombatCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
+		OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
+
+	if (OwningCombatCharacter->IsReloading())
 	{
-		AWeapon* CurrentWeapon = OwningCharacter->GetCurrentWeapon();
+		OwningCombatCharacter->EndFire();
+		OwningCombatCharacter->EndAim();
+	}
 
-		if (CurrentWeapon)
+	if (EnemyActor)
+	{
+		AIOwner->SetFocus(EnemyActor);
+
+		OwningCombatCharacter->BeginAim();
+
+		if (CurrentWeapon->getCurrentAmmo() <= 0)
 		{
-			if (!OwningCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
-				OwningCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
+			// check if enemy distance is close, if so then pull out pistol
+			// otherwise reload
 
-			if (OwningCharacter->IsReloading())
+			float PawnLocation = OwningCombatCharacter->GetActorLocation().Size();
+			float EnemyLocation = EnemyActor->GetActorLocation().Size();
+
+			float DistanceDiff = UKismetMathLibrary::Abs(PawnLocation - EnemyLocation);
+
+			float randomDistanceLimit = FMath::RandRange(0.0f, 50.0f);
+
+			if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->IsInHelicopter())
 			{
-				OwningCharacter->EndFire();
-				OwningCharacter->EndAim();
-			}
-
-
-			if (EnemyObj)
-			{
-				AActor* EnemyActor = Cast<AActor>(EnemyObj);
-
-				AIOwner->SetFocus(EnemyActor);
-
-				OwningCharacter->BeginAim();
-
-				if (CurrentWeapon->getCurrentAmmo() <= 0)
-				{
-					// check if enemy distance is close, if so then pull out pistol
-					// otherwise reload
-
-					float PawnLocation = Pawn->GetActorLocation().Size();
-					float EnemyLocation = EnemyActor->GetActorLocation().Size();
-
-					float DistanceDiff = UKismetMathLibrary::Abs(PawnLocation - EnemyLocation);
-
-					float randomDistanceLimit = FMath::RandRange(800.0f, 1000.0f);
-
-					if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCharacter->GetSecondaryWeaponObj() && !OwningCharacter->IsInHelicopter())
-					{
-						OwningCharacter->EndFire();
-						OwningCharacter->EndAim();
-						OwningCharacter->BeginWeaponSwap();
-					}
-					else
-					{
-						CurrentWeapon->BeginReload();
-					}
-				}
-				else
-				{
-					// Shotguns requires bolt action rather than constant firing of weapon
-					// check if using shotgun weapon type 
-					AShotgun* ShotgunObj = Cast<AShotgun>(OwningCharacter->GetCurrentWeapon());
-
-					if (ShotgunObj)
-					{
-						if (ShotgunObj->HasLoadedShell())
-						{
-							OwningCharacter->BeginFire();
-						}
-						else
-						{
-							OwningCharacter->EndFire();
-						}
-					}
-					else
-					{
-						OwningCharacter->BeginFire();
-						//OwningCharacter->GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &UCombatTaskNode::EndFiring, FMath::RandRange(1.0f, 3.0f), false, 0.0f);
-					}
-				}
-
-
+				OwningCombatCharacter->EndFire();
+				OwningCombatCharacter->EndAim();
+				OwningCombatCharacter->BeginWeaponSwap();
 			}
 			else
 			{
+				OwningCombatCharacter->BeginReload();
+			}
+		}
+		else
+		{
+			// Shotguns requires bolt action rather than constant firing of weapon
+			// check if using shotgun weapon type
+			AShotgun* ShotgunObj = Cast<AShotgun>(OwningCombatCharacter->GetCurrentWeapon());
 
-				if (CurrentWeapon->getCurrentAmmo() <= 0) // replenish clip if finished completely
+			if (ShotgunObj)
+			{
+				if (ShotgunObj->HasLoadedShell())
 				{
-					ReloadWeapon();
-				}
-				else if (CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // replenish if not on full clip
-				{
-					OwningCharacter->GetWorldTimerManager().SetTimer(THandler_TimeReloadWeapon, this, &UCombatTaskNode::ReloadWeapon, FMath::RandRange(5.0f, 10.0f), false, 0.0f);
+					OwningCombatCharacter->BeginFire();
 				}
 				else
 				{
-					// switch back to primary
-					if (CurrentWeapon == OwningCharacter->GetSecondaryWeaponObj())
-					{
-						OwningCharacter->BeginWeaponSwap();
-					}
+					OwningCombatCharacter->EndFire();
 				}
-
-				OwningCharacter->EndFire();
-				OwningCharacter->EndAim();
-				OwningCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 			}
-
+			else
+			{
+				OwningCombatCharacter->BeginFire();
+				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &UCombatTaskNode::EndFiring, FMath::RandRange(.1f, .5f), false, 0.0f);
+			}
 		}
+	}
+	else
+	{
+		AIOwner->ClearFocus(EAIFocusPriority::Gameplay);
+		OwningCombatCharacter->EndFire();
 
-
-
+		if (CurrentWeapon->getCurrentAmmo() <= 0) // reload clip if finished completely
+		{
+			OwningCombatCharacter->BeginReload();
+		}
+		else if (CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // reload if not on full clip
+		{
+			OwningCombatCharacter->BeginReload();
+		}
+		else
+		{
+			// switch back to primary
+			if (CurrentWeapon == OwningCombatCharacter->GetSecondaryWeaponObj())
+			{
+				OwningCombatCharacter->BeginWeaponSwap();
+			}
+		}
 	}
 	return EBTNodeResult::Succeeded;
-
 }
-
 
 void UCombatTaskNode::EndFiring()
 {
-	OwningCharacter->EndFire();
-	OwningCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
-
-}
-
-void UCombatTaskNode::ReloadWeapon()
-{
-	OwningCharacter->BeginReload();
-	OwningCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeReloadWeapon);
+	OwningCombatCharacter->EndFire();
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 }

@@ -13,6 +13,7 @@ class UAISenseConfig;
 class UAISense;
 class UAIPerceptionComponent;
 class AWeapon;
+class AShotgun;
 class USphereComponent;
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
@@ -63,13 +64,18 @@ private:
 
 	UAIPerceptionComponent* PerceptionComp;
 	AWeapon* CurrentWeapon;
+	AShotgun* ShotgunObj;
 
 	ACommanderCharacter* Commander;
 
 	float CurrentDeltaTime;
-	float BulletFireCountDown;
-	float FiringWaitTime;
-	bool IsCoolingDown;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float TimeBetweenShotsMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float TimeBetweenShotsMax;
+
 	bool StayCombatAlert;
 	bool HasChosenCover;
 	bool CanFindCover;
@@ -91,8 +97,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		float MovementDebugLifetTime;
 
+
+	FTimerHandle THandler_TimeBetweenShots;
+	FTimerHandle THandler_EndFire;
+
 public:
 	ACombatAIController();
+
+	void FindEnemy();
 
 private:
 	void Init();
@@ -107,11 +119,10 @@ private:
 
 	void SetVisionAngle();
 
-	AActor* FindEnemy();
 
 	void ShootAtEnemy();
 
-	void StartFiring();
+	void EndFiring();
 
 	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius);
 
@@ -130,4 +141,10 @@ protected:
 
 private:
 	virtual void Tick(float DeltaTime) override;
+
+
+public:
+	AActor* GetEnemyActor() {
+		return EnemyActor;
+	}
 };
