@@ -347,16 +347,16 @@ void ACombatAIController::FindEnemy()
 
 void ACombatAIController::ShootAtEnemy()
 {
-	if (EnemyActor == nullptr) {
-		return;
-	}
-
-
 	if (OwningCombatCharacter->IsRepellingDown())
 	{
 		OwningCombatCharacter->EndFire();
 		OwningCombatCharacter->EndAim();
 		OwningCombatCharacter->IsInCombatMode(false);
+		return;
+	}
+
+
+	if (EnemyActor == nullptr) {
 		return;
 	}
 
