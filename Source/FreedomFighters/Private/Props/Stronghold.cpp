@@ -9,6 +9,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/BoxComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/AudioComponent.h"
 #include "NavigationSystem.h"
 
 
@@ -34,6 +35,9 @@ AStronghold::AStronghold()
 	FactionFlag->CanCharacterStepUpOn = ECB_No;
 	FactionFlag->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 	FlagClothMaterialIndex = 0;
+
+
+	StrongholdAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("StrongholdAudio"));
 
 	SpawnMax = 5;
 	SpawnRate = 1.f;
@@ -92,6 +96,14 @@ void AStronghold::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 			if (!DoesOccupantExist(CombatCharacter))
 			{
 				OccupyingCharacters.Add(CombatCharacter);
+			}
+
+			if (DominantFaction->Faction == TeamFaction::Neutral) {
+				if (CaptureSound != NULL)
+				{
+					StrongholdAudio->Sound = CaptureSound;
+					StrongholdAudio->Play();
+				}
 			}
 		}
 	}
@@ -164,7 +176,7 @@ void AStronghold::UpdateFaction()
 		{
 			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
 
-			if (CurrentHealth->IsAlive())
+			if (CurrentHealth->IsAlive() && Character->getCommander() == nullptr)
 			{
 				if (OccupiedFactions.Num() > 0)
 				{

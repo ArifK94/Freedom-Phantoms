@@ -10,7 +10,7 @@
 class UBoxComponent;
 class ACombatCharacter;
 class UFactionManager;
-
+class UAudioComponent;
 
 // dynamically add the dominant in case more factions are added in the future
 USTRUCT(BlueprintType)
@@ -30,11 +30,6 @@ public:
 
 	UPROPERTY()
 		UFactionManager* FactionManager;
-
-	FOccupiedFaction()
-	{
-
-	}
 };
 
 
@@ -57,6 +52,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* FactionFlag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* StrongholdAudio;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* CaptureSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int SpawnMax;
