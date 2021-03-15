@@ -509,7 +509,7 @@ void AAircraft::OnDestroy()
 	OnAircraftDestroy.Broadcast(this);
 
 
-	// desttroy all attached actors to this aircraft
+	// destroy all attached actors to this aircraft
 	TArray<AActor*> AttachedActors;
 	GetAttachedActors(AttachedActors);
 

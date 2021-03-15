@@ -5,10 +5,7 @@
 
 #include "Engine/DataTable.h"
 
-
 #include "Weapon.generated.h"
-
-
 
 class USkeletalMeshComponent;
 class UDamageType;
@@ -25,8 +22,9 @@ class UAnimSequence;
 class UAimOffsetBlendSpace;
 class AWeaponClip;
 class AWeaponBullet;
+class UObjectPoolComponent;
 
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
+UENUM(BlueprintType)
 enum class WeaponType : uint8
 {
 	Rifle		UMETA(DisplayName = "Rifle"),
@@ -36,7 +34,7 @@ enum class WeaponType : uint8
 	Pistol		UMETA(DisplayName = "Pistol")
 };
 
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
+UENUM(BlueprintType)
 enum class SelectiveFire : uint8
 {
 	Automatic		UMETA(DisplayName = "Automatic"),
@@ -189,7 +187,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponBullet> BulletClass;
-	AWeaponBullet* BulletObj;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		TSubclassOf<UDamageType> DamageType;
@@ -322,6 +319,8 @@ protected:
 		USoundBase* ReloadEndSound;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UObjectPoolComponent* ObjectPoolComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ShotAudioComponent;
@@ -401,10 +400,6 @@ public:
 
 	float GetZoomFOV() {
 		return ZoomFOV;
-	}
-
-	AWeaponBullet* GetBulletObj() {
-		return BulletObj;
 	}
 
 	UAudioComponent* GetShotAudioComponent() {

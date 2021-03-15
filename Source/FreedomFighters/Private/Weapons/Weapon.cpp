@@ -20,6 +20,7 @@
 #include "Components/SceneComponent.h"
 #include "Components/SkinnedMeshComponent.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/ObjectPoolComponent.h"
 
 
 #include "TimerManager.h"
@@ -39,8 +40,9 @@ AWeapon::AWeapon()
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->CanCharacterStepUpOn = ECB_No;
 
+	ObjectPoolComponent = CreateDefaultSubobject<UObjectPoolComponent>(TEXT("ObjectPoolComponent"));
 	ShotAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotAudioComponent"));
-	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));
+	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));	
 
 	MuzzleSocket = "Muzzle";
 	TracerTargetSocket = "Target";
@@ -88,6 +90,16 @@ void AWeapon::ConfigSetup()
 		CurrentAmmo = AmmoPerClip;
 	}
 
+	AActor* MyOwner = GetOwner();
+	// Add neccessary Actors to the Object pool
+	if (BulletClass && MyOwner)
+	{
+		FObjectPoolParameters ObjectPoolParams;
+		ObjectPoolParams.PoolSize = AmmoPerClip;
+		ObjectPoolParams.LifeSpan = 5.0f;
+		ObjectPoolParams.ActorClass = BulletClass;
+		ObjectPoolComponent->AddToPool(MyOwner, ObjectPoolParams);
+	}
 
 	TimeBetweenShots = 60 / RateOfFire;
 }
@@ -208,12 +220,11 @@ void AWeapon::CreateBullet()
 
 	if (BulletClass)
 	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = MyOwner;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		// Spawn the weapon actor
-	//	BulletObj = GetWorld()->SpawnActor<AWeaponBullet>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
+		FObjectPoolParameters ObjectPoolParams;
+		ObjectPoolParams.PoolSize = 1;
+		ObjectPoolParams.LifeSpan = 5.0f;
+		ObjectPoolParams.ActorClass = BulletClass;
+		ObjectPoolComponent->ActivatePoolObject(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), MyOwner, ObjectPoolParams);
 	}
 
 	PlayShotEffect(TracerEndPoint);
