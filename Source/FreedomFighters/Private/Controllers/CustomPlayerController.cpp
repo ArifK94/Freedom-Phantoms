@@ -7,11 +7,13 @@
 
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponBullet.h"
+#include "Weapons/AmmoCrate.h"
 
 #include "Vehicles/Aircraft.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/CapsuleComponent.h"
 
 ACustomPlayerController::ACustomPlayerController()
 {
@@ -63,11 +65,17 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	OwningCommander = Cast<ACommanderCharacter>(OwningPawn);
 
 	AddUIWidgets();
+
+	if (OwningCombatCharacter) {
+		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
+	}
+
 }
 
 void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
 
 void ACustomPlayerController::AddUIWidgets()
@@ -112,6 +120,42 @@ void ACustomPlayerController::AddUIWidgets()
 	if (OwningCommander)
 	{
 		OwningCommander->AddUIWidget();
+	}
+}
+
+void ACustomPlayerController::OnCharacterHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (OtherActor == NULL || OtherActor == OwningCombatCharacter) {
+		return;
+	}
+
+	// if hit an ammo create
+	AAmmoCrate* AmmoCrate = Cast<AAmmoCrate>(OtherActor);
+	if (AmmoCrate)
+	{
+		bool HasPrimaryReplenished = OwningCombatCharacter->GetPrimaryWeapon()->ReplenishAmmo();
+
+		bool HasSecondaryReplenished = OwningCombatCharacter->GetSecondaryWeaponObj()->ReplenishAmmo();
+
+		bool HasUnderBarrelReplenished = false;
+		if (OwningCombatCharacter->GetUnderBarrelWeapon()) {
+			OwningCombatCharacter->GetUnderBarrelWeapon()->ReplenishAmmo();
+		}
+
+		bool SuccessfulReplenish = false;
+		if (HasPrimaryReplenished || HasSecondaryReplenished || HasUnderBarrelReplenished)
+		{
+			SuccessfulReplenish = true;
+		}
+
+		if (SuccessfulReplenish)
+		{
+			AmmoCrate->PlaySuccess();
+		}
+		else
+		{
+			AmmoCrate->PlayFailed();
+		}
 	}
 }
 

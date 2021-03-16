@@ -4,20 +4,29 @@
 #include "GameFramework/Actor.h"
 #include "AmmoCrate.generated.h"
 
-class UCapsuleComponent;
+class UAudioComponent;
 UCLASS()
 class FREEDOMFIGHTERS_API AAmmoCrate : public AActor
 {
 	GENERATED_BODY()
 	
 private:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UCapsuleComponent* CapsuleComponent;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UStaticMeshComponent* Mesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* AudioComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* ReplenishSuccessSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* ReplenishFailedSound;
 
 public:	
 	AAmmoCrate();
 
+	void PlaySuccess();
+
+	void PlayFailed();
 };

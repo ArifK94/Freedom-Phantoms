@@ -134,6 +134,8 @@ public:
 
 	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
 
+	/** Return bool so it can be used to play sounds if true */
+	bool ReplenishAmmo();
 
 private:
 	void BurstDelay();

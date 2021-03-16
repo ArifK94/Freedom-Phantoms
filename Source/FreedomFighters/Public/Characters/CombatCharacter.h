@@ -199,6 +199,14 @@ public:
 		return currentWeaponObj;
 	}
 
+	AWeapon* GetPrimaryWeapon() {
+		return primaryWeaponObj;
+	}
+
+	AWeapon* GetUnderBarrelWeapon() {
+		return underBarrelWeaponObj;
+	}
+
 	AWeapon* GetSecondaryWeaponObj(){
 		return secondaryWeaponObj;
 	}

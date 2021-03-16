@@ -1,16 +1,33 @@
 #include "Weapons/AmmoCrate.h"
 
-#include "Components/CapsuleComponent.h"
+#include "Components/AudioComponent.h"
 
 AAmmoCrate::AAmmoCrate()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Root"));
-	RootComponent = CapsuleComponent;
-
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetCollisionProfileName(TEXT("BlockAll"));
-	Mesh->AttachToComponent(CapsuleComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	RootComponent = Mesh;
 
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
+}
+
+void AAmmoCrate::PlaySuccess()
+{
+	if (ReplenishSuccessSound)
+	{
+		AudioComponent->Sound = ReplenishSuccessSound;
+		AudioComponent->Play();		
+	}
+}
+
+void AAmmoCrate::PlayFailed()
+{
+	if (ReplenishFailedSound)
+	{
+		AudioComponent->Sound = ReplenishFailedSound;
+		AudioComponent->Play();
+	}
 }

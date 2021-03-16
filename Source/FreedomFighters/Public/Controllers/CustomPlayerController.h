@@ -54,6 +54,9 @@ private:
 
 	void AddUIWidgets();
 
+	UFUNCTION()
+		void OnCharacterHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
 

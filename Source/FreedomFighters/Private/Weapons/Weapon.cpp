@@ -542,3 +542,15 @@ void AWeapon::AutoReload()
 		}
 	}
 }
+
+
+bool AWeapon::ReplenishAmmo()
+{
+	if (CurrentMaxAmmo < MaxAmmoCapacity)
+	{
+		CurrentMaxAmmo = MaxAmmoCapacity;
+		return true;
+	}
+
+	return false;
+}
