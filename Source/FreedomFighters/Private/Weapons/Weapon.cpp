@@ -56,9 +56,8 @@ AWeapon::AWeapon()
 	TorchlightSocket = "Torchlight";
 	ParentHolderSocket = "Hand";
 
-	MaxAmmo = 120;
+	MaxAmmoCapacity = 120;
 	RateOfFire = 600.0f;
-	BulletDamage = 20.0f;
 	CooldownReload = 0.0f;
 
 	RecoilAmount = 5.0f;
@@ -102,6 +101,8 @@ void AWeapon::ConfigSetup()
 	}
 
 	TimeBetweenShots = 60 / RateOfFire;
+
+	CurrentMaxAmmo = MaxAmmoCapacity;
 }
 
 FVector AWeapon::getMuzzleLocation()
@@ -324,7 +325,7 @@ void AWeapon::StopFire()
 void AWeapon::OnReload()
 {
 	// Do we have ammo in the ammopool?
-	if (MaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !HasUnlimitedAmmo) return;
+	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !HasUnlimitedAmmo) return;
 
 	if (HasUnlimitedAmmo)
 	{
@@ -333,14 +334,14 @@ void AWeapon::OnReload()
 	else
 	{
 		// Do we have enough to meet what the weapon needs?
-		if (MaxAmmo < (AmmoPerClip - CurrentAmmo))
+		if (CurrentMaxAmmo < (AmmoPerClip - CurrentAmmo))
 		{
-			CurrentAmmo = CurrentAmmo + MaxAmmo;
-			MaxAmmo = 0;
+			CurrentAmmo = CurrentAmmo + CurrentMaxAmmo;
+			CurrentMaxAmmo = 0;
 		}
 		else
 		{
-			MaxAmmo = MaxAmmo - (AmmoPerClip - CurrentAmmo);
+			CurrentMaxAmmo = CurrentMaxAmmo - (AmmoPerClip - CurrentAmmo);
 
 			CurrentAmmo = AmmoPerClip;
 		}
@@ -349,7 +350,7 @@ void AWeapon::OnReload()
 
 void AWeapon::BeginReload()
 {
-	if (MaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !isReloading)	return;
+	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !isReloading)	return;
 
 	isFiring = false;
 	isReloading = true;

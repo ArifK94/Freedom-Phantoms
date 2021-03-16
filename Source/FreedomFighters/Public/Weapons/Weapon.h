@@ -263,8 +263,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Ammo")
 		int32 CurrentAmmo;
 
+
+	/** Current max which changes on reload */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Ammo")
+		int32 CurrentMaxAmmo;
+
+	/** Used for when it comes to replenishing and setting the original max ammo */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
-		int32 MaxAmmo;
+		int32 MaxAmmoCapacity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
 		int32 AmmoPerClip;
@@ -335,13 +341,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* MuzzleEffect;
 
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* TracerEffect;
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Damage")
-		float BulletDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")
 		FVector CurrentMuzzleLocation;
@@ -372,9 +373,11 @@ public:
 
 
 	int32 getCurrentAmmo() { return CurrentAmmo; }
-	int32 getMaxAmmo() { return MaxAmmo; }
+	int32 getCurrentMaxAmmo() { return CurrentMaxAmmo; }
 	int32 getAmmoPerClip() { return AmmoPerClip; }
+	int32 GetMaxAmmoCapacity() { return MaxAmmoCapacity; }
 
+		
 	FName GetMuzzleSocket() { return MuzzleSocket; }
 	FName getHolsterSocket() { return HolsterSocket; }
 	FName getParentHolderSocket() { return ParentHolderSocket; }

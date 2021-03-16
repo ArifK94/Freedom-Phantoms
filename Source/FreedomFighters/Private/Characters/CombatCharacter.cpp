@@ -166,6 +166,7 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 		}
 
 		if (currentWeaponObj) {
+			EndFire();
 			currentWeaponObj->getMeshComp()->SetCollisionProfileName(TEXT("Weapon"));
 			currentWeaponObj->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			currentWeaponObj->getMeshComp()->SetSimulatePhysics(true);
@@ -454,15 +455,15 @@ void ACombatCharacter::UpdateReload()
 
 	isReloading = currentWeaponObj->getIsReloading();
 
-	//if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
-	//{
-	//	HasPlayedReloadingSound = true;
-	//	if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
-	//	{
-	//		VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
-	//		VoiceAudioComponent->Play();
-	//	}
-	//}
+	if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
+	{
+		HasPlayedReloadingSound = true;
+		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
+		{
+			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
+			VoiceAudioComponent->Play();
+		}
+	}
 
 }
 
@@ -613,11 +614,11 @@ void ACombatCharacter::FriendlyKilled()
 		return;
 	}
 
-	//if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().FriendlyDownSound != NULL)
-	//{
-	//	VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().FriendlyDownSound;
-	//	VoiceAudioComponent->Play();
-	//}
+	if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().FriendlyDownSound != NULL)
+	{
+		VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().FriendlyDownSound;
+		VoiceAudioComponent->Play();
+	}
 
 }
 

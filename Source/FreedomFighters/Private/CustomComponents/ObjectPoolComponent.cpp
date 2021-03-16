@@ -21,6 +21,10 @@ void UObjectPoolComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 void UObjectPoolComponent::EnableActor(AActor* Actor, bool IsEnabled)
 {
+	if (Actor == nullptr) {
+		return;
+	}
+
 	Actor->SetActorHiddenInGame(!IsEnabled);
 	Actor->SetHidden(!IsEnabled);
 

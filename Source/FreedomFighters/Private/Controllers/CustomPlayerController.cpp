@@ -310,6 +310,10 @@ void ACustomPlayerController::SwitchWeapon()
 	{
 		ControlledAircraft->ChangeWeapon();
 	}
+	else
+	{
+		OwningCombatCharacter->BeginWeaponSwap();
+	}
 }
 
 

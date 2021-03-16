@@ -11,6 +11,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/AudioComponent.h"
 #include "NavigationSystem.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 AStronghold::AStronghold()
@@ -97,14 +98,6 @@ void AStronghold::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 			{
 				OccupyingCharacters.Add(CombatCharacter);
 			}
-
-			if (DominantFaction->Faction == TeamFaction::Neutral) {
-				if (CaptureSound != NULL)
-				{
-					StrongholdAudio->Sound = CaptureSound;
-					StrongholdAudio->Play();
-				}
-			}
 		}
 	}
 }
@@ -156,6 +149,7 @@ void AStronghold::SpawnCharacter()
 	}
 }
 
+
 void AStronghold::StartSpawn()
 {
 	if (!THandler_SpawnDelay.IsValid()) {
@@ -170,40 +164,36 @@ void AStronghold::StopSpawn()
 
 void AStronghold::UpdateFaction()
 {
-	if (OccupyingCharacters.Num() > 0)
-	{
-		for (ACombatCharacter* Character : OccupyingCharacters)
-		{
-			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
+	if (OccupyingCharacters.Num() <= 0) {
+		return;
+	}
 
-			if (CurrentHealth->IsAlive() && Character->getCommander() == nullptr)
+	for (ACombatCharacter* Character : OccupyingCharacters)
+	{
+		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
+
+		if (CurrentHealth->IsAlive())
+		{
+			FOccupiedFaction* OccupiedFaction = DoesFactionExist(CurrentHealth->GetSelectedFaction());
+			if (OccupiedFaction != nullptr)
 			{
-				if (OccupiedFactions.Num() > 0)
-				{
-					for (FOccupiedFaction* OccupiedFaction : OccupiedFactions)
-					{
-						if (OccupiedFaction->Faction == CurrentHealth->GetSelectedFaction())
-						{
-							OccupiedFaction->FactionCount++;
-						}
-						else
-						{
-							AddFaction(Character, CurrentHealth->GetSelectedFaction());
-						}
-					}
-				}
-				else
-				{
-					AddFaction(Character, CurrentHealth->GetSelectedFaction());
-				}
+				OccupiedFaction->FactionCount++;
 			}
 			else
 			{
-				OccupyingCharacters.Remove(Character);
+				AddFaction(Character, CurrentHealth->GetSelectedFaction());
 			}
-
 		}
+		else
+		{
+			OccupyingCharacters.Remove(Character);
+
+			// update the spawn actor count
+			CurrentSpawnedActors--;
+		}
+
 	}
+
 }
 
 void AStronghold::AddFaction(ACombatCharacter* Character, TeamFaction Faction)
@@ -217,26 +207,26 @@ void AStronghold::AddFaction(ACombatCharacter* Character, TeamFaction Faction)
 	OccupiedFactions.Add(OccupyingFaction);
 }
 
-bool AStronghold::DoesFactionExist(TeamFaction Faction)
+FOccupiedFaction* AStronghold::DoesFactionExist(TeamFaction Faction)
 {
-	if (OccupiedFactions.Num() < 0) {
-		return false;
+	if (OccupiedFactions.Num() <= 0) {
+		return nullptr;
 	}
 
 	for (FOccupiedFaction* OccupiedFaction : OccupiedFactions)
 	{
 		if (OccupiedFaction->Faction == Faction)
 		{
-			return true;
+			return OccupiedFaction;
 		}
 	}
 
-	return false;
+	return nullptr;
 }
 
 bool AStronghold::DoesOccupantExist(ACombatCharacter* Occupant)
 {
-	if (OccupyingCharacters.Num() < 0) {
+	if (OccupyingCharacters.Num() <= 0) {
 		return false;
 	}
 
@@ -273,6 +263,31 @@ void AStronghold::GetHighestFaction()
 		}
 	}
 
+	// play the capture sound
+	if (DominantFaction->Faction == TeamFaction::Neutral) {
+		if (CaptureSound != NULL)
+		{
+			StrongholdAudio->Sound = CaptureSound;
+			StrongholdAudio->Play();
+		}
+	}
+	else
+	{
+		// Stronghold has been overrun if the dominant faction is no longer the same
+		if (DominantFaction->Faction != OwningFaction->Faction)
+		{
+			if (OverrunSound != NULL)
+			{
+				StrongholdAudio->Sound = OverrunSound;
+				StrongholdAudio->Play();
+			}
+
+			// reset spawned actors count
+			CurrentSpawnedActors = 0;
+		}
+	}
+
+	// update the dominant faction
 	DominantFaction = OwningFaction;
 	FactionFlag->SetMaterial(FlagClothMaterialIndex, DominantFaction->FlagMaterial);
 }

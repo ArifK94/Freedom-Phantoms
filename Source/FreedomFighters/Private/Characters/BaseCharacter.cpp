@@ -158,6 +158,8 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 
 		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 		GetMesh()->SetSimulatePhysics(true);
+
+		PrimaryActorTick.bCanEverTick = false;
 	}
 }
 

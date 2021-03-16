@@ -152,7 +152,7 @@ void AShotgun::beginHandguardPull()
 
 void AShotgun::OnReload()
 {
-	if (MaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip) return;
+	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip) return;
 
 	if (CurrentAmmo < AmmoPerClip)
 	{
@@ -167,9 +167,9 @@ void AShotgun::OnReload()
 			HandguardAudioComponent->Play(0.0f);
 		}
 
-		if (MaxAmmo > 0)
+		if (CurrentMaxAmmo > 0)
 		{
-			MaxAmmo--;
+			CurrentMaxAmmo--;
 		}
 	}
 	else

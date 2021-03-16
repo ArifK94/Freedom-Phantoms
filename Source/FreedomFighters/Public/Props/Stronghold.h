@@ -11,6 +11,7 @@ class UBoxComponent;
 class ACombatCharacter;
 class UFactionManager;
 class UAudioComponent;
+class AAmmoCrate;
 
 // dynamically add the dominant in case more factions are added in the future
 USTRUCT(BlueprintType)
@@ -31,8 +32,6 @@ public:
 	UPROPERTY()
 		UFactionManager* FactionManager;
 };
-
-
 
 UCLASS()
 class FREEDOMFIGHTERS_API AStronghold : public AActor
@@ -60,6 +59,9 @@ private:
 		USoundBase* CaptureSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* OverrunSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int SpawnMax;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -80,9 +82,9 @@ private:
 		int32 FlagClothMaterialIndex;
 
 
-
 private:
 	int CurrentSpawnedActors;
+
 	FTimerHandle THandler_SpawnDelay;
 
 	TArray<UBoxComponent*> SpawnAreas;
@@ -92,9 +94,6 @@ private:
 	TArray<ACombatCharacter*> OccupyingCharacters;
 
 	TArray<FOccupiedFaction*> OccupiedFactions;
-
-	void AddFaction(ACombatCharacter* Character, TeamFaction Faction);
-	
 public:	
 	AStronghold();
 
@@ -103,10 +102,17 @@ public:
 
 private:
 	void GetSpawnAreas();
+
 	void SpawnCharacter();
+		
 	void UpdateFaction();
-	bool DoesFactionExist(TeamFaction Faction);
+	
+	void AddFaction(ACombatCharacter* Character, TeamFaction Faction);
+	
+	FOccupiedFaction* DoesFactionExist(TeamFaction Faction);
+	
 	bool DoesOccupantExist(ACombatCharacter* Occupant);
+	
 	void GetHighestFaction();
 
 	UFUNCTION()
