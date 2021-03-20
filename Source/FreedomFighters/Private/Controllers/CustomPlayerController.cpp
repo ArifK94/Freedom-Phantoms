@@ -77,9 +77,6 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	AddUIWidgets();
 
 	if (OwningCombatCharacter) {
-		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
-
-
 		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 		TArray <FInputActionKeyMapping> OutMappings;
 		Settings->GetActionMappingByName("Pickup", OutMappings);
@@ -94,6 +91,11 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (OwningCombatCharacter)
+	{
+		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
+	}
 }
 
 void ACustomPlayerController::Tick(float DeltaTime)
