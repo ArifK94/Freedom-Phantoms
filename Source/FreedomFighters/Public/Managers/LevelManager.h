@@ -13,7 +13,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DayNight", meta = (AllowPrivateAccess = "true"))
 		bool IsNightTime;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DayNight", meta = (AllowPrivateAccess = "true"))
 		TArray<AActor*> DayTimeObjects;
 

@@ -8,6 +8,7 @@ class ACommanderCharacter;
 class ACombatCharacter;
 class AAircraft;
 class AWeapon;
+class AInteractable;
 UCLASS()
 class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
 {
@@ -41,6 +42,23 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> WeaponCrosshairhWidgetClass;
 	UUserWidget* WeaponCrosshairWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> InteracthWidgetClass;
+	UUserWidget* InteractWidget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FKey InteractKey;
+
+	/** the interactable actor that is being line traced if found */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		AInteractable* FocusedInteractable;
+
+	AInteractable* CurrentInteractable;
+
+	/** Line trace length for the interactable actor to be detected */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float InteractionLength;
 	
 public:
 	ACustomPlayerController();
@@ -51,11 +69,15 @@ private:
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	void AddUIWidgets();
 
 	UFUNCTION()
 		void OnCharacterHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION(BlueprintCallable)
+		void OnAircraftDestroy(AAircraft* CurrentControlledAircraft);
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
@@ -82,13 +104,12 @@ private:
 	void BeginFire();
 	void EndFire();
 
-	void SpawnAC130();
-
 	void SwitchWeapon();
 	void ToggleThermalVision();
 
+	void PickupInteractable();
 
-	UFUNCTION(BlueprintCallable)
-		void OnAircraftDestroy(AAircraft* CurrentControlledAircraft);
+	void CheckInteractable();
 
+	void UseInteractableActor();
 };

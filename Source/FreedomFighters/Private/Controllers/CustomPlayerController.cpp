@@ -11,13 +11,19 @@
 
 #include "Vehicles/Aircraft.h"
 
+#include "Props/Interactable.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/CapsuleComponent.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/InputSettings.h"
 
 ACustomPlayerController::ACustomPlayerController()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	InteractionLength = 500.0f;
 }
 
 void ACustomPlayerController::SetupInputComponent()
@@ -52,6 +58,10 @@ void ACustomPlayerController::SetupInputComponent()
 	// number keys
 	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
 	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
+
+	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
+
+	InputComponent->BindAction("UseInteractable", IE_Pressed, this, &ACustomPlayerController::UseInteractableActor);
 }
 
 
@@ -68,6 +78,15 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 
 	if (OwningCombatCharacter) {
 		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
+
+
+		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+		TArray <FInputActionKeyMapping> OutMappings;
+		Settings->GetActionMappingByName("Pickup", OutMappings);
+		if (OutMappings.Num() > 0)
+		{
+			InteractKey = OutMappings[0].Key;
+		}
 	}
 
 }
@@ -75,14 +94,22 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
+void ACustomPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	CheckInteractable();
 }
 
 void ACustomPlayerController::AddUIWidgets()
 {
 	UWorld* World = GetWorld();
 
-	if (!World) return;
+	if (!World) {
+		return;
+	}
 
 	// Weapon Ammo
 	if (WeaponAmmoWidgetClass)
@@ -115,6 +142,13 @@ void ACustomPlayerController::AddUIWidgets()
 			HealthWidget->AddToViewport();
 		}
 	}
+
+
+	if (InteracthWidgetClass)
+	{
+		InteractWidget = CreateWidget<UUserWidget>(World, InteracthWidgetClass);
+	}
+
 
 	// Commander UI
 	if (OwningCommander)
@@ -333,21 +367,6 @@ void ACustomPlayerController::EndFire()
 	}
 }
 
-void ACustomPlayerController::SpawnAC130()
-{
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = OwningCombatCharacter;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	if (OwningCombatCharacter->getFactionObj())
-	{
-		ControlledAircraft = GetWorld()->SpawnActor<AAircraft>(OwningCombatCharacter->getFactionObj()->GetAC130Class(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-		OwningCombatCharacter->DisableInput(this);
-		ControlledAircraft->SetPlayerControl(this);
-		ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
-	}
-}
-
 void ACustomPlayerController::SwitchWeapon()
 {
 	if (ControlledAircraft)
@@ -367,4 +386,82 @@ void ACustomPlayerController::ToggleThermalVision()
 	{
 		ControlledAircraft->ChangeThermalVision();
 	}
+}
+
+void ACustomPlayerController::CheckInteractable()
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.bTraceComplex = true;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+	FHitResult OutHit;
+	FVector Start = OwningCombatCharacter->FollowCamera->GetComponentLocation();
+
+	FVector ForwardVector = OwningCombatCharacter->FollowCamera->GetForwardVector();
+	FVector End = ((ForwardVector * InteractionLength) + Start);
+
+	FCollisionQueryParams CollisionParams;
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams))
+	{
+		if (OutHit.bBlockingHit)
+		{
+			AActor* TargetActor = OutHit.GetActor();
+
+			AInteractable* Interactable = Cast<AInteractable>(TargetActor);
+			FocusedInteractable = Interactable;
+
+			if (Interactable) {
+
+				if (InteractWidget && !InteractWidget->IsInViewport())
+				{
+					InteractWidget->AddToViewport();
+				}
+			}
+			else
+			{
+				if (InteractWidget && InteractWidget->IsInViewport())
+				{
+					InteractWidget->RemoveFromViewport();
+				}
+			}
+		}
+	}
+}
+
+void ACustomPlayerController::PickupInteractable()
+{
+	if (FocusedInteractable)
+	{
+		CurrentInteractable = FocusedInteractable;
+		//FocusedInteractable->Destroy();
+
+		FocusedInteractable->SetActorHiddenInGame(true);
+		FocusedInteractable->SetHidden(true);
+
+		FocusedInteractable->SetActorEnableCollision(false);
+		FocusedInteractable->SetActorTickEnabled(false);
+	}
+}
+
+void ACustomPlayerController::UseInteractableActor()
+{
+	if (CurrentInteractable == nullptr) {
+		return;
+	}
+
+	CurrentInteractable->BeginInteraction(OwningCombatCharacter, this);
+
+	if (CurrentInteractable->GetAircraft())
+	{
+		ControlledAircraft = CurrentInteractable->GetAircraft();
+		OwningCombatCharacter->DisableInput(this);
+		ControlledAircraft->SetPlayerControl(this);
+		ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
+	}
+
+	CurrentInteractable = nullptr;
+
 }
