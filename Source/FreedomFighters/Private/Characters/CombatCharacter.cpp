@@ -455,15 +455,15 @@ void ACombatCharacter::UpdateReload()
 
 	isReloading = currentWeaponObj->getIsReloading();
 
-	if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
-	{
-		HasPlayedReloadingSound = true;
-		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
-		{
-			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
-			VoiceAudioComponent->Play();
-		}
-	}
+	//if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
+	//{
+	//	HasPlayedReloadingSound = true;
+	//	if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
+	//	{
+	//		VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
+	//		VoiceAudioComponent->Play();
+	//	}
+	//}
 
 }
 

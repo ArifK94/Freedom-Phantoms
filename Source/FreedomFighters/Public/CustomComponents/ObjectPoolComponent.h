@@ -4,6 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "ObjectPoolComponent.generated.h"
 
+class AObjectPoolActor;
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FObjectPoolParameters
 {
@@ -11,22 +12,13 @@ struct FREEDOMFIGHTERS_API FObjectPoolParameters
 
 public:
 	UPROPERTY()
-		TSubclassOf<AActor> ActorClass;
+		TSubclassOf<AObjectPoolActor> PoolableActorClass;
 
 	UPROPERTY()
-		AActor* Actor;
+		AObjectPoolActor* PoolableActor;
 
 	UPROPERTY()
 		int PoolSize;
-
-	UPROPERTY()
-		float LifeSpan;
-
-	UPROPERTY()
-		bool IsEnabled;
-
-	FTimerHandle THandler_LifeSpan;
-	FTimerDelegate TimerDel;
 };
 
 
@@ -49,21 +41,9 @@ public:
 
 	void AddToPool(AActor* Owner, FObjectPoolParameters ObjectPoolParams);
 
-	/** TSubclassOf is given as this will be used to compare which object needs to be called to activate */
-	void ActivatePoolObject(TSubclassOf<AActor> ActorClass, FVector const& Location, FRotator const& Rotation, AActor* Owner = nullptr, FObjectPoolParameters ObjectPoolParams = FObjectPoolParameters());
-
-
-	/** UFUNCTION() needed to make the timer delegate to work */
-	UFUNCTION()
-		void DeactivatePoolObject(AActor* Actor);
-
-private:
-	void EnableActor(AActor* Actor, bool IsEnabled);
+	AObjectPoolActor* ActivatePoolObject(TSubclassOf<AActor> ActorClass, FVector const& Location, FRotator const& Rotation);
 
 protected:
 	virtual void BeginPlay() override;
-
-public:	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 };

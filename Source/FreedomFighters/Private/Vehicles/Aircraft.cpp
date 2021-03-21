@@ -57,6 +57,8 @@ AAircraft::AAircraft()
 	TotalLaps = 1;
 
 	CurrentWeaponIndex = 0;
+
+	CameraSwitchDelay = .5f;
 }
 
 void AAircraft::AddUIWidget()
@@ -390,42 +392,43 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 		return;
 	}
 
+	if (TargetSystemNodes.Num() <= 0) {
+		return;
+	}
 
-	if (TargetSystemNodes.Num() > 0)
+	for (int i = 0; i < TargetSystemNodes.Num(); i++)
 	{
-		for (int i = 0; i < TargetSystemNodes.Num(); i++)
+		FTargetSystemNode* TargetNode = TargetSystemNodes[i];
+
+		// remove dead characters from the targetting system
+		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(TargetNode->Character->GetComponentByClass(UHealthComponent::StaticClass()));
+
+		if (CurrentHealth)
 		{
-			FTargetSystemNode* TargetNode = TargetSystemNodes[i];
-
-			// remove dead characters from the targetting system
-			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(TargetNode->Character->GetComponentByClass(UHealthComponent::StaticClass()));
-
-			if (CurrentHealth)
+			if (CurrentHealth->IsAlive())
 			{
-				if (CurrentHealth->IsAlive())
+				// add or update target marker based on character location
+				FActorSpawnParameters SpawnParams;
+
+				if (TargetNode->Marker == nullptr)
 				{
-					// add or update target marker based on character location
-					FActorSpawnParameters SpawnParams;
+					TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, TargetNode->Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
 
-					if (TargetNode->Marker == nullptr)
-					{
-						TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, TargetNode->Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
-
-					}
-					else
-					{
-						TargetNode->Marker->SetActorLocation(TargetNode->Character->GetActorLocation());
-					}
 				}
 				else
 				{
-					if (TargetNode->Marker) {
-						TargetNode->Marker->GetMarkerComponent()->SetHiddenInGame(true);
-					}
+					TargetNode->Marker->SetActorLocation(TargetNode->Character->GetActorLocation());
+				}
+			}
+			else
+			{
+				if (TargetNode->Marker) {
+					TargetNode->Marker->GetMarkerComponent()->SetHiddenInGame(true);
 				}
 			}
 		}
 	}
+
 }
 
 bool AAircraft::DoesFriendlyNodeExists(AActor* TargetActor)
@@ -490,16 +493,22 @@ void AAircraft::ChangeThermalVision()
 
 void AAircraft::SetPlayerControl(APlayerController* OurPlayerController)
 {
-	OurPlayerController->SetViewTargetWithBlend(this, .5f);
+	OurPlayerController->SetViewTargetWithBlend(this, CameraSwitchDelay);
 
 	ThermalVisionPPComp->bEnabled = true;
 	ShowOutlines(true);
 	UpdateCurrentThermalVision(1.0f);
 	AddUIWidget();
 
-	PilotAudio->Play();
-
+	GetWorldTimerManager().SetTimer(THandler_CameraSwitchDelay, this, &AAircraft::PlayPilotSound, CameraSwitchDelay, false);
 }
+
+void AAircraft::PlayPilotSound()
+{
+	PilotAudio->Play();
+	GetWorldTimerManager().ClearTimer(THandler_CameraSwitchDelay);
+}
+
 
 void AAircraft::OnDestroy()
 {

@@ -164,13 +164,15 @@ private:
 		TSubclassOf<ATargetSystemMarker> EnemyMarkerClass;
 	TArray<FTargetSystemNode*> EnemySystemNodes;
 
-
-
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FLIR", meta = (AllowPrivateAccess = "true"))
 		TArray<UMaterialInterface*> ThermalMaterials;
 	TArray<UMaterialInstanceDynamic*> ThermalMaterialInstances;
 	int CurrentThermalMatIndex;
+
+	/** Time taken for the SetViewTargetWithBlend function blend time */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float CameraSwitchDelay;
+	FTimerHandle THandler_CameraSwitchDelay;
 
 public:
 	AAircraft();
@@ -223,6 +225,8 @@ private:
 	void UpdateCurrentThermalVision(float InWeight);
 
 	void CreateThermalMatInstances();
+
+	void PlayPilotSound();
 
 	void OnDestroy();
 

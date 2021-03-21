@@ -417,14 +417,14 @@ void ACustomPlayerController::CheckInteractable()
 
 			if (Interactable) {
 
-				if (InteractWidget && !InteractWidget->IsInViewport())
+				if (InteractWidget != nullptr && !InteractWidget->IsInViewport())
 				{
 					InteractWidget->AddToViewport();
 				}
 			}
 			else
 			{
-				if (InteractWidget && InteractWidget->IsInViewport())
+				if (InteractWidget != nullptr && InteractWidget->IsInViewport())
 				{
 					InteractWidget->RemoveFromViewport();
 				}

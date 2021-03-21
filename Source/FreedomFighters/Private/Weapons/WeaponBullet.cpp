@@ -48,19 +48,45 @@ void AWeaponBullet::BeginPlay()
 {
 	Super::BeginPlay();
 
+	BulletMovement->Deactivate();
+
 	CapsuleComponent->OnComponentHit.AddDynamic(this, &AWeaponBullet::OnBulletHit);
 	Mesh->OnComponentHit.AddDynamic(this, &AWeaponBullet::OnBulletHit);
 
 	BulletMovementAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 	BulletMovementAudio->SetRelativeLocation(FVector::ZeroVector);
 
+}
+
+void AWeaponBullet::Activate()
+{
+	UProjectileMovementComponent* ProjectileMovementComp = Cast<UProjectileMovementComponent>(GetComponentByClass(UProjectileMovementComponent::StaticClass()));
+
+	if (ProjectileMovementComp)
+	{
+		UProjectileMovementComponent* NewProjectileMovementComp = NewObject<UProjectileMovementComponent>(this);
+		NewProjectileMovementComp->InitialSpeed = ProjectileMovementComp->InitialSpeed;
+		NewProjectileMovementComp->MaxSpeed = ProjectileMovementComp->MaxSpeed;
+		NewProjectileMovementComp->Bounciness = ProjectileMovementComp->Bounciness;
+		NewProjectileMovementComp->Friction = ProjectileMovementComp->Friction;
+		NewProjectileMovementComp->ProjectileGravityScale = ProjectileMovementComp->ProjectileGravityScale;
+		// delete it before registering new Projectile Movement Component in case any physics are applied and cause a clash between two of the componentss
+		ProjectileMovementComp->DestroyComponent();
+		NewProjectileMovementComp->RegisterComponent();
+	}
+	else
+	{
+		ProjectileMovementComp->Deactivate();
+	}
+
 	if (TravelSound != NULL)
 	{
 		BulletMovementAudio->Sound = TravelSound;
 		BulletMovementAudio->Play();
 	}
-}
 
+	Super::Activate();
+}
 
 void AWeaponBullet::Explode(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
@@ -124,12 +150,7 @@ void AWeaponBullet::Explode(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		}
 	}
 
-	SetActorHiddenInGame(true);
-	SetActorEnableCollision(false);
-	SetActorTickEnabled(false);
-
-
-
+	Deactivate();
 }
 
 void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -172,9 +193,7 @@ void AWeaponBullet::OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 			UGameplayStatics::ApplyPointDamage(OtherActor, ActualDamage, FVector::ZeroVector, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
 		}
 
-		SetActorHiddenInGame(true);
-		SetActorEnableCollision(false);
-		SetActorTickEnabled(false);
+		Deactivate();
 	}
 
 	if (ExplosionParticle != NULL)

@@ -95,8 +95,7 @@ void AWeapon::ConfigSetup()
 	{
 		FObjectPoolParameters ObjectPoolParams;
 		ObjectPoolParams.PoolSize = AmmoPerClip;
-		ObjectPoolParams.LifeSpan = 5.0f;
-		ObjectPoolParams.ActorClass = BulletClass;
+		ObjectPoolParams.PoolableActorClass = BulletClass;
 		ObjectPoolComponent->AddToPool(MyOwner, ObjectPoolParams);
 	}
 
@@ -221,11 +220,7 @@ void AWeapon::CreateBullet()
 
 	if (BulletClass)
 	{
-		FObjectPoolParameters ObjectPoolParams;
-		ObjectPoolParams.PoolSize = 1;
-		ObjectPoolParams.LifeSpan = 5.0f;
-		ObjectPoolParams.ActorClass = BulletClass;
-		ObjectPoolComponent->ActivatePoolObject(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), MyOwner, ObjectPoolParams);
+		ObjectPoolComponent->ActivatePoolObject(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
 	}
 
 	PlayShotEffect(TracerEndPoint);

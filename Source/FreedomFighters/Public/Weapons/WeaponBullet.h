@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "ObjectPoolActor.h"
 #include "WeaponBullet.generated.h"
 
 class UArrowComponent;
@@ -11,10 +11,8 @@ class USoundBase;
 class UDamageType;
 class UProjectileMovementComponent;
 class UAudioComponent;
-
-
 UCLASS()
-class FREEDOMFIGHTERS_API AWeaponBullet : public AActor
+class FREEDOMFIGHTERS_API AWeaponBullet : public AObjectPoolActor
 {
 	GENERATED_BODY()
 	
@@ -82,8 +80,11 @@ private:
 
 	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
 
+	virtual void Activate() override;
+
 protected:
 	virtual void BeginPlay() override;
+
 
 public:	
 
