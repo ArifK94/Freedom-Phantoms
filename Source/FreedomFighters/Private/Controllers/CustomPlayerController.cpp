@@ -102,7 +102,9 @@ void ACustomPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CheckInteractable();
+	if (ControlledAircraft == nullptr) {
+		CheckInteractable();
+	}
 }
 
 void ACustomPlayerController::AddUIWidgets()
@@ -392,13 +394,6 @@ void ACustomPlayerController::ToggleThermalVision()
 
 void ACustomPlayerController::CheckInteractable()
 {
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	QueryParams.bTraceComplex = true;
-
-	FCollisionObjectQueryParams ObjectParams;
-	ObjectParams.AllObjects;
-
 	FHitResult OutHit;
 	FVector Start = OwningCombatCharacter->FollowCamera->GetComponentLocation();
 

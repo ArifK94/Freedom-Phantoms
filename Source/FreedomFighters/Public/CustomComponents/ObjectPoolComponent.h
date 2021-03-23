@@ -39,11 +39,14 @@ private:
 public:	
 	UObjectPoolComponent();
 
-	void AddToPool(AActor* Owner, FObjectPoolParameters ObjectPoolParams);
+	void AddToPool(AActor* Owner, FObjectPoolParameters* ObjectPoolParams);
 
-	AObjectPoolActor* ActivatePoolObject(TSubclassOf<AActor> ActorClass, FVector const& Location, FRotator const& Rotation);
+	void ActivatePoolObject(TSubclassOf<AActor> ActorClass, FVector const& Location, FRotator const& Rotation);
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+
 
 };

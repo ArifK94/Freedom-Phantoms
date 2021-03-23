@@ -158,32 +158,36 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 
 void AAircraft::FindPath()
 {
+	// if already assigned a path then return
+	if (AircraftPath != nullptr)
+	{
+		return;
+	}
+
 	TArray<AActor*> TargetActor;
 	UGameplayStatics::GetAllActorsWithTag(GetWorld(), AircraftPathTagName, TargetActor);
 
-	if (AircraftPath == nullptr)
+	for (AActor* Actor : TargetActor)
 	{
-		for (AActor* Actor : TargetActor)
+		AircraftPath = Cast<AAircraftSplinePath>(Actor);
+
+		if (AircraftPath != nullptr)
 		{
-			AircraftPath = Cast<AAircraftSplinePath>(Actor);
 
-			if (AircraftPath != nullptr)
+			// setup time line for following the path
+			if (CurveFloat)
 			{
-
-				// setup time line for following the path
-				if (CurveFloat)
-				{
-					FOnTimelineFloat TimelineProgress;
-					TimelineProgress.BindUFunction(this, FName("FollowSplinePath"));
-					CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
-					CurveTimeline.SetLooping(false);
-					CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
-					CurveTimeline.PlayFromStart();
-				}
-				break;
+				FOnTimelineFloat TimelineProgress;
+				TimelineProgress.BindUFunction(this, FName("FollowSplinePath"));
+				CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+				CurveTimeline.SetLooping(false);
+				CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+				CurveTimeline.PlayFromStart();
 			}
+			break;
 		}
 	}
+
 }
 
 void AAircraft::FollowSplinePath(float Value)

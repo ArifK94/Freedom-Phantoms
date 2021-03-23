@@ -9,7 +9,6 @@ class USphereComponent;
 class UParticleSystem;
 class USoundBase;
 class UDamageType;
-class UProjectileMovementComponent;
 class UAudioComponent;
 UCLASS()
 class FREEDOMFIGHTERS_API AWeaponBullet : public AObjectPoolActor
@@ -21,6 +20,8 @@ public:
 
 private:
 
+	float CurrentDeltaTime;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
 		USphereComponent* CapsuleComponent;
 
@@ -29,9 +30,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* BulletMovementAudio;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
-		UProjectileMovementComponent* BulletMovement;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* ExplosionParticle;
@@ -48,9 +46,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
 		USoundBase* TravelSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		bool isAnExplosive;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UDamageType> DamageType;
@@ -59,8 +56,10 @@ private:
 		float DamageAmount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
-		float DamageRadius;
+		float ExplosiveRadius;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
+		bool IgnoreOwner;
 
 	FTimerHandle THandler_TimeBetweenShots;
 
@@ -72,11 +71,34 @@ private:
 		float DebugExplosionLifeTime;
 
 
-private:
-	UFUNCTION()
-		void OnBulletHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-	void Explode(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	// Projectile Movement
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+		float InitialSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+		float Mass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+		float Drag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+		FVector Gravity;
+
+	FVector Velocity;
+
+	FVector Acceleration;
+
+
+	FVector NextPosition;
+	FVector PreviousPosition;
+
+private:
+
+	void Movement();
+	void DetectHit();
+
+	void Explode();
 
 	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
 
@@ -85,6 +107,7 @@ private:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
 
 public:	
 

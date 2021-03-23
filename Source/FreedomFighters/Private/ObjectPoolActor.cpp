@@ -17,11 +17,13 @@ void AObjectPoolActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-bool AObjectPoolActor::IsActive() {
+bool AObjectPoolActor::IsActive()
+{
 	return isActive;
 }
 
-void AObjectPoolActor::SetActive(bool InpActive) {
+void AObjectPoolActor::SetActive(bool InpActive)
+{
 	isActive = InpActive;
 
 	SetActorHiddenInGame(!InpActive);
@@ -37,7 +39,8 @@ void AObjectPoolActor::Activate()
 }
 
 
-void AObjectPoolActor::Deactivate() {
+void AObjectPoolActor::Deactivate() 
+{
 	SetActive(false);
 	GetWorldTimerManager().ClearTimer(THandler_LifespanTimer);
 }

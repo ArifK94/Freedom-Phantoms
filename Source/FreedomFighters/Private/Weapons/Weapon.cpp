@@ -73,6 +73,8 @@ AWeapon::AWeapon()
 
 	HasPlayedClipIn = false;
 	HasPlayedClipOut = false;
+
+	PlayFireSoundAtLocation = true;
 }
 
 void AWeapon::ConfigSetup()
@@ -93,9 +95,9 @@ void AWeapon::ConfigSetup()
 	// Add neccessary Actors to the Object pool
 	if (BulletClass && MyOwner)
 	{
-		FObjectPoolParameters ObjectPoolParams;
-		ObjectPoolParams.PoolSize = AmmoPerClip;
-		ObjectPoolParams.PoolableActorClass = BulletClass;
+		FObjectPoolParameters* ObjectPoolParams = new FObjectPoolParameters();
+		ObjectPoolParams->PoolSize = AmmoPerClip;
+		ObjectPoolParams->PoolableActorClass = BulletClass;
 		ObjectPoolComponent->AddToPool(MyOwner, ObjectPoolParams);
 	}
 
@@ -248,10 +250,17 @@ void AWeapon::PlayShotEffect(FVector TracerEndPoint)
 	LastFireTime = GetWorld()->TimeSeconds;
 
 	// try and play the sound if specified
-	if (ShotSound != NULL)
+	if (ShotSound != nullptr)
 	{
-		ShotAudioComponent->Sound = ShotSound;
-		ShotAudioComponent->Play(0.0f);
+		if (PlayFireSoundAtLocation)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ShotSound, EyeLocation, 1.f, 1.f, 0.f, FireAttenuation);
+		}
+		else
+		{
+			ShotAudioComponent->Sound = ShotSound;
+			ShotAudioComponent->Play(0.0f);
+		}
 	}
 }
 
