@@ -141,7 +141,8 @@ private:
 	void BurstDelay();
 	void SemiFireDelay();
 
-	void AutoReload();
+	void AutoReloadBegin();
+	void AutoReloadEnd();
 
 protected:
 	virtual void Fire();
@@ -164,8 +165,6 @@ protected:
 	void PlayShotEffect(FVector TracerEndPoint);
 
 protected:
-	float CurrentDeltaTime;
-
 	int BurstAmmountCount;
 
 	USkeletalMeshComponent* CharacterReference;
@@ -203,14 +202,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
 		bool canShowClip;
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool isFiring;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		bool CanAutoReload;
+	FTimerHandle THandler_AutoReloadBegin;
+	FTimerHandle THandler_AutoReloadEnd;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
@@ -256,7 +257,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		float CooldownReload;
-	float CurrentCountdownReload;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		float RateOfFire;

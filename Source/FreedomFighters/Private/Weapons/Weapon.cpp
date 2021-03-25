@@ -42,7 +42,7 @@ AWeapon::AWeapon()
 
 	ObjectPoolComponent = CreateDefaultSubobject<UObjectPoolComponent>(TEXT("ObjectPoolComponent"));
 	ShotAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotAudioComponent"));
-	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));	
+	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));
 
 	MuzzleSocket = "Muzzle";
 	TracerTargetSocket = "Target";
@@ -75,6 +75,8 @@ AWeapon::AWeapon()
 	HasPlayedClipOut = false;
 
 	PlayFireSoundAtLocation = true;
+
+	CanAutoReload = false;
 }
 
 void AWeapon::ConfigSetup()
@@ -121,15 +123,11 @@ void AWeapon::BeginPlay()
 	SpawnMagazine();
 	ConfigSetup();
 	SpawnWeaponAttachments();
-
-	CurrentCountdownReload = CooldownReload;
 }
 
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	CurrentDeltaTime = DeltaTime;
 
 	if (weaponClipObj)
 	{
@@ -159,8 +157,6 @@ void AWeapon::Tick(float DeltaTime)
 			StopFire();
 		}
 	}
-
-	AutoReload();
 }
 
 void AWeapon::Fire()
@@ -174,6 +170,16 @@ void AWeapon::Fire()
 	CreateBullet();
 
 	BurstAmmountCount++;
+
+	if (CanAutoReload)
+	{
+		if (CurrentAmmo <= 0)
+		{
+			isReloading = true;
+			ClipOut();
+			GetWorldTimerManager().SetTimer(THandler_AutoReloadBegin, this, &AWeapon::AutoReloadBegin, CooldownReload / 2.0f, false);
+		}
+	}
 }
 
 void AWeapon::CreateBullet()
@@ -393,7 +399,6 @@ void AWeapon::ClipIn()
 
 void AWeapon::ClipOut()
 {
-
 	if (!HasPlayedClipOut && ReloadClipOutSound != NULL)
 	{
 		ClipAudioComponent->Sound = ReloadClipOutSound;
@@ -407,36 +412,35 @@ void AWeapon::ClipOut()
 	{
 		weaponClipObj->DropClip(MeshComp, ClipSocket, weaponClip);
 	}
-
-
 }
 
 void AWeapon::SpawnMagazine()
 {
+	if (!weaponClip) {
+		return;
+	}
+
 	UWorld* world = GetWorld();
 
-	if (weaponClip)
+	if (!world) {
+		return;
+	}
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	// Spawn the weapon actor
+	weaponClipObj = world->SpawnActor<AWeaponClip>(weaponClip, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (weaponClipObj)
 	{
-		if (world)
+		weaponClipObj->SetOwner(this);
+		SetMagazineSocket();
+
+		// Some weapons may not show clip such as certain shotguns
+		if (!canShowClip)
 		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = this;
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-			// Spawn the weapon actor
-			weaponClipObj = world->SpawnActor<AWeaponClip>(weaponClip, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-			if (weaponClipObj)
-			{
-				weaponClipObj->SetOwner(this);
-				SetMagazineSocket();
-
-				// Some weapons may not show clip such as certain shotguns
-				if (!canShowClip)
-				{
-					weaponClipObj->getClipMesh()->ToggleVisibility(false);
-				}
-			}
+			weaponClipObj->getClipMesh()->ToggleVisibility(false);
 		}
 	}
 }
@@ -513,38 +517,25 @@ void AWeapon::SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName Trigge
 	HandguardOffset.SetRotation(TargetRotation.Quaternion());
 }
 
-void AWeapon::AutoReload()
+
+void AWeapon::AutoReloadBegin()
 {
-	if (CooldownReload > 0.0f && CurrentAmmo <= 0.0f)
+	if (ReloadClipInSound != NULL)
 	{
-		if (CurrentCountdownReload > 0.0f)
-		{
-			CurrentCountdownReload -= CurrentDeltaTime;
-
-			isReloading = true;
-
-			if (CurrentCountdownReload > (CooldownReload / 2)) // if countdown is half way through, change sound clip
-			{
-				ClipOut();
-			}
-			else
-			{
-				if (!HasPlayedClipIn && ReloadClipInSound != NULL)
-				{
-					ClipAudioComponent->Sound = ReloadClipInSound;
-					ClipAudioComponent->Play();
-					HasPlayedClipIn = true;
-				}
-			}
-		}
-		else
-		{
-			OnReload();
-			EndReload();
-			CurrentCountdownReload = CooldownReload;
-			isReloading = false;
-		}
+		ClipAudioComponent->Sound = ReloadClipInSound;
+		ClipAudioComponent->Play();
 	}
+
+	GetWorldTimerManager().SetTimer(THandler_AutoReloadEnd, this, &AWeapon::AutoReloadEnd, CooldownReload / 2.0f, false);
+	GetWorldTimerManager().ClearTimer(THandler_AutoReloadBegin);
+}
+
+void AWeapon::AutoReloadEnd()
+{
+	OnReload();
+	EndReload();
+	isReloading = false;
+	GetWorldTimerManager().ClearTimer(THandler_AutoReloadEnd);
 }
 
 
