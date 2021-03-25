@@ -68,8 +68,6 @@ private:
 
 	ACommanderCharacter* Commander;
 
-	float CurrentDeltaTime;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TimeBetweenShotsMin;
 
@@ -98,8 +96,16 @@ private:
 		float MovementDebugLifetTime;
 
 
-	FTimerHandle THandler_TimeBetweenShots;
+	FTimerHandle THandler_Sprint;
+	FTimerHandle THandler_BeginFire;
 	FTimerHandle THandler_EndFire;
+	FTimerHandle THandler_FindEnemy;
+	FTimerHandle THandler_CommanderOrders;
+	FTimerHandle THandler_FollowCamera;
+	FTimerHandle THandler_CombatAlert;
+	FTimerHandle THandler_FindCover;
+
+
 
 public:
 	ACombatAIController();
@@ -108,6 +114,9 @@ public:
 
 private:
 	void Init();
+
+	// Camera position can change if in helicopter, crouch or other stance
+	void UpdateFollowCamera();
 
 	void UpdateCharacterMovement();
 
@@ -127,6 +136,8 @@ private:
 	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius);
 
 	void CheckCommanderOrder();
+
+	void FindCover();
 	
 	void GenerateCoverPoints(AActor* TargetActor);
 

@@ -129,6 +129,10 @@ void AStronghold::SpawnCharacter()
 		return;
 	}
 
+	if (DominantFaction->FactionManager->GetOperativeCharacterClass() == nullptr) {
+		return;
+	}
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -138,13 +142,20 @@ void AStronghold::SpawnCharacter()
 		UBoxComponent* SpawnArea = SpawnAreas[i];
 
 		FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
-		//FVector Location = UNavigationSystemV1::GetRandomReachablePointInRadius(GetWorld(), SpawnArea->GetComponentLocation(), 100.0f);
 
-		ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionManager->GetOperativeCharacterClass(), Location, SpawnArea->GetComponentRotation(), SpawnParams);
+		// check if location is on the navmesh
+		FNavLocation NavLocation;
+		UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+		bool navResult = NavigationArea->ProjectPointToNavigation(Location, NavLocation);
 
-		if (Character)
+		if (navResult)
 		{
-			CurrentSpawnedActors++;
+			ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionManager->GetOperativeCharacterClass(), NavLocation.Location, SpawnArea->GetComponentRotation(), SpawnParams);
+
+			if (Character)
+			{
+				CurrentSpawnedActors++;
+			}
 		}
 	}
 }

@@ -100,67 +100,38 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 	CanFindCover = true;
 
-	GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &ACombatAIController::ShootAtEnemy, 1.0f, true, 0.0f);
-	GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true, 0.0f);
+	if (OwningCombatCharacter)
+	{
+		GetWorldTimerManager().SetTimer(THandler_FollowCamera, this, &ACombatAIController::UpdateFollowCamera, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_BeginFire, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
+		GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_Sprint, this, &ACombatAIController::UpdateSprint, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_CombatAlert, this, &ACombatAIController::UpdatCombatAlert, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::FindCover, 1.0f, true);
+	}
 }
 
 void ACombatAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	CurrentDeltaTime = DeltaTime;
 
 	if (OwningCombatCharacter)
 	{
-		// set the camera to always be placed by the head
-		OwningCombatCharacter->FollowCamera->SetWorldLocation(OwningCombatCharacter->GetMesh()->GetBoneLocation(OwningCombatCharacter->GetHeadSocket(), EBoneSpaces::WorldSpace));
-
 		UpdateCharacterMovement();
 
-		UpdatCombatAlert();
-
-		CheckCommanderOrder();
-
-		if (PerceptionComp != nullptr)
-		{
-			SetVisionAngle();
-		}
-
-		FindEnemy();
-
-		//if (CanFindCover)
+		//if (PerceptionComp != nullptr)
 		//{
-		//	if (EnemyActor)
-		//	{
-		//		if (!HasChosenCover)
-		//		{
-		//			GenerateCoverPoints(EnemyActor);
-		//		}
-		//	}
-		//	else
-		//	{
-		//		// pick a random cover point
-		//		if (!HasChosenCover)
-		//		{
-		//			GenerateCoverPoints(OwningCombatCharacter);
-		//			HasChosenCover = true;
-		//		}
-		//	}
-
-		//	//// check if current cover has been taken,
-		//	//// if so, then find another cover point
-		//	//FWorldCoverPoint CoverLocation = FWorldCoverPoint();
-		//	//CoverLocation.Location = TargetDestination;
-		//	//CoverLocation.Owner = OwningCombatCharacter;
-
-		//	//if (GameModeManager->IsCoverPointTaken(CoverLocation))
-		//	//{
-		//	//	HasChosenCover = false;
-		//	//}
+		//	SetVisionAngle();
 		//}
-
-
-		UpdateSprint();
 	}
+}
+
+void ACombatAIController::UpdateFollowCamera()
+{
+	// set the camera to always be placed by the head
+	OwningCombatCharacter->FollowCamera->SetWorldLocation(OwningCombatCharacter->GetMesh()->GetBoneLocation(OwningCombatCharacter->GetHeadSocket(), EBoneSpaces::WorldSpace));
 }
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius)
@@ -355,11 +326,6 @@ void ACombatAIController::ShootAtEnemy()
 		return;
 	}
 
-
-	if (EnemyActor == nullptr) {
-		return;
-	}
-
 	CurrentWeapon = OwningCombatCharacter->GetCurrentWeapon();
 
 	if (CurrentWeapon == nullptr) {
@@ -466,6 +432,42 @@ void ACombatAIController::EndFiring()
 	}
 }
 
+void ACombatAIController::FindCover()
+{
+	if (!CanFindCover)
+	{
+		return;
+	}
+	if (EnemyActor)
+	{
+		if (!HasChosenCover)
+		{
+			GenerateCoverPoints(EnemyActor);
+		}
+	}
+	else
+	{
+		// pick a random cover point
+		if (!HasChosenCover)
+		{
+			GenerateCoverPoints(OwningCombatCharacter);
+			HasChosenCover = true;
+		}
+	}
+
+	// check if current cover has been taken,
+	// if so, then find another cover point
+	FWorldCoverPoint CoverLocation = FWorldCoverPoint();
+	CoverLocation.Location = TargetDestination;
+	CoverLocation.Owner = OwningCombatCharacter;
+
+	if (GameModeManager->IsCoverPointTaken(CoverLocation))
+	{
+		HasChosenCover = false;
+	}
+
+}
+
 void ACombatAIController::GenerateCoverPoints(AActor* TargetActor)
 {
 	if (TargetActor == nullptr)
@@ -507,7 +509,8 @@ void ACombatAIController::GenerateCoverPoints(AActor* TargetActor)
 			// get all hit results which hit an obstacle
 			if (bHit)
 			{
-				FVector LocationPoint = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
+				//FVector LocationPoint = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
+				FVector LocationPoint = HitResult.ImpactPoint;
 
 				DrawDebugLine(GetWorld(), Start, LocationPoint, FColor::Magenta, true, 5.0f, 0, 1.0f);
 
@@ -667,6 +670,19 @@ void ACombatAIController::CheckCommanderOrder()
 		case CommanderOrders::Follow:
 			TargetDestination = Commander->GetActorLocation();
 			CanFindCover = false;
+
+			// Crouch if the commander is crouched
+			if (Commander->GetCharacterMovement()->IsCrouching())
+			{
+				if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+					OwningCombatCharacter->Crouch();
+			}
+			else
+			{
+				if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+					OwningCombatCharacter->UnCrouch();
+			}
+
 			break;
 		}
 
