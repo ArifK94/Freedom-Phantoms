@@ -12,7 +12,7 @@ class ACombatCharacter;
 class UFactionManager;
 class UAudioComponent;
 class AAmmoCrate;
-
+class UCoverPointComponent;
 // dynamically add the dominant in case more factions are added in the future
 USTRUCT(BlueprintType)
 struct FOccupiedFaction
@@ -89,19 +89,26 @@ private:
 
 	TArray<UBoxComponent*> SpawnAreas;
 
+	TArray<UCoverPointComponent*> CoverPointComponents;
+
 	FOccupiedFaction* DominantFaction;
 
 	TArray<ACombatCharacter*> OccupyingCharacters;
 
 	TArray<FOccupiedFaction*> OccupiedFactions;
+
 public:	
 	AStronghold();
 
 	void StartSpawn();
 	void StopSpawn();
 
+	UCoverPointComponent* GetCoverPoint(AActor* OwningCharacter);
+
 private:
 	void GetSpawnAreas();
+
+	void GetCoverPoints();
 
 	void SpawnCharacter();
 		

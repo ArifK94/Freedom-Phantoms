@@ -31,7 +31,7 @@ enum class AircraftMovement : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FAircraftWeapon : public FTableRowBase
+struct FAircraftWeapon
 {
 	GENERATED_USTRUCT_BODY()
 

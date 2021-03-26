@@ -1,7 +1,9 @@
 #include "Props/Stronghold.h"
 
 #include "Characters/CombatCharacter.h"
+#include "Controllers/CombatAIController.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/CoverPointComponent.h"
 #include "Managers/FactionManager.h"
 
 #include "TimerManager.h"
@@ -62,6 +64,7 @@ void AStronghold::BeginPlay()
 	DominantFaction->FactionManager = nullptr;
 
 	GetSpawnAreas();
+	GetCoverPoints();
 	StartSpawn();
 }
 
@@ -84,6 +87,37 @@ void AStronghold::GetSpawnAreas()
 			SpawnAreas.Add(SpawnArea);
 		}
 	}
+}
+
+void AStronghold::GetCoverPoints()
+{
+	for (UActorComponent* component : GetComponentsByClass(UCoverPointComponent::StaticClass()))
+	{
+		UCoverPointComponent* CoverPointComp = Cast<UCoverPointComponent>(component);
+		if (CoverPointComp)
+		{
+			CoverPointComponents.Add(CoverPointComp);
+		}
+	}
+}
+
+UCoverPointComponent* AStronghold::GetCoverPoint(AActor* OwningCharacter)
+{
+	if (CoverPointComponents.Num() <= 0) {
+		return nullptr;
+	}
+
+	for (int i = 0; i < CoverPointComponents.Num(); i++)
+	{
+		UCoverPointComponent* CoverPointComp = CoverPointComponents[i];
+
+		if (!CoverPointComp->GetOwner())
+		{
+			CoverPointComp->SetOccupant(OwningCharacter);
+			return CoverPointComp;
+		}
+	}
+	return nullptr;
 }
 
 void AStronghold::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -155,6 +189,12 @@ void AStronghold::SpawnCharacter()
 			if (Character)
 			{
 				CurrentSpawnedActors++;
+
+				ACombatAIController* CombatAI = Cast<ACombatAIController>(Character->GetController());
+
+				if (CombatAI) {
+					CombatAI->SetGuardingStronghold(this);
+				}
 			}
 		}
 	}

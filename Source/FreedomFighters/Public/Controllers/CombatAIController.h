@@ -15,6 +15,7 @@ class UAIPerceptionComponent;
 class AWeapon;
 class AShotgun;
 class USphereComponent;
+class AStronghold;
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 {
@@ -65,6 +66,9 @@ private:
 	UAIPerceptionComponent* PerceptionComp;
 	AWeapon* CurrentWeapon;
 	AShotgun* ShotgunObj;
+
+	// to take defensive positions within the stronghold
+	AStronghold* CurrentStronghold;
 
 	ACommanderCharacter* Commander;
 
@@ -157,5 +161,9 @@ private:
 public:
 	AActor* GetEnemyActor() {
 		return EnemyActor;
+	}
+
+	void SetGuardingStronghold(AStronghold* Stronghold) {
+		CurrentStronghold = Stronghold;
 	}
 };

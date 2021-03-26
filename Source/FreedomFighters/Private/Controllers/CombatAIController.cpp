@@ -5,6 +5,8 @@
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/Shotgun.h"
+#include "Props/Stronghold.h"
+#include "CustomComponents/CoverPointComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 
@@ -434,10 +436,11 @@ void ACombatAIController::EndFiring()
 
 void ACombatAIController::FindCover()
 {
-	if (!CanFindCover)
-	{
+	if (!CanFindCover) {
 		return;
 	}
+
+
 	if (EnemyActor)
 	{
 		if (!HasChosenCover)
@@ -447,11 +450,33 @@ void ACombatAIController::FindCover()
 	}
 	else
 	{
-		// pick a random cover point
+
 		if (!HasChosenCover)
 		{
-			GenerateCoverPoints(OwningCombatCharacter);
-			HasChosenCover = true;
+			if (CurrentStronghold)
+			{
+				UCoverPointComponent* CoverPointComp = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
+
+				if (CoverPointComp)
+				{
+					TargetDestination = CoverPointComp->GetComponentLocation();
+					CoverLocationPoints.Add(CoverPointComp->GetComponentLocation());
+					TakeCover();
+				}
+				else
+				{
+					GenerateCoverPoints(OwningCombatCharacter);
+				}
+
+				HasChosenCover = true;
+			}
+			else
+			{	// pick a random cover point
+				GenerateCoverPoints(OwningCombatCharacter);
+				HasChosenCover = true;
+			}
+
+
 		}
 	}
 

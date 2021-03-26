@@ -10,13 +10,19 @@
 #include "GameModeManager.generated.h"
 
 USTRUCT(BlueprintType)
-struct FWorldCoverPoint : public FTableRowBase
+struct FWorldCoverPoint 
 {
 	GENERATED_USTRUCT_BODY()
 
+public:
 	AActor* Owner;
 
-	FVector Location;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FVector Location;
+
+	FWorldCoverPoint()
+	{
+	}
 };
 UCLASS()
 class FREEDOMFIGHTERS_API AGameModeManager : public AGameModeBase
