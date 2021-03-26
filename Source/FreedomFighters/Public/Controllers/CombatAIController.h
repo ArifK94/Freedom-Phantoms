@@ -100,6 +100,11 @@ private:
 		float MovementDebugLifetTime;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float ResetMovementCountdown;
+	float CurrentResetMovementCountdown;
+
+
 	FTimerHandle THandler_Sprint;
 	FTimerHandle THandler_BeginFire;
 	FTimerHandle THandler_EndFire;
@@ -108,6 +113,7 @@ private:
 	FTimerHandle THandler_FollowCamera;
 	FTimerHandle THandler_CombatAlert;
 	FTimerHandle THandler_FindCover;
+	FTimerHandle THandler_ResetMovement;
 
 
 
@@ -148,6 +154,9 @@ private:
 	FVector GetClosestCoverPoint(AActor* TargetActor);
 
 	void TakeCover();
+
+	/** If AI is stuck, then reset location appropiately */
+	void ResetLocation();
 
 protected:
 	virtual void BeginPlay() override;

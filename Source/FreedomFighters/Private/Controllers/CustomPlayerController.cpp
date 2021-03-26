@@ -84,6 +84,10 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 		{
 			InteractKey = OutMappings[0].Key;
 		}
+
+		if (InteractWidget) {
+			GetWorldTimerManager().SetTimer(THandler_CheckInteractable, this, &ACustomPlayerController::CheckInteractable, 1.0f, true);
+		}
 	}
 
 }
@@ -101,10 +105,6 @@ void ACustomPlayerController::BeginPlay()
 void ACustomPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (ControlledAircraft == nullptr) {
-		CheckInteractable();
-	}
 }
 
 void ACustomPlayerController::AddUIWidgets()
@@ -394,6 +394,12 @@ void ACustomPlayerController::ToggleThermalVision()
 
 void ACustomPlayerController::CheckInteractable()
 {
+	// if controlling aircraft then do not check for interactions
+	if (ControlledAircraft) {
+		return;
+	}
+
+
 	FHitResult OutHit;
 	FVector Start = OwningCombatCharacter->FollowCamera->GetComponentLocation();
 
@@ -412,17 +418,16 @@ void ACustomPlayerController::CheckInteractable()
 
 			if (Interactable) {
 
-				if (InteractWidget != nullptr && !InteractWidget->IsInViewport())
+				// display the interact widget if currently not displaying
+				if (!InteractWidget->IsInViewport())
 				{
 					InteractWidget->AddToViewport();
 				}
 			}
 			else
 			{
-				if (InteractWidget != nullptr && InteractWidget->IsInViewport())
-				{
-					InteractWidget->RemoveFromViewport();
-				}
+				// remove the interact widget
+				InteractWidget->RemoveFromViewport();
 			}
 		}
 	}

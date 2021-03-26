@@ -45,6 +45,8 @@ ACombatAIController::ACombatAIController()
 
 	TimeBetweenShotsMin = 2.0f;
 	TimeBetweenShotsMax = 3.0f;
+
+	ResetMovementCountdown = 5.0f;
 }
 
 void ACombatAIController::Init()
@@ -75,6 +77,7 @@ void ACombatAIController::Init()
 void ACombatAIController::BeginPlay()
 {
 	Super::BeginPlay();
+	CurrentResetMovementCountdown = ResetMovementCountdown;
 
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
 
@@ -112,6 +115,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_Sprint, this, &ACombatAIController::UpdateSprint, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CombatAlert, this, &ACombatAIController::UpdatCombatAlert, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::FindCover, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_ResetMovement, this, &ACombatAIController::ResetLocation, 2.0f, true);
 	}
 }
 
@@ -713,5 +717,45 @@ void ACombatAIController::CheckCommanderOrder()
 
 
 		CurrentMovement = MoveToTarget(TargetRadius);
+	}
+}
+
+void ACombatAIController::ResetLocation()
+{
+	if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
+		return;
+	}
+
+	// Using character speed to check if stuck or not
+	if (OwningCombatCharacter->GetCharacterSpeed() <= .2f)
+	{
+		// if reset is more than 0 then perform countdown
+		if (CurrentResetMovementCountdown > 0.0f)
+		{
+			CurrentResetMovementCountdown--;
+		}
+		else
+		{
+			// reset movement
+			// find closest location point on navmesh to current character location
+			FNavLocation NavLocation;
+			UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+			bool navResult = NavigationArea->ProjectPointToNavigation(OwningCombatCharacter->GetActorLocation(), NavLocation);
+
+			if (navResult)
+			{
+				OwningCombatCharacter->SetActorLocation(NavLocation.Location);
+
+				// reset countdown timer
+				CurrentResetMovementCountdown = ResetMovementCountdown;
+
+				DrawDebugSphere(GetWorld(), NavLocation.Location, 10.0f, 20, FColor::Purple, false, 100.0f, 0, 2);
+
+			}
+		}
+	}
+	else
+	{
+		CurrentResetMovementCountdown = ResetMovementCountdown;
 	}
 }

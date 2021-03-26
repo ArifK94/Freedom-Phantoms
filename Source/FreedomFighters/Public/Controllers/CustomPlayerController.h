@@ -19,6 +19,8 @@ private:
 	ACombatCharacter* OwningCombatCharacter;
 	ACommanderCharacter* OwningCommander;
 
+	FTimerHandle THandler_CheckInteractable;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		AAircraft* ControlledAircraft;
 

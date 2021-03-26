@@ -256,7 +256,6 @@ protected:
 
 
 public:
-
 	FName GetHeadSocket() {
 		return HeadSocket;
 	}
@@ -285,6 +284,9 @@ public:
 		return isTakingCover;
 	}
 
+	float GetCharacterSpeed() {
+		return CharacterSpeed;
+	}
 
 	void IsTakingCover(bool Value) {
 		isTakingCover = Value;
