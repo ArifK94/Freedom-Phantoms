@@ -112,6 +112,9 @@ void ABaseCharacter::BeginPlay()
 
 	// Create Animation Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
+
 }
 
 void ABaseCharacter::Tick(float DeltaTime)
@@ -160,6 +163,18 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 		GetMesh()->SetSimulatePhysics(true);
 
 		PrimaryActorTick.bCanEverTick = false;
+	}
+}
+
+void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	ABaseCharacter* Character = Cast<ABaseCharacter>(OtherActor);
+
+	if (Character)
+	{
+		// ignore character collision when moving
+		GetCapsuleComponent()->IgnoreActorWhenMoving(Character, true);
+		Character->GetCapsuleComponent()->IgnoreActorWhenMoving(this, true);
 	}
 }
 
