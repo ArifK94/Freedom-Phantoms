@@ -54,10 +54,10 @@ public:
 private:
 	void OnConstruction(const FTransform& Transform) override;
 
-//
-//#if WITH_EDITOR
-//	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-//#endif
+
+#if WITH_EDITOR
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
 	void UpdatePointIndex();
 	void UpdateCollisionBox();

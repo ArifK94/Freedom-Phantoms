@@ -1,9 +1,10 @@
 #include "CustomComponents/CoverPointComponent.h"
 
-#include "Kismet/KismetMathLibrary.h"
+#include "Components/ArrowComponent.h"
 
 UCoverPointComponent::UCoverPointComponent()
 {
+	SetCollisionProfileName(TEXT("NoCollision"));
 }
 
 
