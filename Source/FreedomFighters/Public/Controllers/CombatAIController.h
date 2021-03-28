@@ -69,7 +69,7 @@ private:
 
 	// to take defensive positions within the stronghold
 	AStronghold* CurrentStronghold;
-
+	class UCoverPointComponent* ChosenCoverPointComponent;
 	ACommanderCharacter* Commander;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -113,6 +113,8 @@ private:
 	FTimerHandle THandler_FollowCamera;
 	FTimerHandle THandler_CombatAlert;
 	FTimerHandle THandler_FindCover;
+	FTimerHandle THandler_BeginPeakCover;
+	FTimerHandle THandler_EndPeakCover;
 	FTimerHandle THandler_ResetMovement;
 
 
@@ -131,6 +133,9 @@ private:
 	void UpdateCharacterMovement();
 
 	void UpdatCombatAlert();
+
+	void BeginCoverPeak();
+	void EndCoverPeak();
 
 	void UpdateSprint();
 

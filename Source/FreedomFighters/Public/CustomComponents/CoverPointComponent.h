@@ -14,11 +14,23 @@ private:
 	AActor* Owner;
 
 	FVector Location;
+
+	class UArrowComponent* ArrowComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool IsAtCornerLeft;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool IsAtCornerRight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool CanCrouch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool PreferCrouched;
+
 public:	
 	UCoverPointComponent();
-
-protected:
-	virtual void BeginPlay() override;
 
 public:	
 	FVector GetLocation() {
@@ -33,5 +45,15 @@ public:
 		Owner = Actor;
 	}
 
-		
+	bool IsACornerLeft() {
+		return IsAtCornerLeft;
+	}
+
+	bool IsACornerRight() {
+		return IsAtCornerRight;
+	}
+	
+	bool IsCrouchPreferred() {
+		return PreferCrouched;
+	}
 };

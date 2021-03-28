@@ -260,6 +260,10 @@ public:
 		return HeadSocket;
 	}
 
+	float GetCharacterSpeed() {
+		return CharacterSpeed;
+	}
+
 	bool IsSprinting() {
 		return isSprinting;
 	}
@@ -284,12 +288,30 @@ public:
 		return isTakingCover;
 	}
 
-	float GetCharacterSpeed() {
-		return CharacterSpeed;
+	bool IsAtCoverCorner() {
+		return isAtCoverCorner;
 	}
+
+	bool IsFacingCoverRHS() {
+		return isFacingCoverRHS;
+	}
+
+
 
 	void IsTakingCover(bool Value) {
 		isTakingCover = Value;
+	}
+
+	void IsFacingCoverRHS(bool Value) {
+		isFacingCoverRHS = Value;
+	}
+
+	void IsAtCoverCorner(bool Value) {
+		isAtCoverCorner = Value;
+	}
+
+	void SetRightInputValue(float Value) {
+		RightInputValue = Value;
 	}
 
 	void SetIsInHelicopter(bool value) {

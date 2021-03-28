@@ -204,7 +204,40 @@ void ACombatAIController::UpdatCombatAlert()
 			OwningCombatCharacter->EndAim();
 		}
 	}
+
+	if (OwningCombatCharacter->IsAtCoverCorner())
+	{
+		if (!THandler_BeginPeakCover.IsValid())
+		{
+			GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, 2.0f, false);
+		}
+
+
+	}
 }
+
+void ACombatAIController::BeginCoverPeak()
+{
+	if (OwningCombatCharacter->IsFacingCoverRHS())
+	{
+		OwningCombatCharacter->SetRightInputValue(1.0f);
+	}
+	else
+	{
+		OwningCombatCharacter->SetRightInputValue(-1.0f);
+	}
+
+	GetWorldTimerManager().SetTimer(THandler_EndPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 4.0f), false);
+	GetWorldTimerManager().ClearTimer(THandler_BeginPeakCover);
+}
+
+void ACombatAIController::EndCoverPeak()
+{
+	GetWorldTimerManager().ClearTimer(THandler_EndPeakCover);
+
+	OwningCombatCharacter->SetRightInputValue(.0f);
+}
+
 
 UAISenseConfig* ACombatAIController::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
 {
@@ -449,7 +482,7 @@ void ACombatAIController::FindCover()
 	{
 		if (!HasChosenCover)
 		{
-			GenerateCoverPoints(EnemyActor);
+			//			GenerateCoverPoints(EnemyActor);
 		}
 	}
 	else
@@ -459,28 +492,25 @@ void ACombatAIController::FindCover()
 		{
 			if (CurrentStronghold)
 			{
-				UCoverPointComponent* CoverPointComp = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
+				ChosenCoverPointComponent = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
 
-				if (CoverPointComp)
+				if (ChosenCoverPointComponent)
 				{
-					TargetDestination = CoverPointComp->GetComponentLocation();
-					CoverLocationPoints.Add(CoverPointComp->GetComponentLocation());
-					TakeCover();
+					TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
+					CoverLocationPoints.Add(ChosenCoverPointComponent->GetComponentLocation());
 				}
 				else
 				{
-					GenerateCoverPoints(OwningCombatCharacter);
+					//	GenerateCoverPoints(OwningCombatCharacter);
 				}
 
 				HasChosenCover = true;
 			}
 			else
 			{	// pick a random cover point
-				GenerateCoverPoints(OwningCombatCharacter);
+				//GenerateCoverPoints(OwningCombatCharacter);
 				HasChosenCover = true;
 			}
-
-
 		}
 	}
 
@@ -494,6 +524,10 @@ void ACombatAIController::FindCover()
 	{
 		HasChosenCover = false;
 	}
+
+	CurrentMovement = MoveToTarget(0.0f);
+
+	TakeCover();
 
 }
 
@@ -597,8 +631,6 @@ void ACombatAIController::GenerateCoverPoints(AActor* TargetActor)
 		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
 			OwningCombatCharacter->GetCharacterMovement()->UnCrouch();
 	}
-
-	TakeCover();
 }
 
 FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
@@ -636,36 +668,95 @@ FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
 	return ClosestPoint;
 }
 
+
 void ACombatAIController::TakeCover()
 {
 	if (CoverLocationPoints.Num() <= 0)
 	{
 		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
 			OwningCombatCharacter->BeginCrouch();
+		return;
 	}
-	else
+
+	if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+		OwningCombatCharacter->GetCharacterMovement()->UnCrouch();
+
+
+	switch (CurrentMovement)
 	{
-		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->GetCharacterMovement()->UnCrouch();
+	case EPathFollowingRequestResult::Failed:
+		HasChosenCover = false;
+		break;
+	case EPathFollowingRequestResult::AlreadyAtGoal:
 
-		CurrentMovement = MoveToTarget(0.0f);
-
-		switch (CurrentMovement)
+		if (ChosenCoverPointComponent)
 		{
-		case EPathFollowingRequestResult::Failed:
-			HasChosenCover = false;
-			break;
-		case EPathFollowingRequestResult::AlreadyAtGoal:
-			if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-				OwningCombatCharacter->BeginCrouch();
-			break;
-		case EPathFollowingRequestResult::RequestSuccessful:
-			HasChosenCover = true;
-			break;
-		default:
-			break;
+			FLatentActionInfo LatentInfo;
+			LatentInfo.CallbackTarget = this;
+
+			UKismetSystemLibrary::MoveComponentTo(
+				OwningCombatCharacter->GetCapsuleComponent(),
+				ChosenCoverPointComponent->GetComponentLocation(),
+				UKismetMathLibrary::MakeRotFromXZ(FVector(0.0f, ChosenCoverPointComponent->GetRelativeLocation().Z, 0.0f), OwningCombatCharacter->GetCapsuleComponent()->GetUpVector()),
+				false,
+				false,
+				.2f,
+				false,
+				EMoveComponentAction::Type::Move,
+				LatentInfo
+			);
+
+
+			if (ChosenCoverPointComponent->IsCrouchPreferred())
+			{
+				if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching()) {
+					OwningCombatCharacter->BeginCrouch();
+				}
+			}
+
+			if (ChosenCoverPointComponent->IsACornerLeft() && ChosenCoverPointComponent->IsACornerRight())
+			{
+				// choose a random corner direction
+				int RandomNumber = FMath::RandRange(0, 1);
+
+				if (RandomNumber == 0)
+				{
+					OwningCombatCharacter->IsTakingCover(true);
+					OwningCombatCharacter->IsAtCoverCorner(true);
+					OwningCombatCharacter->IsFacingCoverRHS(false);
+				}
+				else
+				{
+					OwningCombatCharacter->IsTakingCover(true);
+					OwningCombatCharacter->IsAtCoverCorner(true);
+					OwningCombatCharacter->IsFacingCoverRHS(true);
+				}
+			}
+
+			if (ChosenCoverPointComponent->IsACornerLeft())
+			{
+				OwningCombatCharacter->IsTakingCover(true);
+				OwningCombatCharacter->IsAtCoverCorner(true);
+				OwningCombatCharacter->IsFacingCoverRHS(false);
+			}
+			else if (ChosenCoverPointComponent->IsACornerRight())
+			{
+				OwningCombatCharacter->IsTakingCover(true);
+				OwningCombatCharacter->IsAtCoverCorner(true);
+				OwningCombatCharacter->IsFacingCoverRHS(true);
+			}
 		}
+		GetWorldTimerManager().ClearTimer(THandler_FindCover);
+
+
+		break;
+	case EPathFollowingRequestResult::RequestSuccessful:
+		HasChosenCover = true;
+		break;
+	default:
+		break;
 	}
+
 }
 
 void ACombatAIController::CheckCommanderOrder()

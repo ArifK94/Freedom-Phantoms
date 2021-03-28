@@ -426,8 +426,11 @@ void ACustomPlayerController::CheckInteractable()
 			}
 			else
 			{
-				// remove the interact widget
-				InteractWidget->RemoveFromViewport();
+				// remove the interact widget if currently displaying
+				//if (!InteractWidget->IsInViewport())
+				//{
+				//	InteractWidget->RemoveFromViewport();
+				//}
 			}
 		}
 	}
