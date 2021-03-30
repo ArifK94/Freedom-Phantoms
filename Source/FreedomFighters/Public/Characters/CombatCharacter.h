@@ -15,11 +15,6 @@ class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
 	GENERATED_BODY()
 
 public:
-	ACombatCharacter();
-
-public:
-
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isFiring;
 
@@ -93,8 +88,8 @@ private:
 
 	FTimerHandle THandler_VoiceSoundReset;
 
-
 public:
+	ACombatCharacter();
 
 	AWeapon* GetCurrentWeapon();
 
@@ -162,6 +157,8 @@ public:
 	void ResetVoiceSound();
 
 	void ShowCharacterOutline(bool CanShow) override;
+
+	void UseMountedGun(AWeapon* MountedGun);
 
 
 protected:

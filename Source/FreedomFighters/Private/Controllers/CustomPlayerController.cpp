@@ -8,12 +8,14 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponBullet.h"
 #include "Weapons/AmmoCrate.h"
+#include "Weapons/MountedGun.h"
 
 #include "Vehicles/Aircraft.h"
 
 #include "Props/Interactable.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetInputLibrary.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
@@ -74,22 +76,15 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	OwningCombatCharacter = Cast<ACombatCharacter>(OwningPawn);
 	OwningCommander = Cast<ACommanderCharacter>(OwningPawn);
 
-	AddUIWidgets();
-
 	if (OwningCombatCharacter) {
 		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 		TArray <FInputActionKeyMapping> OutMappings;
 		Settings->GetActionMappingByName("Pickup", OutMappings);
 		if (OutMappings.Num() > 0)
 		{
-			InteractKey = OutMappings[0].Key;
-		}
-
-		if (InteractWidget) {
-			GetWorldTimerManager().SetTimer(THandler_CheckInteractable, this, &ACustomPlayerController::CheckInteractable, 1.0f, true);
+			InteractKeyDisplayName = UKismetInputLibrary::Key_GetDisplayName(OutMappings[0].Key);
 		}
 	}
-
 }
 
 void ACustomPlayerController::BeginPlay()
@@ -100,6 +95,10 @@ void ACustomPlayerController::BeginPlay()
 	{
 		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
 	}
+
+	AddUIWidgets();
+
+	BeginCheckInteractable();
 }
 
 void ACustomPlayerController::Tick(float DeltaTime)
@@ -151,6 +150,11 @@ void ACustomPlayerController::AddUIWidgets()
 	if (InteracthWidgetClass)
 	{
 		InteractWidget = CreateWidget<UUserWidget>(World, InteracthWidgetClass);
+
+		if (InteractWidget)
+		{
+			InteractWidget->AddToViewport();
+		}
 	}
 
 
@@ -203,6 +207,7 @@ void ACustomPlayerController::OnAircraftDestroy(AAircraft* CurrentControlledAirc
 	AddUIWidgets();
 	ControlledAircraft = nullptr;
 	OwningCombatCharacter->EnableInput(this);
+	BeginCheckInteractable();
 }
 
 
@@ -329,11 +334,15 @@ void ACustomPlayerController::EndSprint()
 void ACustomPlayerController::BeginAim()
 {
 	OwningCombatCharacter->BeginAim();
+
+	OwningCombatCharacter->GetCurrentWeapon()->ChargeUp();
 }
 
 void ACustomPlayerController::EndAim()
 {
 	OwningCombatCharacter->EndAim();
+
+	OwningCombatCharacter->GetCurrentWeapon()->ChargeDown();
 }
 
 void ACustomPlayerController::TakeCover()
@@ -392,13 +401,16 @@ void ACustomPlayerController::ToggleThermalVision()
 	}
 }
 
+void ACustomPlayerController::BeginCheckInteractable()
+{
+	if (InteractWidget) {
+		GetWorldTimerManager().SetTimer(THandler_CheckInteractable, this, &ACustomPlayerController::CheckInteractable, 0.2f, true);
+	}
+}
+
 void ACustomPlayerController::CheckInteractable()
 {
-	// if controlling aircraft then do not check for interactions
-	if (ControlledAircraft) {
-		return;
-	}
-
+	FName ActionMessage;
 
 	FHitResult OutHit;
 	FVector Start = OwningCombatCharacter->FollowCamera->GetComponentLocation();
@@ -413,27 +425,35 @@ void ACustomPlayerController::CheckInteractable()
 		{
 			AActor* TargetActor = OutHit.GetActor();
 
+			// Interactable object?
 			AInteractable* Interactable = Cast<AInteractable>(TargetActor);
 			FocusedInteractable = Interactable;
 
-			if (Interactable) {
+			// Mounted Gun?
+			MountedGun = Cast<AMountedGun>(TargetActor);
 
-				// display the interact widget if currently not displaying
-				if (!InteractWidget->IsInViewport())
+			if (Interactable)
+			{
+				ActionMessage = Interactable->GetActionMessage();
+			}
+			else if (MountedGun)
+			{
+				// As we would need another UI message to display message to stop using the gun, 
+				// we check if the current weapon is not the mounted gun, meaning the player is not using it
+
+				if (OwningCombatCharacter->GetCurrentWeapon() != MountedGun)
 				{
-					InteractWidget->AddToViewport();
+					ActionMessage = MountedGun->GetPickupMessage();
 				}
 			}
 			else
 			{
-				// remove the interact widget if currently displaying
-				//if (!InteractWidget->IsInViewport())
-				//{
-				//	InteractWidget->RemoveFromViewport();
-				//}
+				ActionMessage = "";
 			}
 		}
 	}
+
+	OnInteractionFound.Broadcast(ActionMessage);
 }
 
 void ACustomPlayerController::PickupInteractable()
@@ -441,13 +461,35 @@ void ACustomPlayerController::PickupInteractable()
 	if (FocusedInteractable)
 	{
 		CurrentInteractable = FocusedInteractable;
-		//FocusedInteractable->Destroy();
 
 		FocusedInteractable->SetActorHiddenInGame(true);
 		FocusedInteractable->SetHidden(true);
 
 		FocusedInteractable->SetActorEnableCollision(false);
 		FocusedInteractable->SetActorTickEnabled(false);
+	}
+	else if (MountedGun) 		// Use Mounted Gun
+	{
+		// Stop using the mounted gun if currently using it
+		if (OwningCombatCharacter->GetCurrentWeapon() == MountedGun)
+		{
+			MountedGun = nullptr;
+
+			BeginCheckInteractable();
+
+			OwningCombatCharacter->BeginWeaponSwap();
+		}
+		else
+		{
+			// don't need to check for interaction if already using it
+			GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
+
+			OwningCombatCharacter->UseMountedGun(MountedGun);
+
+			// Display "Stop" message if using the mounted gun
+			OnInteractionFound.Broadcast(MountedGun->GetStopUsingMessage());
+
+		}
 	}
 }
 
@@ -457,6 +499,8 @@ void ACustomPlayerController::UseInteractableActor()
 		return;
 	}
 
+	MountedGun = nullptr;
+
 	CurrentInteractable->BeginInteraction(OwningCombatCharacter, this);
 
 	if (CurrentInteractable->GetAircraft())
@@ -465,6 +509,9 @@ void ACustomPlayerController::UseInteractableActor()
 		OwningCombatCharacter->DisableInput(this);
 		ControlledAircraft->SetPlayerControl(this);
 		ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
+
+		// if controlling aircraft then do not check for interactions
+		GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
 	}
 
 	CurrentInteractable = nullptr;

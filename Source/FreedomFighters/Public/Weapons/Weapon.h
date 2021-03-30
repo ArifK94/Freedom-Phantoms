@@ -116,6 +116,13 @@ public:
 
 	void StopFire();
 
+	// Charging the weapon before being able to fire or used when holding the aim button eg. minigun aiming
+	void ChargeUp();
+
+	void ChargeDown();
+
+	void IncreaseCharge();
+
 	void BeginReload();
 
 	void EndReload();
@@ -280,13 +287,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
 		bool HasUnlimitedAmmo;
 
-	FTimerHandle THandler_TimeBetweenShots;
-
-	// Derived from RateOfFire
-	float TimeBetweenShots;
-
-	float LastFireTime;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float ZoomFOV;
 
@@ -314,6 +314,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ShotSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
+		USoundBase* ChargeSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ReloadClipOutSound;
@@ -356,6 +359,28 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")
 		FRotator CurrentMuzzleRotation;
 
+	/** Message to be displayed on the UI */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+		FName PickupMessage;
+
+
+	// Derived from RateOfFire
+	float TimeBetweenShots;
+	float LastFireTime;
+	FTimerHandle THandler_TimeBetweenShots;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		float ChargeUpTime;
+
+	// Looping to true means it will charge forever like a minigun constantly spinning when aiming with it
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		bool ChargeUpLooping;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+		bool IsChargingUp;
+
+	float CurrentChargeUpTime;
+	FTimerHandle THandler_ChargeUp;
 
 private:
 	float CurrentVerticleRecoil;
@@ -390,6 +415,10 @@ public:
 	FName getOpticsSocket() { return OpticsSocket; }
 	FName getLaserSocket() { return LaserSocket; }
 	FName getTorchlightSocket() { return TorchlightSocket; }
+
+	FName GetPickupMessage() {
+		return PickupMessage;
+	}
 
 	bool getIsReloading() { return isReloading; }
 	bool getIsFiring() { return isFiring; }

@@ -106,6 +106,7 @@ void AWeapon::ConfigSetup()
 	TimeBetweenShots = 60 / RateOfFire;
 
 	CurrentMaxAmmo = MaxAmmoCapacity;
+	CurrentChargeUpTime = ChargeUpTime;
 }
 
 FVector AWeapon::getMuzzleLocation()
@@ -140,7 +141,11 @@ void AWeapon::Tick(float DeltaTime)
 
 	CurrentMuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocket);
 	CurrentMuzzleRotation = MeshComp->GetSocketRotation(MuzzleSocket);
+}
 
+void AWeapon::Fire()
+{
+	if (CurrentAmmo <= 0) return;
 
 	// Reset Burst fire count
 	if (selectiveFireMode == SelectiveFire::Burst)
@@ -148,6 +153,7 @@ void AWeapon::Tick(float DeltaTime)
 		if (BurstAmmountCount >= 3)
 		{
 			StopFire();
+			return;
 		}
 	}
 	else if (selectiveFireMode == SelectiveFire::SemiAutomatic)
@@ -155,13 +161,9 @@ void AWeapon::Tick(float DeltaTime)
 		if (BurstAmmountCount >= 1)
 		{
 			StopFire();
+			return;
 		}
 	}
-}
-
-void AWeapon::Fire()
-{
-	if (CurrentAmmo <= 0) return;
 
 	isFiring = true;
 
@@ -331,6 +333,49 @@ void AWeapon::StopFire()
 	BurstAmmountCount = 0;
 }
 
+void AWeapon::ChargeUp()
+{
+	if (CurrentChargeUpTime <= 0.0f) {
+		return;
+	}
+
+	IsChargingUp = true;
+
+	if (ChargeSound != NULL)
+	{
+		if (!ShotAudioComponent->IsPlaying())
+		{
+			ShotAudioComponent->Sound = ChargeSound;
+			ShotAudioComponent->Play();
+		}
+	}
+
+	if (!ChargeUpLooping)
+	{
+		GetWorldTimerManager().SetTimer(THandler_ChargeUp, this, &AWeapon::IncreaseCharge, ChargeUpTime, true);
+	}
+}
+
+void AWeapon::ChargeDown()
+{
+	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
+	IsChargingUp = false;
+}
+
+void AWeapon::IncreaseCharge()
+{
+	if (CurrentChargeUpTime >= 0.0f)
+	{
+		CurrentChargeUpTime--;
+	}
+	else
+	{
+		CurrentChargeUpTime = ChargeUpTime;
+		ShotAudioComponent->Stop();
+
+		IsChargingUp = false;
+	}
+}
 
 void AWeapon::OnReload()
 {

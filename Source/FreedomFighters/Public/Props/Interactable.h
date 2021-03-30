@@ -42,4 +42,7 @@ public:
 		return Aircraft;
 	}
 
+	FName GetActionMessage() {
+		return ActionMessage;
+	}
 };

@@ -8,7 +8,11 @@ class ACommanderCharacter;
 class ACombatCharacter;
 class AAircraft;
 class AWeapon;
+class AMountedGun;
 class AInteractable;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
+
 UCLASS()
 class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
 {
@@ -50,7 +54,7 @@ private:
 	UUserWidget* InteractWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FKey InteractKey;
+		FText InteractKeyDisplayName;
 
 	/** the interactable actor that is being line traced if found */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -61,6 +65,9 @@ private:
 	/** Line trace length for the interactable actor to be detected */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float InteractionLength;
+
+	AMountedGun* MountedGun;
+
 	
 public:
 	ACustomPlayerController();
@@ -111,7 +118,11 @@ private:
 
 	void PickupInteractable();
 
+	void BeginCheckInteractable();
 	void CheckInteractable();
 
 	void UseInteractableActor();
+
+	UPROPERTY(BlueprintAssignable)
+		FOnInteractiveFoundSignature OnInteractionFound;
 };

@@ -11,6 +11,7 @@
 #include "Weapons/WeaponLaser.h"
 #include "Weapons/Pistol.h"
 #include "Weapons/WeaponSet.h"
+#include "Weapons/MountedGun.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -341,7 +342,10 @@ void ACombatCharacter::setWeaponHand()
 	}
 	else
 	{
-		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		// if not mounted gun
+		if (!Cast<AMountedGun>(currentWeaponObj)) {
+			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		}
 	}
 
 }
@@ -488,20 +492,22 @@ void ACombatCharacter::ToggleUnderBarrelWeapon()
 
 void ACombatCharacter::UpdateHandGaurdIK()
 {
-	if (currentWeaponObj)
-	{
-		currentWeaponObj->SetHandGuardIK(GetMesh(), RightHandSocket);
-
-		if (isInCombatMode && !isReloading)
-		{
-			HandGuardAlpha = 1.0f;
-		}
-		else
-		{
-			HandGuardAlpha = 0.0f;
-		}
-
+	// if mounted gun, then do not update hand IK
+	if (currentWeaponObj == nullptr || Cast<AMountedGun>(currentWeaponObj)) {
+		return;
 	}
+	currentWeaponObj->SetHandGuardIK(GetMesh(), RightHandSocket);
+
+	if (isInCombatMode && !isReloading)
+	{
+		HandGuardAlpha = 1.0f;
+	}
+	else
+	{
+		HandGuardAlpha = 0.0f;
+	}
+
+
 }
 
 void ACombatCharacter::ToggleLaser()
@@ -691,6 +697,12 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 			currentComp->SetRenderCustomDepth(CanShow);
 		}
 	}
+}
+
+void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
+{
+	unEquipWeapon();
+	currentWeaponObj = MountedGun;
 }
 
 
