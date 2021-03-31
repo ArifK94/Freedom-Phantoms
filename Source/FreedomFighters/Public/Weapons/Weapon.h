@@ -11,6 +11,7 @@ class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
 class USoundBase;
+class USoundCue;
 class UAudioComponent;
 class UArrowComponent;
 class UAnimMontage;
@@ -102,6 +103,29 @@ struct FWeaponAnimSet : public FTableRowBase
 		UAimOffsetBlendSpace* AimOffsetProning;
 };
 
+USTRUCT(BlueprintType)
+struct FWeaponChargeSound : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* Sound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float StartTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool PlayOnLoop;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		bool HasPlayedSound;
+
+	FWeaponChargeSound()
+	{
+
+	}
+};
 
 
 UCLASS()
@@ -122,6 +146,8 @@ public:
 	void ChargeDown();
 
 	void IncreaseCharge();
+
+	void DecreaseCharge();
 
 	void BeginReload();
 
@@ -315,8 +341,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ShotSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
-		USoundBase* ChargeSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ReloadClipOutSound;
@@ -369,18 +393,44 @@ protected:
 	float LastFireTime;
 	FTimerHandle THandler_TimeBetweenShots;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+
+
+
+
+
+
+
+	/** Charging Weapon */
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+		USoundBase* ChargeUpSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+		USoundBase* ChargeDownSound;
+
+	/** For the ChargeUpSound Cue to change when using crossfade by param  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+		FName ChargeUpSoundParamater;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+		TArray<FWeaponChargeSound> ChargeUpSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+		TArray<FWeaponChargeSound> ChargeDownSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
 		float ChargeUpTime;
 
 	// Looping to true means it will charge forever like a minigun constantly spinning when aiming with it
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
 		bool ChargeUpLooping;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Charging")
 		bool IsChargingUp;
 
 	float CurrentChargeUpTime;
 	FTimerHandle THandler_ChargeUp;
+	FTimerHandle THandler_ChargeDown;
 
 private:
 	float CurrentVerticleRecoil;

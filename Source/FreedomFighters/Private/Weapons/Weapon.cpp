@@ -77,6 +77,8 @@ AWeapon::AWeapon()
 	PlayFireSoundAtLocation = true;
 
 	CanAutoReload = false;
+
+	ChargeUpSoundParamater = "ChargeAmount";
 }
 
 void AWeapon::ConfigSetup()
@@ -106,7 +108,7 @@ void AWeapon::ConfigSetup()
 	TimeBetweenShots = 60 / RateOfFire;
 
 	CurrentMaxAmmo = MaxAmmoCapacity;
-	CurrentChargeUpTime = ChargeUpTime;
+	CurrentChargeUpTime = 0.0f;
 }
 
 FVector AWeapon::getMuzzleLocation()
@@ -335,46 +337,122 @@ void AWeapon::StopFire()
 
 void AWeapon::ChargeUp()
 {
-	if (CurrentChargeUpTime <= 0.0f) {
-		return;
-	}
+	GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
 
 	IsChargingUp = true;
 
-	if (ChargeSound != NULL)
+	//if (ChargeUpSound != NULL)
+	//{
+	//	ShotAudioComponent->Sound = ChargeUpSound;
+	//	ShotAudioComponent->Play();
+	//}
+
+	for (int i = 0; i < ChargeDownSounds.Num(); i++)
 	{
-		if (!ShotAudioComponent->IsPlaying())
-		{
-			ShotAudioComponent->Sound = ChargeSound;
-			ShotAudioComponent->Play();
-		}
+		ChargeDownSounds[i].HasPlayedSound = false;
 	}
 
-	if (!ChargeUpLooping)
-	{
-		GetWorldTimerManager().SetTimer(THandler_ChargeUp, this, &AWeapon::IncreaseCharge, ChargeUpTime, true);
-	}
+	GetWorldTimerManager().SetTimer(THandler_ChargeUp, this, &AWeapon::IncreaseCharge, .1f, true);
 }
 
 void AWeapon::ChargeDown()
 {
 	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
 	IsChargingUp = false;
+
+
+	//if (ChargeDownSound != NULL)
+	//{
+	//	ShotAudioComponent->Sound = ChargeDownSound;
+	//	ShotAudioComponent->Play();
+	//}
+
+	for (int i = 0; i < ChargeUpSounds.Num(); i++)
+	{
+		ChargeUpSounds[i].HasPlayedSound = false;
+	}
+
+	GetWorldTimerManager().SetTimer(THandler_ChargeDown, this, &AWeapon::DecreaseCharge, .1f, true);
+
 }
 
 void AWeapon::IncreaseCharge()
 {
-	if (CurrentChargeUpTime >= 0.0f)
+	if (CurrentChargeUpTime < ChargeUpTime)
 	{
-		CurrentChargeUpTime--;
+		CurrentChargeUpTime += .1f;
 	}
 	else
 	{
 		CurrentChargeUpTime = ChargeUpTime;
-		ShotAudioComponent->Stop();
-
-		IsChargingUp = false;
 	}
+
+
+	for (int i = 0; i < ChargeUpSounds.Num(); i++)
+	{
+		FWeaponChargeSound prev;
+		if (i - 1 > -1) {
+			prev = ChargeUpSounds[i - 1];
+		}
+
+		if (CurrentChargeUpTime > prev.StartTime)
+		{
+			if (!ChargeUpSounds[i].HasPlayedSound)
+			{
+				USoundBase* SoundBase = ChargeUpSounds[i].Sound;
+				ShotAudioComponent->Sound = SoundBase;
+				ShotAudioComponent->Play();
+
+				ChargeUpSounds[i].HasPlayedSound = true;
+				break;
+			}
+			else if (ChargeUpSounds[i].PlayOnLoop)
+			{
+				USoundBase* SoundBase = ChargeUpSounds[i].Sound;
+
+				if (ShotAudioComponent->Sound != SoundBase) {
+					ShotAudioComponent->Sound = SoundBase;
+				}
+
+				if (!ShotAudioComponent->IsPlaying()) {
+					ShotAudioComponent->Play();
+				}
+			}
+		}
+	}
+
+	ShotAudioComponent->SetFloatParameter(ChargeUpSoundParamater, CurrentChargeUpTime);
+}
+
+void AWeapon::DecreaseCharge()
+{
+	if (CurrentChargeUpTime > 0.0f)
+	{
+		CurrentChargeUpTime -= .1f;
+	}
+	else
+	{
+		CurrentChargeUpTime = 0.0f;
+
+		GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
+	}
+
+	for (int i = ChargeDownSounds.Num() - 1; i >= 0; i--)
+	{
+		if (CurrentChargeUpTime < ChargeDownSounds[i].StartTime)
+		{
+			if (!ChargeDownSounds[i].HasPlayedSound)
+			{
+				USoundBase* SoundBase = ChargeDownSounds[i].Sound;
+				ShotAudioComponent->Sound = SoundBase;
+				ShotAudioComponent->Play();
+				ChargeDownSounds[i].HasPlayedSound = true;
+				break;
+			}
+		}
+	}
+
+	ShotAudioComponent->SetFloatParameter(ChargeUpSoundParamater, CurrentChargeUpTime);
 }
 
 void AWeapon::OnReload()

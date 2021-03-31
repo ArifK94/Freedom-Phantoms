@@ -475,9 +475,9 @@ void ACustomPlayerController::PickupInteractable()
 		{
 			MountedGun = nullptr;
 
-			BeginCheckInteractable();
+			OwningCombatCharacter->DropMountedGun();
 
-			OwningCombatCharacter->BeginWeaponSwap();
+			BeginCheckInteractable();
 		}
 		else
 		{

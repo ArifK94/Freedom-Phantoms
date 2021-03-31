@@ -128,6 +128,8 @@ public:
 
 	void setWeaponHand();
 
+	void DropMountedGun();
+
 	void setCharacterRotation();
 
 	void disableSprint();

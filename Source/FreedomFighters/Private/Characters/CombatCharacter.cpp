@@ -705,4 +705,10 @@ void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 	currentWeaponObj = MountedGun;
 }
 
+void ACombatCharacter::DropMountedGun()
+{
+	// set to secondary so during weapon swap, it goes back to primary
+	currentWeaponObj = secondaryWeaponObj;
+	BeginWeaponSwap();
+}
 
