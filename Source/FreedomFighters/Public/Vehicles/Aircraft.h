@@ -221,7 +221,6 @@ private:
 	bool DoesFriendlyNodeExists(AActor* TargetActor);
 	bool DoesEnemyNodeExists(AActor* TargetActor);
 
-
 	void UpdateCurrentThermalVision(float InWeight);
 
 	void CreateThermalMatInstances();

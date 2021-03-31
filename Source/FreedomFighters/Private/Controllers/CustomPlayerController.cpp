@@ -215,8 +215,13 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 {
 	if (Val != 0.f && IsLocalPlayerController())
 	{
-		if (ControlledAircraft) {
+		if (ControlledAircraft)
+		{
 			ControlledAircraft->AddControllerPitchInput(Val);
+		}
+		else if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			MountedGun->AddControllerPitchInput(Val);
 		}
 		else
 		{
@@ -229,8 +234,13 @@ void ACustomPlayerController::AddControllerYawInput(float Val)
 {
 	if (Val != 0.f && IsLocalPlayerController())
 	{
-		if (ControlledAircraft) {
+		if (ControlledAircraft)
+		{
 			ControlledAircraft->AddControllerYawInput(Val);
+		}
+		else if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			MountedGun->AddControllerYawInput(Val);
 		}
 		else
 		{
@@ -254,27 +264,33 @@ void ACustomPlayerController::LookUpAtRate(float Rate)
 
 void ACustomPlayerController::MoveForward(float Value)
 {
-	if (Value != 0.0f)
+	if (Value == 0.0f) {
+		return;
+	}
+
+	if (!OwningCombatCharacter->InputEnabled()) {
+		return;
+	}
+
+	if (!OwningCombatCharacter->IsTakingCover())
 	{
-		if (!OwningCombatCharacter->IsTakingCover())
-		{
-			// find out which way is forward
-			const FRotator Rotation = GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
+		// find out which way is forward
+		const FRotator Rotation = GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-			// get forward vector
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		// get forward vector
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-			OwningCombatCharacter->AddMovementInput(Direction, Value);
-		}
-		else
+		OwningCombatCharacter->AddMovementInput(Direction, Value);
+	}
+	else
+	{
+		if (Value == -1.0f)
 		{
-			if (Value == -1.0f)
-			{
-				OwningCombatCharacter->EscapeCover();
-			}
+			OwningCombatCharacter->EscapeCover();
 		}
 	}
+
 }
 
 void ACustomPlayerController::MoveRight(float Value)
@@ -285,6 +301,11 @@ void ACustomPlayerController::MoveRight(float Value)
 	if (Value == 0.0f) {
 		return;
 	}
+
+	if (!OwningCombatCharacter->InputEnabled()) {
+		return;
+	}
+
 	//if (isTakingCover && !isAtCoverCorner)
 	//	RightInputValue = Value;
 
@@ -323,12 +344,10 @@ void ACustomPlayerController::EndJump()
 void ACustomPlayerController::BeginSprint()
 {
 	OwningCombatCharacter->BeginSprint();
-
 }
 void ACustomPlayerController::EndSprint()
 {
 	OwningCombatCharacter->EndSprint();
-
 }
 
 void ACustomPlayerController::BeginAim()
@@ -382,6 +401,10 @@ void ACustomPlayerController::EndFire()
 
 void ACustomPlayerController::SwitchWeapon()
 {
+	if (OwningCombatCharacter->IsUsingMountedWeapon()) {
+		return;
+	}
+
 	if (ControlledAircraft)
 	{
 		ControlledAircraft->ChangeWeapon();
@@ -473,16 +496,26 @@ void ACustomPlayerController::PickupInteractable()
 		// Stop using the mounted gun if currently using it
 		if (OwningCombatCharacter->GetCurrentWeapon() == MountedGun)
 		{
+			MountedGun->RemovePlayerControl(this, OwningCombatCharacter);
+
 			MountedGun = nullptr;
 
 			OwningCombatCharacter->DropMountedGun();
 
 			BeginCheckInteractable();
+
+			// renable character input
+			OwningCombatCharacter->EnableInput(this);
 		}
 		else
 		{
+			// disable character input
+			OwningCombatCharacter->DisableInput(this);
+
 			// don't need to check for interaction if already using it
 			GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
+
+			MountedGun->SetPlayerControl(this);
 
 			OwningCombatCharacter->UseMountedGun(MountedGun);
 

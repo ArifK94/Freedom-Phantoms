@@ -241,6 +241,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
 
+	/** Useful for cannons, as they may not have reload animation but instead a countdown reload time */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool CanAutoReload;
 	FTimerHandle THandler_AutoReloadBegin;
@@ -434,7 +435,7 @@ private:
 	USceneComponent* EyeViewPointComponent; // used for vehicles rather than pawns
 
 
-public:
+protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;

@@ -456,7 +456,9 @@ void AWeapon::DecreaseCharge()
 void AWeapon::OnReload()
 {
 	// Do we have ammo in the ammopool?
-	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !HasUnlimitedAmmo) return;
+	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !HasUnlimitedAmmo) {
+		return;
+	}
 
 	if (HasUnlimitedAmmo)
 	{

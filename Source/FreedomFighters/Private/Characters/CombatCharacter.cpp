@@ -11,7 +11,6 @@
 #include "Weapons/WeaponLaser.h"
 #include "Weapons/Pistol.h"
 #include "Weapons/WeaponSet.h"
-#include "Weapons/MountedGun.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -60,6 +59,7 @@ ACombatCharacter::ACombatCharacter()
 	IsInAimOffSetRotation = false;
 	HasPlayedReloadingSound = false;
 	HasPlayedTargetFoundSound = false;
+	isUsingMountedWeapon = false;
 
 	MaxAimYawSprint = 180.0f;
 	HandGuardAlpha = 0.0f;
@@ -176,13 +176,6 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser);
 }
-
-AWeapon* ACombatCharacter::GetCurrentWeapon()
-{
-	return currentWeaponObj;
-}
-
-
 
 void ACombatCharacter::setCharacterRotation()
 {
@@ -342,12 +335,8 @@ void ACombatCharacter::setWeaponHand()
 	}
 	else
 	{
-		// if not mounted gun
-		if (!Cast<AMountedGun>(currentWeaponObj)) {
-			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
-		}
+		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
 	}
-
 }
 
 void ACombatCharacter::unEquipWeapon()
@@ -493,7 +482,7 @@ void ACombatCharacter::ToggleUnderBarrelWeapon()
 void ACombatCharacter::UpdateHandGaurdIK()
 {
 	// if mounted gun, then do not update hand IK
-	if (currentWeaponObj == nullptr || Cast<AMountedGun>(currentWeaponObj)) {
+	if (currentWeaponObj == nullptr || isUsingMountedWeapon) {
 		return;
 	}
 	currentWeaponObj->SetHandGuardIK(GetMesh(), RightHandSocket);
@@ -701,6 +690,7 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 
 void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 {
+	isUsingMountedWeapon = true;
 	unEquipWeapon();
 	MountedGun->SetOwner(this);
 	currentWeaponObj = MountedGun;
@@ -708,9 +698,12 @@ void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 
 void ACombatCharacter::DropMountedGun()
 {
+	isUsingMountedWeapon = false;
+
 	// set to secondary so during weapon swap, it goes back to primary
 	currentWeaponObj->SetOwner(nullptr);
 	currentWeaponObj = secondaryWeaponObj;
 	BeginWeaponSwap();
+
 }
 

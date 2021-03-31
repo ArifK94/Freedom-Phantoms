@@ -36,6 +36,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool CanAutoReloadWeapon;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool isUsingMountedWeapon;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
 		FName WeaponHandSocket;
 
@@ -53,16 +56,16 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		 AWeapon* currentWeaponObj;
+		AWeapon* currentWeaponObj;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		 AWeapon* primaryWeaponObj;
+		AWeapon* primaryWeaponObj;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		 AWeapon* secondaryWeaponObj;
+		AWeapon* secondaryWeaponObj;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		 AWeapon* underBarrelWeaponObj;
+		AWeapon* underBarrelWeaponObj;
 
 
 
@@ -90,8 +93,6 @@ private:
 
 public:
 	ACombatCharacter();
-
-	AWeapon* GetCurrentWeapon();
 
 	void UpdateCombatMode();
 
@@ -177,13 +178,16 @@ public:
 		return isFiring;
 	}
 
+	bool IsUsingMountedWeapon() {
+		return isUsingMountedWeapon;
+	}
 
-	UFactionManager* getFactionObj(){
+	UFactionManager* getFactionObj() {
 		return FactionObj;
 	}
 
-	void setCommandingOfficer(ACommanderCharacter* Commander) { 
-		CommandingOfficer = Commander; 
+	void setCommandingOfficer(ACommanderCharacter* Commander) {
+		CommandingOfficer = Commander;
 	}
 
 	ACommanderCharacter* getCommander() {
@@ -194,7 +198,7 @@ public:
 		return isReloading;
 	}
 
-	AWeapon* GetCurrentWeaponObj() {
+	AWeapon* GetCurrentWeapon() {
 		return currentWeaponObj;
 	}
 

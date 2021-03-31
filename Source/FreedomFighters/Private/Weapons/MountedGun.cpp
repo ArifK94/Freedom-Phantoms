@@ -3,22 +3,47 @@
 
 #include "Weapons/MountedGun.h"
 
+#include "Camera/CameraComponent.h"
+#include "GameFramework/Character.h"
+
 AMountedGun::AMountedGun()
 {
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 
 }
+
+void AMountedGun::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FollowCamera->AttachToComponent(getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+}
+
 
 void AMountedGun::AddControllerPitchInput(float Val)
 {
 	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, PitchMin, PitchMax);
 	RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
 
-	SetActorRelativeRotation(RotationInput);
+	FollowCamera->SetRelativeRotation(RotationInput);
 }
+
 void AMountedGun::AddControllerYawInput(float Val)
 {
 	RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, YawMin, YawMax);
 	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
 
-	SetActorRelativeRotation(RotationInput);
+	FollowCamera->SetRelativeRotation(RotationInput);
+}
+
+void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController)
+{
+	OurPlayerController->SetViewTargetWithBlend(this, .5f);
+}
+
+void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, class ACharacter* Character)
+{
+	OurPlayerController->SetViewTargetWithBlend(Character, .2f);
+	StopFire();
 }

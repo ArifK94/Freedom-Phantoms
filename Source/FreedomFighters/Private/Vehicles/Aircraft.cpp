@@ -214,7 +214,6 @@ void AAircraft::FollowSplinePath(float Value)
 			OnDestroy();
 		}
 	}
-
 }
 
 void AAircraft::SpawnWeapon()
