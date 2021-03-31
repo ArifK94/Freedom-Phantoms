@@ -43,6 +43,8 @@ AWeapon::AWeapon()
 	ObjectPoolComponent = CreateDefaultSubobject<UObjectPoolComponent>(TEXT("ObjectPoolComponent"));
 	ShotAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotAudioComponent"));
 	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));
+	ChargingAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ChargingAudioComponent"));
+
 
 	MuzzleSocket = "Muzzle";
 	TracerTargetSocket = "Target";
@@ -78,7 +80,7 @@ AWeapon::AWeapon()
 
 	CanAutoReload = false;
 
-	ChargeUpSoundParamater = "ChargeAmount";
+	HasNoReload = false;
 }
 
 void AWeapon::ConfigSetup()
@@ -147,7 +149,13 @@ void AWeapon::Tick(float DeltaTime)
 
 void AWeapon::Fire()
 {
-	if (CurrentAmmo <= 0) return;
+	if (isReloading) {
+		return;
+	}
+
+	if (CurrentAmmo <= 0 && !HasNoReload) {
+		return;
+	}
 
 	// Reset Burst fire count
 	if (selectiveFireMode == SelectiveFire::Burst)
@@ -169,13 +177,17 @@ void AWeapon::Fire()
 
 	isFiring = true;
 
-	CurrentAmmo -= 1;
+	if (!HasNoReload) {
+		CurrentAmmo -= 1;
+	}
 
 	CreateBullet();
 
 	BurstAmmountCount++;
 
-	if (CanAutoReload)
+	CurrentChargeUpTime = ChargeUpTime;
+
+	if (CanAutoReload && !HasNoReload)
 	{
 		if (CurrentAmmo <= 0)
 		{
@@ -301,28 +313,25 @@ void AWeapon::SemiFireDelay()
 
 void AWeapon::StartFire()
 {
-	if (!isReloading)
+	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
+
+	switch (selectiveFireMode)
 	{
-		isFiring = true;
-
-		float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
-
-		switch (selectiveFireMode)
-		{
-		case SelectiveFire::Automatic:
-			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
-			break;
-		case SelectiveFire::SemiAutomatic:
-			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::SemiFireDelay, TimeBetweenShots, true, FirstDelay);
-			break;
-		case SelectiveFire::Burst:
-			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::BurstDelay, TimeBetweenShots, true, FirstDelay);
-			break;
-		default:
-			Fire();
-			break;
-		}
+	case SelectiveFire::Automatic:
+		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+		break;
+	case SelectiveFire::SemiAutomatic:
+		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::SemiFireDelay, TimeBetweenShots, true, FirstDelay);
+		break;
+	case SelectiveFire::Burst:
+		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::BurstDelay, TimeBetweenShots, true, FirstDelay);
+		break;
+	default:
+		Fire();
+		break;
 	}
+
+	ChargeUp();
 }
 
 void AWeapon::StopFire()
@@ -333,19 +342,19 @@ void AWeapon::StopFire()
 
 	CurrentVerticleRecoil = 0.0f;
 	BurstAmmountCount = 0;
+
+	ChargeDown();
 }
 
 void AWeapon::ChargeUp()
 {
+	if (IsChargingUp) {
+		return;
+	}
+
 	GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
 
 	IsChargingUp = true;
-
-	//if (ChargeUpSound != NULL)
-	//{
-	//	ShotAudioComponent->Sound = ChargeUpSound;
-	//	ShotAudioComponent->Play();
-	//}
 
 	for (int i = 0; i < ChargeDownSounds.Num(); i++)
 	{
@@ -359,13 +368,6 @@ void AWeapon::ChargeDown()
 {
 	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
 	IsChargingUp = false;
-
-
-	//if (ChargeDownSound != NULL)
-	//{
-	//	ShotAudioComponent->Sound = ChargeDownSound;
-	//	ShotAudioComponent->Play();
-	//}
 
 	for (int i = 0; i < ChargeUpSounds.Num(); i++)
 	{
@@ -400,8 +402,8 @@ void AWeapon::IncreaseCharge()
 			if (!ChargeUpSounds[i].HasPlayedSound)
 			{
 				USoundBase* SoundBase = ChargeUpSounds[i].Sound;
-				ShotAudioComponent->Sound = SoundBase;
-				ShotAudioComponent->Play();
+				ChargingAudioComponent->Sound = SoundBase;
+				ChargingAudioComponent->Play();
 
 				ChargeUpSounds[i].HasPlayedSound = true;
 				break;
@@ -410,18 +412,16 @@ void AWeapon::IncreaseCharge()
 			{
 				USoundBase* SoundBase = ChargeUpSounds[i].Sound;
 
-				if (ShotAudioComponent->Sound != SoundBase) {
-					ShotAudioComponent->Sound = SoundBase;
+				if (ChargingAudioComponent->Sound != SoundBase) {
+					ChargingAudioComponent->Sound = SoundBase;
 				}
 
-				if (!ShotAudioComponent->IsPlaying()) {
-					ShotAudioComponent->Play();
+				if (!ChargingAudioComponent->IsPlaying()) {
+					ChargingAudioComponent->Play();
 				}
 			}
 		}
 	}
-
-	ShotAudioComponent->SetFloatParameter(ChargeUpSoundParamater, CurrentChargeUpTime);
 }
 
 void AWeapon::DecreaseCharge()
@@ -444,15 +444,13 @@ void AWeapon::DecreaseCharge()
 			if (!ChargeDownSounds[i].HasPlayedSound)
 			{
 				USoundBase* SoundBase = ChargeDownSounds[i].Sound;
-				ShotAudioComponent->Sound = SoundBase;
-				ShotAudioComponent->Play();
+				ChargingAudioComponent->Sound = SoundBase;
+				ChargingAudioComponent->Play();
 				ChargeDownSounds[i].HasPlayedSound = true;
 				break;
 			}
 		}
 	}
-
-	ShotAudioComponent->SetFloatParameter(ChargeUpSoundParamater, CurrentChargeUpTime);
 }
 
 void AWeapon::OnReload()

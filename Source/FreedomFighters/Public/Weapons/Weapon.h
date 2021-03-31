@@ -313,10 +313,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
 		bool HasUnlimitedAmmo;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+		bool HasNoReload;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float ZoomFOV;
 
 
+	/** RECOIL */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true"))
 		bool hasRecoil;
 
@@ -336,7 +340,11 @@ protected:
 		float TargetVerticalRecoil;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true"))
-		float	TargetHorizontalRecoil;
+		float TargetHorizontalRecoil;
+
+
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
 		USoundBase* ShotSound;
@@ -401,16 +409,8 @@ protected:
 
 
 	/** Charging Weapon */
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
-		USoundBase* ChargeUpSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
-		USoundBase* ChargeDownSound;
-
-	/** For the ChargeUpSound Cue to change when using crossfade by param  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
-		FName ChargeUpSoundParamater;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Charging", meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* ChargingAudioComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
 		TArray<FWeaponChargeSound> ChargeUpSounds;
@@ -420,10 +420,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
 		float ChargeUpTime;
-
-	// Looping to true means it will charge forever like a minigun constantly spinning when aiming with it
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
-		bool ChargeUpLooping;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Charging")
 		bool IsChargingUp;

@@ -702,12 +702,14 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 {
 	unEquipWeapon();
+	MountedGun->SetOwner(this);
 	currentWeaponObj = MountedGun;
 }
 
 void ACombatCharacter::DropMountedGun()
 {
 	// set to secondary so during weapon swap, it goes back to primary
+	currentWeaponObj->SetOwner(nullptr);
 	currentWeaponObj = secondaryWeaponObj;
 	BeginWeaponSwap();
 }
