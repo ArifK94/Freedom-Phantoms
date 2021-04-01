@@ -29,7 +29,7 @@ void UObjectPoolComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 	}
 }
 
-void UObjectPoolComponent::AddToPool(AActor* Owner, FObjectPoolParameters* ObjectPoolParams)
+void UObjectPoolComponent::AddToPool(FObjectPoolParameters* ObjectPoolParams)
 {
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -41,9 +41,6 @@ void UObjectPoolComponent::AddToPool(AActor* Owner, FObjectPoolParameters* Objec
 		if (ActorObj)
 		{
 			ActorObj->Deactivate();
-
-			// for some reason, the owner needs to be set after spawning the object instead of assigning it from SpawnParams struct.
-			ActorObj->SetOwner(Owner);
 
 			// add the pool params to memory
 			FObjectPoolParameters* ObjectPoolParameters = new FObjectPoolParameters();
@@ -57,16 +54,16 @@ void UObjectPoolComponent::AddToPool(AActor* Owner, FObjectPoolParameters* Objec
 }
 
 
-void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, FVector const& Location, FRotator const& Rotation)
+void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation)
 {
 	// Backup param incase an object cannot be found
 	FObjectPoolParameters* ObjectPoolParams = nullptr;
-	AActor* Owner = nullptr;
 
 	for (int i = 0; i < ActorsInObjectPool.Num(); i++)
 	{
 		if (ActorsInObjectPool[i]->PoolableActorClass == ActorClass)
 		{
+
 			AObjectPoolActor* PoolableActor = ActorsInObjectPool[i]->PoolableActor;
 
 			if (ObjectPoolParams == nullptr) {
@@ -82,13 +79,9 @@ void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, FV
 			}
 			else
 			{
-				if (Owner == nullptr) {
-					Owner = ActorsInObjectPool[i]->PoolableActor->GetOwner();
-
-				}
-
 				if (PoolableActor != nullptr && !PoolableActor->IsActive())
 				{
+					ActorsInObjectPool[i]->PoolableActor->SetOwner(Owner);
 					PoolableActor->SetActorLocationAndRotation(Location, Rotation.Quaternion());
 					PoolableActor->Activate();
 					return;
@@ -104,8 +97,8 @@ void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, FV
 	// Create another Pool Actor if none retrieved from previous loop
 	if (ObjectPoolParams)
 	{
-		AddToPool(Owner, ObjectPoolParams);
-		ActivatePoolObject(ObjectPoolParams->PoolableActorClass, Location, Rotation);
+		AddToPool(ObjectPoolParams);
+		ActivatePoolObject(ObjectPoolParams->PoolableActorClass, Owner, Location, Rotation);
 	}
 
 }

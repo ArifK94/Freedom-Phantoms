@@ -76,6 +76,12 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	OwningCombatCharacter = Cast<ACombatCharacter>(OwningPawn);
 	OwningCommander = Cast<ACommanderCharacter>(OwningPawn);
 
+	// no point running this script if no player found
+	if (OwningCombatCharacter == nullptr && OwningCommander == nullptr) {
+		DisableInput(this);
+		return;
+	}
+
 	if (OwningCombatCharacter) {
 		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 		TArray <FInputActionKeyMapping> OutMappings;
@@ -433,6 +439,10 @@ void ACustomPlayerController::BeginCheckInteractable()
 
 void ACustomPlayerController::CheckInteractable()
 {
+	if (OwningCombatCharacter == nullptr) {
+		return;
+	}
+
 	FName ActionMessage;
 
 	FHitResult OutHit;

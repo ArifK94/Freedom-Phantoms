@@ -97,14 +97,23 @@ void AWeapon::ConfigSetup()
 		CurrentAmmo = AmmoPerClip;
 	}
 
-	AActor* MyOwner = GetOwner();
 	// Add neccessary Actors to the Object pool
-	if (BulletClass && MyOwner)
+	if (BulletClass)
 	{
 		FObjectPoolParameters* ObjectPoolParams = new FObjectPoolParameters();
-		ObjectPoolParams->PoolSize = AmmoPerClip;
 		ObjectPoolParams->PoolableActorClass = BulletClass;
-		ObjectPoolComponent->AddToPool(MyOwner, ObjectPoolParams);
+
+		if (AmmoPerClip <= 0)
+		{
+			// for weapons that are mounted which do not have a reload system
+			ObjectPoolParams->PoolSize = 10;
+		}
+		else
+		{
+			ObjectPoolParams->PoolSize = AmmoPerClip;
+		}
+
+		ObjectPoolComponent->AddToPool(ObjectPoolParams);
 	}
 
 	TimeBetweenShots = 60 / RateOfFire;
@@ -202,7 +211,9 @@ void AWeapon::CreateBullet()
 {
 	AActor* MyOwner = GetOwner();
 
-	if (!MyOwner) return;
+	if (!MyOwner) {
+		return;
+	}
 
 	// Trace world from pawn eyes to cross hair location
 	if (EyeViewPointComponent)
@@ -244,7 +255,7 @@ void AWeapon::CreateBullet()
 
 	if (BulletClass)
 	{
-		ObjectPoolComponent->ActivatePoolObject(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+		ObjectPoolComponent->ActivatePoolObject(BulletClass, MyOwner, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
 	}
 
 	PlayShotEffect(TracerEndPoint);
@@ -366,6 +377,10 @@ void AWeapon::ChargeUp()
 
 void AWeapon::ChargeDown()
 {
+	if (isFiring) {
+		return;
+	}
+
 	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
 	IsChargingUp = false;
 

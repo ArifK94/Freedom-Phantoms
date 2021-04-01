@@ -35,6 +35,9 @@ private:
 	/** Message to be displayed on the UI */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 		FName StopUsingMessage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+		FName CameraPositionSocket;
 	
 public:
 	AMountedGun();

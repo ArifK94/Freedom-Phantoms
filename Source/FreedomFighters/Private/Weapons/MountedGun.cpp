@@ -10,14 +10,14 @@ AMountedGun::AMountedGun()
 {
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 
+	CameraPositionSocket = "CamPos";
 }
 
 void AMountedGun::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FollowCamera->AttachToComponent(getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+	FollowCamera->AttachToComponent(getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraPositionSocket);
 }
 
 
@@ -40,6 +40,7 @@ void AMountedGun::AddControllerYawInput(float Val)
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController)
 {
 	OurPlayerController->SetViewTargetWithBlend(this, .5f);
+	SetComponentEyeViewPoint(FollowCamera);
 }
 
 void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, class ACharacter* Character)
