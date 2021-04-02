@@ -18,6 +18,9 @@ void AMountedGun::BeginPlay()
 	Super::BeginPlay();
 
 	FollowCamera->AttachToComponent(getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraPositionSocket);
+	
+	// So that the weapon fires from the FollowCamera view
+	SetComponentEyeViewPoint(FollowCamera);
 }
 
 
@@ -40,7 +43,6 @@ void AMountedGun::AddControllerYawInput(float Val)
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController)
 {
 	OurPlayerController->SetViewTargetWithBlend(this, .5f);
-	SetComponentEyeViewPoint(FollowCamera);
 }
 
 void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, class ACharacter* Character)

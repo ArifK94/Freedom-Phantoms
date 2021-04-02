@@ -371,9 +371,13 @@ void ACombatCharacter::UpdateCombatMode()
 	if (currentWeaponObj && hasEquippedWeapon && !isReloading && !isRepellingDown)
 	{
 		if (isAiming || isFiring)
+		{
 			isInCombatMode = true;
+		}
 		else
+		{
 			isInCombatMode = false;
+		}
 	}
 }
 
@@ -408,6 +412,7 @@ void ACombatCharacter::BeginAim()
 		else
 		{
 			isAiming = true;
+			currentWeaponObj->SetIsAiming(true);
 		}
 
 		EndSprint();
@@ -416,8 +421,10 @@ void ACombatCharacter::BeginAim()
 
 void ACombatCharacter::EndAim()
 {
-	if (currentWeaponObj)
+	if (currentWeaponObj) {
 		isAiming = false;
+		currentWeaponObj->SetIsAiming(false);
+	}
 }
 
 void ACombatCharacter::BeginReload()
@@ -427,6 +434,7 @@ void ACombatCharacter::BeginReload()
 		currentWeaponObj->BeginReload();
 		isAiming = false;
 		isFiring = false;
+		currentWeaponObj->SetIsAiming(false);
 	}
 }
 

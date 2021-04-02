@@ -240,6 +240,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
+	bool IsAiming;
+
 
 	/** Useful for cannons, as they may not have reload animation but instead a countdown reload time */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
@@ -472,6 +474,10 @@ public:
 
 	bool GetHasUnlimitedAmmo() {
 		return HasUnlimitedAmmo;
+	}
+
+	void SetIsAiming(bool Value) {
+		IsAiming = Value;
 	}
 
 	void SetUnlimitedAmmo(bool IsUnlimited) {

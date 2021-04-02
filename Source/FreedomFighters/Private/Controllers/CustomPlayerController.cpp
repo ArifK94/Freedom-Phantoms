@@ -531,7 +531,6 @@ void ACustomPlayerController::PickupInteractable()
 
 			// Display "Stop" message if using the mounted gun
 			OnInteractionFound.Broadcast(MountedGun->GetStopUsingMessage());
-
 		}
 	}
 }

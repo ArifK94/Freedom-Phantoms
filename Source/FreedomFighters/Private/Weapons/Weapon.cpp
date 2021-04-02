@@ -381,6 +381,10 @@ void AWeapon::ChargeDown()
 		return;
 	}
 
+	if (IsAiming) {
+		return;
+	}
+
 	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
 	IsChargingUp = false;
 
