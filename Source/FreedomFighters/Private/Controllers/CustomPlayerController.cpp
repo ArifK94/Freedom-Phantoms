@@ -25,6 +25,8 @@ ACustomPlayerController::ACustomPlayerController()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	DesiredInputHoldTime = .5f;
+
 	InteractionLength = 500.0f;
 }
 
@@ -64,6 +66,19 @@ void ACustomPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
 
 	InputComponent->BindAction("UseInteractable", IE_Pressed, this, &ACustomPlayerController::UseInteractableActor);
+
+
+
+	// Commander Input
+	//InputComponent->BindAction("Recruit", IE_Pressed, this, &ACustomPlayerController::Recruit);
+	InputComponent->BindAction("Attack", IE_Pressed, this, &ACustomPlayerController::BeginAttackCommand);
+	InputComponent->BindAction("Attack", IE_Released, this, &ACustomPlayerController::EndAttackCommand);
+
+	InputComponent->BindAction("Defend", IE_Pressed, this, &ACustomPlayerController::BeginDefendCommand);
+	InputComponent->BindAction("Defend", IE_Released, this, &ACustomPlayerController::EndDefendCommand);
+
+	InputComponent->BindAction("Follow", IE_Pressed, this, &ACustomPlayerController::BeginFollowCommand);
+	InputComponent->BindAction("Follow", IE_Released, this, &ACustomPlayerController::EndFollowCommand);
 }
 
 
@@ -83,6 +98,8 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	}
 
 	if (OwningCombatCharacter) {
+
+		// Grab the "Pickup Key" for it to be displayed on the UI 
 		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 		TArray <FInputActionKeyMapping> OutMappings;
 		Settings->GetActionMappingByName("Pickup", OutMappings);
@@ -557,5 +574,132 @@ void ACustomPlayerController::UseInteractableActor()
 	}
 
 	CurrentInteractable = nullptr;
-
 }
+
+void ACustomPlayerController::ClearInputHold()
+{
+	CurrentInputHoldTime = 0.0f;
+	GetWorldTimerManager().ClearTimer(THandler_InputHeld);
+}
+
+#pragma region Commander Functions
+
+#pragma region Attack
+
+void ACustomPlayerController::Attack()
+{
+	if (CurrentInputHoldTime < DesiredInputHoldTime)
+	{
+		CurrentInputHoldTime += .1f;
+	}
+	else
+	{
+		OwningCommander->Attack(true);
+
+		// set it to desired amount before releasing the input key, 
+		// as the release command or end command functions send the same command but for only for recruit
+		CurrentInputHoldTime = DesiredInputHoldTime;
+		GetWorldTimerManager().ClearTimer(THandler_InputHeld);
+	}
+}
+
+void ACustomPlayerController::BeginAttackCommand()
+{
+	// incase another command key is pressed, clear the current time
+	ClearInputHold();
+
+	GetWorldTimerManager().SetTimer(THandler_InputHeld, this, &ACustomPlayerController::Attack, .1f, true);
+}
+
+void ACustomPlayerController::EndAttackCommand()
+{
+	if (CurrentInputHoldTime < DesiredInputHoldTime)
+	{
+		OwningCommander->Attack();
+	}
+
+	ClearInputHold();
+}
+
+#pragma endregion
+
+#pragma region Defend
+
+void ACustomPlayerController::Defend()
+{
+	if (CurrentInputHoldTime < DesiredInputHoldTime)
+	{
+		CurrentInputHoldTime += .1f;
+	}
+	else
+	{
+		OwningCommander->DefendArea(true);
+
+		// set it to desired amount before releasing the input key, 
+		// as the release command or end command functions send the same command but for only for recruit
+		CurrentInputHoldTime = DesiredInputHoldTime;
+		GetWorldTimerManager().ClearTimer(THandler_InputHeld);
+	}
+}
+
+
+void ACustomPlayerController::BeginDefendCommand()
+{
+	// incase another command key is pressed, clear the current time
+	ClearInputHold();
+
+	GetWorldTimerManager().SetTimer(THandler_InputHeld, this, &ACustomPlayerController::Defend, .1f, true);
+}
+
+void ACustomPlayerController::EndDefendCommand()
+{
+	if (CurrentInputHoldTime < DesiredInputHoldTime)
+	{
+		OwningCommander->DefendArea();
+	}
+
+	ClearInputHold();
+}
+
+#pragma endregion
+
+#pragma region Follow
+
+void ACustomPlayerController::Follow()
+{
+	if (CurrentInputHoldTime < DesiredInputHoldTime)
+	{
+		CurrentInputHoldTime += .1f;
+	}
+	else
+	{
+		OwningCommander->FollowCommander(true);
+
+		// set it to desired amount before releasing the input key, 
+		// as the release command or end command functions send the same command but for only for recruit
+		CurrentInputHoldTime = DesiredInputHoldTime;
+		GetWorldTimerManager().ClearTimer(THandler_InputHeld);
+	}
+}
+
+void ACustomPlayerController::BeginFollowCommand()
+{
+	// incase another command key is pressed, clear the current time
+	ClearInputHold();
+
+	GetWorldTimerManager().SetTimer(THandler_InputHeld, this, &ACustomPlayerController::Follow, .1f, true);
+}
+
+void ACustomPlayerController::EndFollowCommand()
+{
+	if (CurrentInputHoldTime < DesiredInputHoldTime)
+	{
+		OwningCommander->FollowCommander();
+	}
+
+	ClearInputHold();
+}
+
+#pragma endregion
+
+#pragma endregion

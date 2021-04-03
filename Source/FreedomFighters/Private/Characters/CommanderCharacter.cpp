@@ -20,9 +20,6 @@ void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Recruit", IE_Pressed, this, &ACommanderCharacter::Recruit);
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ACommanderCharacter::Attack);
-	PlayerInputComponent->BindAction("Defend", IE_Pressed, this, &ACommanderCharacter::DefendArea);
-	PlayerInputComponent->BindAction("Follow", IE_Pressed, this, &ACommanderCharacter::FollowCommander);
 }
 
 
@@ -43,6 +40,7 @@ void ACommanderCharacter::AddUIWidget()
 		}
 	}
 }
+
 
 void ACommanderCharacter::BeginPlay()
 {
@@ -201,7 +199,7 @@ UCommanderRecruit* ACommanderCharacter::GetRecruitInfo(AActor* TargetActor)
 	return nullptr;
 }
 
-void ACommanderCharacter::Attack()
+void ACommanderCharacter::Attack(bool CommandAll)
 {
 	if (ActiveRecruits.Num() <= 0) {
 		return;
@@ -214,81 +212,127 @@ void ACommanderCharacter::Attack()
 		AActor* TargetActor = HitResult.GetActor();
 
 		ABaseCharacter* EnemyCharacter = Cast<ABaseCharacter>(TargetActor);
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(TargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
+		UHealthComponent* TargetHealth = Cast<UHealthComponent>(TargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
 		bool isFriendly = UHealthComponent::IsFriendly(this, TargetActor);
 
-		CurrentRecruit->CurrentCommand = CommanderOrders::Attack;
-		DisplayOverheadIcon(CurrentRecruit->AttackOverheadIcon, CurrentRecruit->OverheadIconArray);
-
-		if (EnemyCharacter && CurrentHealth && CurrentHealth->IsAlive() && !isFriendly) // if hit result is an enemy character
+		if (CommandAll)
 		{
-			CurrentRecruit->HighValueTarget = EnemyCharacter;
-			CurrentRecruit->TargetLocation = GetPositionToNav(TargetActor->GetActorLocation()).Location;
-
-
-			// attach the HVT overhead icon to the target head, rather than updating the location every frame of the enemy's head position
-			FVector HeadLocation = EnemyCharacter->GetMesh()->GetSocketLocation(EnemyCharacter->GetHeadSocket());
-			CurrentRecruit->HighValueTargetOverheadIcon->AttachToComponent(EnemyCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
-			DisplayPositionIcon(CurrentRecruit->HighValueTargetOverheadIcon, CurrentRecruit->OrderIconArray, HeadLocation);
+			for (int i = 0; i < ActiveRecruits.Num(); i++)
+			{
+				AttackSingle(ActiveRecruits[i], EnemyCharacter, TargetHealth, isFriendly, HitResult);
+			}
 		}
-		else // show the attack position 
+		else
 		{
-			CurrentRecruit->HighValueTarget = nullptr;
-			CurrentRecruit->TargetLocation = GetPositionToNav(HitResult.ImpactPoint).Location;
-
-			DisplayPositionIcon(CurrentRecruit->AttackPositionIcon, CurrentRecruit->OrderIconArray, CurrentRecruit->TargetLocation);
+			AttackSingle(CurrentRecruit, EnemyCharacter, TargetHealth, isFriendly, HitResult);
+			IncrementCurrentRecruit();
 		}
 	}
 
 	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().AttackSound, CurrentRecruit);
 
-	IncrementCurrentRecruit();
 }
 
-void ACommanderCharacter::DefendArea()
+void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, UHealthComponent* TargetHealth, bool isFriendly, FHitResult HitResult)
+{
+	Recruit->CurrentCommand = CommanderOrders::Attack;
+	DisplayOverheadIcon(Recruit->AttackOverheadIcon, Recruit->OverheadIconArray);
+
+	if (EnemyCharacter && TargetHealth && TargetHealth->IsAlive() && !isFriendly) // if hit result is an enemy character
+	{
+		Recruit->HighValueTarget = EnemyCharacter;
+		Recruit->TargetLocation = GetPositionToNav(EnemyCharacter->GetActorLocation()).Location;
+
+
+		// attach the HVT overhead icon to the target head, rather than updating the location every frame of the enemy's head position
+		FVector HeadLocation = EnemyCharacter->GetMesh()->GetSocketLocation(EnemyCharacter->GetHeadSocket());
+		Recruit->HighValueTargetOverheadIcon->AttachToComponent(EnemyCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+		DisplayPositionIcon(Recruit->HighValueTargetOverheadIcon, Recruit->OrderIconArray, HeadLocation);
+	}
+	else // show the attack position 
+	{
+		Recruit->HighValueTarget = nullptr;
+		Recruit->TargetLocation = GetPositionToNav(HitResult.ImpactPoint).Location;
+
+		DisplayPositionIcon(Recruit->AttackPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
+	}
+}
+
+void ACommanderCharacter::DefendArea(bool CommandAll)
 {
 	if (ActiveRecruits.Num() <= 0) {
 		return;
 	}
 
+	if (CommandAll)
+	{
+		for (int i = 0; i < ActiveRecruits.Num(); i++)
+		{
+			DefendAreaSingle(ActiveRecruits[i]);
+		}
+	}
+	else
+	{
+		DefendAreaSingle(CurrentRecruit);
+		IncrementCurrentRecruit();
+	}
+
+
+	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound, CurrentRecruit);
+}
+
+void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
+{
 	if (isAiming)
 	{
 		FHitResult HitResult = GetCurrentTraceHit(50000.0f);
 
 		if (HitResult.bBlockingHit)
 		{
-			CurrentRecruit->TargetLocation = GetPositionToNav(HitResult.ImpactPoint).Location;
+			Recruit->TargetLocation = GetPositionToNav(HitResult.ImpactPoint).Location;
 		}
 	}
 	else
 	{
-		CurrentRecruit->TargetLocation = GetPositionToNav(GetActorLocation()).Location;
+		Recruit->TargetLocation = GetPositionToNav(GetActorLocation()).Location;
 	}
+	Recruit->CurrentCommand = CommanderOrders::Defend;
 
-	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound, CurrentRecruit);
-
-	CurrentRecruit->CurrentCommand = CommanderOrders::Defend;
-
-	DisplayPositionIcon(CurrentRecruit->DefendPositionIcon, CurrentRecruit->OrderIconArray, CurrentRecruit->TargetLocation);
-	DisplayOverheadIcon(CurrentRecruit->DefendOverheadIcon, CurrentRecruit->OverheadIconArray);
-
-	IncrementCurrentRecruit();
+	DisplayPositionIcon(Recruit->DefendPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
+	DisplayOverheadIcon(Recruit->DefendOverheadIcon, Recruit->OverheadIconArray);
 }
 
-void ACommanderCharacter::FollowCommander()
+
+void ACommanderCharacter::FollowCommander(bool CommandAll)
 {
-	if (ActiveRecruits.Num() > 0)
+	if (ActiveRecruits.Num() <= 0) {
+		return;
+	}
+
+	if (CommandAll)
 	{
-		CurrentRecruit->CurrentCommand = CommanderOrders::Follow;
-
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().FollowSound, CurrentRecruit);
-
-		CurrentRecruit->TargetLocation = GetActorLocation();
-
-		DisplayOverheadIcon(CurrentRecruit->FollowOverheadIcon, CurrentRecruit->OverheadIconArray);
-
+		for (int i = 0; i < ActiveRecruits.Num(); i++)
+		{
+			FollowSingle(ActiveRecruits[i]);
+		}
+	}
+	else
+	{
+		FollowSingle(CurrentRecruit);
 		IncrementCurrentRecruit();
 	}
+
+	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().FollowSound, CurrentRecruit);
+}
+
+
+void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit)
+{
+	Recruit->CurrentCommand = CommanderOrders::Follow;
+
+	Recruit->TargetLocation = GetActorLocation();
+
+	DisplayOverheadIcon(Recruit->FollowOverheadIcon, Recruit->OverheadIconArray);
 }
 
 /// <summary>

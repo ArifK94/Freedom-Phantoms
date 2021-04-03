@@ -125,4 +125,31 @@ private:
 
 	UPROPERTY(BlueprintAssignable)
 		FOnInteractiveFoundSignature OnInteractionFound;
+
+
+	////////////// -------------------------- Input Functions -------------------------- //////////////
+	FTimerHandle THandler_InputHeld;
+	float DesiredInputHoldTime;
+	float CurrentInputHoldTime;
+
+	void ClearInputHold();
+
+
+
+	////////////// -------------------------- Commander Functions -------------------------- //////////////
+
+private:
+
+
+	void BeginAttackCommand();
+	void EndAttackCommand();
+	void Attack();
+
+	void Defend();
+	void BeginDefendCommand();
+	void EndDefendCommand();
+
+	void Follow();
+	void BeginFollowCommand();
+	void EndFollowCommand();
 };

@@ -184,7 +184,7 @@ void AStronghold::SpawnCharacter()
 
 		if (navResult)
 		{
-			ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionManager->GetOperativeCharacterClass(), NavLocation.Location, SpawnArea->GetComponentRotation(), SpawnParams);
+			ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionManager->GetOperativeCharacterClass(), Location, SpawnArea->GetComponentRotation(), SpawnParams);
 
 			if (Character)
 			{

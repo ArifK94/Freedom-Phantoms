@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -122,6 +120,13 @@ public:
 
 	void AddUIWidget();
 
+
+	void Attack(bool CommandAll = false);
+
+	void DefendArea(bool CommandAll = false);
+
+	void FollowCommander(bool CommandAll = false);
+
 private:
 
 	FHitResult GetCurrentTraceHit(float Length = 500.0f);
@@ -129,6 +134,12 @@ private:
 	void CheckRecruit();
 
 	void Recruit();
+
+	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, UHealthComponent* TargetHealth, bool isFriendly, FHitResult HitResult);
+
+	void DefendAreaSingle(UCommanderRecruit* Recruit);
+
+	void FollowSingle(UCommanderRecruit* Recruit);
 
 
 	UFUNCTION(BlueprintCallable, Category = "Commander")
@@ -138,12 +149,6 @@ private:
 		FOnRemoveRecruitSignature OnRemoveRecruit;
 
 	void ResetTargetActor();
-
-	void Attack();
-
-	void DefendArea();
-
-	void FollowCommander();
 
 	void UpdateActiveRecruits();
 
