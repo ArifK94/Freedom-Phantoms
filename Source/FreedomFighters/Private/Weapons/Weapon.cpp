@@ -30,6 +30,11 @@
 #include "UObject/UObjectGlobals.h"
 
 
+void AWeapon::SetIsAiming(bool isAiming)
+{
+	IsAiming = isAiming;
+}
+
 // Sets default values
 AWeapon::AWeapon()
 {
@@ -81,6 +86,8 @@ AWeapon::AWeapon()
 	CanAutoReload = false;
 
 	HasNoReload = false;
+
+	ChargeSoundParamName = "ChargeAmount";
 }
 
 void AWeapon::ConfigSetup()
@@ -193,8 +200,6 @@ void AWeapon::Fire()
 	CreateBullet();
 
 	BurstAmmountCount++;
-
-	CurrentChargeUpTime = ChargeUpTime;
 
 	if (CanAutoReload && !HasNoReload)
 	{
@@ -367,9 +372,10 @@ void AWeapon::ChargeUp()
 
 	IsChargingUp = true;
 
-	for (int i = 0; i < ChargeDownSounds.Num(); i++)
+	if (ChargeUpSound != nullptr)
 	{
-		ChargeDownSounds[i].HasPlayedSound = false;
+		ChargingAudioComponent->Sound = ChargeUpSound;
+		ChargingAudioComponent->Play();
 	}
 
 	GetWorldTimerManager().SetTimer(THandler_ChargeUp, this, &AWeapon::IncreaseCharge, .1f, true);
@@ -388,9 +394,11 @@ void AWeapon::ChargeDown()
 	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
 	IsChargingUp = false;
 
-	for (int i = 0; i < ChargeUpSounds.Num(); i++)
+
+	if (ChargeDownSound != nullptr)
 	{
-		ChargeUpSounds[i].HasPlayedSound = false;
+		ChargingAudioComponent->Sound = ChargeDownSound;
+		ChargingAudioComponent->Play();
 	}
 
 	GetWorldTimerManager().SetTimer(THandler_ChargeDown, this, &AWeapon::DecreaseCharge, .1f, true);
@@ -399,6 +407,8 @@ void AWeapon::ChargeDown()
 
 void AWeapon::IncreaseCharge()
 {
+	ChargingAudioComponent->SetFloatParameter(ChargeSoundParamName, CurrentChargeUpTime);
+
 	if (CurrentChargeUpTime < ChargeUpTime)
 	{
 		CurrentChargeUpTime += .1f;
@@ -407,44 +417,12 @@ void AWeapon::IncreaseCharge()
 	{
 		CurrentChargeUpTime = ChargeUpTime;
 	}
-
-
-	for (int i = 0; i < ChargeUpSounds.Num(); i++)
-	{
-		FWeaponChargeSound prev;
-		if (i - 1 > -1) {
-			prev = ChargeUpSounds[i - 1];
-		}
-
-		if (CurrentChargeUpTime > prev.StartTime)
-		{
-			if (!ChargeUpSounds[i].HasPlayedSound)
-			{
-				USoundBase* SoundBase = ChargeUpSounds[i].Sound;
-				ChargingAudioComponent->Sound = SoundBase;
-				ChargingAudioComponent->Play();
-
-				ChargeUpSounds[i].HasPlayedSound = true;
-				break;
-			}
-			else if (ChargeUpSounds[i].PlayOnLoop)
-			{
-				USoundBase* SoundBase = ChargeUpSounds[i].Sound;
-
-				if (ChargingAudioComponent->Sound != SoundBase) {
-					ChargingAudioComponent->Sound = SoundBase;
-				}
-
-				if (!ChargingAudioComponent->IsPlaying()) {
-					ChargingAudioComponent->Play();
-				}
-			}
-		}
-	}
 }
 
 void AWeapon::DecreaseCharge()
 {
+	ChargingAudioComponent->SetFloatParameter(ChargeSoundParamName, CurrentChargeUpTime);
+
 	if (CurrentChargeUpTime > 0.0f)
 	{
 		CurrentChargeUpTime -= .1f;
@@ -454,21 +432,6 @@ void AWeapon::DecreaseCharge()
 		CurrentChargeUpTime = 0.0f;
 
 		GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
-	}
-
-	for (int i = ChargeDownSounds.Num() - 1; i >= 0; i--)
-	{
-		if (CurrentChargeUpTime < ChargeDownSounds[i].StartTime)
-		{
-			if (!ChargeDownSounds[i].HasPlayedSound)
-			{
-				USoundBase* SoundBase = ChargeDownSounds[i].Sound;
-				ChargingAudioComponent->Sound = SoundBase;
-				ChargingAudioComponent->Play();
-				ChargeDownSounds[i].HasPlayedSound = true;
-				break;
-			}
-		}
 	}
 }
 

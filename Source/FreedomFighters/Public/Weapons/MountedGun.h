@@ -39,6 +39,13 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 		FName CameraPositionSocket;
 	
+
+	float DefaultFOV;
+	float TargetFOV;
+
+	FTimerHandle THandler_ZoomFOVIn;
+	FTimerHandle THandler_ZoomFOVOut;
+
 public:
 	AMountedGun();
 
@@ -52,7 +59,13 @@ public:
 		return StopUsingMessage;
 	}
 
+	virtual void SetIsAiming(bool isAiming) override;
+
 private:
 	virtual void BeginPlay() override;
+
+
+	void ZoomIn();
+	void ZoomOut();
 
 };

@@ -103,31 +103,6 @@ struct FWeaponAnimSet : public FTableRowBase
 		UAimOffsetBlendSpace* AimOffsetProning;
 };
 
-USTRUCT(BlueprintType)
-struct FWeaponChargeSound : public FTableRowBase
-{
-	GENERATED_USTRUCT_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		USoundBase* Sound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float StartTime;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		bool PlayOnLoop;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		bool HasPlayedSound;
-
-	FWeaponChargeSound()
-	{
-
-	}
-};
-
-
 UCLASS()
 class FREEDOMFIGHTERS_API AWeapon : public AActor
 {
@@ -169,6 +144,8 @@ public:
 
 	/** Return bool so it can be used to play sounds if true */
 	bool ReplenishAmmo();
+
+	virtual void SetIsAiming(bool isAiming);
 
 private:
 	void BurstDelay();
@@ -416,10 +393,13 @@ protected:
 		UAudioComponent* ChargingAudioComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
-		TArray<FWeaponChargeSound> ChargeUpSounds;
+		USoundBase* ChargeUpSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
-		TArray<FWeaponChargeSound> ChargeDownSounds;
+		USoundBase* ChargeDownSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+		FName ChargeSoundParamName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
 		float ChargeUpTime;
@@ -476,9 +456,6 @@ public:
 		return HasUnlimitedAmmo;
 	}
 
-	void SetIsAiming(bool Value) {
-		IsAiming = Value;
-	}
 
 	void SetUnlimitedAmmo(bool IsUnlimited) {
 		HasUnlimitedAmmo = IsUnlimited;

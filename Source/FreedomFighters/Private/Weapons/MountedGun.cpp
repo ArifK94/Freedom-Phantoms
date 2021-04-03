@@ -8,14 +8,40 @@
 
 AMountedGun::AMountedGun()
 {
+	PrimaryActorTick.bCanEverTick = false;
+
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 
 	CameraPositionSocket = "CamPos";
 }
 
+void AMountedGun::SetIsAiming(bool isAiming)
+{
+	Super::SetIsAiming(isAiming);
+
+	// clear Zoom timers if running
+	GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
+	GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
+
+	TargetFOV = isAiming ? ZoomFOV : DefaultFOV;
+
+	if (isAiming)
+	{
+		GetWorldTimerManager().SetTimer(THandler_ZoomFOVIn, this, &AMountedGun::ZoomIn, .01f, true);
+	}
+	else
+	{
+		GetWorldTimerManager().SetTimer(THandler_ZoomFOVOut, this, &AMountedGun::ZoomOut, .01f, true);
+	}
+
+}
+
 void AMountedGun::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DefaultFOV = FollowCamera->FieldOfView;
+	TargetFOV = 0.0f;
 
 	FollowCamera->AttachToComponent(getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraPositionSocket);
 	
@@ -42,11 +68,37 @@ void AMountedGun::AddControllerYawInput(float Val)
 
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController)
 {
-	OurPlayerController->SetViewTargetWithBlend(this, .5f);
+	OurPlayerController->SetViewTargetWithBlend(this, .2f);
 }
 
 void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, class ACharacter* Character)
 {
 	OurPlayerController->SetViewTargetWithBlend(Character, .2f);
 	StopFire();
+}
+
+void AMountedGun::ZoomIn()
+{
+	if (FollowCamera->FieldOfView > TargetFOV)
+	{
+		FollowCamera->FieldOfView--;
+	}
+	else
+	{
+		FollowCamera->SetFieldOfView(TargetFOV);
+		GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
+	}
+}
+
+void AMountedGun::ZoomOut()
+{
+	if (FollowCamera->FieldOfView < TargetFOV)
+	{
+		FollowCamera->FieldOfView++;
+	}
+	else
+	{
+		FollowCamera->SetFieldOfView(TargetFOV);
+		GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
+	}
 }
