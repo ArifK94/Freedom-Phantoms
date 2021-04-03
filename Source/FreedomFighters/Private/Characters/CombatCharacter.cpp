@@ -710,8 +710,9 @@ void ACombatCharacter::DropMountedGun()
 
 	// set to secondary so during weapon swap, it goes back to primary
 	currentWeaponObj->SetOwner(nullptr);
-	currentWeaponObj = secondaryWeaponObj;
-	BeginWeaponSwap();
+	currentWeaponObj = primaryWeaponObj;
+	BeginEquipWeapon();
+	GrabWeapon();
 
 }
 
