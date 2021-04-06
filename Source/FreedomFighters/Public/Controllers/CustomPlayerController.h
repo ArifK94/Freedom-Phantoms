@@ -50,7 +50,7 @@ private:
 	UUserWidget* WeaponCrosshairWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> InteracthWidgetClass;
+		TSubclassOf<UUserWidget> InteractWidgetClass;
 	UUserWidget* InteractWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -134,13 +134,17 @@ private:
 
 	void ClearInputHold();
 
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
+		void PauseGame();
 
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> PauseMenuWidgetClass;
+	UUserWidget* PauseMenuWidget;
 
 	////////////// -------------------------- Commander Functions -------------------------- //////////////
 
 private:
-
-
 	void BeginAttackCommand();
 	void EndAttackCommand();
 	void Attack();

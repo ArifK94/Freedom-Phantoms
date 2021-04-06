@@ -34,6 +34,9 @@ void ACustomPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
+	FInputActionBinding PauseInput = InputComponent->BindAction("Pause", IE_Pressed, this, &ACustomPlayerController::PauseGame);
+	PauseInput.bExecuteWhenPaused = true;
+
 	InputComponent->BindAxis("Turn", this, &ACustomPlayerController::AddControllerYawInput);
 	InputComponent->BindAxis("TurnRate", this, &ACustomPlayerController::TurnAtRate);
 
@@ -119,9 +122,45 @@ void ACustomPlayerController::BeginPlay()
 		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
 	}
 
-	AddUIWidgets();
 
 	BeginCheckInteractable();
+}
+
+void ACustomPlayerController::PauseGame()
+{
+	UWorld* World = GetWorld();
+
+	if (!World) {
+		return;
+	}
+
+	if (UGameplayStatics::IsGamePaused(World))
+	{
+		// resume game
+		if (PauseMenuWidget != nullptr && PauseMenuWidget->IsInViewport())
+		{
+			PauseMenuWidget->RemoveFromParent();
+		}
+
+		SetShowMouseCursor(false);
+
+		UGameplayStatics::SetGamePaused(World, false);
+	}
+	else
+	{	// pause game
+		if (PauseMenuWidgetClass)
+		{
+			PauseMenuWidget = CreateWidget<UUserWidget>(World, PauseMenuWidgetClass);
+
+			if (PauseMenuWidget)
+			{
+				PauseMenuWidget->AddToViewport();
+			}
+		}
+		SetShowMouseCursor(true);
+
+		UGameplayStatics::SetGamePaused(World, true);
+	}
 }
 
 void ACustomPlayerController::Tick(float DeltaTime)
@@ -170,9 +209,9 @@ void ACustomPlayerController::AddUIWidgets()
 	}
 
 
-	if (InteracthWidgetClass)
+	if (InteractWidgetClass)
 	{
-		InteractWidget = CreateWidget<UUserWidget>(World, InteracthWidgetClass);
+		InteractWidget = CreateWidget<UUserWidget>(World, InteractWidgetClass);
 
 		if (InteractWidget)
 		{

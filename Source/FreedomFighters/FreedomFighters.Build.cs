@@ -19,6 +19,7 @@ public class FreedomFighters : ModuleRules
             "AIModule",
             "NavigationSystem",
             "PhysicsCore",
+            "MoviePlayer"
         });
     }
 }
