@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
 #include "Components/TimelineComponent.h"
 #include "Engine/DataTable.h"
-
+#include "EnumCollection.h"
+#include "StructCollection.h"
 #include "Aircraft.generated.h"
 
 class AWeapon;
@@ -21,68 +21,6 @@ class ATargetSystemMarker;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChangeSignature, AAircraft*, Aircraft);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestorySignature, AAircraft*, Aircraft);
 
-UENUM(BlueprintType)
-enum class AircraftMovement : uint8
-{
-	Grounded		UMETA(DisplayName = "Grounded"),
-	Hovering		UMETA(DisplayName = "Hovering"),
-	Stopping 		UMETA(DisplayName = "Stopping"),
-	MovingForward	UMETA(DisplayName = "MovingForward"),
-};
-
-USTRUCT(BlueprintType)
-struct FAircraftWeapon
-{
-	GENERATED_USTRUCT_BODY()
-
-public:
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TSubclassOf<AWeapon> Weapon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		FName WeaponSocketName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		FName CameraSocketName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float YawMin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float YawMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float PitchMin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float PitchMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TSubclassOf<UUserWidget> HUD;
-};
-
-USTRUCT(BlueprintType)
-struct FREEDOMFIGHTERS_API FTargetSystemNode
-{
-	GENERATED_USTRUCT_BODY()
-
-public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		ABaseCharacter* Character;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		ATargetSystemMarker* Marker; // the marker class containing the widget component
-
-	FTargetSystemNode()
-	{
-
-	}
-};
-
-
-
-
 UCLASS()
 class FREEDOMFIGHTERS_API AAircraft : public AActor
 {
@@ -92,8 +30,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CapsuleComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		USkeletalMeshComponent* Mesh;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* EngineAudio;
@@ -110,8 +47,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UPostProcessComponent* ThermalVisionPPComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		AircraftMovement CurrentAircraftMovement;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<FAircraftWeapon> AircraftWeapons;
@@ -144,9 +80,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CurrentWingSpeed;
 
-
-	FTimeline CurveTimeline;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCurveFloat* CurveFloat;
 
@@ -174,6 +107,20 @@ private:
 		float CameraSwitchDelay;
 	FTimerHandle THandler_CameraSwitchDelay;
 
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		USkeletalMeshComponent* Mesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<FAircraftSeating> AircraftSeats;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TArray<FAircraftSeating> OccupiedSeats;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		EAircraftMovement CurrentAircraftMovement;
+
+	FTimeline CurveTimeline;
 public:
 	AAircraft();
 
@@ -207,6 +154,8 @@ private:
 
 	UFUNCTION()
 		void FollowSplinePath(float Value);
+
+	void SpawnPassenger();
 
 	void SpawnWeapon();
 

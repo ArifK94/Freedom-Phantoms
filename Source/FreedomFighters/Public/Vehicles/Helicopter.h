@@ -5,9 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Actor.h"
-
 #include "Engine/DataTable.h"
-
 #include "Helicopter.generated.h"
 
 class ABaseCharacter;
@@ -24,7 +22,7 @@ enum class HelicopterMovement : uint8
 	MovingForward	UMETA(DisplayName = "MovingForward"),
 };
 
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
+UENUM(BlueprintType)
 enum class HelicopterRole : uint8
 {
 	Pilot				UMETA(DisplayName = "Pilot"),

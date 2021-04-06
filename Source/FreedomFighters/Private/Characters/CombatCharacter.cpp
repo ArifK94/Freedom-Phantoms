@@ -179,7 +179,7 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 void ACombatCharacter::setCharacterRotation()
 {
-	if (isInCombatMode && !isTakingCover && !isInHelicopter)
+	if (isInCombatMode && !isTakingCover && !IsInAircraft)
 	{
 		float x = 0.0f, y = 0.0f;
 

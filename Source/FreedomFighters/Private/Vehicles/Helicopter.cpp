@@ -147,40 +147,40 @@ void AHelicopter::FollowSplinePath(float Value)
 
 void AHelicopter::SpawnPassenger()
 {
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	//FActorSpawnParameters SpawnParams;
+	//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	for (int i = 0; i < HelicopterSeating.Num(); i++)
-	{
-		FHelicopterSeating HeliSeat = HelicopterSeating[i];
+	//for (int i = 0; i < HelicopterSeating.Num(); i++)
+	//{
+	//	FAircraftSeating HeliSeat = HelicopterSeating[i];
 
-		if (HeliSeat.Character)
-		{
-			HeliSeat.CharacterObj = GetWorld()->SpawnActor<ABaseCharacter>(HeliSeat.Character, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	//	if (HeliSeat.Character)
+	//	{
+	//		HeliSeat.CharacterObj = GetWorld()->SpawnActor<ABaseCharacter>(HeliSeat.Character, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-			if (HeliSeat.CharacterObj)
-			{
-				ABaseCharacter* Character = HeliSeat.CharacterObj;
-				Character->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
-				Character->SetIsInHelicopter(true);
-				Character->SetHelicopterSeatPosition(HeliSeat.SeatPosition);
-				HeliSeat.OwningHelicopter = this;
+	//		if (HeliSeat.CharacterObj)
+	//		{
+	//			ABaseCharacter* Character = HeliSeat.CharacterObj;
+	//			Character->AttachToComponent(HelicopterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
+	//			Character->SetIsInAircraft(true);
+	//			Character->SetHelicopterSeatPosition(HeliSeat.SeatPosition);
+	//			HeliSeat.OwningHelicopter = this;
 
-				Character->SetHelicopterSeating(HeliSeat);
-
-
-				FRotator CamRotation = HeliSeat.CharacterObj->FollowCamera->GetComponentRotation();
-
-				float TargetYaw = FMath::Clamp(CamRotation.Yaw, HeliSeat.CameraViewYawMin, HeliSeat.CameraViewYawMax);
-
-				FRotator TargetRotation = UKismetMathLibrary::MakeRotator(CamRotation.Roll, CamRotation.Pitch, TargetYaw);
-				//	HeliSeat.CharacterObj->FollowCamera->SetWorldRotation(TargetRotation);
+	//			Character->SetAircraftSeat(HeliSeat);
 
 
-				OccupiedSeating.Add(HeliSeat);
-			}
-		}
-	}
+	//			FRotator CamRotation = HeliSeat.CharacterObj->FollowCamera->GetComponentRotation();
+
+	//			float TargetYaw = FMath::Clamp(CamRotation.Yaw, HeliSeat.CameraViewYawMin, HeliSeat.CameraViewYawMax);
+
+	//			FRotator TargetRotation = UKismetMathLibrary::MakeRotator(CamRotation.Roll, CamRotation.Pitch, TargetYaw);
+	//			//	HeliSeat.CharacterObj->FollowCamera->SetWorldRotation(TargetRotation);
+
+
+	//			OccupiedSeating.Add(HeliSeat);
+	//		}
+	//	}
+	//}
 }
 
 void AHelicopter::WaitForRepelling()
@@ -287,5 +287,4 @@ void AHelicopter::UpdateOccupiedSeats()
 			}
 		}
 	}
-
 }

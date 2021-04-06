@@ -2,10 +2,8 @@
 
 
 #include "Animations/HelicopterAnimNotify.h"
-
 #include "Characters/BaseCharacter.h"
-
-#include "Vehicles/Helicopter.h"
+#include "Vehicles/AircraftTransport.h"
 
 
 void UHelicopterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
@@ -16,27 +14,27 @@ void UHelicopterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequen
 
 		if (Character)
 		{
-			FHelicopterSeating MySeat = Character->CurrentSeating();
-			AHelicopter* OwningHelicopter = MySeat.OwningHelicopter;
+			FAircraftSeating MySeat = Character->GetAircraftSeat();
+			AAircraftTransport* OwningAircraft = Cast<AAircraftTransport>(MySeat.OwningAircraft);
 
 			if (DetachFromHelicopter)
 			{
 				Character->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-				Character->SetIsInHelicopter(false);
+				Character->SetIsInAircraft(false);
 				Character->SetIsRepellingDown(false);
 			}
 
 			if (IsRopeFreeToUse)
 			{
-				if (OwningHelicopter)
+				if (OwningAircraft)
 				{
 					if (MySeat.isRopeLeftSide)
 					{
-						OwningHelicopter->IsLeftRappelOccupied(false);
+						OwningAircraft->IsLeftRappelOccupied(false);
 					}
 					else
 					{
-						OwningHelicopter->IsRightRappelOccupied(false);
+						OwningAircraft->IsRightRappelOccupied(false);
 					}
 				}
 			}

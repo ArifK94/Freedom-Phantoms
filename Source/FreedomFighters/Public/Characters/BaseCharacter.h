@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-
 #include "Engine/DataTable.h"
-#include "Vehicles/Helicopter.h"
-
+#include "StructCollection.h"
+#include "EnumCollection.h"
 #include "BaseCharacter.generated.h"
 
 class UHealthComponent;
@@ -15,15 +14,6 @@ class UAudioComponent;
 class UPostProcessComponent;
 class APlayerCameraManager;
 class AAIController;
-
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
-enum class CoverType : uint8
-{
-	Default			UMETA(DisplayName = "Default"),
-	CornerLeft		UMETA(DisplayName = "CornerLeft"),
-	CornerRight 	UMETA(DisplayName = "CornerRight")
-};
-
 
 
 UCLASS(config = Game)
@@ -125,10 +115,10 @@ protected:
 		bool isAiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool isInHelicopter;
+		bool IsInAircraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		int32 HelicopterSeatPosition;
+		int32 AircraftSeatPosition;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
@@ -143,7 +133,7 @@ protected:
 		UAudioComponent* VoiceAudioComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FHelicopterSeating currentSeating;
+		FAircraftSeating CurrentAircraftSeat;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
@@ -231,13 +221,6 @@ public:
 	void EscapeCover();
 
 protected:
-
-	//void MoveForward(float Value);
-
-	//void MoveRight(float Value);
-
-
-protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
@@ -277,7 +260,7 @@ public:
 	}
 
 	bool IsInHelicopter() {
-		return isInHelicopter;
+		return IsInAircraft;
 	}
 
 	bool IsRepellingDown() {
@@ -314,17 +297,6 @@ public:
 		RightInputValue = Value;
 	}
 
-	void SetIsInHelicopter(bool value) {
-		isInHelicopter = value;
-	}
-
-	void SetIsRepellingDown(bool value) {
-		isRepellingDown = value;
-	}
-
-	void SetHelicopterSeatPosition(int32 position) {
-		HelicopterSeatPosition = position;
-	}
 
 	UPostProcessComponent* getCharacterOutlinePPComp() {
 		return  CharacterOutlinePPComp;
@@ -338,11 +310,23 @@ public:
 		CharacterDirection = Value;
 	}
 
-	void SetHelicopterSeating(FHelicopterSeating CurrentSeating) {
-		currentSeating = CurrentSeating;
+	void SetIsInAircraft(bool value) {
+		IsInAircraft = value;
 	}
 
-	FHelicopterSeating CurrentSeating() {
-		return currentSeating;
+	void SetIsRepellingDown(bool value) {
+		isRepellingDown = value;
+	}
+
+	void SetAircraftSeatPosition(int32 position) {
+		AircraftSeatPosition = position;
+	}
+
+	void SetAircraftSeat(FAircraftSeating CurrentSeating) {
+		CurrentAircraftSeat = CurrentSeating;
+	}
+
+	FAircraftSeating GetAircraftSeat() {
+		return CurrentAircraftSeat;
 	}
 };

@@ -109,6 +109,8 @@ void AAircraft::BeginPlay()
 		SpawnWeapon();
 	}
 	EngineAudio->Play();
+
+	SpawnPassenger();
 }
 
 void AAircraft::Tick(float DeltaTime)
@@ -138,17 +140,17 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 				switch (CurrentSplinePoint.MovementType)
 				{
 				case AircraftSplineMovement::Throttling:
-					CurrentAircraftMovement = AircraftMovement::MovingForward;
+					CurrentAircraftMovement = EAircraftMovement::MovingForward;
 					break;
 				case AircraftSplineMovement::Hovering:
-					CurrentAircraftMovement = AircraftMovement::Hovering;
+					CurrentAircraftMovement = EAircraftMovement::Hovering;
 					CurveTimeline.Stop();
 					break;
 				case AircraftSplineMovement::Stopping:
-					CurrentAircraftMovement = AircraftMovement::Stopping;
+					CurrentAircraftMovement = EAircraftMovement::Stopping;
 					break;
 				default:
-					CurrentAircraftMovement = AircraftMovement::Grounded;
+					CurrentAircraftMovement = EAircraftMovement::Grounded;
 					break;
 				}
 			}
@@ -216,6 +218,48 @@ void AAircraft::FollowSplinePath(float Value)
 	}
 }
 
+void AAircraft::SpawnPassenger()
+{
+	if (AircraftSeats.Num() <= 0) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	for (int i = 0; i < AircraftSeats.Num(); i++)
+	{
+		FAircraftSeating HeliSeat = AircraftSeats[i];
+
+		if (HeliSeat.Character)
+		{
+			HeliSeat.CharacterObj = GetWorld()->SpawnActor<ABaseCharacter>(HeliSeat.Character, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+			if (HeliSeat.CharacterObj)
+			{
+				ABaseCharacter* Character = HeliSeat.CharacterObj;
+				Character->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
+				Character->SetIsInAircraft(true);
+				Character->SetAircraftSeatPosition(HeliSeat.SeatPosition);
+				HeliSeat.OwningAircraft = this;
+
+				Character->SetAircraftSeat(HeliSeat);
+
+
+				FRotator CamRotation = HeliSeat.CharacterObj->FollowCamera->GetComponentRotation();
+
+				float TargetYaw = FMath::Clamp(CamRotation.Yaw, HeliSeat.CameraViewYawMin, HeliSeat.CameraViewYawMax);
+
+				FRotator TargetRotation = UKismetMathLibrary::MakeRotator(CamRotation.Roll, CamRotation.Pitch, TargetYaw);
+				//	HeliSeat.CharacterObj->FollowCamera->SetWorldRotation(TargetRotation);
+
+
+				OccupiedSeats.Add(HeliSeat);
+			}
+		}
+	}
+}
+
 void AAircraft::SpawnWeapon()
 {
 	FActorSpawnParameters SpawnParams;
@@ -242,6 +286,7 @@ void AAircraft::SpawnWeapon()
 
 	UpdateWeaponView();
 }
+
 
 void AAircraft::ChangeWeapon()
 {
@@ -335,6 +380,10 @@ void AAircraft::ShowOutlines(bool CanShow)
 
 void AAircraft::SetTargetSystem()
 {
+	if (FriendlyMarkerClass == nullptr && EnemyMarkerClass == nullptr) {
+		return;
+	}
+
 	AActor* MyOwner = GetOwner();
 
 	if (!MyOwner) {
