@@ -121,7 +121,7 @@ void ACustomPlayerController::BeginPlay()
 	{
 		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
 	}
-
+	AddUIWidgets();
 
 	BeginCheckInteractable();
 }
