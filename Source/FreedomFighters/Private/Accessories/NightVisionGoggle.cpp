@@ -7,7 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/AudioComponent.h"
-
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 ANightVisionGoggle::ANightVisionGoggle()
 {
@@ -32,6 +32,18 @@ void ANightVisionGoggle::BeginPlay()
 	canToggle = true;
 }
 
+void ANightVisionGoggle::AddNVGWidget()
+{
+	if (NVGWidgetClass)
+	{
+		NVGWidget = CreateWidget<UUserWidget>(GetWorld(), NVGWidgetClass);
+		if (NVGWidget)
+		{
+			NVGWidget->AddToViewport();
+		}
+	}
+}
+
 
 void ANightVisionGoggle::ToggleVision()
 {
@@ -48,7 +60,6 @@ void ANightVisionGoggle::ToggleVision()
 
 		GetWorldTimerManager().SetTimer(UnusedHandle, this, &ANightVisionGoggle::SetVisorState, .5f, false);
 	}
-
 }
 
 

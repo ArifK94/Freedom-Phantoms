@@ -14,11 +14,6 @@ void ALevelManager::BeginPlay()
 	ToggleObjects();
 }
 
-void ALevelManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
 void ALevelManager::ToggleObjects()
 {
 	if (DayTimeObjects.Num() > 0)
@@ -27,20 +22,11 @@ void ALevelManager::ToggleObjects()
 		{
 			if (Actor != nullptr)
 			{
-				Actor->SetHidden(IsNightTime);
-
 				// Hides visible components
 				Actor->SetActorHiddenInGame(IsNightTime);
-
-
-				TArray<UPrimitiveComponent*> AllComponents;
-				Actor->GetComponents<UPrimitiveComponent>(AllComponents);
-
-				for (UPrimitiveComponent* Component : AllComponents)
-				{
-					Component->SetHiddenInGame(IsNightTime);
-				}
-
+				Actor->SetHidden(IsNightTime);
+				Actor->SetActorEnableCollision(!IsNightTime);
+				Actor->SetActorTickEnabled(!IsNightTime);
 			}
 		}
 	}
@@ -51,22 +37,10 @@ void ALevelManager::ToggleObjects()
 		{
 			if (Actor != nullptr)
 			{
-				Actor->SetHidden(!IsNightTime);
-
-				// Hides visible components
 				Actor->SetActorHiddenInGame(!IsNightTime);
-
-
-				TArray<UPrimitiveComponent*> AllComponents;
-				Actor->GetComponents<UPrimitiveComponent>(AllComponents);
-
-				for (UPrimitiveComponent* Component : AllComponents)
-				{
-					Component->SetHiddenInGame(!IsNightTime);
-				}
+				Actor->SetHidden(!IsNightTime);
+				Actor->SetActorEnableCollision(IsNightTime);
 			}
-
 		}
 	}
-
 }

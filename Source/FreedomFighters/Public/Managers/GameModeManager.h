@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-
 #include "Engine/DataTable.h"
-
 #include "GameModeManager.generated.h"
+
+class ALevelManager;
 
 USTRUCT(BlueprintType)
 struct FWorldCoverPoint 
@@ -32,10 +32,25 @@ class FREEDOMFIGHTERS_API AGameModeManager : public AGameModeBase
 private:
 	TArray<FWorldCoverPoint> CoverPoints;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		ALevelManager* LevelManager;
+
+private:
+	virtual void BeginPlay() override;
+
+	void FindLevelManager();
+
 public:
 	bool IsCoverPointTaken(FWorldCoverPoint CoverLocation);
 	
 	void AddCoverPoint(FWorldCoverPoint CoverLocation);
 
 	void RemoveCoverPoint(FWorldCoverPoint CoverLocation);
+
+
+	ALevelManager* GetLevelManager() {
+		return LevelManager;
+	}
+
+
 };

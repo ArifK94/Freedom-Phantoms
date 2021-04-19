@@ -7,7 +7,6 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-
 #include "Components/SpotLightComponent.h"
 #include "Math/UnrealMathUtility.h"
 
@@ -21,12 +20,14 @@ AHeadgear::AHeadgear()
 	GoggleSocket = "Goggles";
 	NVGSocket = "NVG";
 
-
+	IsGoggleOn = false;
 }
 
 void AHeadgear::BeginPlay()
 {
 	Super::BeginPlay();
+
+	IsGoggleOn = true;
 
 	SpawnGoggle();
 	SpawnNVG();
@@ -35,50 +36,58 @@ void AHeadgear::BeginPlay()
 
 void AHeadgear::SpawnNVG()
 {
-	UWorld* world = GetWorld();
-
-	if (world)
-	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		// Spawn the weapon actor
-		NightVisionGoggleObj = world->SpawnActor<ANightVisionGoggle>(NightVisionGoggle, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-		if (NightVisionGoggleObj)
-		{
-			NightVisionGoggleObj->SetOwner(this);
-			NightVisionGoggleObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, NVGSocket);
-		}
+	if (NightVisionGoggleClass == nullptr) {
+		return;
 	}
-}
 
+	UWorld* World = GetWorld();
+
+	if (World == nullptr) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	// Spawn the weapon actor
+	NightVisionGoggleObj = World->SpawnActor<ANightVisionGoggle>(NightVisionGoggleClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (NightVisionGoggleObj)
+	{
+		NightVisionGoggleObj->SetOwner(this);
+		NightVisionGoggleObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, NVGSocket);
+	}
+
+}
 
 
 void AHeadgear::SpawnGoggle()
 {
-	UWorld* world = GetWorld();
-
-	if (world)
-	{
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		// Spawn the weapon actor
-		GoggleObj = world->SpawnActor<AGoggle>(Goggle, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-		if (GoggleObj)
-		{
-			GoggleObj->SetOwner(this);
-			GoggleObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, GoggleSocket);
-		}
+	if (GoggleClass == nullptr) {
+		return;
 	}
+
+	UWorld* World = GetWorld();
+
+	if (World == nullptr) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	// Spawn the weapon actor
+	GoggleObj = World->SpawnActor<AGoggle>(GoggleClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (GoggleObj)
+	{
+		GoggleObj->SetOwner(this);
+		GoggleObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, GoggleSocket);
+	}
+
 }
-
-
 
 
 // Toggle visibility between goggles & night vision goggles
@@ -86,31 +95,51 @@ void AHeadgear::ToggleRandomAccessory()
 {
 	int RandomAccessory = FMath::RandRange(0, 1);
 
-	switch (RandomAccessory)
+	if (RandomAccessory == 0)
 	{
-	case 1: // show nightvision goggles
-		NightVisionGoggleObj->GetMesh()->SetVisibility(true);
-		GoggleObj->GetMesh()->SetVisibility(true);
-		break;
-	default: // show goggles
-		NightVisionGoggleObj->GetMesh()->SetVisibility(false);
-		GoggleObj->GetMesh()->SetVisibility(true);
+		// show nightvision goggles
+		if (NightVisionGoggleObj) {
+			EnableActor(NightVisionGoggleObj, true);
+		}
+
+		if (GoggleObj) {
+			EnableActor(GoggleObj, true);
+
+		}
+	}
+	else
+	{
+		// show only goggles
+		if (NightVisionGoggleObj) {
+			EnableActor(NightVisionGoggleObj, false);
+		}
+
+		if (GoggleObj) {
+			EnableActor(GoggleObj, true);
+		}
 
 		int RandomGoggleVisor = FMath::RandRange(0, 1);
 
-		if (RandomAccessory == 0)
+		if (RandomGoggleVisor == 0)
 		{
-			IsGoggleOff = true;
+			IsGoggleOn = true;
 		}
 		else
 		{
-			IsGoggleOff = false;
+			IsGoggleOn = false;
 		}
-		break;
 	}
 }
 
 void AHeadgear::ToggleGoggles()
 {
-	IsGoggleOff = !IsGoggleOff;
+	IsGoggleOn = !IsGoggleOn;
+}
+
+void AHeadgear::EnableActor(AActor* Actor, bool IsEnabled)
+{
+	Actor->SetActorHiddenInGame(!IsEnabled);
+	Actor->SetHidden(!IsEnabled);
+	Actor->SetActorEnableCollision(IsEnabled);
+	Actor->SetActorTickEnabled(IsEnabled);
 }

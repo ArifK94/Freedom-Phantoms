@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 
+
 UENUM(BlueprintType)
 enum class CoverType : uint8
 {
@@ -12,6 +13,14 @@ enum class CoverType : uint8
 	CornerRight 	UMETA(DisplayName = "CornerRight")
 };
 
+UENUM(BlueprintType)
+enum class LoadoutType : uint8
+{
+	Assault UMETA(DisplayName = "Assault"),
+	SMG 	UMETA(DisplayName = "SMG"),
+	Shotgun UMETA(DisplayName = "Shotgun"),
+	LMG		UMETA(DisplayName = "LMG")
+};
 
 UENUM(BlueprintType)
 enum class EAircraftMovement : uint8

@@ -21,27 +21,35 @@
 ALoadout::ALoadout()
 {
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
-	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
+	Mesh->SetCollisionProfileName(TEXT("Loadout"));
 	Mesh->CanCharacterStepUpOn = ECB_No;
-
 
 	FRotator MakeControlRot = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, 270.0f);
 	Mesh->SetRelativeRotation(MakeControlRot);
-}
 
-
-void ALoadout::BeginPlay()
-{
-	Super::BeginPlay();
-
-	//UWorld* world = GetWorld();
-	//UGameInstance* instance = UGameplayStatics::GetGameInstance(world);
-	//gameInstanceController = Cast<UGameInstanceController>(instance);
+	UseMasterPoseComponent = false;
 }
 
 void ALoadout::Init(UWeaponSet* WeaponSetObj)
 {
 	CurrentWeaponSetObj = WeaponSetObj;
+}
+
+void ALoadout::BeginPlay()
+{
+	Super::BeginPlay();
+
+	SimlateBones();
+}
+
+void ALoadout::SimlateBones()
+{
+	for (int i = 0; i < PhysicsBones.Num(); i++)
+	{
+		FName Bone = PhysicsBones[i];
+
+		Mesh->SetAllBodiesBelowSimulatePhysics(Bone, true, true);
+	}
 }
 
 AWeapon* ALoadout::SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owner)

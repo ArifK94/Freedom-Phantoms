@@ -58,7 +58,7 @@ AHeadgear* UFactionManager::SpawnHelmet(USkeletalMeshComponent* Mesh, AActor* Ow
 			if (headgearObj)
 			{
 				headgearObj->SetOwner(Owner);
-				headgearObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "headgear_socket");
+				headgearObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, headgearObj->GetParentSocket());
 				return headgearObj;
 
 			}
@@ -82,13 +82,17 @@ ALoadout* UFactionManager::SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Ow
 
 
 		// Spawn a random helmet actor
-		loadoutObj = CurrentWorld->SpawnActor<ALoadout>(Loadouts[RandIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		loadoutObj = CurrentWorld->SpawnActor<ALoadout>(Loadouts[Loadouts.Num() - 1], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 		if (loadoutObj)
 		{
 			loadoutObj->SetOwner(Owner);
 			loadoutObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			loadoutObj->getLoadoutMesh()->SetMasterPoseComponent(Mesh);
+
+			if (loadoutObj->IsUseMasterPoseComponent()) {
+				loadoutObj->getLoadoutMesh()->SetMasterPoseComponent(Mesh);
+			}
+
 			loadoutObj->Init(WeaponSetObj);
 
 			return loadoutObj;

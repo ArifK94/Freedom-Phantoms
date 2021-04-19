@@ -5,20 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Accessories/Accessory.h"
+#include "EnumCollection.h"
 #include "Loadout.generated.h"
 
 class USkeletalMeshComponent;
 class UWeaponSet;
-
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
-enum class LoadoutType : uint8
-{
-	Assault UMETA(DisplayName = "Assault"),
-	SMG 	UMETA(DisplayName = "SMG"),
-	Shotgun UMETA(DisplayName = "Shotgun"),
-	LMG		UMETA(DisplayName = "LMG")
-};
-
 UCLASS()
 class FREEDOMFIGHTERS_API ALoadout : public AActor
 {
@@ -29,13 +20,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
 		LoadoutType loadoutType;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
+		TArray<FName> PhysicsBones;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
+		bool UseMasterPoseComponent;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory", meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* Mesh;
 
 
 private:
-	//class UGameInstanceController* gameInstanceController;
-
 	 UWeaponSet* CurrentWeaponSetObj;
 
 
@@ -47,9 +42,13 @@ public:
 
 	USkeletalMeshComponent* getLoadoutMesh() { return Mesh; }
 
-protected:
-
+private:
 	virtual void BeginPlay() override;
 
+	void SimlateBones();
 
+public:
+	bool IsUseMasterPoseComponent() {
+		return UseMasterPoseComponent;
+	}
 };

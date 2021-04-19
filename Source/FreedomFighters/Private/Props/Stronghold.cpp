@@ -163,6 +163,10 @@ void AStronghold::SpawnCharacter()
 		return;
 	}
 
+	if (DominantFaction->FactionManager == nullptr) {
+		return;
+	}
+
 	if (DominantFaction->FactionManager->GetOperativeCharacterClass() == nullptr) {
 		return;
 	}

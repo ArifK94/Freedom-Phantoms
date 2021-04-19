@@ -1,10 +1,25 @@
 #include "Managers/GameModeManager.h"
+#include "Managers/LevelManager.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
+void AGameModeManager::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FindLevelManager();
+}
+
+void AGameModeManager::FindLevelManager()
+{
+	AActor* LevelManagerActor = UGameplayStatics::GetActorOfClass(GetWorld(), ALevelManager::StaticClass());
+	LevelManager = Cast<ALevelManager>(LevelManagerActor);
+}
+
 
 bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 {
-
 	if (CoverPoints.Num() > 0)
 	{
 		int DuplicateAmount = -1;
