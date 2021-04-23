@@ -167,7 +167,7 @@ void ACommanderCharacter::Recruit()
 			CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
 		}
 
-		PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().RecruitSound, follower);
+		PlayVoiceSound(GetVoiceClipsSet()->RecruitSound, follower);
 
 		ResetTargetActor();
 	}
@@ -229,7 +229,7 @@ void ACommanderCharacter::Attack(bool CommandAll)
 		}
 	}
 
-	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().AttackSound, CurrentRecruit);
+	PlayVoiceSound(GetVoiceClipsSet()->AttackSound, CurrentRecruit);
 
 }
 
@@ -278,7 +278,7 @@ void ACommanderCharacter::DefendArea(bool CommandAll)
 	}
 
 
-	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().DefendSound, CurrentRecruit);
+	PlayVoiceSound(GetVoiceClipsSet()->DefendSound, CurrentRecruit);
 }
 
 void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
@@ -322,7 +322,7 @@ void ACommanderCharacter::FollowCommander(bool CommandAll)
 		IncrementCurrentRecruit();
 	}
 
-	PlayVoiceSound(FactionObj->getSelectedVoiceClipSet().FollowSound, CurrentRecruit);
+	PlayVoiceSound(GetVoiceClipsSet()->FollowSound, CurrentRecruit);
 }
 
 
@@ -559,7 +559,7 @@ void ACommanderCharacter::PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit)
 		return;
 	}
 
-	TargetRecruit->Recruit->getVoiceAudioComponent()->Sound = TargetRecruit->Recruit->getFactionObj()->getSelectedVoiceClipSet().AcknowledgeCommandSound;
+	TargetRecruit->Recruit->getVoiceAudioComponent()->Sound = TargetRecruit->Recruit->GetVoiceClipsSet()->AcknowledgeCommandSound;
 	TargetRecruit->Recruit->getVoiceAudioComponent()->Play();
 }
 

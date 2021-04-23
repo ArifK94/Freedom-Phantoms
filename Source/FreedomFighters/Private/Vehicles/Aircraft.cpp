@@ -136,23 +136,7 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 
 			if (CurrentSplinePoint.PointIndex != -1)
 			{
-
-				switch (CurrentSplinePoint.MovementType)
-				{
-				case AircraftSplineMovement::Throttling:
-					CurrentAircraftMovement = EAircraftMovement::MovingForward;
-					break;
-				case AircraftSplineMovement::Hovering:
-					CurrentAircraftMovement = EAircraftMovement::Hovering;
-					CurveTimeline.Stop();
-					break;
-				case AircraftSplineMovement::Stopping:
-					CurrentAircraftMovement = EAircraftMovement::Stopping;
-					break;
-				default:
-					CurrentAircraftMovement = EAircraftMovement::Grounded;
-					break;
-				}
+				CurrentAircraftMovement = CurrentSplinePoint.MovementType;
 			}
 		}
 	}

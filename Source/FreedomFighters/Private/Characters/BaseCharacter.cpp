@@ -101,6 +101,9 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	RetrieveVoiceDataSet();
+	RetrieveAccessoryDataSet();
+
 	CamManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 	DefaultCamViewYawMin = CamManager->ViewYawMin;
 	DefaultCamViewYawMax = CamManager->ViewYawMax;
@@ -114,7 +117,6 @@ void ABaseCharacter::BeginPlay()
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
-
 }
 
 void ABaseCharacter::Tick(float DeltaTime)
@@ -176,6 +178,29 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 		GetCapsuleComponent()->IgnoreActorWhenMoving(Character, true);
 		Character->GetCapsuleComponent()->IgnoreActorWhenMoving(this, true);
 	}
+}
+
+void ABaseCharacter::RetrieveVoiceDataSet()
+{
+	if (VoiceClipsDatatable == nullptr || VoiceSetRows.Num() <= 0) {
+		return;
+	}
+
+	int RandomRowIndex = rand() % VoiceSetRows.Num();
+	FName DataRowName = VoiceSetRows[RandomRowIndex];
+
+	static const FString ContextString(TEXT("Voice Clip Set"));
+	VoiceClipsSet = VoiceClipsDatatable->FindRow<FVoiceClipSet>(DataRowName, ContextString, true);
+}
+
+void ABaseCharacter::RetrieveAccessoryDataSet()
+{
+	if (AccessoryDatatable == nullptr) {
+		return;
+	}
+
+	static const FString ContextString(TEXT("Accessory DataSet"));
+	AccessorySet = AccessoryDatatable->FindRow<FAccessorySet>(AccessoryRowName, ContextString, true);
 }
 
 void ABaseCharacter::UpdateCameraView()

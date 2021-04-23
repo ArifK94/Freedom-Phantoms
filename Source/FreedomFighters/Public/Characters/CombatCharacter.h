@@ -68,12 +68,6 @@ private:
 		AWeapon* underBarrelWeaponObj;
 
 
-
-	class ALoadout* loadoutObj;
-
-	class AHeadgear* headgearObj;
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 		float MaxAimYawSprint;
 
@@ -162,6 +156,13 @@ public:
 	void ShowCharacterOutline(bool CanShow) override;
 
 	void UseMountedGun(AWeapon* MountedGun);
+
+private:
+	AHeadgear* Headgear;
+	ALoadout* Loadout;
+
+	void SpawnHelmet();
+	void SpawnLoadout();
 
 
 protected:

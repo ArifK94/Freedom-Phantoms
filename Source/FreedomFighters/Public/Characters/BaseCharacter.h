@@ -14,7 +14,7 @@ class UAudioComponent;
 class UPostProcessComponent;
 class APlayerCameraManager;
 class AAIController;
-
+class UDataTable;
 
 UCLASS(config = Game)
 class FREEDOMFIGHTERS_API ABaseCharacter : public ACharacter
@@ -43,8 +43,28 @@ public:
 		float BaseLookUpRate;
 
 
+#pragma region DataTables
 protected:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* VoiceClipsDatatable;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		TArray<FName> VoiceSetRows;
+	FVoiceClipSet* VoiceClipsSet;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* AccessoryDatatable;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		FName AccessoryRowName;
+	FAccessorySet* AccessorySet;
+
+private:
+	void RetrieveVoiceDataSet();
+	void RetrieveAccessoryDataSet();
+
+#pragma endregion
+
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName HeadSocket;
 
@@ -241,6 +261,14 @@ protected:
 public:
 	FName GetHeadSocket() {
 		return HeadSocket;
+	}
+
+	FVoiceClipSet* GetVoiceClipsSet() {
+		return VoiceClipsSet;
+	}
+
+	FAccessorySet* GetAccessorySet() {
+		return AccessorySet;
 	}
 
 	float GetCharacterSpeed() {

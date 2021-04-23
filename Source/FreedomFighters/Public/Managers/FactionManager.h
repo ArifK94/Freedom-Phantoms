@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "Engine/DataTable.h"
-
+#include "StructCollection.h"
 #include "FactionManager.generated.h"
 
 class AWeapon;
@@ -14,52 +14,6 @@ class ALoadout;
 class AAircraft;
 class ACombatCharacter;
 class ACommanderCharacter;
-
-USTRUCT(BlueprintType)
-struct FVoiceClipSet : public FTableRowBase
-{
-	GENERATED_BODY()
-		
-		UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* TargetFoundSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* ReloadingSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* FriendlyDownSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* EnemyDownSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* RecruitSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* AcknowledgeSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* AcknowledgeCommandSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* FollowSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* AttackSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* DefendSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* DeathSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* DeathFallSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* StrongholdCaptureSound;
-};
-
 
 
 
@@ -77,19 +31,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Attachment", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UWeaponSet> WeaponSetClass;
 	UWeaponSet* WeaponSetObj;
-
-
-	UPROPERTY(EditAnywhere, Category = "Accessories")
-		TArray<TSubclassOf<ALoadout>> Loadouts;
-	ALoadout* loadoutObj;
-
-	UPROPERTY(EditAnywhere, Category = "Accessories")
-		TArray<TSubclassOf< AHeadgear>> Headgears;
-	AHeadgear* headgearObj;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Battle Chatters", meta = (AllowPrivateAccess = "true"))
-		TArray<FVoiceClipSet> VoiceClips;
-	FVoiceClipSet SelectedVoiceClipSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Characters", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ACombatCharacter> OperativeCharacterClass;
@@ -115,17 +56,10 @@ public:
 
 public:
 
-	void setRanomVoiceSet();
-
-	FVoiceClipSet getSelectedVoiceClipSet() { return SelectedVoiceClipSet; }
-
 	UWeaponSet* getWeaponSetObj() { return WeaponSetObj; }
 
 	AWeapon* getPrimaryWeaponObj() { return PrimaryWeaponObj; }
 	AWeapon* getSecondaryWeaponObj() { return SecondaryWeaponObj; }
-
-	AHeadgear* SpawnHelmet(USkeletalMeshComponent* Mesh, AActor* Owner);
-	ALoadout* SpawnLoadout(USkeletalMeshComponent* Mesh, AActor* Owner);
 
 
 	TSubclassOf<ACombatCharacter> GetOperativeCharacterClass() {

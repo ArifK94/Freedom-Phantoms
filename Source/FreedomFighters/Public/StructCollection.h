@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnumCollection.h"
+#include "Engine/DataTable.h"
 #include "StructCollection.generated.h"
 
 class ABaseCharacter;
@@ -11,6 +12,98 @@ class AAircraft;
 class ATargetSystemMarker;
 class AWeapon;
 class UUserWidget;
+class USoundBase;
+class AHeadgear;
+class ALoadout;
+
+USTRUCT(BlueprintType)
+struct FVoiceClipSet : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* TargetFoundSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* ReloadingSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* FriendlyDownSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* EnemyDownSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* RecruitSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* AcknowledgeSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* AcknowledgeCommandSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* FollowSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* AttackSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* DefendSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* DeathSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* DeathFallSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* StrongholdCaptureSound;
+
+	FVoiceClipSet()
+	{
+
+	}
+};
+
+
+USTRUCT(BlueprintType)
+struct FAccessorySet : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<TSubclassOf<ALoadout>> Loadouts;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<TSubclassOf< AHeadgear>> Headgears;
+
+
+	FAccessorySet()
+	{
+
+	}
+};
+
+
+USTRUCT(BlueprintType)
+struct FVehicleSplinePoint : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		int32 PointIndex;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		FVector PointLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		EAircraftMovement MovementType;
+};
+
 
 USTRUCT(BlueprintType)
 struct FAircraftSeating
@@ -60,7 +153,6 @@ struct FAircraftWeapon
 	GENERATED_USTRUCT_BODY()
 
 public:
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<AWeapon> Weapon;
 

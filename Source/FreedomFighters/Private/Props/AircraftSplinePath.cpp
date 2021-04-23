@@ -139,10 +139,10 @@ void AAircraftSplinePath::UpdateCollisionBox()
 
 		switch (VehicleSplinePoint.MovementType)
 		{
-		case AircraftSplineMovement::Throttling:
+		case EAircraftMovement::MovingForward:
 			ColliderColour = FColor(0, 0, 255, 255);
 			break;
-		case AircraftSplineMovement::Hovering:
+		case EAircraftMovement::Rappel:
 			ColliderColour = FColor(0, 255, 0, 255);
 			break;
 		default:

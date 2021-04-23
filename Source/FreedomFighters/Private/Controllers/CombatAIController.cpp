@@ -115,7 +115,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_Sprint, this, &ACombatAIController::UpdateSprint, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CombatAlert, this, &ACombatAIController::UpdatCombatAlert, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::FindCover, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_ResetMovement, this, &ACombatAIController::ResetLocation, 2.0f, true);
+		//GetWorldTimerManager().SetTimer(THandler_ResetMovement, this, &ACombatAIController::ResetLocation, 2.0f, true);
 	}
 }
 
@@ -813,6 +813,10 @@ void ACombatAIController::CheckCommanderOrder()
 
 void ACombatAIController::ResetLocation()
 {
+	if (OwningCombatCharacter->IsInHelicopter()) {
+		return;
+	}
+
 	if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
 		return;
 	}

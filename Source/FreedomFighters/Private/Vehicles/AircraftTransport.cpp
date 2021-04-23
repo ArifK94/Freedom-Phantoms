@@ -26,7 +26,7 @@ void AAircraftTransport::Tick(float DeltaTime)
 
 void AAircraftTransport::WaitForRapelling()
 {
-	if (CurrentAircraftMovement == EAircraftMovement::Hovering && OccupiedSeats.Num() > 0)
+	if (CurrentAircraftMovement == EAircraftMovement::Rappel && OccupiedSeats.Num() > 0)
 	{
 		CurveTimeline.Stop();
 

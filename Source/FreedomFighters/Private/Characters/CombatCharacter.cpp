@@ -98,31 +98,33 @@ void ACombatCharacter::BeginPlay()
 		FactionObj = NewObject<UFactionManager>((UObject*)GetTransientPackage(), FactionClass);
 	}
 
-	if (FactionObj)
+
+	FactionObj->Init(GetWorld());
+
+	SpawnHelmet();
+	SpawnLoadout();
+
+
+	if (Loadout)
 	{
-		FactionObj->Init(GetWorld());
+		primaryWeaponObj = Loadout->SpawnPrimaryWeapon(Loadout->getLoadoutMesh(), this);
+		secondaryWeaponObj = FactionObj->getWeaponSetObj()->SpawnSecondaryWeapon(GetWorld(), Loadout->getLoadoutMesh(), this);
+	}
 
-		headgearObj = FactionObj->SpawnHelmet(GetMesh(), this);
-		loadoutObj = FactionObj->SpawnLoadout(GetMesh(), this);
+	if (primaryWeaponObj)
+	{
+		currentWeaponObj = primaryWeaponObj;
+		BeginEquipWeapon();
+	}
 
-
-		if (loadoutObj)
-		{
-			primaryWeaponObj = loadoutObj->SpawnPrimaryWeapon(loadoutObj->getLoadoutMesh(), this);
-			secondaryWeaponObj = FactionObj->getWeaponSetObj()->SpawnSecondaryWeapon(GetWorld(), loadoutObj->getLoadoutMesh(), this);
-		}
-
-		if (primaryWeaponObj)
-		{
-			currentWeaponObj = primaryWeaponObj;
-			BeginEquipWeapon();
-		}
-
+	if (currentWeaponObj)
+	{
 		if (currentWeaponObj->getWeaponAttachmentObj() != NULL)
 		{
 			underBarrelWeaponObj = currentWeaponObj->getWeaponAttachmentObj()->getUnderBarrelWeaponObj();
 		}
 	}
+
 
 }
 
@@ -160,9 +162,9 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 {
 	if (isDead)
 	{
-		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().DeathSound != NULL)
+		if (FactionObj != NULL && GetVoiceClipsSet()->DeathSound != NULL)
 		{
-			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().DeathSound;
+			VoiceAudioComponent->Sound = GetVoiceClipsSet()->DeathSound;
 			VoiceAudioComponent->Play();
 		}
 
@@ -175,6 +177,78 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 	}
 
 	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser);
+}
+
+void ACombatCharacter::SpawnHelmet()
+{
+	if (GetAccessorySet() == nullptr) {
+		return;
+	}
+
+	if (GetAccessorySet()->Headgears.Num() <= 0) {
+		return;
+	}
+
+	if (GetWorld() == nullptr) {
+		return;
+	}
+
+
+	int RandIndex = rand() % GetAccessorySet()->Headgears.Num();
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+
+	// Spawn a random helmet actor
+	Headgear = GetWorld()->SpawnActor<AHeadgear>(GetAccessorySet()->Headgears[RandIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (Headgear)
+	{
+		Headgear->SetOwner(this);
+		Headgear->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Headgear->GetParentSocket());
+	}
+
+
+}
+
+void ACombatCharacter::SpawnLoadout()
+{
+	if (GetAccessorySet() == nullptr) {
+		return;
+	}
+
+	if (GetAccessorySet()->Loadouts.Num() <= 0) {
+		return;
+	}
+
+	if (GetWorld() == nullptr) {
+		return;
+	}
+
+	int RandIndex = rand() % GetAccessorySet()->Loadouts.Num();
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+
+	// Spawn a random helmet actor
+	Loadout = GetWorld()->SpawnActor<ALoadout>(GetAccessorySet()->Loadouts[RandIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (Loadout)
+	{
+		Loadout->SetOwner(this);
+		Loadout->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+		if (Loadout->IsUseMasterPoseComponent()) {
+			Loadout->getLoadoutMesh()->SetMasterPoseComponent(GetMesh());
+		}
+
+		Loadout->Init(FactionObj->getWeaponSetObj());
+	}
+
 }
 
 void ACombatCharacter::setCharacterRotation()
@@ -318,11 +392,11 @@ void ACombatCharacter::swapWeapon()
 
 void ACombatCharacter::ToggleNightVision()
 {
-	if (headgearObj)
+	if (Headgear)
 	{
-		if (headgearObj->getNightVision())
+		if (Headgear->getNightVision())
 		{
-			headgearObj->getNightVision()->ToggleVision();
+			Headgear->getNightVision()->ToggleVision();
 		}
 	}
 }
@@ -459,9 +533,9 @@ void ACombatCharacter::UpdateReload()
 	//if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
 	//{
 	//	HasPlayedReloadingSound = true;
-	//	if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().ReloadingSound != NULL)
+	//	if (FactionObj != NULL && GetVoiceClipsSet()->ReloadingSound != NULL)
 	//	{
-	//		VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().ReloadingSound;
+	//		VoiceAudioComponent->Sound = GetVoiceClipsSet()->ReloadingSound;
 	//		VoiceAudioComponent->Play();
 	//	}
 	//}
@@ -527,14 +601,13 @@ void ACombatCharacter::TargetFound()
 {
 	if (!HasPlayedTargetFoundSound && !isDead)
 	{
-		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().TargetFoundSound != NULL)
+		if (FactionObj != NULL && GetVoiceClipsSet()->TargetFoundSound != NULL)
 		{
-			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().TargetFoundSound;
+			VoiceAudioComponent->Sound = GetVoiceClipsSet()->TargetFoundSound;
 			VoiceAudioComponent->Play();
 			HasPlayedTargetFoundSound = true;
 		}
 	}
-
 }
 
 ACombatCharacter* ACombatCharacter::FindNearestFriendly()
@@ -617,9 +690,9 @@ void ACombatCharacter::FriendlyKilled()
 		return;
 	}
 
-	if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().FriendlyDownSound != NULL)
+	if (FactionObj != NULL && GetVoiceClipsSet()->FriendlyDownSound != NULL)
 	{
-		VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().FriendlyDownSound;
+		VoiceAudioComponent->Sound = GetVoiceClipsSet()->FriendlyDownSound;
 		VoiceAudioComponent->Play();
 	}
 
@@ -633,9 +706,9 @@ void ACombatCharacter::EnemyKilled()
 
 	if (!HasPlayedEnemyKilledSound && !isDead)
 	{
-		if (FactionObj != NULL && FactionObj->getSelectedVoiceClipSet().EnemyDownSound != NULL)
+		if (FactionObj != NULL && GetVoiceClipsSet()->EnemyDownSound != NULL)
 		{
-			VoiceAudioComponent->Sound = FactionObj->getSelectedVoiceClipSet().EnemyDownSound;
+			VoiceAudioComponent->Sound = GetVoiceClipsSet()->EnemyDownSound;
 			VoiceAudioComponent->Play();
 			HasPlayedEnemyKilledSound = true;
 
@@ -656,10 +729,10 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 {
 	Super::ShowCharacterOutline(CanShow);
 
-	if (loadoutObj != nullptr)
+	if (Loadout != nullptr)
 	{
 		TArray<USkeletalMeshComponent*> LoadoutSkeletalMeshComponents;
-		loadoutObj->GetComponents<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents);
+		Loadout->GetComponents<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents);
 		for (int32 ComponentIdx = 0; ComponentIdx < LoadoutSkeletalMeshComponents.Num(); ++ComponentIdx)
 		{
 			auto currentComp = Cast<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents[ComponentIdx]);
@@ -667,7 +740,7 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 		}
 
 		TArray<UStaticMeshComponent*> LoadoutStaticComponents;
-		loadoutObj->GetComponents<UStaticMeshComponent>(LoadoutStaticComponents);
+		Loadout->GetComponents<UStaticMeshComponent>(LoadoutStaticComponents);
 		for (int32 ComponentIdx = 0; ComponentIdx < LoadoutStaticComponents.Num(); ++ComponentIdx)
 		{
 			auto currentComp = Cast<UStaticMeshComponent>(LoadoutStaticComponents[ComponentIdx]);
@@ -675,10 +748,10 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 		}
 	}
 
-	if (headgearObj != nullptr)
+	if (Headgear != nullptr)
 	{
 		TArray<USkeletalMeshComponent*> HeadgearSkeletalMeshComponents;
-		loadoutObj->GetComponents<USkeletalMeshComponent>(HeadgearSkeletalMeshComponents);
+		Headgear->GetComponents<USkeletalMeshComponent>(HeadgearSkeletalMeshComponents);
 		for (int32 ComponentIdx = 0; ComponentIdx < HeadgearSkeletalMeshComponents.Num(); ++ComponentIdx)
 		{
 			auto currentComp = Cast<USkeletalMeshComponent>(HeadgearSkeletalMeshComponents[ComponentIdx]);
@@ -687,7 +760,7 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 
 
 		TArray<UStaticMeshComponent*> HeadgearStaticComponents;
-		headgearObj->GetComponents<UStaticMeshComponent>(HeadgearStaticComponents);
+		Headgear->GetComponents<UStaticMeshComponent>(HeadgearStaticComponents);
 		for (int32 ComponentIdx = 0; ComponentIdx < HeadgearStaticComponents.Num(); ++ComponentIdx)
 		{
 			auto currentComp = Cast<UStaticMeshComponent>(HeadgearStaticComponents[ComponentIdx]);
