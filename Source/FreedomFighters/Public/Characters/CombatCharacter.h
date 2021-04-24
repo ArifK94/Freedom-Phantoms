@@ -78,10 +78,13 @@ private:
 
 	bool IsInAimOffSetRotation;
 
-	bool HasPlayedReloadingSound;
 	bool HasPlayedTargetFoundSound;
 	bool HasPlayedEnemyKilledSound;
 
+	FTimerHandle THandler_HandguardIK;
+	FTimerHandle THandler_CombatMode;
+	FTimerHandle THandler_FireWeapon;
+	FTimerHandle THandler_RunAndShoot;
 
 	FTimerHandle THandler_VoiceSoundReset;
 
@@ -119,19 +122,19 @@ public:
 
 	void swapWeapon();
 
-	void unEquipWeapon();
+	void HolsterWeapon();
 
 	void setWeaponHand();
 
 	void DropMountedGun();
 
-	void setCharacterRotation();
+	void RunAndShoot ();
 
 	void disableSprint();
 
 	void ToggleUnderBarrelWeapon();
 
-	void UpdateHandGaurdIK();
+	void SetHandGaurdIK(float Alpha);
 
 	void ToggleLaser();
 

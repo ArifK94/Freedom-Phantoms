@@ -40,7 +40,7 @@ public:
 
 	class AWeapon* SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owner);
 
-	USkeletalMeshComponent* getLoadoutMesh() { return Mesh; }
+	USkeletalMeshComponent* GetMesh() { return Mesh; }
 
 private:
 	virtual void BeginPlay() override;

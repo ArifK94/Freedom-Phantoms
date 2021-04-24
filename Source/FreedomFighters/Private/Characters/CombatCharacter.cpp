@@ -57,7 +57,6 @@ ACombatCharacter::ACombatCharacter()
 	CanAutoReloadWeapon = false;
 	isInCombatMode = false;
 	IsInAimOffSetRotation = false;
-	HasPlayedReloadingSound = false;
 	HasPlayedTargetFoundSound = false;
 	isUsingMountedWeapon = false;
 
@@ -107,8 +106,8 @@ void ACombatCharacter::BeginPlay()
 
 	if (Loadout)
 	{
-		primaryWeaponObj = Loadout->SpawnPrimaryWeapon(Loadout->getLoadoutMesh(), this);
-		secondaryWeaponObj = FactionObj->getWeaponSetObj()->SpawnSecondaryWeapon(GetWorld(), Loadout->getLoadoutMesh(), this);
+		primaryWeaponObj = Loadout->SpawnPrimaryWeapon(Loadout->GetMesh(), this);
+		secondaryWeaponObj = FactionObj->getWeaponSetObj()->SpawnSecondaryWeapon(GetWorld(), Loadout->GetMesh(), this);
 	}
 
 	if (primaryWeaponObj)
@@ -152,9 +151,13 @@ void ACombatCharacter::Tick(float DeltaTime)
 		}
 
 
-		UpdateHandGaurdIK();
-		setCharacterRotation();
-		disableSprint();
+		//RunAndShoot();
+		//disableSprint();
+
+		if (isInCombatMode && !isReloading)
+		{
+			SetHandGaurdIK(1.0f);
+		}
 	}
 }
 
@@ -243,7 +246,7 @@ void ACombatCharacter::SpawnLoadout()
 		Loadout->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 		if (Loadout->IsUseMasterPoseComponent()) {
-			Loadout->getLoadoutMesh()->SetMasterPoseComponent(GetMesh());
+			Loadout->GetMesh()->SetMasterPoseComponent(GetMesh());
 		}
 
 		Loadout->Init(FactionObj->getWeaponSetObj());
@@ -251,7 +254,7 @@ void ACombatCharacter::SpawnLoadout()
 
 }
 
-void ACombatCharacter::setCharacterRotation()
+void ACombatCharacter::RunAndShoot()
 {
 	if (isInCombatMode && !isTakingCover && !IsInAircraft)
 	{
@@ -352,7 +355,7 @@ void ACombatCharacter::GrabWeapon()
 	}
 	else
 	{
-		unEquipWeapon();
+		HolsterWeapon();
 		hasEquippedWeapon = false;
 	}
 }
@@ -387,20 +390,6 @@ void ACombatCharacter::swapWeapon()
 	}
 }
 
-
-
-
-void ACombatCharacter::ToggleNightVision()
-{
-	if (Headgear)
-	{
-		if (Headgear->getNightVision())
-		{
-			Headgear->getNightVision()->ToggleVision();
-		}
-	}
-}
-
 void ACombatCharacter::setWeaponHand()
 {
 	if (currentWeaponObj->IsA(APistol::StaticClass()))
@@ -413,9 +402,9 @@ void ACombatCharacter::setWeaponHand()
 	}
 }
 
-void ACombatCharacter::unEquipWeapon()
+void ACombatCharacter::HolsterWeapon()
 {
-	currentWeaponObj->setWeaponSocket(GetMesh(), currentWeaponObj->getHolsterSocket());
+	currentWeaponObj->setWeaponSocket(Loadout->GetMesh(), currentWeaponObj->getHolsterSocket());
 }
 
 
@@ -503,12 +492,19 @@ void ACombatCharacter::EndAim()
 
 void ACombatCharacter::BeginReload()
 {
-	if (currentWeaponObj && !isReloading)
+	if (currentWeaponObj == nullptr || isReloading) {
+		return;
+	}
+
+	currentWeaponObj->BeginReload();
+	isAiming = false;
+	isFiring = false;
+	currentWeaponObj->SetIsAiming(false);
+
+	if (GetVoiceClipsSet()->ReloadingSound != NULL)
 	{
-		currentWeaponObj->BeginReload();
-		isAiming = false;
-		isFiring = false;
-		currentWeaponObj->SetIsAiming(false);
+		VoiceAudioComponent->Sound = GetVoiceClipsSet()->ReloadingSound;
+		VoiceAudioComponent->Play();
 	}
 }
 
@@ -517,8 +513,6 @@ void ACombatCharacter::EndReload()
 	if (currentWeaponObj)
 	{
 		currentWeaponObj->EndReload();
-
-		HasPlayedReloadingSound = false;
 	}
 }
 
@@ -529,17 +523,6 @@ void ACombatCharacter::UpdateReload()
 	}
 
 	isReloading = currentWeaponObj->getIsReloading();
-
-	//if (currentWeaponObj->getIsReloading() && !HasPlayedReloadingSound)
-	//{
-	//	HasPlayedReloadingSound = true;
-	//	if (FactionObj != NULL && GetVoiceClipsSet()->ReloadingSound != NULL)
-	//	{
-	//		VoiceAudioComponent->Sound = GetVoiceClipsSet()->ReloadingSound;
-	//		VoiceAudioComponent->Play();
-	//	}
-	//}
-
 }
 
 
@@ -561,7 +544,7 @@ void ACombatCharacter::ToggleUnderBarrelWeapon()
 	}
 }
 
-void ACombatCharacter::UpdateHandGaurdIK()
+void ACombatCharacter::SetHandGaurdIK(float Alpha)
 {
 	// if mounted gun, then do not update hand IK
 	if (currentWeaponObj == nullptr || isUsingMountedWeapon) {
@@ -569,16 +552,18 @@ void ACombatCharacter::UpdateHandGaurdIK()
 	}
 	currentWeaponObj->SetHandGuardIK(GetMesh(), RightHandSocket);
 
-	if (isInCombatMode && !isReloading)
-	{
-		HandGuardAlpha = 1.0f;
-	}
-	else
-	{
-		HandGuardAlpha = 0.0f;
-	}
+	HandGuardAlpha = Alpha;
+}
 
-
+void ACombatCharacter::ToggleNightVision()
+{
+	if (Headgear)
+	{
+		if (Headgear->getNightVision())
+		{
+			Headgear->getNightVision()->ToggleVision();
+		}
+	}
 }
 
 void ACombatCharacter::ToggleLaser()
@@ -772,7 +757,7 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 {
 	isUsingMountedWeapon = true;
-	unEquipWeapon();
+	HolsterWeapon();
 	MountedGun->SetOwner(this);
 	currentWeaponObj = MountedGun;
 }

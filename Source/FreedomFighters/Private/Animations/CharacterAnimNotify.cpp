@@ -1,6 +1,6 @@
 #include "Animations/CharacterAnimNotify.h"
 
-#include "Characters/BaseCharacter.h"
+#include "Characters/CombatCharacter.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -8,7 +8,7 @@ void UCharacterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenc
 {
 	if (MeshComp != NULL && MeshComp->GetOwner() != NULL)
 	{
-		ABaseCharacter* Character = Cast<ABaseCharacter>(MeshComp->GetOwner());
+		ACombatCharacter* Character = Cast<ACombatCharacter>(MeshComp->GetOwner());
 
 		if (Character)
 		{
@@ -20,6 +20,16 @@ void UCharacterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenc
 			{
 				if (!Character->GetCharacterMovement()->IsCrouching())
 					Character->BeginCrouch();
+			}
+
+			if (AlignHandguardIK)
+			{
+				Character->SetHandGaurdIK(1.0f);
+			}
+
+			if (StopAlignHandguardIK)
+			{
+				Character->SetHandGaurdIK(0.0f);
 			}
 		}
 	}

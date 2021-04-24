@@ -59,19 +59,19 @@ AWeapon* ALoadout::SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owne
 	switch (loadoutType)
 	{
 	case LoadoutType::Assault:
-		return CurrentWeaponSetObj->SpawnAssaultRifle(World, mesh, owner);
+		return CurrentWeaponSetObj->SpawnAssaultRifle(World, Mesh, owner);
 		break;
 	case LoadoutType::SMG:
-		return CurrentWeaponSetObj->SpawnSMG(World, mesh, owner);
+		return CurrentWeaponSetObj->SpawnSMG(World, Mesh, owner);
 		break;
 	case LoadoutType::Shotgun:
-		return CurrentWeaponSetObj->SpawnShotgun(World, mesh, owner);
+		return CurrentWeaponSetObj->SpawnShotgun(World, Mesh, owner);
 		break;
 	case LoadoutType::LMG:
-		return CurrentWeaponSetObj->SpawnLMG(World, mesh, owner);
+		return CurrentWeaponSetObj->SpawnLMG(World, Mesh, owner);
 		break;
 	default:
-		return CurrentWeaponSetObj->SpawnAssaultRifle(World, mesh, owner);
+		return CurrentWeaponSetObj->SpawnAssaultRifle(World, Mesh, owner);
 		break;
 	}
 }
