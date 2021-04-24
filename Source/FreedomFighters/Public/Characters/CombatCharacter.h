@@ -15,6 +15,21 @@ class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
 	GENERATED_BODY()
 
 public:
+#pragma region DataTables
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* WeaponsDatatable;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		FName WeaponsRowName;
+	FWeaponsSet* WeaponsDataSet;
+
+private:
+	void RetrieveWeaponDataSet();
+
+#pragma endregion
+
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isFiring;
 
@@ -166,7 +181,6 @@ private:
 
 	void SpawnHelmet();
 	void SpawnLoadout();
-
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

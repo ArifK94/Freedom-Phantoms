@@ -2,9 +2,8 @@
 
 
 #include "Accessories/Loadout.h"
-
+#include "StructCollection.h"
 #include "Weapons/Weapon.h"
-#include "Weapons/WeaponSet.h"
 #include "Weapons/WeaponAttachmentManager.h"
 
 #include "UObject/UObjectGlobals.h"
@@ -15,9 +14,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine.h"
 
-
-
-// Sets default values
 ALoadout::ALoadout()
 {
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
@@ -28,11 +24,6 @@ ALoadout::ALoadout()
 	Mesh->SetRelativeRotation(MakeControlRot);
 
 	UseMasterPoseComponent = false;
-}
-
-void ALoadout::Init(UWeaponSet* WeaponSetObj)
-{
-	CurrentWeaponSetObj = WeaponSetObj;
 }
 
 void ALoadout::BeginPlay()
@@ -52,26 +43,54 @@ void ALoadout::SimlateBones()
 	}
 }
 
-AWeapon* ALoadout::SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owner)
+AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 {
-	UWorld* World = GetWorld();
+	int RandomIndex = 0;
+	AWeapon* Weapon = nullptr;
 
-	switch (loadoutType)
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	if (IsPrimary)
 	{
-	case LoadoutType::Assault:
-		return CurrentWeaponSetObj->SpawnAssaultRifle(World, Mesh, owner);
-		break;
-	case LoadoutType::SMG:
-		return CurrentWeaponSetObj->SpawnSMG(World, Mesh, owner);
-		break;
-	case LoadoutType::Shotgun:
-		return CurrentWeaponSetObj->SpawnShotgun(World, Mesh, owner);
-		break;
-	case LoadoutType::LMG:
-		return CurrentWeaponSetObj->SpawnLMG(World, Mesh, owner);
-		break;
-	default:
-		return CurrentWeaponSetObj->SpawnAssaultRifle(World, Mesh, owner);
-		break;
+		switch (loadoutType)
+		{
+		case LoadoutType::Assault:
+			RandomIndex = rand() % WeaponsDataSet->AssaultRifles.Num();
+			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->AssaultRifles[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			break;
+		case LoadoutType::SMG:
+			RandomIndex = rand() % WeaponsDataSet->SMGs.Num();
+			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->SMGs[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			break;
+		case LoadoutType::Shotgun:
+			RandomIndex = rand() % WeaponsDataSet->Shotguns.Num();
+			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->Shotguns[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			break;
+		case LoadoutType::LMG:
+			RandomIndex = rand() % WeaponsDataSet->LMGs.Num();
+			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->LMGs[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			break;
+		default:
+			RandomIndex = rand() % WeaponsDataSet->AssaultRifles.Num();
+			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->AssaultRifles[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			break;
+		}
 	}
+	else
+	{
+		RandomIndex = rand() % WeaponsDataSet->SecondaryWeapons.Num();
+		Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->SecondaryWeapons[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	}
+
+
+
+	if (Weapon)
+	{
+		Weapon->SetOwner(GetOwner());
+		Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Weapon->getHolsterSocket());
+	}
+
+	return Weapon;
 }

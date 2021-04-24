@@ -89,6 +89,36 @@ public:
 
 
 USTRUCT(BlueprintType)
+struct FWeaponsSet : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, Category = "Assault")
+		TArray<TSubclassOf<class AAssaultRifle>> AssaultRifles;
+
+	UPROPERTY(EditAnywhere, Category = "SMG")
+		TArray<TSubclassOf<class ASMG>> SMGs;
+
+	UPROPERTY(EditAnywhere, Category = "Shotgun")
+		TArray<TSubclassOf<class AShotgun>> Shotguns;
+
+	UPROPERTY(EditAnywhere, Category = "LMG")
+		TArray<TSubclassOf<class ALMG>> LMGs;
+
+	UPROPERTY(EditAnywhere, Category = "Secondary")
+		TArray<TSubclassOf<AWeapon>> SecondaryWeapons;
+
+
+	FWeaponsSet()
+	{
+
+	}
+};
+
+
+
+USTRUCT(BlueprintType)
 struct FVehicleSplinePoint : public FTableRowBase
 {
 	GENERATED_BODY()

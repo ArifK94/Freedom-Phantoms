@@ -7,7 +7,6 @@
 #include "FactionManager.generated.h"
 
 class AWeapon;
-class UWeaponSet;
 class USoundBase;
 class AHeadgear;
 class ALoadout;
@@ -27,11 +26,6 @@ protected:
 
 
 private:
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Attachment", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UWeaponSet> WeaponSetClass;
-	UWeaponSet* WeaponSetObj;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Characters", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ACombatCharacter> OperativeCharacterClass;
 
@@ -44,24 +38,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Props", meta = (AllowPrivateAccess = "true"))
 		UMaterialInterface* FlagMaterial;
 
-private:
-	UWorld* CurrentWorld;
-
-	AWeapon* PrimaryWeaponObj;
-	AWeapon* SecondaryWeaponObj;
-
 public:
-	UFactionManager();
-	void Init(UWorld* World);
-
-public:
-
-	UWeaponSet* getWeaponSetObj() { return WeaponSetObj; }
-
-	AWeapon* getPrimaryWeaponObj() { return PrimaryWeaponObj; }
-	AWeapon* getSecondaryWeaponObj() { return SecondaryWeaponObj; }
-
-
 	TSubclassOf<ACombatCharacter> GetOperativeCharacterClass() {
 		return OperativeCharacterClass;
 	}

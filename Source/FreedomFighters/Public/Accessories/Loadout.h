@@ -6,10 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "Accessories/Accessory.h"
 #include "EnumCollection.h"
+#include "StructCollection.h"
 #include "Loadout.generated.h"
 
 class USkeletalMeshComponent;
-class UWeaponSet;
+class AWeapon;
 UCLASS()
 class FREEDOMFIGHTERS_API ALoadout : public AActor
 {
@@ -29,16 +30,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory", meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* Mesh;
 
-
-private:
-	 UWeaponSet* CurrentWeaponSetObj;
-
-
 public:	
 	ALoadout();
-	void Init(UWeaponSet* WeaponSetObj);
 
-	class AWeapon* SpawnPrimaryWeapon(USkeletalMeshComponent* mesh, AActor* owner);
+	// If primary is true, then spawn primary weapon otherwise spawn secondary
+	AWeapon* SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary);
 
 	USkeletalMeshComponent* GetMesh() { return Mesh; }
 

@@ -10,7 +10,6 @@
 #include "Weapons/WeaponTorchlight.h"
 #include "Weapons/WeaponLaser.h"
 #include "Weapons/Pistol.h"
-#include "Weapons/WeaponSet.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -93,12 +92,11 @@ void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	RetrieveWeaponDataSet();
+
 	if (FactionClass) {
 		FactionObj = NewObject<UFactionManager>((UObject*)GetTransientPackage(), FactionClass);
 	}
-
-
-	FactionObj->Init(GetWorld());
 
 	SpawnHelmet();
 	SpawnLoadout();
@@ -106,8 +104,8 @@ void ACombatCharacter::BeginPlay()
 
 	if (Loadout)
 	{
-		primaryWeaponObj = Loadout->SpawnPrimaryWeapon(Loadout->GetMesh(), this);
-		secondaryWeaponObj = FactionObj->getWeaponSetObj()->SpawnSecondaryWeapon(GetWorld(), Loadout->GetMesh(), this);
+		primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
+		secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
 	}
 
 	if (primaryWeaponObj)
@@ -182,6 +180,16 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser);
 }
 
+void ACombatCharacter::RetrieveWeaponDataSet()
+{
+	if (WeaponsDatatable == nullptr) {
+		return;
+	}
+
+	static const FString ContextString(TEXT("Weapons DataSet"));
+	WeaponsDataSet = WeaponsDatatable->FindRow<FWeaponsSet>(WeaponsRowName, ContextString, true);
+}
+
 void ACombatCharacter::SpawnHelmet()
 {
 	if (GetAccessorySet() == nullptr) {
@@ -248,8 +256,6 @@ void ACombatCharacter::SpawnLoadout()
 		if (Loadout->IsUseMasterPoseComponent()) {
 			Loadout->GetMesh()->SetMasterPoseComponent(GetMesh());
 		}
-
-		Loadout->Init(FactionObj->getWeaponSetObj());
 	}
 
 }

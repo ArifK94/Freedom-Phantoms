@@ -27,7 +27,7 @@ void UWeaponAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 				Character->EndEquipWeapon();
 				break;
 			case AnimType::UnEquip:
-				Character->unEquipWeapon();
+				Character->HolsterWeapon();
 				break;
 			case AnimType::SwapWeapon:
 				Character->swapWeapon();
