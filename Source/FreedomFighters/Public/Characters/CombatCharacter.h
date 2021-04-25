@@ -96,7 +96,6 @@ private:
 	bool HasPlayedTargetFoundSound;
 	bool HasPlayedEnemyKilledSound;
 
-	FTimerHandle THandler_HandguardIK;
 	FTimerHandle THandler_CombatMode;
 	FTimerHandle THandler_FireWeapon;
 	FTimerHandle THandler_RunAndShoot;
@@ -107,6 +106,9 @@ public:
 	ACombatCharacter();
 
 	void UpdateCombatMode();
+
+	virtual void BeginSprint() override;
+	virtual void EndSprint() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginFire();
@@ -186,6 +188,10 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void BeginPlay() override;
+
+	virtual void InitTimeHandlers() override;
+
+	virtual void ClearTimeHandlers() override;
 
 	virtual void Tick(float DeltaTime) override;
 

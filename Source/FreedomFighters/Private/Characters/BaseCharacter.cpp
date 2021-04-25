@@ -24,7 +24,6 @@
 
 #include "Engine.h"
 
-// Sets default values
 ABaseCharacter::ABaseCharacter()
 {
 	// Set size for collision capsule
@@ -117,6 +116,34 @@ void ABaseCharacter::BeginPlay()
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
+
+	InitTimeHandlers();
+}
+
+void ABaseCharacter::InitTimeHandlers()
+{
+	GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
+	GetWorldTimerManager().SetTimer(THandler_CharacterDirection, this, &ABaseCharacter::UpdateDirection, .1f, true);
+}
+
+void ABaseCharacter::ClearTimeHandlers()
+{
+	GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
+	GetWorldTimerManager().ClearTimer(THandler_CharacterDirection);
+}
+
+void ABaseCharacter::SetIsInAircraft(bool InAircraft)
+{
+	IsInAircraft = InAircraft;
+
+	if (InAircraft)
+	{
+		GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
+	}
+	else
+	{
+		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
+	}
 }
 
 void ABaseCharacter::Tick(float DeltaTime)
@@ -125,8 +152,6 @@ void ABaseCharacter::Tick(float DeltaTime)
 	CurrentDeltaTime = DeltaTime;
 
 	UpdateCameraView();
-
-	UpdateCharacterMovement();
 
 	AimOffset();
 }
@@ -152,6 +177,9 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 {
 	if (Health <= 0.0f && !isDead)
 	{
+		PrimaryActorTick.bCanEverTick = false;
+		ClearTimeHandlers();
+
 		isDead = true;
 
 		ShowCharacterOutline(false);
@@ -164,7 +192,6 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 		GetMesh()->SetSimulatePhysics(true);
 
-		PrimaryActorTick.bCanEverTick = false;
 	}
 }
 
@@ -298,7 +325,6 @@ void ABaseCharacter::AimOffset()
 void ABaseCharacter::UpdateCharacterMovement()
 {
 	UpdateSpeed();
-	UpdateDirection();
 
 	// check if character is in the air
 	IsCharacterInAir = APawn::GetMovementComponent()->IsFalling();
@@ -392,7 +418,7 @@ void ABaseCharacter::UpdateDirection()
 		// get the direction of the character
 		if (AnimInstance)
 		{
-			CharacterDirection = AnimInstance->CalculateDirection(Velocity, GetActorRotation());
+			CharacterDirection = (AnimInstance->CalculateDirection(Velocity, FollowCamera->GetComponentRotation())) * -1.0f;
 		}
 	}
 }

@@ -121,8 +121,21 @@ void ACombatCharacter::BeginPlay()
 			underBarrelWeaponObj = currentWeaponObj->getWeaponAttachmentObj()->getUnderBarrelWeaponObj();
 		}
 	}
+}
 
+void ACombatCharacter::InitTimeHandlers()
+{
+	Super::InitTimeHandlers();
 
+	GetWorldTimerManager().SetTimer(THandler_CombatMode, this, &ACombatCharacter::UpdateCombatMode, .5f, true);
+}
+
+void ACombatCharacter::ClearTimeHandlers()
+{
+	Super::ClearTimeHandlers();
+
+	GetWorldTimerManager().ClearTimer(THandler_CombatMode);
+	GetWorldTimerManager().ClearTimer(THandler_RunAndShoot);
 }
 
 void ACombatCharacter::Tick(float DeltaTime)
@@ -135,8 +148,6 @@ void ACombatCharacter::Tick(float DeltaTime)
 
 	if (currentWeaponObj)
 	{
-		UpdateCombatMode();
-
 		UpdatePawnControl();
 
 		UpdateFire();
@@ -148,14 +159,7 @@ void ACombatCharacter::Tick(float DeltaTime)
 			EndFire();
 		}
 
-
-		//RunAndShoot();
 		//disableSprint();
-
-		if (isInCombatMode && !isReloading)
-		{
-			SetHandGaurdIK(1.0f);
-		}
 	}
 }
 
@@ -260,35 +264,51 @@ void ACombatCharacter::SpawnLoadout()
 
 }
 
+void ACombatCharacter::BeginSprint()
+{
+	Super::BeginSprint();
+
+	//GetWorldTimerManager().SetTimer(THandler_RunAndShoot, this, &ACombatCharacter::RunAndShoot, .3f, true);
+}
+
+void ACombatCharacter::EndSprint()
+{
+	Super::EndSprint();
+
+	GetWorldTimerManager().ClearTimer(THandler_RunAndShoot);
+}
+
 void ACombatCharacter::RunAndShoot()
 {
-	if (isInCombatMode && !isTakingCover && !IsInAircraft)
-	{
-		float x = 0.0f, y = 0.0f;
-
-		auto controlYaw = 0.0f, actorYaw = 0.0f;
-
-		UKismetMathLibrary::BreakRotator(GetControlRotation(), x, y, controlYaw);
-		UKismetMathLibrary::BreakRotator(GetActorRotation(), x, y, actorYaw);
-
-		auto ControlTargetRot = UKismetMathLibrary::MakeRotator(x, y, controlYaw);
-		auto ActorTargetRot = UKismetMathLibrary::MakeRotator(x, y, actorYaw);
-
-		FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlTargetRot, ActorTargetRot);
-
-		if (UKismetMathLibrary::Abs(Target.Yaw) >= 70.0f || IsInAimOffSetRotation)
-		{
-			IsInAimOffSetRotation = true;
-		}
-
-		if (IsInAimOffSetRotation)
-		{
-			FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, CurrentDeltaTime, 5.0f);
-			AddActorWorldRotation(MoveToTarget);
-
-			IsInAimOffSetRotation = !UKismetMathLibrary::NearlyEqual_FloatFloat(Target.Yaw, 0.0f, 2.0f);
-		}
+	if (isTakingCover || !IsInAircraft || !isInCombatMode) {
+		return;
 	}
+
+	float x = 0.0f, y = 0.0f;
+
+	auto controlYaw = 0.0f, actorYaw = 0.0f;
+
+	UKismetMathLibrary::BreakRotator(GetControlRotation(), x, y, controlYaw);
+	UKismetMathLibrary::BreakRotator(GetActorRotation(), x, y, actorYaw);
+
+	auto ControlTargetRot = UKismetMathLibrary::MakeRotator(x, y, controlYaw);
+	auto ActorTargetRot = UKismetMathLibrary::MakeRotator(x, y, actorYaw);
+
+	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlTargetRot, ActorTargetRot);
+
+	if (UKismetMathLibrary::Abs(Target.Yaw) >= 70.0f || IsInAimOffSetRotation)
+	{
+		IsInAimOffSetRotation = true;
+	}
+
+	if (IsInAimOffSetRotation)
+	{
+		FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, CurrentDeltaTime, 5.0f);
+		AddActorWorldRotation(MoveToTarget);
+
+		IsInAimOffSetRotation = !UKismetMathLibrary::NearlyEqual_FloatFloat(Target.Yaw, 0.0f, 2.0f);
+	}
+
 }
 
 void ACombatCharacter::disableSprint()
@@ -442,6 +462,7 @@ void ACombatCharacter::UpdateCombatMode()
 		if (isAiming || isFiring)
 		{
 			isInCombatMode = true;
+			SetHandGaurdIK(1.0f);
 		}
 		else
 		{
@@ -460,13 +481,13 @@ void ACombatCharacter::UpdateFire()
 
 	if (isSwappingWeapon || isReloading || isRepellingDown || isDead) {
 		EndFire();
+		HandGuardAlpha = 0.0f;
 	}
 
 	if (CanAutoReloadWeapon && currentWeaponObj->getCurrentAmmo() <= 0) {
 		BeginReload();
+		HandGuardAlpha = 0.0f;
 	}
-
-
 }
 
 

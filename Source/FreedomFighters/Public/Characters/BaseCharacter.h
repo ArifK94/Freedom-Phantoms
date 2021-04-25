@@ -192,20 +192,22 @@ private:
 	FVector CoverForwardAxis;
 
 
-	FTimerHandle THandler_MovemntInputDisable;
-
 	FTimerHandle THandler_ResetInitialDirectionBool;
+	FTimerHandle THandler_CharacterMovement;
+	FTimerHandle THandler_CharacterDirection;
 
 	APlayerCameraManager* CamManager;
 
 
 protected:
 
+	virtual void InitTimeHandlers();
+
+	virtual void ClearTimeHandlers();
+
 	void UpdateCameraView();
 
-
 	void UpdateSpeed();
-
 
 	void AimOffset();
 
@@ -229,8 +231,8 @@ public:
 
 	void BeginCrouch();
 
-	void BeginSprint();
-	void EndSprint();
+	virtual void BeginSprint();
+	virtual void EndSprint();
 
 	virtual void BeginAim();
 	virtual void EndAim();
@@ -239,6 +241,8 @@ public:
 	void CoverMovement(float Value);
 	void MoveToCover();
 	void EscapeCover();
+
+	void SetIsInAircraft(bool InAircraft);
 
 protected:
 	// APawn interface
@@ -336,10 +340,6 @@ public:
 
 	void SetCharacterDirection(float Value) {
 		CharacterDirection = Value;
-	}
-
-	void SetIsInAircraft(bool value) {
-		IsInAircraft = value;
 	}
 
 	void SetIsRepellingDown(bool value) {
