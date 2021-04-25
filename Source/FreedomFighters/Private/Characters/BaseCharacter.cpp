@@ -21,6 +21,7 @@
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #include "Engine.h"
 
@@ -55,12 +56,19 @@ ABaseCharacter::ABaseCharacter()
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 	CameraBoom->TargetArmLength = 200.0f; // The camera follows at this distance behind the character	
 	CameraBoom->SocketOffset.Set(0.0f, 40.0f, 50.0f);
-
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->bEnableCameraRotationLag = true;
 	CameraBoom->CameraLagSpeed = 50.0f;
 	CameraBoom->CameraRotationLagSpeed = 50.0f;
 	CameraBoom->CameraLagMaxDistance = 10.0f;
+
+	AimCameraSpring = CreateDefaultSubobject<USpringArmComponent>(TEXT("AimCameraSpring"));
+	AimCameraSpring->SetupAttachment(RootComponent);
+	AimCameraSpring->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	AimCameraSpring->TargetArmLength = 100.0f; // The camera follows at this distance behind the character	
+	AimCameraSpring->SocketOffset.Set(0.0f, 40.0f, 50.0f);
+	AimCameraSpring->bEnableCameraLag = false;
+	AimCameraSpring->bEnableCameraRotationLag = false;
 
 
 	// Create a follow camera
@@ -84,7 +92,6 @@ ABaseCharacter::ABaseCharacter()
 
 	isSprinting = false;
 	isDead = false;
-	canMoveForward = false;
 	ReceeivedInitialDirection = false;
 	UseRootMotion = false;
 	CoverSelected = false;
@@ -92,6 +99,7 @@ ABaseCharacter::ABaseCharacter()
 
 	HeadSocket = "j_head";
 	RightHandSocket = "j_wrist_ri";
+	ShoulderRightSocket = "j_shoulder_ri";
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
@@ -110,7 +118,7 @@ void ABaseCharacter::BeginPlay()
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 	DefaultCameraFOV = FollowCamera->FieldOfView;
 
-	canMoveForward = true;
+	AimCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, ShoulderRightSocket);
 
 	// Create Animation Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
@@ -713,10 +721,29 @@ void ABaseCharacter::ResetInitialDirectionBool()
 void ABaseCharacter::BeginAim()
 {
 	isAiming = true;
+
+	if (UseAimCameraSpring)
+	{
+		FollowCamera->AttachToComponent(AimCameraSpring, FAttachmentTransformRules::KeepWorldTransform);
+
+		FLatentActionInfo LatentInfo;
+		LatentInfo.CallbackTarget = this;
+		UKismetSystemLibrary::MoveComponentTo(FollowCamera, FVector::ZeroVector, FRotator::ZeroRotator, true, true, 0.3f, false, EMoveComponentAction::Type::Move, LatentInfo);
+	}
 }
 
 void ABaseCharacter::EndAim()
 {
 	isAiming = false;
+
+	if (UseAimCameraSpring)
+	{
+		FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::KeepWorldTransform);
+
+		FLatentActionInfo LatentInfo;
+		LatentInfo.CallbackTarget = this;
+
+		UKismetSystemLibrary::MoveComponentTo(FollowCamera, FVector::ZeroVector, FRotator::ZeroRotator, true, true, 0.3f, false, EMoveComponentAction::Type::Move, LatentInfo);
+	}
 }
 

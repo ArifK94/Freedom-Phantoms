@@ -159,6 +159,7 @@ void ACombatCharacter::Tick(float DeltaTime)
 			EndFire();
 		}
 
+		RunAndShoot();
 		//disableSprint();
 	}
 }
@@ -501,7 +502,7 @@ void ACombatCharacter::BeginAim()
 		}
 		else
 		{
-			isAiming = true;
+			Super::BeginAim();
 			currentWeaponObj->SetIsAiming(true);
 		}
 
@@ -511,8 +512,9 @@ void ACombatCharacter::BeginAim()
 
 void ACombatCharacter::EndAim()
 {
+	Super::EndAim();
+
 	if (currentWeaponObj) {
-		isAiming = false;
 		currentWeaponObj->SetIsAiming(false);
 	}
 }
