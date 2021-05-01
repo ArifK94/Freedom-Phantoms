@@ -88,7 +88,7 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 			if (ShotgunObj)
 			{
-				if (ShotgunObj->HasLoadedShell())
+				if (ShotgunObj->GetHasLoadedShell())
 				{
 					OwningCombatCharacter->BeginFire();
 				}

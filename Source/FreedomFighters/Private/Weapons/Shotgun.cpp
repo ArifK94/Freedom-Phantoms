@@ -26,28 +26,26 @@ AShotgun::AShotgun()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
-	HandguardAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("HandguardAudioComponent"));
+	PumpAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PumpAudioComponent"));
 
 	weaponType = WeaponType::Shotgun;
 
-	Ammo_Holder = nullptr;
-	hasLoadedShell = false;
-	isPullingHandguard = false;
-
-	HandguardSpeed = 0.0f;
+	HasLoadedShell = false;
+	IsPullingPump = false;
+	PumpActionBySound = false;
 }
 
 void AShotgun::PlayHandguardPullSound()
 {
 	if (HandguardPullSound != NULL)
 	{
-		if (HandguardAudioComponent->IsPlaying())
-			HandguardAudioComponent->Stop();
+		if (PumpAudioComponent->IsPlaying())
+			PumpAudioComponent->Stop();
 
-		HandguardAudioComponent->Sound = HandguardPullSound;
+		PumpAudioComponent->Sound = HandguardPullSound;
 
-		if (!HandguardAudioComponent->IsPlaying())
-			HandguardAudioComponent->Play(0.0f);
+		if (!PumpAudioComponent->IsPlaying())
+			PumpAudioComponent->Play(0.0f);
 	}
 }
 
@@ -55,14 +53,14 @@ void AShotgun::PlayHandguardPushSound()
 {
 	if (HandguardPushSound != NULL)
 	{
-		if (HandguardAudioComponent->IsPlaying())
-			HandguardAudioComponent->Stop();
+		if (PumpAudioComponent->IsPlaying())
+			PumpAudioComponent->Stop();
 
 
-		HandguardAudioComponent->Sound = HandguardPushSound;
+		PumpAudioComponent->Sound = HandguardPushSound;
 
-		if (!HandguardAudioComponent->IsPlaying())
-			HandguardAudioComponent->Play(0.0f);
+		if (!PumpAudioComponent->IsPlaying())
+			PumpAudioComponent->Play(0.0f);
 	}
 }
 
@@ -70,65 +68,41 @@ void AShotgun::BeginPlay()
 {
 	Super::BeginPlay();
 
-	setHandguard();
-
-	hasLoadedShell = true;
+	HasLoadedShell = true;
 }
 
 void AShotgun::Fire()
 {
-	if (CurrentAmmo <= 0 || !hasLoadedShell) return;
+	if (CurrentAmmo <= 0 || !HasLoadedShell) return;
 
-	hasLoadedShell = false;
+	HasLoadedShell = false;
 	isFiring = true;
 
 	CurrentAmmo -= 1;
 
 	CreateBullet();
 
-	GetWorldTimerManager().SetTimer(pullHandguardTimeHandle, this, &AShotgun::beginHandguardPull, .3f, false);
+	GetWorldTimerManager().SetTimer(THandler_PullPump, this, &AShotgun::beginHandguardPull, .3f, false);
 }
 
 
-
-
-void AShotgun::setHandguard()
+void AShotgun::PullPump()
 {
-	for (UActorComponent* component : GetComponentsByTag(UStaticMeshComponent::StaticClass(), "Handguard"))
+	if (!HasLoadedShell)
 	{
-		HandguardComp = Cast<UStaticMeshComponent>(component);
+		BeginShellEffect();
 	}
 
-	if (HandguardComp)
-	{
-		HandguardMesh = HandguardComp;
-	}
+	GetWorldTimerManager().ClearTimer(THandler_PullPump);
+
 }
 
 
-
-void AShotgun::pullHanguard()
+void AShotgun::PushPump()
 {
-	if (HandguardComp)
-	{
-		if (!hasLoadedShell)
-		{
-			BeginShellEffect();
-		}
-
-		GetWorldTimerManager().ClearTimer(pullHandguardTimeHandle);
-	}
-}
-
-
-void AShotgun::pushHanguard()
-{
-	if (HandguardComp)
-	{
-		isPullingHandguard = false;
-		hasLoadedShell = true;
-		isReloading = false;
-	}
+	IsPullingPump = false;
+	HasLoadedShell = true;
+	isReloading = false;
 }
 
 void AShotgun::BeginHandguardTransition()
@@ -139,13 +113,13 @@ void AShotgun::BeginHandguardTransition()
 
 	FTimerHandle tHandle;
 	const float Delay = .5f;
-	GetWorldTimerManager().SetTimer(tHandle, this, &AShotgun::pushHanguard, Delay, false);
+	GetWorldTimerManager().SetTimer(tHandle, this, &AShotgun::PushPump, Delay, false);
 }
 
 void AShotgun::beginHandguardPull()
 {
 	// pull the handguard
-	isPullingHandguard = true;
+	IsPullingPump = true;
 
 	PlayHandguardPullSound();
 }
@@ -158,13 +132,14 @@ void AShotgun::OnReload()
 	{
 		isFiring = false;
 		isReloading = true;
+		HasLoadedShell = true;
 
 		CurrentAmmo++;
 
 		if (InsertAmmoSound != NULL)
 		{
-			HandguardAudioComponent->Sound = InsertAmmoSound;
-			HandguardAudioComponent->Play(0.0f);
+			PumpAudioComponent->Sound = InsertAmmoSound;
+			PumpAudioComponent->Play(0.0f);
 		}
 
 		if (CurrentMaxAmmo > 0)

@@ -414,7 +414,7 @@ void ACombatAIController::ShootAtEnemy()
 
 			if (ShotgunObj)
 			{
-				if (ShotgunObj->HasLoadedShell())
+				if (ShotgunObj->GetHasLoadedShell())
 				{
 					OwningCombatCharacter->BeginFire();
 				}

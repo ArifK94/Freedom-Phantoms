@@ -1,0 +1,146 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Weapons/PumpActionWeapon.h"
+
+#include "Weapons//Weapon.h"
+#include "Weapons//WeaponClip.h"
+
+#include "FreedomFighters/FreedomFighters.h"
+
+#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/SceneComponent.h"
+
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "Components/AudioComponent.h"
+#include "Math/Vector.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/Actor.h"
+
+#include "TimerManager.h"
+
+APumpActionWeapon::APumpActionWeapon()
+{
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+
+	weaponType = WeaponType::Shotgun;
+
+	HasLoadedShell = false;
+	IsPullingPump = false;
+	PumpActionBySound = false;
+}
+
+void APumpActionWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	HasLoadedShell = true;
+}
+
+void APumpActionWeapon::Fire()
+{
+	if (CurrentAmmo <= 0 || !HasLoadedShell) return;
+
+	EndLoadShell();
+
+	HasLoadedShell = false;
+	isFiring = true;
+
+	CurrentAmmo -= 1;
+
+	CreateBullet();
+
+	BeginLoadShell();
+}
+
+
+void APumpActionWeapon::BeginLoadShell()
+{
+	// pull the handguard
+	IsPullingPump = true;
+
+	PlayPumpPullSound();
+
+	GetWorldTimerManager().SetTimer(THandler_Pump, this, &APumpActionWeapon::EndLoadShell, PumpPullSound->GetDuration(), false);
+}
+
+void APumpActionWeapon::EndLoadShell()
+{
+	GetWorldTimerManager().ClearTimer(THandler_Pump);
+
+	PlayPumpPushSound();
+
+	BeginShellEffect();
+
+	IsPullingPump = false;
+	HasLoadedShell = true;
+	//isReloading = false;
+}
+
+
+void APumpActionWeapon::OnReload()
+{
+	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip) {
+		EndLoadShell();
+		return;
+	}
+
+	if (CurrentAmmo < AmmoPerClip)
+	{
+		isReloading = true;
+		HasLoadedShell = true;
+
+		CurrentAmmo++;
+
+		if (InsertAmmoSound != NULL)
+		{
+			ClipAudioComponent->Sound = InsertAmmoSound;
+			ClipAudioComponent->Play();
+		}
+
+		if (CurrentMaxAmmo > 0)
+		{
+			CurrentMaxAmmo--;
+		}
+		else
+		{
+			EndLoadShell();
+		}
+	}
+	else
+	{
+		EndLoadShell();
+	}
+}
+
+void APumpActionWeapon::PlayPumpPullSound()
+{
+	if (ClipAudioComponent != NULL)
+	{
+		if (ClipAudioComponent->IsPlaying())
+			ClipAudioComponent->Stop();
+
+		ClipAudioComponent->Sound = PumpPullSound;
+
+		if (!ClipAudioComponent->IsPlaying())
+			ClipAudioComponent->Play();
+	}
+}
+
+void APumpActionWeapon::PlayPumpPushSound()
+{
+	if (ClipAudioComponent != NULL)
+	{
+		if (ClipAudioComponent->IsPlaying())
+			ClipAudioComponent->Stop();
+
+
+		ClipAudioComponent->Sound = PumpPushSound;
+
+		if (!ClipAudioComponent->IsPlaying())
+			ClipAudioComponent->Play();
+	}
+}

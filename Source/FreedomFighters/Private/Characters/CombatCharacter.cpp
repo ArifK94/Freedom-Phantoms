@@ -10,34 +10,29 @@
 #include "Weapons/WeaponTorchlight.h"
 #include "Weapons/WeaponLaser.h"
 #include "Weapons/Pistol.h"
+#include "Weapons/PumpActionWeapon.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
-
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/AudioComponent.h"
 #include "CustomComponents/HealthComponent.h"
-
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-
 #include "Animation/AnimInstance.h"
-
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "Kismet/KismetStringLibrary.h"
 #include "GameFramework/Actor.h"
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
-
 #include "Containers/Array.h"
-
 #include "GameFramework/Controller.h"
 
 
@@ -111,11 +106,17 @@ void ACombatCharacter::BeginPlay()
 	if (primaryWeaponObj)
 	{
 		currentWeaponObj = primaryWeaponObj;
-		BeginEquipWeapon();
+	}
+	else
+	{
+		currentWeaponObj = secondaryWeaponObj;
 	}
 
 	if (currentWeaponObj)
 	{
+		RetrieveWeaponAnimDataSet();
+		BeginEquipWeapon();
+
 		if (currentWeaponObj->getWeaponAttachmentObj() != NULL)
 		{
 			underBarrelWeaponObj = currentWeaponObj->getWeaponAttachmentObj()->getUnderBarrelWeaponObj();
@@ -193,6 +194,43 @@ void ACombatCharacter::RetrieveWeaponDataSet()
 
 	static const FString ContextString(TEXT("Weapons DataSet"));
 	WeaponsDataSet = WeaponsDatatable->FindRow<FWeaponsSet>(WeaponsRowName, ContextString, true);
+}
+
+void ACombatCharacter::RetrieveWeaponAnimDataSet()
+{
+	if (WeaponsAnimationDatatable == nullptr) {
+		return;
+	}
+
+	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("WeaponType"), true);
+	FName WeaponTypeName = EnumPtr->GetNameByValue((int64)currentWeaponObj->GetWeaponType());
+
+	FString Left, Right;
+	WeaponTypeName.ToString().Split(TEXT("::"), &Left, &Right);
+
+	static const FString ContextString(TEXT("Weapons Animation DataSet"));
+	WeaponAnimDataSet = WeaponsAnimationDatatable->FindRow<FWeaponAnimSet>(*Right, ContextString, true);
+
+	if (WeaponAnimDataSet)
+	{
+		WeaponAnimDataSetEditor.StandArmed = WeaponAnimDataSet->StandArmed;
+		WeaponAnimDataSetEditor.CrouchArmed = WeaponAnimDataSet->CrouchArmed;
+		WeaponAnimDataSetEditor.StandAimingBS = WeaponAnimDataSet->StandAimingBS;
+		WeaponAnimDataSetEditor.StartMoveBS = WeaponAnimDataSet->StartMoveBS;
+		WeaponAnimDataSetEditor.StartMoveCombatBS = WeaponAnimDataSet->StartMoveCombatBS;
+		WeaponAnimDataSetEditor.StopMoveBS = WeaponAnimDataSet->StopMoveBS;
+		WeaponAnimDataSetEditor.CrouchAimingBS = WeaponAnimDataSet->CrouchAimingBS;
+		WeaponAnimDataSetEditor.CrouchStartBS = WeaponAnimDataSet->CrouchStartBS;
+		WeaponAnimDataSetEditor.CrouchStopBS = WeaponAnimDataSet->CrouchStopBS;
+		WeaponAnimDataSetEditor.ProneAimingBS = WeaponAnimDataSet->ProneAimingBS;
+		WeaponAnimDataSetEditor.DrawMontage = WeaponAnimDataSet->DrawMontage;
+		WeaponAnimDataSetEditor.HolsterMontage = WeaponAnimDataSet->HolsterMontage;
+		WeaponAnimDataSetEditor.Shooting = WeaponAnimDataSet->Shooting;
+		WeaponAnimDataSetEditor.Reloading = WeaponAnimDataSet->Reloading;
+		WeaponAnimDataSetEditor.AimOffsetStanding = WeaponAnimDataSet->AimOffsetStanding;
+		WeaponAnimDataSetEditor.AimOffsetCrouching = WeaponAnimDataSet->AimOffsetCrouching;
+		WeaponAnimDataSetEditor.AimOffsetProning = WeaponAnimDataSet->AimOffsetProning;
+	}
 }
 
 void ACombatCharacter::SpawnHelmet()
@@ -349,6 +387,7 @@ void ACombatCharacter::BeginWeaponSwap()
 	if (hasEquippedWeapon)
 	{
 		isSwappingWeapon = true;
+		PlayAnimMontage(WeaponAnimDataSet->HolsterMontage);
 	}
 	else
 	{
@@ -367,10 +406,12 @@ void ACombatCharacter::BeginWeaponSwap()
 
 void ACombatCharacter::BeginEquipWeapon()
 {
+	if (isReloading) {
+		EndReload();
+	}
 	isEquippingWeapon = true;
 
-	if (isReloading)
-		isReloading = false;
+	PlayAnimMontage(WeaponAnimDataSet->DrawMontage);
 }
 
 void ACombatCharacter::GrabWeapon()
@@ -391,30 +432,35 @@ void ACombatCharacter::EndEquipWeapon()
 {
 	isEquippingWeapon = false;
 	isSwappingWeapon = false;
+
+	StopAnimMontage(WeaponAnimDataSet->DrawMontage);
 }
 
 
 void ACombatCharacter::swapWeapon()
 {
-	if (isSwappingWeapon)
-	{
-		if (isReloading)
-			isReloading = false;
-
-
-		hasEquippedWeapon = false;
-
-		if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
-		{
-			currentWeaponObj = secondaryWeaponObj;
-		}
-		else // set primary weapon
-		{
-			currentWeaponObj = primaryWeaponObj;
-		}
-
-		BeginEquipWeapon();
+	if (!isSwappingWeapon) {
+		return;
 	}
+
+	if (isReloading) {
+		EndReload();
+	}
+
+
+	hasEquippedWeapon = false;
+
+	if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
+	{
+		currentWeaponObj = secondaryWeaponObj;
+	}
+	else // set primary weapon
+	{
+		currentWeaponObj = primaryWeaponObj;
+	}
+
+	RetrieveWeaponAnimDataSet();
+	BeginEquipWeapon();
 }
 
 void ACombatCharacter::setWeaponHand()
@@ -437,14 +483,28 @@ void ACombatCharacter::HolsterWeapon()
 
 void ACombatCharacter::BeginFire()
 {
-	if (currentWeaponObj)
+	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isFiring) {
+		return;
+	}
+
+	if (isReloading)
 	{
-		if (hasEquippedWeapon && !isReloading && !isFiring)
+		// Pump Action Weapons can fire if there is ammo
+		if (Cast<APumpActionWeapon>(currentWeaponObj) && currentWeaponObj->getCurrentAmmo() > 0)
 		{
-			isFiring = true;
-			currentWeaponObj->StartFire();
+			isReloading = false;
+			EndReload();
+		}
+		else
+		{
+			return;
 		}
 	}
+
+	isFiring = true;
+	currentWeaponObj->StartFire();
+	PlayAnimMontage(WeaponAnimDataSet->Shooting);
+
 }
 
 void ACombatCharacter::EndFire()
@@ -453,6 +513,7 @@ void ACombatCharacter::EndFire()
 	{
 		currentWeaponObj->StopFire();
 		isFiring = false;
+		StopAnimMontage(WeaponAnimDataSet->Shooting);
 	}
 }
 
@@ -471,7 +532,6 @@ void ACombatCharacter::UpdateCombatMode()
 		}
 	}
 }
-
 
 
 void ACombatCharacter::UpdateFire()
@@ -525,10 +585,14 @@ void ACombatCharacter::BeginReload()
 		return;
 	}
 
+	if (currentWeaponObj->getCurrentMaxAmmo() <= 0 || currentWeaponObj->getCurrentAmmo() >= currentWeaponObj->getAmmoPerClip()) {
+		return;
+	}
+
 	currentWeaponObj->BeginReload();
 	isAiming = false;
-	isFiring = false;
-	currentWeaponObj->SetIsAiming(false);
+
+	PlayAnimMontage(WeaponAnimDataSet->Reloading);
 
 	if (GetVoiceClipsSet()->ReloadingSound != NULL)
 	{
@@ -542,6 +606,7 @@ void ACombatCharacter::EndReload()
 	if (currentWeaponObj)
 	{
 		currentWeaponObj->EndReload();
+		StopAnimMontage(WeaponAnimDataSet->Reloading);
 	}
 }
 

@@ -22,9 +22,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
 		FName WeaponsRowName;
 	FWeaponsSet* WeaponsDataSet;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* WeaponsAnimationDatatable;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FWeaponAnimSet WeaponAnimDataSetEditor;
+	FWeaponAnimSet* WeaponAnimDataSet;
 
 private:
 	void RetrieveWeaponDataSet();
+
+	void RetrieveWeaponAnimDataSet();
 
 #pragma endregion
 

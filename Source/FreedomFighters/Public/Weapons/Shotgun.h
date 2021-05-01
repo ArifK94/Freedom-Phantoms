@@ -18,24 +18,13 @@ public:
 	AShotgun();
 
 private:
-
-
-
-	UStaticMeshComponent* HandguardComp;
-
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
-		UAudioComponent* HandguardAudioComponent;
+		UAudioComponent* PumpAudioComponent;
 
+	FTimerHandle THandler_PullPump;
 
-
-	FTimerHandle pullHandguardTimeHandle;
 
 private:
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Ammo_Holder;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
 		USoundBase* HandguardPushSound;
 
@@ -45,36 +34,34 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
 		USoundBase* InsertAmmoSound;
 
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Handguard", meta = (AllowPrivateAccess = "true"))
-		float HandguardSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		bool HasLoadedShell;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		bool hasLoadedShell;
+		bool IsPullingPump;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		bool isPullingHandguard;
+		bool HasFinishedReload;
 
+	/** An animation may not be present for when reloading a shell so using alternative to pump shell like pull and push sounds should work */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		bool hasFinishedReload;
-
+		bool PumpActionBySound;
 
 
 public:
 
 	void PlayHandguardPullSound();
 
-	UFUNCTION(BlueprintCallable, Category = "Shotgun", meta = (AllowPrivateAccess = "true"))
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
 		void PlayHandguardPushSound();
 
-	UFUNCTION(BlueprintCallable, Category = "Shotgun", meta = (AllowPrivateAccess = "true"))
-		void pullHanguard();
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
+		void PullPump();
 
-	UFUNCTION(BlueprintCallable, Category = "Shotgun", meta = (AllowPrivateAccess = "true"))
-		void pushHanguard();
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
+		void PushPump();
 
-	UFUNCTION(BlueprintCallable, Category = "Shotgun", meta = (AllowPrivateAccess = "true"))
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
 		void BeginHandguardTransition();
 
 	void beginHandguardPull();
@@ -89,14 +76,12 @@ private:
 
 	virtual void OnReload() override;
 
-	void setHandguard();
-
 
 
 public:
 
-	bool HasLoadedShell() {
-		return hasLoadedShell;
+	bool GetHasLoadedShell() {
+		return HasLoadedShell;
 	}
 
 	

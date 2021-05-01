@@ -15,6 +15,13 @@ class UUserWidget;
 class USoundBase;
 class AHeadgear;
 class ALoadout;
+class UAnimMontage;
+class UBlendSpace;
+class UBlendSpace1D;
+class UAnimationAsset;
+class UAnimMontage;
+class UAnimSequence;
+class UAimOffsetBlendSpace;
 
 USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase
@@ -95,16 +102,16 @@ struct FWeaponsSet : public FTableRowBase
 
 public:
 	UPROPERTY(EditAnywhere, Category = "Assault")
-		TArray<TSubclassOf<class AAssaultRifle>> AssaultRifles;
+		TArray<TSubclassOf<AWeapon>> AssaultRifles;
 
 	UPROPERTY(EditAnywhere, Category = "SMG")
-		TArray<TSubclassOf<class ASMG>> SMGs;
+		TArray<TSubclassOf<AWeapon>> SMGs;
 
 	UPROPERTY(EditAnywhere, Category = "Shotgun")
-		TArray<TSubclassOf<class AShotgun>> Shotguns;
+		TArray<TSubclassOf<AWeapon>> Shotguns;
 
 	UPROPERTY(EditAnywhere, Category = "LMG")
-		TArray<TSubclassOf<class ALMG>> LMGs;
+		TArray<TSubclassOf<AWeapon>> LMGs;
 
 	UPROPERTY(EditAnywhere, Category = "Secondary")
 		TArray<TSubclassOf<AWeapon>> SecondaryWeapons;
@@ -114,6 +121,64 @@ public:
 	{
 
 	}
+};
+
+USTRUCT(BlueprintType)
+struct FWeaponAnimSet : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace1D* StandArmed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace1D* CrouchArmed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* StandAimingBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* StartMoveBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* StartMoveCombatBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* StopMoveBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* CrouchAimingBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* CrouchStartBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* CrouchStopBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UBlendSpace* ProneAimingBS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UAnimMontage* DrawMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UAnimMontage* HolsterMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UAnimMontage* Shooting;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UAnimMontage* Reloading;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UAimOffsetBlendSpace* AimOffsetStanding;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UAimOffsetBlendSpace* AimOffsetCrouching;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UAimOffsetBlendSpace* AimOffsetProning;
 };
 
 

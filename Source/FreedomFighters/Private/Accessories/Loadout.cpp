@@ -56,10 +56,6 @@ AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 	{
 		switch (loadoutType)
 		{
-		case LoadoutType::Assault:
-			RandomIndex = rand() % WeaponsDataSet->AssaultRifles.Num();
-			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->AssaultRifles[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-			break;
 		case LoadoutType::SMG:
 			RandomIndex = rand() % WeaponsDataSet->SMGs.Num();
 			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->SMGs[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
@@ -72,7 +68,7 @@ AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 			RandomIndex = rand() % WeaponsDataSet->LMGs.Num();
 			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->LMGs[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 			break;
-		default:
+		default: // Assault loadout by default
 			RandomIndex = rand() % WeaponsDataSet->AssaultRifles.Num();
 			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->AssaultRifles[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 			break;

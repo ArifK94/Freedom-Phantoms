@@ -2,9 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
-#include "Engine/DataTable.h"
-
+#include "EnumCollection.h"
+#include "StructCollection.h"
 #include "Weapon.generated.h"
 
 class USkeletalMeshComponent;
@@ -13,95 +12,9 @@ class UParticleSystem;
 class USoundBase;
 class USoundCue;
 class UAudioComponent;
-class UArrowComponent;
-class UAnimMontage;
-class UBlendSpace;
-class UBlendSpace1D;
-class UAnimationAsset;
-class UAnimMontage;
-class UAnimSequence;
-class UAimOffsetBlendSpace;
 class AWeaponClip;
 class AWeaponBullet;
 class UObjectPoolComponent;
-
-UENUM(BlueprintType)
-enum class WeaponType : uint8
-{
-	Rifle		UMETA(DisplayName = "Rifle"),
-	SMG 		UMETA(DisplayName = "SMG"),
-	Shotgun		UMETA(DisplayName = "Shotgun"),
-	LMG			UMETA(DisplayName = "LMG"),
-	Pistol		UMETA(DisplayName = "Pistol")
-};
-
-UENUM(BlueprintType)
-enum class SelectiveFire : uint8
-{
-	Automatic		UMETA(DisplayName = "Automatic"),
-	SemiAutomatic 	UMETA(DisplayName = "SemiAutomatic"),
-	Burst			UMETA(DisplayName = "Burst")
-};
-
-USTRUCT(BlueprintType)
-struct FWeaponAnimSet : public FTableRowBase
-{
-	GENERATED_USTRUCT_BODY()
-
-		UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		WeaponType weaponType;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace1D* StandArmed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace1D* CrouchArmed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace* StandAimingBS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace* StartMoveBS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace* StartMoveCombatBS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace* StopMoveBS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace* CrouchAimingBS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace* CrouchStartBS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace* CrouchStopBS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UBlendSpace* ProneAimingBS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAnimMontage* DrawMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAnimMontage* HolsterMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAnimMontage* Shooting;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAnimMontage* Reloading;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAimOffsetBlendSpace* AimOffsetStanding;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAimOffsetBlendSpace* AimOffsetCrouching;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UAimOffsetBlendSpace* AimOffsetProning;
-};
 
 UCLASS()
 class FREEDOMFIGHTERS_API AWeapon : public AActor
@@ -476,5 +389,9 @@ public:
 
 	UAudioComponent* GetClipAudioComponent() {
 		return ClipAudioComponent;
+	}
+
+	WeaponType GetWeaponType() {
+		return weaponType;
 	}
 };

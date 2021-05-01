@@ -6,6 +6,25 @@
 
 
 UENUM(BlueprintType)
+enum class WeaponType : uint8
+{
+	Rifle		UMETA(DisplayName = "Rifle"),
+	SMG 		UMETA(DisplayName = "SMG"),
+	Shotgun		UMETA(DisplayName = "Shotgun"),
+	LMG			UMETA(DisplayName = "LMG"),
+	Pistol		UMETA(DisplayName = "Pistol")
+};
+
+UENUM(BlueprintType)
+enum class SelectiveFire : uint8
+{
+	Automatic		UMETA(DisplayName = "Automatic"),
+	SemiAutomatic 	UMETA(DisplayName = "SemiAutomatic"),
+	Burst			UMETA(DisplayName = "Burst")
+};
+
+
+UENUM(BlueprintType)
 enum class CoverType : uint8
 {
 	Default			UMETA(DisplayName = "Default"),
