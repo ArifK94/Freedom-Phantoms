@@ -4,7 +4,7 @@
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
-#include "Weapons/Shotgun.h"
+#include "Weapons/PumpActionWeapon.h"
 #include "Props/Stronghold.h"
 #include "CustomComponents/CoverPointComponent.h"
 
@@ -410,11 +410,11 @@ void ACombatAIController::ShootAtEnemy()
 		{
 			// Shotguns requires bolt action rather than constant firing of weapon
 			// check if using shotgun weapon type
-			ShotgunObj = Cast<AShotgun>(OwningCombatCharacter->GetCurrentWeapon());
+			PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetCurrentWeapon());
 
-			if (ShotgunObj)
+			if (PumpActionWeapon)
 			{
-				if (ShotgunObj->GetHasLoadedShell())
+				if (PumpActionWeapon->GetHasLoadedShell())
 				{
 					OwningCombatCharacter->BeginFire();
 				}
@@ -461,7 +461,7 @@ void ACombatAIController::EndFiring()
 		return;
 	}
 
-	if (ShotgunObj) {
+	if (PumpActionWeapon) {
 		return;
 	}
 

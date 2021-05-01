@@ -6,7 +6,6 @@
 #include "Characters/CombatCharacter.h"
 #include "Components/SkeletalMeshComponent.h"
 
-#include "Weapons/Shotgun.h"
 #include "Weapons/Weapon.h"
 
 

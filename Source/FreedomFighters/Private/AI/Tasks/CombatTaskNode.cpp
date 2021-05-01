@@ -8,8 +8,7 @@
 
 #include "Characters/CombatCharacter.h"
 #include "Weapons/Weapon.h"
-#include "Weapons/Shotgun.h"
-
+#include "Weapons/PumpActionWeapon.h"
 
 #include "TimerManager.h"
 #include "Engine/World.h"
@@ -84,7 +83,7 @@ EBTNodeResult::Type UCombatTaskNode::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 		{
 			// Shotguns requires bolt action rather than constant firing of weapon
 			// check if using shotgun weapon type
-			AShotgun* ShotgunObj = Cast<AShotgun>(OwningCombatCharacter->GetCurrentWeapon());
+			APumpActionWeapon* ShotgunObj = Cast<APumpActionWeapon>(OwningCombatCharacter->GetCurrentWeapon());
 
 			if (ShotgunObj)
 			{

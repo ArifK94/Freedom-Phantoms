@@ -13,7 +13,7 @@ class UAISenseConfig;
 class UAISense;
 class UAIPerceptionComponent;
 class AWeapon;
-class AShotgun;
+class APumpActionWeapon;
 class USphereComponent;
 class AStronghold;
 UCLASS()
@@ -65,7 +65,7 @@ private:
 
 	UAIPerceptionComponent* PerceptionComp;
 	AWeapon* CurrentWeapon;
-	AShotgun* ShotgunObj;
+	APumpActionWeapon* PumpActionWeapon;
 
 	// to take defensive positions within the stronghold
 	AStronghold* CurrentStronghold;
