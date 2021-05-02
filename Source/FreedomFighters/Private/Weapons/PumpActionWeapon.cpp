@@ -47,11 +47,8 @@ void APumpActionWeapon::Fire()
 	EndLoadShell();
 
 	HasLoadedShell = false;
-	isFiring = true;
 
-	CurrentAmmo -= 1;
-
-	CreateBullet();
+	Super::Fire();
 
 	BeginLoadShell();
 }

@@ -8,6 +8,8 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Engine/EngineTypes.h"
 #include "Math/Vector.h"
 
 #include "Particles/ParticleSystem.h"
@@ -48,7 +50,6 @@ AWeapon::AWeapon()
 
 
 	MuzzleSocket = "Muzzle";
-	TracerTargetSocket = "Target";
 	ClipSocket = "Clip";
 	HolsterSocket = "holster1";
 	EjectorSocket = "Ejector";
@@ -63,11 +64,9 @@ AWeapon::AWeapon()
 	RateOfFire = 600.0f;
 	CooldownReload = 0.0f;
 
-	RecoilAmount = 5.0f;
-	VerticleRecoil = 0.05f;
-	HorizontalRecoil = 0.01f;
-	BulletSpread = 2.0f;
+	BulletSpreadRadius = 5.0f;
 	ZoomFOV = 90.0f;
+	BulletsPerFire = 1;
 
 	isReloading = false;
 	canShowClip = true;
@@ -84,6 +83,9 @@ AWeapon::AWeapon()
 	HasNoReload = false;
 
 	ChargeSoundParamName = "ChargeAmount";
+
+	DrawShotLine = false;
+	ShotLineDuration = 5.0f;
 }
 
 void AWeapon::ConfigSetup()
@@ -193,6 +195,7 @@ void AWeapon::Fire()
 		CurrentAmmo -= 1;
 	}
 
+
 	CreateBullet();
 
 	BurstAmmountCount++;
@@ -216,6 +219,12 @@ void AWeapon::CreateBullet()
 		return;
 	}
 
+
+	float TraceLength = 10000.0f;
+
+	FVector EyeLocation;
+	FRotator EyeRotation;
+
 	// Trace world from pawn eyes to cross hair location
 	if (EyeViewPointComponent)
 	{
@@ -229,57 +238,56 @@ void AWeapon::CreateBullet()
 
 	FVector ShotDirection = EyeRotation.Vector();
 
-	if (hasRecoil)
+	for (int i = 0; i < BulletsPerFire; i++)
 	{
-		float HalfRad = FMath::DegreesToRadians(BulletSpread);
-		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+		FVector RandomRadius = RandomPointInCircle(UKismetMathLibrary::DegTan(BulletSpreadRadius) * TraceLength);
+
+		FVector TraceEnd = EyeLocation + (ShotDirection * TraceLength);
+
+		if (hasRecoil)
+		{
+			TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
+		}
+
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(MyOwner);
+		QueryParams.AddIgnoredActor(this);
+		QueryParams.bTraceComplex = true;
+		QueryParams.bReturnPhysicalMaterial = true;
+
+		// Particle "Target" parameter
+		FVector TracerEndPoint = TraceEnd;
+
+		FHitResult Hit;
+		bool LineTraceFire = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
+		if (LineTraceFire)
+		{
+			TracerEndPoint = Hit.ImpactPoint;
+		}
+
+		if (BulletClass)
+		{
+			ObjectPoolComponent->ActivatePoolObject(BulletClass, MyOwner, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+		}
+
+		if (DrawShotLine)
+		{
+			TArray<AActor*> ActorsToIgnore;
+			UKismetSystemLibrary::LineTraceSingle(GetWorld(), EyeLocation, TraceEnd, ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, Hit, true, FLinearColor::Blue, FLinearColor::Green, ShotLineDuration);
+		}
 	}
 
-
-	FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(MyOwner);
-	QueryParams.AddIgnoredActor(this);
-	QueryParams.bTraceComplex = true;
-	QueryParams.bReturnPhysicalMaterial = true;
-
-	// Particle "Target" parameter
-	FVector TracerEndPoint = TraceEnd;
-
-	FHitResult Hit;
-	bool LineTraceFire = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
-	if (LineTraceFire)
-	{
-		TracerEndPoint = Hit.ImpactPoint;
-	}
-
-	if (BulletClass)
-	{
-		ObjectPoolComponent->ActivatePoolObject(BulletClass, MyOwner, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
-	}
-
-	PlayShotEffect(TracerEndPoint);
+	PlayShotEffect(EyeLocation);
 }
 
-void AWeapon::PlayShotEffect(FVector TracerEndPoint)
+void AWeapon::PlayShotEffect(FVector EyeLocation)
 {
 	if (MuzzleEffect)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleEffect, getMuzzleLocation());
 	}
 
-	if (TracerEffect)
-	{
-		UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, getMuzzleLocation());
-
-		if (TracerComp)
-		{
-			TracerComp->SetVectorParameter(TracerTargetSocket, TracerEndPoint);
-		}
-	}
-
-	Recoil();
 
 	LastFireTime = GetWorld()->TimeSeconds;
 
@@ -296,6 +304,19 @@ void AWeapon::PlayShotEffect(FVector TracerEndPoint)
 			ShotAudioComponent->Play(0.0f);
 		}
 	}
+}
+
+// Bullet spread random point
+FVector AWeapon::RandomPointInCircle(float Radius)
+{
+	FVector Target;
+	float Angle = UKismetMathLibrary::RandomFloatInRange(0.0f, 360.0f);
+	float DistanceFromCenter = UKismetMathLibrary::RandomFloatInRange(0.0f, Radius);
+
+	Target.X = DistanceFromCenter * UKismetMathLibrary::DegCos(Angle);
+	Target.Y = DistanceFromCenter * UKismetMathLibrary::DegSin(Angle);
+
+	return Target;
 }
 
 void AWeapon::BeginShellEffect()
@@ -545,24 +566,6 @@ void AWeapon::SpawnMagazine()
 		}
 	}
 }
-
-void AWeapon::Recoil()
-{
-	AActor* MyOwner = GetOwner();
-
-	auto character = UGameplayStatics::GetPlayerController(MyOwner, 0);
-	VerticleRecoil = VerticleRecoil * -1;
-
-	CurrentVerticleRecoil += .2f;
-
-	TargetHorizontalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.3, 0.3);
-	TargetVerticalRecoil = UKismetMathLibrary::RandomFloatInRange(-0.5f, -0.8f) * 2.0f / 3.0f;
-
-	//character->AddPitchInput(TargetVerticalRecoil);
-	//character->AddYawInput(TargetHorizontalRecoil);
-}
-
-
 
 
 void AWeapon::SetMagazineSocket()

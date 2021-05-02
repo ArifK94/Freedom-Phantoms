@@ -67,221 +67,197 @@ private:
 	void AutoReloadBegin();
 	void AutoReloadEnd();
 
+	FVector RandomPointInCircle(float Radius);
+
 protected:
 	virtual void Fire();
 
 	void CreateBullet();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	UFUNCTION(BlueprintCallable)
 		virtual void OnReload();
 
 	void ConfigSetup();
 
 	void SpawnMagazine();
 
-	void Recoil();
-
 	virtual FVector getMuzzleLocation();
 
 	void BeginShellEffect();
 
-	void PlayShotEffect(FVector TracerEndPoint);
+	void PlayShotEffect(FVector EyeLocation);
 
 protected:
 	int BurstAmmountCount;
 
 	USkeletalMeshComponent* CharacterReference;
 
-	FVector EyeLocation;
-	FRotator EyeRotation;
-
-
 protected:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		USkeletalMeshComponent* MeshComp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Hand Offsets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand Offsets", meta = (AllowPrivateAccess = "true"))
 		USceneComponent* HandguardMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UObjectPoolComponent* ObjectPoolComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponClip> weaponClip;
 	AWeaponClip* weaponClipObj;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponBullet> BulletClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		TSubclassOf<UDamageType> DamageType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		SelectiveFire selectiveFireMode;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Attachment", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attachment", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class UWeaponAttachmentManager> WeaponAttachmentClass;
 	UWeaponAttachmentManager* WeaponAttachmentObj;
 
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ammo")
 		bool canShowClip;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isFiring;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
 	bool IsAiming;
 
 
 	/** Useful for cannons, as they may not have reload animation but instead a countdown reload time */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool CanAutoReload;
 	FTimerHandle THandler_AutoReloadBegin;
 	FTimerHandle THandler_AutoReloadEnd;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		WeaponType weaponType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName MuzzleSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
-		FName TracerTargetSocket;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ClipSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName HolsterSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ParentHolderSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName EjectorSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName HandguardSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ReloadClipHandSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName OpticsSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName LaserSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName TorchlightSocket;
 
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Hand Offsets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FTransform HandguardOffset;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float CooldownReload;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		float RateOfFire;
 
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Ammo")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ammo")
 		int32 CurrentAmmo;
 
 
 	/** Current max which changes on reload */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Ammo")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ammo")
 		int32 CurrentMaxAmmo;
 
 	/** Used for when it comes to replenishing and setting the original max ammo */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Ammo")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ammo")
 		int32 MaxAmmoCapacity;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		int32 AmmoPerClip;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true", ClampMin = 1.0f))
+		int32 BulletsPerFire;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		bool HasUnlimitedAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Ammo", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		bool HasNoReload;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float ZoomFOV;
 
 
 	/** RECOIL */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil", meta = (AllowPrivateAccess = "true"))
 		bool hasRecoil;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
-		float BulletSpread;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
-		float RecoilAmount;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
-		float HorizontalRecoil;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Recoil")
-		float VerticleRecoil;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true"))
-		float TargetVerticalRecoil;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Recoil", meta = (AllowPrivateAccess = "true"))
-		float TargetHorizontalRecoil;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
+		float BulletSpreadRadius;
 
 
-
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds")
 		USoundBase* ShotSound;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds")
 		USoundBase* ReloadClipOutSound;
 	bool HasPlayedClipOut;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds")
 		USoundBase* ReloadClipInSound;
 	bool HasPlayedClipIn;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds")
 		USoundBase* ReloadEndSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
 		USoundAttenuation* FireAttenuation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UObjectPoolComponent* ObjectPoolComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ShotAudioComponent;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
 		bool PlayFireSoundAtLocation;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Sounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ClipAudioComponent;
 
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* ShellEjectEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* MuzzleEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Particle Effects", meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* TracerEffect;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Muzzle")
 		FVector CurrentMuzzleLocation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Muzzle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Muzzle")
 		FRotator CurrentMuzzleRotation;
 
 	/** Message to be displayed on the UI */
@@ -295,34 +271,36 @@ protected:
 	FTimerHandle THandler_TimeBetweenShots;
 
 
-
-
-
-
-
-
 	/** Charging Weapon */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Charging", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ChargingAudioComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 		USoundBase* ChargeUpSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 		USoundBase* ChargeDownSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 		FName ChargeSoundParamName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Charging")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 		float ChargeUpTime;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Charging")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging")
 		bool IsChargingUp;
 
 	float CurrentChargeUpTime;
 	FTimerHandle THandler_ChargeUp;
 	FTimerHandle THandler_ChargeDown;
+
+
+	/** Debug */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		bool DrawShotLine;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		float ShotLineDuration;
 
 private:
 	float CurrentVerticleRecoil;
@@ -350,7 +328,7 @@ public:
 	int32 getAmmoPerClip() { return AmmoPerClip; }
 	int32 GetMaxAmmoCapacity() { return MaxAmmoCapacity; }
 
-		
+
 	FName GetMuzzleSocket() { return MuzzleSocket; }
 	FName getHolsterSocket() { return HolsterSocket; }
 	FName getParentHolderSocket() { return ParentHolderSocket; }

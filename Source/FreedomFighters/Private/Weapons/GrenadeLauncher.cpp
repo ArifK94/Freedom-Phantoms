@@ -42,6 +42,10 @@ void AGrenadeLauncher::Fire()
 
 	if (MyOwner)
 	{
+
+		FVector EyeLocation;
+		FRotator EyeRotation;
+
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocket);
@@ -54,8 +58,6 @@ void AGrenadeLauncher::Fire()
 		AWeaponBullet* bulletObj = world->SpawnActor<AWeaponBullet>(weaponClipObj->getBulletClass(), MuzzleLocation, EyeRotation, SpawnParams);
 
 		BeginShellEffect();
-
-		Recoil();
 
 		LastFireTime = GetWorld()->TimeSeconds;
 
