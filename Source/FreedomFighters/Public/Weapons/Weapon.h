@@ -21,83 +21,27 @@ class FREEDOMFIGHTERS_API AWeapon : public AActor
 {
 	GENERATED_BODY()
 
-public:
-	AWeapon();
-
-	void StartFire();
-
-	void StopFire();
-
-	// Charging the weapon before being able to fire or used when holding the aim button eg. minigun aiming
-	void ChargeUp();
-
-	void ChargeDown();
-
-	void IncreaseCharge();
-
-	void DecreaseCharge();
-
-	void BeginReload();
-
-	void EndReload();
-
-	void ClipIn();
-
-	void ClipOut();
-
-	void SetMagazineSocket();
-
-	void SetClipSocket(USkeletalMeshComponent* meshComponent);
-
-	void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket);
-
-	void SpawnWeaponAttachments();
-
-	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
-
-	/** Return bool so it can be used to play sounds if true */
-	bool ReplenishAmmo();
-
-	virtual void SetIsAiming(bool isAiming);
-
 private:
-	void BurstDelay();
-	void SemiFireDelay();
+	FTimerHandle THandler_BulletSpread;
 
-	void AutoReloadBegin();
-	void AutoReloadEnd();
-
-	FVector RandomPointInCircle(float Radius);
-
-protected:
-	virtual void Fire();
-
-	void CreateBullet();
-
-	UFUNCTION(BlueprintCallable)
-		virtual void OnReload();
-
-	void ConfigSetup();
-
-	void SpawnMagazine();
-
-	virtual FVector getMuzzleLocation();
-
-	void BeginShellEffect();
-
-	void PlayShotEffect(FVector EyeLocation);
 
 protected:
 	int BurstAmmountCount;
 
 	USkeletalMeshComponent* CharacterReference;
 
+
+	// Derived from RateOfFire
+	float TimeBetweenShots;
+	float LastFireTime;
+	FTimerHandle THandler_TimeBetweenShots;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		USkeletalMeshComponent* MeshComp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand Offsets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* HandguardMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -215,8 +159,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil", meta = (AllowPrivateAccess = "true"))
 		bool hasRecoil;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
-		float BulletSpreadRadius;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f, ClampMax = 1.0f))
+		float BulletSpreadMin;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f, ClampMax = 1.0f))
+		float BulletSpreadMax;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.1f))
+		float BulletSpreadReduceRate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Recoil")
+		float BulletSpreadCurrent;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds")
@@ -265,12 +215,6 @@ protected:
 		FName PickupMessage;
 
 
-	// Derived from RateOfFire
-	float TimeBetweenShots;
-	float LastFireTime;
-	FTimerHandle THandler_TimeBetweenShots;
-
-
 	/** Charging Weapon */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ChargingAudioComponent;
@@ -308,10 +252,77 @@ private:
 	USceneComponent* EyeViewPointComponent; // used for vehicles rather than pawns
 
 
+public:
+	AWeapon();
+
+	void StartFire();
+
+	void StopFire();
+
+	// Charging the weapon before being able to fire or used when holding the aim button eg. minigun aiming
+	void ChargeUp();
+
+	void ChargeDown();
+
+	void IncreaseCharge();
+
+	void DecreaseCharge();
+
+	void BeginReload();
+
+	void EndReload();
+
+	void ClipIn();
+
+	void ClipOut();
+
+	void SetMagazineSocket();
+
+	void SetClipSocket(USkeletalMeshComponent* meshComponent);
+
+	void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket);
+
+	void SpawnWeaponAttachments();
+
+	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
+
+	/** Return bool so it can be used to play sounds if true */
+	bool ReplenishAmmo();
+
+	virtual void SetIsAiming(bool isAiming);
+
+private:
+	void BurstDelay();
+	void SemiFireDelay();
+
+	void AutoReloadBegin();
+	void AutoReloadEnd();
+
+	void ReduceBulletSpread();
+
+	FVector RandomPointInCircle(float Radius);
+
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void Fire();
+
+	void CreateBullet();
+
+	UFUNCTION(BlueprintCallable)
+		virtual void OnReload();
+
+	void ConfigSetup();
+
+	void SpawnMagazine();
+
+	virtual FVector getMuzzleLocation();
+
+	void BeginShellEffect();
+
+	void PlayShotEffect(FVector EyeLocation);
 
 public:
 

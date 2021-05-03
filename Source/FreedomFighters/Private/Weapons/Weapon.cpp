@@ -64,7 +64,10 @@ AWeapon::AWeapon()
 	RateOfFire = 600.0f;
 	CooldownReload = 0.0f;
 
-	BulletSpreadRadius = 5.0f;
+	BulletSpreadMin = 2.0f;
+	BulletSpreadMax = 5.0f;
+	BulletSpreadReduceRate = .1f;
+
 	ZoomFOV = 90.0f;
 	BulletsPerFire = 1;
 
@@ -90,7 +93,13 @@ AWeapon::AWeapon()
 
 void AWeapon::ConfigSetup()
 {
+	HasUnlimitedAmmo = true;
+	HasNoReload = true;
+
 	HandguardMesh = MeshComp;
+
+	BulletSpreadCurrent = 0.0f;
+	BulletSpreadCurrent = BulletSpreadMin;
 
 	if (weaponClipObj)
 	{
@@ -195,10 +204,27 @@ void AWeapon::Fire()
 		CurrentAmmo -= 1;
 	}
 
-
 	CreateBullet();
 
 	BurstAmmountCount++;
+
+	//BulletSpreadCurrent = FMath::Clamp(BulletSpreadCurrent += .15f, BulletSpreadMin, BulletSpreadMax);
+
+	if (BulletSpreadCurrent < BulletSpreadMax)
+	{
+		// Increase current spread based on character velocity
+		AActor* MyOwner = GetOwner();
+		if (MyOwner) {
+			BulletSpreadCurrent += MyOwner->GetVelocity().Size();
+		}
+
+
+		BulletSpreadCurrent += 1.0f;
+	}
+	else
+	{
+		BulletSpreadCurrent = BulletSpreadMax;
+	}
 
 	if (CanAutoReload && !HasNoReload)
 	{
@@ -208,6 +234,10 @@ void AWeapon::Fire()
 			ClipOut();
 			GetWorldTimerManager().SetTimer(THandler_AutoReloadBegin, this, &AWeapon::AutoReloadBegin, CooldownReload / 2.0f, false);
 		}
+	}
+
+	if (hasRecoil) {
+		GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
 	}
 }
 
@@ -240,7 +270,7 @@ void AWeapon::CreateBullet()
 
 	for (int i = 0; i < BulletsPerFire; i++)
 	{
-		FVector RandomRadius = RandomPointInCircle(UKismetMathLibrary::DegTan(BulletSpreadRadius) * TraceLength);
+		FVector RandomRadius = RandomPointInCircle(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
 
 		FVector TraceEnd = EyeLocation + (ShotDirection * TraceLength);
 
@@ -319,6 +349,17 @@ FVector AWeapon::RandomPointInCircle(float Radius)
 	return Target;
 }
 
+void AWeapon::ReduceBulletSpread()
+{
+	BulletSpreadCurrent = FMath::Clamp(BulletSpreadCurrent -= 1.0f, BulletSpreadMin, BulletSpreadMax);
+
+	if (BulletSpreadCurrent <= BulletSpreadMin)
+	{
+		BulletSpreadCurrent = BulletSpreadMin;
+		GetWorldTimerManager().ClearTimer(THandler_BulletSpread);
+	}
+}
+
 void AWeapon::BeginShellEffect()
 {
 	if (ShellEjectEffect)
@@ -377,6 +418,8 @@ void AWeapon::StopFire()
 	BurstAmmountCount = 0;
 
 	ChargeDown();
+
+	GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
 }
 
 void AWeapon::ChargeUp()
