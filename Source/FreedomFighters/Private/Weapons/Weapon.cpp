@@ -93,9 +93,6 @@ AWeapon::AWeapon()
 
 void AWeapon::ConfigSetup()
 {
-	HasUnlimitedAmmo = true;
-	HasNoReload = true;
-
 	HandguardMesh = MeshComp;
 
 	BulletSpreadCurrent = 0.0f;
@@ -208,23 +205,25 @@ void AWeapon::Fire()
 
 	BurstAmmountCount++;
 
-	//BulletSpreadCurrent = FMath::Clamp(BulletSpreadCurrent += .15f, BulletSpreadMin, BulletSpreadMax);
+	if (hasRecoil) {
 
-	if (BulletSpreadCurrent < BulletSpreadMax)
-	{
-		// Increase current spread based on character velocity
-		AActor* MyOwner = GetOwner();
-		if (MyOwner) {
-			BulletSpreadCurrent += MyOwner->GetVelocity().Size();
+		if (BulletSpreadCurrent < BulletSpreadMax)
+		{
+			// Increase current spread based on character velocity
+			AActor* MyOwner = GetOwner();
+			if (MyOwner) {
+				BulletSpreadCurrent += MyOwner->GetVelocity().Size();
+			}
+
+
+			BulletSpreadCurrent += 1.0f;
 		}
-
-
-		BulletSpreadCurrent += 1.0f;
+		else
+		{
+			BulletSpreadCurrent = BulletSpreadMax;
+		}
 	}
-	else
-	{
-		BulletSpreadCurrent = BulletSpreadMax;
-	}
+
 
 	if (CanAutoReload && !HasNoReload)
 	{
@@ -270,12 +269,11 @@ void AWeapon::CreateBullet()
 
 	for (int i = 0; i < BulletsPerFire; i++)
 	{
-		FVector RandomRadius = RandomPointInCircle(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
-
 		FVector TraceEnd = EyeLocation + (ShotDirection * TraceLength);
 
 		if (hasRecoil)
 		{
+			FVector RandomRadius = RandomPointInCircle(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
 			TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
 		}
 
