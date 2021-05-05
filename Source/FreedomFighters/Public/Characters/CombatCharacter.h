@@ -62,11 +62,8 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isUsingMountedWeapon;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName WeaponHandSocket;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Sockets", meta = (AllowPrivateAccess = "true"))
-		FName SecondaryWeaponHandSocket;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
@@ -123,7 +120,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void EndFire();
-	void UpdateFire();
 
 	virtual	void BeginAim() override;
 	virtual	void EndAim() override;
@@ -131,12 +127,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginReload();
 	void EndReload();
-	void UpdateReload();
+
+	UFUNCTION(BlueprintCallable)
+		void OnWeaponAmmoEmpty(AWeapon* Weapon);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void ToggleNightVision();
 
-	void UpdatePawnControl();
+	void UpdateControllerYaw();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginWeaponSwap();
@@ -149,13 +147,11 @@ public:
 
 	void HolsterWeapon();
 
-	void setWeaponHand();
-
 	void DropMountedGun();
 
-	void RunAndShoot ();
+	void AimAutoRotation();
 
-	void disableSprint();
+	void DisableSprint();
 
 	void ToggleUnderBarrelWeapon();
 
@@ -185,6 +181,8 @@ public:
 
 	void UseMountedGun(AWeapon* MountedGun);
 
+	virtual void SetIsRepellingDown(bool IsRappelling) override;
+
 private:
 	AHeadgear* Headgear;
 	ALoadout* Loadout;
@@ -200,8 +198,6 @@ protected:
 	virtual void InitTimeHandlers() override;
 
 	virtual void ClearTimeHandlers() override;
-
-	virtual void Tick(float DeltaTime) override;
 
 	virtual void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser) override;
 

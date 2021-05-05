@@ -58,7 +58,6 @@ ACombatCharacter::ACombatCharacter()
 	HandGuardAlpha = 0.0f;
 
 	WeaponHandSocket = "weapon_hand";
-	SecondaryWeaponHandSocket = "weapon_hand_secondary";
 }
 
 
@@ -139,37 +138,11 @@ void ACombatCharacter::ClearTimeHandlers()
 	GetWorldTimerManager().ClearTimer(THandler_RunAndShoot);
 }
 
-void ACombatCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (isDead) {
-		return;
-	}
-
-	if (currentWeaponObj)
-	{
-		UpdatePawnControl();
-
-		UpdateFire();
-
-		UpdateReload();
-
-		if (isEquippingWeapon || isDead)
-		{
-			EndFire();
-		}
-
-		RunAndShoot();
-		//disableSprint();
-	}
-}
-
 void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (isDead)
 	{
-		if (FactionObj != NULL && GetVoiceClipsSet()->DeathSound != NULL)
+		if (GetVoiceClipsSet()->DeathSound != NULL)
 		{
 			VoiceAudioComponent->Sound = GetVoiceClipsSet()->DeathSound;
 			VoiceAudioComponent->Play();
@@ -230,6 +203,10 @@ void ACombatCharacter::RetrieveWeaponAnimDataSet()
 		WeaponAnimDataSetEditor.AimOffsetStanding = WeaponAnimDataSet->AimOffsetStanding;
 		WeaponAnimDataSetEditor.AimOffsetCrouching = WeaponAnimDataSet->AimOffsetCrouching;
 		WeaponAnimDataSetEditor.AimOffsetProning = WeaponAnimDataSet->AimOffsetProning;
+	}
+
+	if (CanAutoReloadWeapon) {
+		currentWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 	}
 }
 
@@ -307,50 +284,19 @@ void ACombatCharacter::BeginSprint()
 {
 	Super::BeginSprint();
 
-	//GetWorldTimerManager().SetTimer(THandler_RunAndShoot, this, &ACombatCharacter::RunAndShoot, .3f, true);
+	UpdateControllerYaw();
 }
 
 void ACombatCharacter::EndSprint()
 {
 	Super::EndSprint();
 
-	GetWorldTimerManager().ClearTimer(THandler_RunAndShoot);
+	UpdateControllerYaw();
 }
 
-void ACombatCharacter::RunAndShoot()
-{
-	if (isTakingCover || !IsInAircraft || !isInCombatMode) {
-		return;
-	}
-
-	float x = 0.0f, y = 0.0f;
-
-	auto controlYaw = 0.0f, actorYaw = 0.0f;
-
-	UKismetMathLibrary::BreakRotator(GetControlRotation(), x, y, controlYaw);
-	UKismetMathLibrary::BreakRotator(GetActorRotation(), x, y, actorYaw);
-
-	auto ControlTargetRot = UKismetMathLibrary::MakeRotator(x, y, controlYaw);
-	auto ActorTargetRot = UKismetMathLibrary::MakeRotator(x, y, actorYaw);
-
-	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlTargetRot, ActorTargetRot);
-
-	if (UKismetMathLibrary::Abs(Target.Yaw) >= 70.0f || IsInAimOffSetRotation)
-	{
-		IsInAimOffSetRotation = true;
-	}
-
-	if (IsInAimOffSetRotation)
-	{
-		FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, CurrentDeltaTime, 5.0f);
-		AddActorWorldRotation(MoveToTarget);
-
-		IsInAimOffSetRotation = !UKismetMathLibrary::NearlyEqual_FloatFloat(Target.Yaw, 0.0f, 2.0f);
-	}
-
-}
-
-void ACombatCharacter::disableSprint()
+// if in combat mode while sprinting and looking backwards then stop sprinting
+// a mechanic observed in call of duty gameplay
+void ACombatCharacter::DisableSprint()
 {
 	float x = 0.0f, y = 0.0f;
 
@@ -370,9 +316,9 @@ void ACombatCharacter::disableSprint()
 	}
 }
 
-void ACombatCharacter::UpdatePawnControl()
+void ACombatCharacter::UpdateControllerYaw()
 {
-	if (isInCombatMode && CharacterSpeed > 0.1f && !isSprinting)
+	if (isInCombatMode && !isSprinting)
 	{
 		bUseControllerRotationYaw = true;
 	}
@@ -387,6 +333,7 @@ void ACombatCharacter::BeginWeaponSwap()
 	if (hasEquippedWeapon)
 	{
 		isSwappingWeapon = true;
+		EndFire();
 		PlayAnimMontage(WeaponAnimDataSet->HolsterMontage);
 	}
 	else
@@ -409,7 +356,11 @@ void ACombatCharacter::BeginEquipWeapon()
 	if (isReloading) {
 		EndReload();
 	}
+
+	EndFire();
+
 	isEquippingWeapon = true;
+
 
 	PlayAnimMontage(WeaponAnimDataSet->DrawMontage);
 }
@@ -418,7 +369,7 @@ void ACombatCharacter::GrabWeapon()
 {
 	if (!hasEquippedWeapon)
 	{
-		setWeaponHand();
+		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
 		hasEquippedWeapon = true;
 	}
 	else
@@ -463,18 +414,6 @@ void ACombatCharacter::swapWeapon()
 	BeginEquipWeapon();
 }
 
-void ACombatCharacter::setWeaponHand()
-{
-	if (currentWeaponObj->IsA(APistol::StaticClass()))
-	{
-		currentWeaponObj->setWeaponSocket(GetMesh(), SecondaryWeaponHandSocket);
-	}
-	else
-	{
-		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
-	}
-}
-
 void ACombatCharacter::HolsterWeapon()
 {
 	currentWeaponObj->setWeaponSocket(Loadout->GetMesh(), currentWeaponObj->getHolsterSocket());
@@ -503,6 +442,10 @@ void ACombatCharacter::BeginFire()
 
 	isFiring = true;
 	currentWeaponObj->StartFire();
+
+	UpdateControllerYaw();
+
+
 	PlayAnimMontage(WeaponAnimDataSet->Shooting);
 
 }
@@ -513,6 +456,14 @@ void ACombatCharacter::EndFire()
 	{
 		currentWeaponObj->StopFire();
 		isFiring = false;
+
+		// in case character is not aiming
+		UpdateControllerYaw();
+
+		if (!isAiming) {
+			HandGuardAlpha = 0.0f;
+		}
+
 		StopAnimMontage(WeaponAnimDataSet->Shooting);
 	}
 }
@@ -534,40 +485,38 @@ void ACombatCharacter::UpdateCombatMode()
 }
 
 
-void ACombatCharacter::UpdateFire()
+// Begin Auto Reload
+void ACombatCharacter::OnWeaponAmmoEmpty(AWeapon* Weapon)
 {
-	if (currentWeaponObj == nullptr) {
-		return;
-	}
-
-	if (isSwappingWeapon || isReloading || isRepellingDown || isDead) {
-		EndFire();
-		HandGuardAlpha = 0.0f;
-	}
-
-	if (CanAutoReloadWeapon && currentWeaponObj->getCurrentAmmo() <= 0) {
-		BeginReload();
-		HandGuardAlpha = 0.0f;
-	}
+	BeginReload();
+	HandGuardAlpha = 0.0f;
 }
 
 
 void ACombatCharacter::BeginAim()
 {
-	if (currentWeaponObj)
-	{
-		if (!hasEquippedWeapon)
-		{
-			BeginEquipWeapon();
-		}
-		else
-		{
-			Super::BeginAim();
-			currentWeaponObj->SetIsAiming(true);
-		}
+	if (currentWeaponObj == nullptr) {
+		return;
+	}
 
+	if (!hasEquippedWeapon)
+	{
+		BeginEquipWeapon();
+	}
+	else
+	{
+		Super::BeginAim();
+		currentWeaponObj->SetIsAiming(true);
+	}
+
+	// if sprinting then stop
+	if (isSprinting)
+	{
 		EndSprint();
 	}
+
+	UpdateControllerYaw();
+
 }
 
 void ACombatCharacter::EndAim()
@@ -577,6 +526,41 @@ void ACombatCharacter::EndAim()
 	if (currentWeaponObj) {
 		currentWeaponObj->SetIsAiming(false);
 	}
+
+	UpdateControllerYaw();
+}
+
+void ACombatCharacter::AimAutoRotation()
+{
+	if (isTakingCover || !IsInAircraft || !isInCombatMode) {
+		return;
+	}
+
+	float x = 0.0f, y = 0.0f;
+
+	auto controlYaw = 0.0f, actorYaw = 0.0f;
+
+	UKismetMathLibrary::BreakRotator(GetControlRotation(), x, y, controlYaw);
+	UKismetMathLibrary::BreakRotator(GetActorRotation(), x, y, actorYaw);
+
+	auto ControlTargetRot = UKismetMathLibrary::MakeRotator(x, y, controlYaw);
+	auto ActorTargetRot = UKismetMathLibrary::MakeRotator(x, y, actorYaw);
+
+	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlTargetRot, ActorTargetRot);
+
+	if (UKismetMathLibrary::Abs(Target.Yaw) >= 70.0f || IsInAimOffSetRotation)
+	{
+		IsInAimOffSetRotation = true;
+	}
+
+	if (IsInAimOffSetRotation)
+	{
+		FRotator MoveToTarget = FMath::RInterpTo(FRotator::ZeroRotator, Target, CurrentDeltaTime, 5.0f);
+		AddActorWorldRotation(MoveToTarget);
+
+		IsInAimOffSetRotation = !UKismetMathLibrary::NearlyEqual_FloatFloat(Target.Yaw, 0.0f, 2.0f);
+	}
+
 }
 
 void ACombatCharacter::BeginReload()
@@ -585,12 +569,16 @@ void ACombatCharacter::BeginReload()
 		return;
 	}
 
-	if (currentWeaponObj->getCurrentMaxAmmo() <= 0 || currentWeaponObj->getCurrentAmmo() >= currentWeaponObj->getAmmoPerClip()) {
+	currentWeaponObj->BeginReload();
+	isReloading = currentWeaponObj->getIsReloading();
+
+	if (!isReloading) {
 		return;
 	}
 
-	currentWeaponObj->BeginReload();
 	isAiming = false;
+
+	EndFire();
 
 	PlayAnimMontage(WeaponAnimDataSet->Reloading);
 
@@ -606,19 +594,10 @@ void ACombatCharacter::EndReload()
 	if (currentWeaponObj)
 	{
 		currentWeaponObj->EndReload();
+		isReloading = currentWeaponObj->getIsReloading();
 		StopAnimMontage(WeaponAnimDataSet->Reloading);
 	}
 }
-
-void ACombatCharacter::UpdateReload()
-{
-	if (isDead || currentWeaponObj == nullptr) {
-		return;
-	}
-
-	isReloading = currentWeaponObj->getIsReloading();
-}
-
 
 void ACombatCharacter::ToggleUnderBarrelWeapon()
 {
@@ -865,6 +844,13 @@ void ACombatCharacter::DropMountedGun()
 	currentWeaponObj = primaryWeaponObj;
 	BeginEquipWeapon();
 	GrabWeapon();
+}
 
+void ACombatCharacter::SetIsRepellingDown(bool IsRappelling)
+{
+	Super::Tick(IsRappelling);
+
+	EndAim();
+	EndFire();
 }
 

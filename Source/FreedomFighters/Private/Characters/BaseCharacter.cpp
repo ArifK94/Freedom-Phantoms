@@ -154,6 +154,11 @@ void ABaseCharacter::SetIsInAircraft(bool InAircraft)
 	}
 }
 
+void ABaseCharacter::SetIsRepellingDown(bool IsRappelling)
+{
+	isRepellingDown = IsRappelling;
+}
+
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

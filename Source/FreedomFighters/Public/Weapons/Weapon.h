@@ -16,6 +16,8 @@ class AWeaponClip;
 class AWeaponBullet;
 class UObjectPoolComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEmptyAmmoClipSignature, AWeapon*, Weapon);
+
 UCLASS()
 class FREEDOMFIGHTERS_API AWeapon : public AActor
 {
@@ -203,13 +205,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* MuzzleEffect;
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Muzzle")
-		FVector CurrentMuzzleLocation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Muzzle")
-		FRotator CurrentMuzzleRotation;
-
 	/** Message to be displayed on the UI */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 		FName PickupMessage;
@@ -254,6 +249,9 @@ private:
 
 public:
 	AWeapon();
+
+	UPROPERTY(BlueprintAssignable)
+		FOnEmptyAmmoClipSignature OnEmptyAmmoClip;
 
 	void StartFire();
 
@@ -304,8 +302,6 @@ private:
 
 protected:
 	virtual void BeginPlay() override;
-
-	virtual void Tick(float DeltaTime) override;
 
 	virtual void Fire();
 

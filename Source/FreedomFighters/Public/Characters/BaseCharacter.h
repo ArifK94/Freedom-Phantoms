@@ -68,13 +68,13 @@ private:
 #pragma endregion
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName HeadSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName RightHandSocket;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ShoulderRightSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -248,6 +248,7 @@ public:
 	void EscapeCover();
 
 	void SetIsInAircraft(bool InAircraft);
+	virtual void SetIsRepellingDown(bool IsRappelling);
 
 protected:
 	// APawn interface
@@ -345,10 +346,6 @@ public:
 
 	void SetCharacterDirection(float Value) {
 		CharacterDirection = Value;
-	}
-
-	void SetIsRepellingDown(bool value) {
-		isRepellingDown = value;
 	}
 
 	void SetAircraftSeatPosition(int32 position) {

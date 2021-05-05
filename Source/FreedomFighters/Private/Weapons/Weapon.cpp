@@ -36,7 +36,7 @@ void AWeapon::SetIsAiming(bool isAiming)
 // Sets default values
 AWeapon::AWeapon()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
@@ -150,31 +150,21 @@ void AWeapon::BeginPlay()
 	SpawnWeaponAttachments();
 }
 
-void AWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (weaponClipObj)
-	{
-		weaponClipObj->SetCurrentAmmo(CurrentAmmo);
-	}
-
-	if (CurrentAmmo <= 0)
-		isFiring = false;
-
-
-	CurrentMuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocket);
-	CurrentMuzzleRotation = MeshComp->GetSocketRotation(MuzzleSocket);
-}
-
 void AWeapon::Fire()
 {
 	if (isReloading) {
 		return;
 	}
 
-	if (CurrentAmmo <= 0 && !HasNoReload) {
-		return;
+	if (CurrentAmmo <= 0) {
+		isFiring = false;
+
+		OnEmptyAmmoClip.Broadcast(this);
+
+		if (!HasNoReload)
+		{
+			return;
+		}
 	}
 
 	// Reset Burst fire count
@@ -199,6 +189,11 @@ void AWeapon::Fire()
 
 	if (!HasNoReload) {
 		CurrentAmmo -= 1;
+	}
+
+	if (weaponClipObj)
+	{
+		weaponClipObj->SetCurrentAmmo(CurrentAmmo);
 	}
 
 	CreateBullet();
