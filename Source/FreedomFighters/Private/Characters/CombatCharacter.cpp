@@ -1,5 +1,4 @@
 #include "Characters/CombatCharacter.h"
-#include "Managers/FactionManager.h"
 
 #include "Accessories/Headgear.h"
 #include "Accessories/Loadout.h"
@@ -86,11 +85,8 @@ void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	RetrieveFactionDataSet();
 	RetrieveWeaponDataSet();
-
-	if (FactionClass) {
-		FactionObj = NewObject<UFactionManager>((UObject*)GetTransientPackage(), FactionClass);
-	}
 
 	SpawnHelmet();
 	SpawnLoadout();
@@ -208,6 +204,16 @@ void ACombatCharacter::RetrieveWeaponAnimDataSet()
 	if (CanAutoReloadWeapon) {
 		currentWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 	}
+}
+
+void ACombatCharacter::RetrieveFactionDataSet()
+{
+	if (FactionDatatable == nullptr) {
+		return;
+	}
+
+	static const FString ContextString(TEXT("Faction DataSet"));
+	FactionDataSet = FactionDatatable->FindRow<FFaction>(FactionRowName, ContextString, true);
 }
 
 void ACombatCharacter::SpawnHelmet()
@@ -659,7 +665,7 @@ void ACombatCharacter::TargetFound()
 {
 	if (!HasPlayedTargetFoundSound && !isDead)
 	{
-		if (FactionObj != NULL && GetVoiceClipsSet()->TargetFoundSound != NULL)
+		if (GetVoiceClipsSet()->TargetFoundSound != NULL)
 		{
 			VoiceAudioComponent->Sound = GetVoiceClipsSet()->TargetFoundSound;
 			VoiceAudioComponent->Play();
@@ -748,7 +754,7 @@ void ACombatCharacter::FriendlyKilled()
 		return;
 	}
 
-	if (FactionObj != NULL && GetVoiceClipsSet()->FriendlyDownSound != NULL)
+	if (GetVoiceClipsSet()->FriendlyDownSound != NULL)
 	{
 		VoiceAudioComponent->Sound = GetVoiceClipsSet()->FriendlyDownSound;
 		VoiceAudioComponent->Play();
@@ -764,7 +770,7 @@ void ACombatCharacter::EnemyKilled()
 
 	if (!HasPlayedEnemyKilledSound && !isDead)
 	{
-		if (FactionObj != NULL && GetVoiceClipsSet()->EnemyDownSound != NULL)
+		if (GetVoiceClipsSet()->EnemyDownSound != NULL)
 		{
 			VoiceAudioComponent->Sound = GetVoiceClipsSet()->EnemyDownSound;
 			VoiceAudioComponent->Play();

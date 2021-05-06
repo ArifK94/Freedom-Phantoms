@@ -2,9 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
 #include "CustomComponents/HealthComponent.h"
-
+#include "StructCollection.h"
 #include "Stronghold.generated.h"
 
 class UBoxComponent;
@@ -29,8 +28,7 @@ public:
 	UPROPERTY()
 		UMaterialInterface* FlagMaterial;
 
-	UPROPERTY()
-		UFactionManager* FactionManager;
+		FFaction* FactionDataSet;
 };
 
 UCLASS()

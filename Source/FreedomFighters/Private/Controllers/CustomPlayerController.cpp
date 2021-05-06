@@ -1,7 +1,5 @@
 #include "Controllers/CustomPlayerController.h"
 
-#include "Managers/FactionManager.h"
-
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 

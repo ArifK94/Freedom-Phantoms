@@ -7,7 +7,6 @@
 #include "CombatCharacter.generated.h"
 
 class AWeapon;
-class UFactionManager;
 class ACommanderCharacter;
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
@@ -29,10 +28,20 @@ protected:
 		FWeaponAnimSet WeaponAnimDataSetEditor;
 	FWeaponAnimSet* WeaponAnimDataSet;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* FactionDatatable;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		FName FactionRowName;
+	FFaction* FactionDataSet;
+
+	
+
 private:
 	void RetrieveWeaponDataSet();
 
 	void RetrieveWeaponAnimDataSet();
+
+	void RetrieveFactionDataSet();
 
 #pragma endregion
 
@@ -66,11 +75,6 @@ private:
 		FName WeaponHandSocket;
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UFactionManager> FactionClass;
-
-	UFactionManager* FactionObj;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		ACommanderCharacter* CommandingOfficer;
 
@@ -209,10 +213,11 @@ public:
 	bool IsUsingMountedWeapon() {
 		return isUsingMountedWeapon;
 	}
-
-	UFactionManager* getFactionObj() {
-		return FactionObj;
+	
+	FFaction* GetFactionDataSet() {
+		return FactionDataSet;
 	}
+
 
 	void setCommandingOfficer(ACommanderCharacter* Commander) {
 		CommandingOfficer = Commander;

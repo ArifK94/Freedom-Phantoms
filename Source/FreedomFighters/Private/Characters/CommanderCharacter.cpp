@@ -1,6 +1,5 @@
 #include "Characters/CommanderCharacter.h"
 #include "GUI/OrderIcon.h"
-#include "Managers/FactionManager.h"
 #include "CustomComponents/HealthComponent.h"
 
 #include "Containers/Array.h"
@@ -542,7 +541,7 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit)
 {
 	// Play acknowledged sound after commander's voice sound has finished playing the order
-	if (FactionObj != nullptr && SoundBase != nullptr)
+	if (SoundBase != nullptr)
 	{
 		VoiceAudioComponent->Sound = SoundBase;
 		VoiceAudioComponent->Play();
@@ -555,7 +554,7 @@ void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, UCommanderRecrui
 
 void ACommanderCharacter::PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit)
 {
-	if (TargetRecruit == nullptr || TargetRecruit->Recruit == nullptr || TargetRecruit->Recruit->getFactionObj() == nullptr) {
+	if (TargetRecruit == nullptr || TargetRecruit->Recruit == nullptr) {
 		return;
 	}
 

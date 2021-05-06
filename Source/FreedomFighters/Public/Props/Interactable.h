@@ -4,7 +4,6 @@
 #include "GameFramework/Actor.h"
 #include "Interactable.generated.h"
 
-class UFactionManager;
 class AAircraft;
 class ABaseCharacter;
 class APlayerController;

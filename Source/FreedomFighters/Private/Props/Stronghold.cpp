@@ -4,7 +4,6 @@
 #include "Controllers/CombatAIController.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
-#include "Managers/FactionManager.h"
 
 #include "TimerManager.h"
 #include "Math/UnrealMathUtility.h"
@@ -61,7 +60,7 @@ void AStronghold::BeginPlay()
 	DominantFaction->Faction = TeamFaction::Neutral;
 	DominantFaction->FlagMaterial = NeutralFlagMaterial;
 	DominantFaction->FactionCount = 0;
-	DominantFaction->FactionManager = nullptr;
+	DominantFaction->FactionDataSet = nullptr;
 
 	GetSpawnAreas();
 	GetCoverPoints();
@@ -163,11 +162,11 @@ void AStronghold::SpawnCharacter()
 		return;
 	}
 
-	if (DominantFaction->FactionManager == nullptr) {
+	if (DominantFaction->FactionDataSet == nullptr) {
 		return;
 	}
 
-	if (DominantFaction->FactionManager->GetOperativeCharacterClass() == nullptr) {
+	if (DominantFaction->FactionDataSet->OperativeCharacterClass == nullptr) {
 		return;
 	}
 
@@ -188,7 +187,7 @@ void AStronghold::SpawnCharacter()
 
 		if (navResult)
 		{
-			ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionManager->GetOperativeCharacterClass(), Location, SpawnArea->GetComponentRotation(), SpawnParams);
+			ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionDataSet->OperativeCharacterClass, Location, SpawnArea->GetComponentRotation(), SpawnParams);
 
 			if (Character)
 			{
@@ -256,8 +255,8 @@ void AStronghold::AddFaction(ACombatCharacter* Character, TeamFaction Faction)
 	FOccupiedFaction* OccupyingFaction = new FOccupiedFaction;
 	OccupyingFaction->Faction = Faction;
 	OccupyingFaction->FactionCount = 1;
-	OccupyingFaction->FactionManager = Character->getFactionObj();
-	OccupyingFaction->FlagMaterial = OccupyingFaction->FactionManager->GetFlagMaterial();
+	OccupyingFaction->FactionDataSet = Character->GetFactionDataSet();
+	OccupyingFaction->FlagMaterial = OccupyingFaction->FactionDataSet->FlagMaterial;
 
 	OccupiedFactions.Add(OccupyingFaction);
 }
@@ -314,7 +313,7 @@ void AStronghold::GetHighestFaction()
 			OwningFaction->FactionCount = OccupiedFaction->FactionCount;
 			OwningFaction->Faction = OccupiedFaction->Faction;
 			OwningFaction->FlagMaterial = OccupiedFaction->FlagMaterial;
-			OwningFaction->FactionManager = OccupiedFaction->FactionManager;
+			OwningFaction->FactionDataSet = OccupiedFaction->FactionDataSet;
 		}
 	}
 

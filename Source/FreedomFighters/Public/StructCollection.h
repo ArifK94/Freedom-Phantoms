@@ -8,6 +8,8 @@
 #include "StructCollection.generated.h"
 
 class ABaseCharacter;
+class ACombatCharacter;
+class ACommanderCharacter;
 class AAircraft;
 class ATargetSystemMarker;
 class AWeapon;
@@ -291,6 +293,30 @@ public:
 		ATargetSystemMarker* Marker; // the marker class containing the widget component
 
 	FTargetSystemNode()
+	{
+
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FFaction : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ACombatCharacter> OperativeCharacterClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ACommanderCharacter> CommanderCharacterClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AAircraft> AC130Class;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UMaterialInterface* FlagMaterial;
+
+	FFaction()
 	{
 
 	}
