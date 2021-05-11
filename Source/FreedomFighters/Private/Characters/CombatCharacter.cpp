@@ -847,6 +847,9 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 
 void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 {
+	EndFire();
+	EndAim();
+
 	isUsingMountedWeapon = true;
 	HolsterWeapon();
 	MountedGun->SetOwner(this);

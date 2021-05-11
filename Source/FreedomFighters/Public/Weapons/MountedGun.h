@@ -81,6 +81,10 @@ public:
 		return PotentialOwner;
 	}
 
+	UCameraComponent* GetFollowCamera() {
+		return FollowCamera;
+	}
+
 	void SetPotentialOwner(AActor* PotOwner) {
 		PotentialOwner = PotOwner;
 	}

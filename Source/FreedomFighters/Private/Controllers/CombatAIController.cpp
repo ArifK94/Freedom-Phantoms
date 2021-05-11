@@ -430,6 +430,11 @@ void ACombatAIController::ShootAtEnemy()
 	{
 		SetFocus(EnemyActor);
 
+		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			MountedGun->GetFollowCamera()->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation()));
+		}
+
 		OwningCombatCharacter->BeginAim();
 
 		if (CurrentWeapon->getCurrentAmmo() <= 0)
@@ -524,9 +529,11 @@ void ACombatAIController::FindMountedGun()
 	}
 
 	if (MountedGun != nullptr) {
-		
+
 		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal)
 		{
+			OwningCombatCharacter->EndFire();
+			OwningCombatCharacter->EndAim();
 			OwningCombatCharacter->UseMountedGun(MountedGun);
 			return;
 		}
@@ -612,7 +619,6 @@ void ACombatAIController::FindMountedGun()
 		MountedGun->SetPotentialOwner(OwningCombatCharacter);
 		TargetDestination = MountedGun->GetCharacterStandPos();
 		CanFindCover = false;
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Found 1!"));
 	}
 
 }

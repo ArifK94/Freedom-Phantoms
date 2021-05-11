@@ -92,10 +92,6 @@ AWeapon::AWeapon()
 
 void AWeapon::ConfigSetup()
 {
-	HasUnlimitedAmmo = true;
-	CanAutoReload = true;
-	HasNoReload = true;
-
 	ConvertWeaponName();
 
 	HandguardMesh = MeshComp;
