@@ -87,6 +87,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		WeaponType weaponType;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName WeaponName;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName MuzzleSocket;
 
@@ -290,6 +293,8 @@ public:
 	virtual void SetIsAiming(bool isAiming);
 
 private:
+	void ConvertWeaponName();
+
 	void BurstDelay();
 	void SemiFireDelay();
 
@@ -335,6 +340,8 @@ public:
 	int32 getAmmoPerClip() { return AmmoPerClip; }
 	int32 GetMaxAmmoCapacity() { return MaxAmmoCapacity; }
 
+
+	FName GetWeaponName() { return WeaponName; }
 
 	FName GetMuzzleSocket() { return MuzzleSocket; }
 	FName getHolsterSocket() { return HolsterSocket; }

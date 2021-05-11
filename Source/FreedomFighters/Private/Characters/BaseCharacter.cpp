@@ -48,7 +48,6 @@ ABaseCharacter::ABaseCharacter()
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 150.0f;
-	defaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -110,6 +109,8 @@ void ABaseCharacter::BeginPlay()
 
 	RetrieveVoiceDataSet();
 	RetrieveAccessoryDataSet();
+
+	defaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 
 	CamManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 	DefaultCamViewYawMin = CamManager->ViewYawMin;

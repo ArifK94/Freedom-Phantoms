@@ -2,6 +2,7 @@
 
 
 #include "Weapons/MountedGun.h"
+#include "Characters/BaseCharacter.h"
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
@@ -13,6 +14,7 @@ AMountedGun::AMountedGun()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 
 	CameraPositionSocket = "CamPos";
+	CharacterPositionSocket = "CharacterPosition";
 }
 
 void AMountedGun::SetIsAiming(bool isAiming)
@@ -66,15 +68,20 @@ void AMountedGun::AddControllerYawInput(float Val)
 	FollowCamera->SetRelativeRotation(RotationInput);
 }
 
-void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController)
+void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character)
 {
 	OurPlayerController->SetViewTargetWithBlend(this, .2f);
+	Character->GetCapsuleComponent()->IgnoreActorWhenMoving(Character, true);
+	PotentialOwner = nullptr;
 }
 
-void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, class ACharacter* Character)
+void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, ACharacter* Character)
 {
-	OurPlayerController->SetViewTargetWithBlend(Character, .2f);
+	Character->GetCapsuleComponent()->IgnoreActorWhenMoving(Character, false);
+	OurPlayerController->SetViewTargetWithBlend(Character, 0.0f);
 	StopFire();
+	SetIsAiming(false);
+	PotentialOwner = nullptr;
 }
 
 void AMountedGun::ZoomIn()
@@ -101,4 +108,15 @@ void AMountedGun::ZoomOut()
 		FollowCamera->SetFieldOfView(TargetFOV);
 		GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
 	}
+}
+
+
+FVector AMountedGun::GetCharacterStandPos()
+{
+	return MeshComp->GetSocketLocation(CharacterPositionSocket);
+}
+
+FRotator AMountedGun::GetCharacterStandRot()
+{
+	return MeshComp->GetSocketRotation(CharacterPositionSocket);
 }

@@ -35,6 +35,7 @@ protected:
 	FFaction* FactionDataSet;
 
 	
+	FTimerHandle THandler_Datatable;
 
 private:
 	void RetrieveWeaponDataSet();

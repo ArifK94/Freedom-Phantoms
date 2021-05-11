@@ -1,16 +1,14 @@
 #include "Characters/CombatCharacter.h"
-
 #include "Accessories/Headgear.h"
 #include "Accessories/Loadout.h"
 #include "Accessories/NightVisionGoggle.h"
-
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponAttachmentManager.h"
 #include "Weapons/WeaponTorchlight.h"
 #include "Weapons/WeaponLaser.h"
 #include "Weapons/Pistol.h"
 #include "Weapons/PumpActionWeapon.h"
-
+#include "Weapons/MountedGun.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -27,7 +25,6 @@
 #include "Animation/AnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetStringLibrary.h"
 #include "GameFramework/Actor.h"
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
@@ -87,6 +84,7 @@ void ACombatCharacter::BeginPlay()
 
 	RetrieveFactionDataSet();
 	RetrieveWeaponDataSet();
+	//GetWorldTimerManager().SetTimer(THandler_Datatable, this, &ACombatCharacter::RetrieveWeaponAnimDataSet, .5f, true);
 
 	SpawnHelmet();
 	SpawnLoadout();
@@ -101,11 +99,21 @@ void ACombatCharacter::BeginPlay()
 	if (primaryWeaponObj)
 	{
 		currentWeaponObj = primaryWeaponObj;
+
+		if (CanAutoReloadWeapon) {
+			primaryWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
+		}
 	}
 	else
 	{
 		currentWeaponObj = secondaryWeaponObj;
+
+		if (CanAutoReloadWeapon) {
+			secondaryWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
+		}
+
 	}
+
 
 	if (currentWeaponObj)
 	{
@@ -149,6 +157,11 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 			currentWeaponObj->getMeshComp()->SetCollisionProfileName(TEXT("Weapon"));
 			currentWeaponObj->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			currentWeaponObj->getMeshComp()->SetSimulatePhysics(true);
+
+			// Incase using a mounted gun or special weapon other than primary and secondary, currentWeaponObj can be used for all types of weapons
+			currentWeaponObj->SetOwner(nullptr);
+			primaryWeaponObj->SetOwner(nullptr);
+			secondaryWeaponObj->SetOwner(nullptr);			
 		}
 	}
 
@@ -171,14 +184,14 @@ void ACombatCharacter::RetrieveWeaponAnimDataSet()
 		return;
 	}
 
-	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("WeaponType"), true);
-	FName WeaponTypeName = EnumPtr->GetNameByValue((int64)currentWeaponObj->GetWeaponType());
+	if (currentWeaponObj == nullptr) {
+		return;
+	}
 
-	FString Left, Right;
-	WeaponTypeName.ToString().Split(TEXT("::"), &Left, &Right);
+	FName WeaponTypeName = currentWeaponObj->GetWeaponName();
 
 	static const FString ContextString(TEXT("Weapons Animation DataSet"));
-	WeaponAnimDataSet = WeaponsAnimationDatatable->FindRow<FWeaponAnimSet>(*Right, ContextString, true);
+	WeaponAnimDataSet = WeaponsAnimationDatatable->FindRow<FWeaponAnimSet>(WeaponTypeName, ContextString, true);
 
 	if (WeaponAnimDataSet)
 	{
@@ -199,10 +212,6 @@ void ACombatCharacter::RetrieveWeaponAnimDataSet()
 		WeaponAnimDataSetEditor.AimOffsetStanding = WeaponAnimDataSet->AimOffsetStanding;
 		WeaponAnimDataSetEditor.AimOffsetCrouching = WeaponAnimDataSet->AimOffsetCrouching;
 		WeaponAnimDataSetEditor.AimOffsetProning = WeaponAnimDataSet->AimOffsetProning;
-	}
-
-	if (CanAutoReloadWeapon) {
-		currentWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 	}
 }
 
@@ -375,8 +384,11 @@ void ACombatCharacter::GrabWeapon()
 {
 	if (!hasEquippedWeapon)
 	{
-		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
-		hasEquippedWeapon = true;
+		if (!Cast<AMountedGun>(currentWeaponObj)) {
+			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+			hasEquippedWeapon = true;
+		}
+
 	}
 	else
 	{
@@ -839,6 +851,27 @@ void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 	HolsterWeapon();
 	MountedGun->SetOwner(this);
 	currentWeaponObj = MountedGun;
+	
+	RetrieveWeaponAnimDataSet();
+
+	FLatentActionInfo LatentInfo;
+	LatentInfo.CallbackTarget = this;
+
+	AMountedGun* Mount = Cast<AMountedGun>(MountedGun);
+
+	//UKismetSystemLibrary::MoveComponentTo(
+	//	GetCapsuleComponent(),
+	//	Mount->GetCharacterStandPos(),
+	//	Mount->GetCharacterStandRot(),
+	//	false,
+	//	false,
+	//	.2f,
+	//	false,
+	//	EMoveComponentAction::Type::Move,
+	//	LatentInfo
+	//);
+
+	SetActorLocationAndRotation(Mount->GetCharacterStandPos(), Mount->GetCharacterStandRot());
 }
 
 void ACombatCharacter::DropMountedGun()
@@ -847,14 +880,24 @@ void ACombatCharacter::DropMountedGun()
 
 	// set to secondary so during weapon swap, it goes back to primary
 	currentWeaponObj->SetOwner(nullptr);
+
+	// Go back a bit behind the mounted gun
+	FVector BehindMGPos = FVector(GetActorLocation().X- 50.0f, GetActorLocation().Y, GetActorLocation().Z);
+	SetActorLocation(BehindMGPos);
+
+	EndFire();
+	EndAim();
+
 	currentWeaponObj = primaryWeaponObj;
+
+	RetrieveWeaponAnimDataSet();
 	BeginEquipWeapon();
 	GrabWeapon();
 }
 
 void ACombatCharacter::SetIsRepellingDown(bool IsRappelling)
 {
-	Super::Tick(IsRappelling);
+	Super::SetIsRepellingDown(IsRappelling);
 
 	EndAim();
 	EndFire();

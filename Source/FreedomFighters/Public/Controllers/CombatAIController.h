@@ -16,6 +16,7 @@ class AWeapon;
 class APumpActionWeapon;
 class USphereComponent;
 class AStronghold;
+class AMountedGun;
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 {
@@ -26,6 +27,8 @@ private:
 	AGameModeManager* GameModeManager;
 	ACombatCharacter* OwningCombatCharacter;
 	USphereComponent* TargetSightSphere;
+	USphereComponent* MountedGunSphere;
+	AMountedGun* MountedGun;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UBehaviorTree* BTAsset;
@@ -104,6 +107,9 @@ private:
 		float ResetMovementCountdown;
 	float CurrentResetMovementCountdown;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float MountedGunSightRadius;
+
 
 	FTimerHandle THandler_Sprint;
 	FTimerHandle THandler_BeginFire;
@@ -112,11 +118,11 @@ private:
 	FTimerHandle THandler_CommanderOrders;
 	FTimerHandle THandler_FollowCamera;
 	FTimerHandle THandler_CombatAlert;
+	FTimerHandle THandler_MountedGun;
 	FTimerHandle THandler_FindCover;
 	FTimerHandle THandler_BeginPeakCover;
 	FTimerHandle THandler_EndPeakCover;
 	FTimerHandle THandler_ResetMovement;
-
 
 
 public:
@@ -126,6 +132,13 @@ public:
 
 private:
 	void Init();
+
+	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
+
+	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
+
+	void SetVisionAngle();
+
 
 	// Camera position can change if in helicopter, crouch or other stance
 	void UpdateFollowCamera();
@@ -139,16 +152,12 @@ private:
 
 	void UpdateSprint();
 
-	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
-
-	void SetVisionAngle();
-
 
 	void ShootAtEnemy();
 
 	void EndFiring();
 
-	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius);
+	void FindMountedGun();
 
 	void CheckCommanderOrder();
 

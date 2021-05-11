@@ -527,8 +527,8 @@ void ACustomPlayerController::CheckInteractable()
 			{
 				// As we would need another UI message to display message to stop using the gun, 
 				// we check if the current weapon is not the mounted gun, meaning the player is not using it
-
-				if (OwningCombatCharacter->GetCurrentWeapon() != MountedGun)
+				// also check if not already in use
+				if (OwningCombatCharacter->GetCurrentWeapon() != MountedGun && MountedGun->GetOwner() == nullptr)
 				{
 					ActionMessage = MountedGun->GetPickupMessage();
 				}
@@ -579,7 +579,7 @@ void ACustomPlayerController::PickupInteractable()
 			// don't need to check for interaction if already using it
 			GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
 
-			MountedGun->SetPlayerControl(this);
+			MountedGun->SetPlayerControl(this, OwningCombatCharacter);
 
 			OwningCombatCharacter->UseMountedGun(MountedGun);
 

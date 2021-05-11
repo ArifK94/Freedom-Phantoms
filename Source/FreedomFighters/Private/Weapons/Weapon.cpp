@@ -73,7 +73,6 @@ AWeapon::AWeapon()
 
 	isReloading = false;
 	canShowClip = true;
-	HasUnlimitedAmmo = false;
 	hasRecoil = true;
 
 	HasPlayedClipIn = false;
@@ -81,8 +80,8 @@ AWeapon::AWeapon()
 
 	PlayFireSoundAtLocation = true;
 
+	HasUnlimitedAmmo = false;
 	CanAutoReload = false;
-
 	HasNoReload = false;
 
 	ChargeSoundParamName = "ChargeAmount";
@@ -93,6 +92,12 @@ AWeapon::AWeapon()
 
 void AWeapon::ConfigSetup()
 {
+	HasUnlimitedAmmo = true;
+	CanAutoReload = true;
+	HasNoReload = true;
+
+	ConvertWeaponName();
+
 	HandguardMesh = MeshComp;
 
 	BulletSpreadCurrent = 0.0f;
@@ -131,6 +136,23 @@ void AWeapon::ConfigSetup()
 
 	CurrentMaxAmmo = MaxAmmoCapacity;
 	CurrentChargeUpTime = 0.0f;
+}
+
+void AWeapon::ConvertWeaponName()
+{
+	if (WeaponName != "None")
+	{
+		return;
+	}
+
+	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("WeaponType"), true);
+	FName WeaponTypeName = EnumPtr->GetNameByValue((int64)weaponType);
+
+	FString Left, Right;
+	WeaponTypeName.ToString().Split(TEXT("::"), &Left, &Right);
+	WeaponName = *Right;
+
+
 }
 
 FVector AWeapon::getMuzzleLocation()
@@ -483,6 +505,11 @@ void AWeapon::DecreaseCharge()
 	else
 	{
 		CurrentChargeUpTime = 0.0f;
+
+		if (ChargeDownSound != nullptr)
+		{
+			ChargingAudioComponent->Stop();
+		}
 
 		GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
 	}

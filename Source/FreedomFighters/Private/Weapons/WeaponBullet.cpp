@@ -181,7 +181,7 @@ void AWeaponBullet::DetectHit()
 
 			if (ImpactSound != NULL)
 			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, OutHit.ImpactPoint, 1.0f);
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
 			}
 
 			UParticleSystem* ImpactParticle = CheckSurface(SurfaceType);

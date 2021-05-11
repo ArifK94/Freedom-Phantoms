@@ -158,7 +158,7 @@ void AStronghold::SpawnCharacter()
 		return;
 	}
 
-	if (CurrentSpawnedActors > SpawnMax) {
+	if (CurrentSpawnedActors >= SpawnMax) {
 		return;
 	}
 
@@ -207,7 +207,7 @@ void AStronghold::SpawnCharacter()
 void AStronghold::StartSpawn()
 {
 	if (!THandler_SpawnDelay.IsValid()) {
-		GetWorldTimerManager().SetTimer(THandler_SpawnDelay, this, &AStronghold::SpawnCharacter, SpawnRate, true, FMath::RandRange(SpawnDelayMin, SpawnDelayMax));
+		GetWorldTimerManager().SetTimer(THandler_SpawnDelay, this, &AStronghold::SpawnCharacter, SpawnRate, true);
 	}
 }
 
