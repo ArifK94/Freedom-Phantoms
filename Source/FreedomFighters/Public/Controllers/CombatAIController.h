@@ -10,6 +10,7 @@ class AGameModeManager;
 class ACombatCharacter;
 class ACommanderCharacter;
 class UAISenseConfig;
+class UAISenseConfig_Sight;
 class UAISense;
 class UAIPerceptionComponent;
 class AWeapon;
@@ -28,7 +29,19 @@ private:
 	ACombatCharacter* OwningCombatCharacter;
 	USphereComponent* TargetSightSphere;
 	USphereComponent* MountedGunSphere;
+	UAISenseConfig_Sight* AISightConfig;
 	AMountedGun* MountedGun;
+	AWeapon* CurrentWeapon;
+	UAIPerceptionComponent* PerceptionComp;
+	APumpActionWeapon* PumpActionWeapon;
+	AActor* EnemyActor;
+
+
+	// to take defensive positions within the stronghold
+	AStronghold* CurrentStronghold;
+	class UCoverPointComponent* ChosenCoverPointComponent;
+	ACommanderCharacter* Commander;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UBehaviorTree* BTAsset;
@@ -63,17 +76,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TargetSightRadius;
-
-	AActor* EnemyActor;
-
-	UAIPerceptionComponent* PerceptionComp;
-	AWeapon* CurrentWeapon;
-	APumpActionWeapon* PumpActionWeapon;
-
-	// to take defensive positions within the stronghold
-	AStronghold* CurrentStronghold;
-	class UCoverPointComponent* ChosenCoverPointComponent;
-	ACommanderCharacter* Commander;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TimeBetweenShotsMin;
@@ -116,7 +118,6 @@ private:
 	FTimerHandle THandler_EndFire;
 	FTimerHandle THandler_FindEnemy;
 	FTimerHandle THandler_CommanderOrders;
-	FTimerHandle THandler_FollowCamera;
 	FTimerHandle THandler_CombatAlert;
 	FTimerHandle THandler_MountedGun;
 	FTimerHandle THandler_FindCover;
@@ -138,10 +139,6 @@ private:
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
 
 	void SetVisionAngle();
-
-
-	// Camera position can change if in helicopter, crouch or other stance
-	void UpdateFollowCamera();
 
 	void UpdateCharacterMovement();
 
@@ -171,6 +168,8 @@ private:
 
 	/** If AI is stuck, then reset location appropiately */
 	void ResetLocation();
+
+	bool IsEnemyBehindMG(AActor* Enemy = nullptr);
 
 protected:
 	virtual void BeginPlay() override;

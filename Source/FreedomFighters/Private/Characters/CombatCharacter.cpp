@@ -862,27 +862,30 @@ void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 
 	AMountedGun* Mount = Cast<AMountedGun>(MountedGun);
 
-	//UKismetSystemLibrary::MoveComponentTo(
-	//	GetCapsuleComponent(),
-	//	Mount->GetCharacterStandPos(),
-	//	Mount->GetCharacterStandRot(),
-	//	false,
-	//	false,
-	//	.2f,
-	//	false,
-	//	EMoveComponentAction::Type::Move,
-	//	LatentInfo
-	//);
-
-	SetActorLocationAndRotation(Mount->GetCharacterStandPos(), Mount->GetCharacterStandRot());
+	UKismetSystemLibrary::MoveComponentTo(
+		GetCapsuleComponent(),
+		Mount->GetCharacterStandPos(),
+		Mount->GetCharacterStandRot(),
+		false,
+		false,
+		.2f,
+		false,
+		EMoveComponentAction::Type::Move,
+		LatentInfo
+	);
 }
 
 void ACombatCharacter::DropMountedGun()
 {
 	isUsingMountedWeapon = false;
 
-	// set to secondary so during weapon swap, it goes back to primary
-	currentWeaponObj->SetOwner(nullptr);
+
+	AMountedGun* Mount = Cast<AMountedGun>(currentWeaponObj);
+
+	if (Mount)
+	{
+		Mount->DropWeapon();
+	}
 
 	// Go back a bit behind the mounted gun
 	FVector BehindMGPos = FVector(GetActorLocation().X- 50.0f, GetActorLocation().Y, GetActorLocation().Z);

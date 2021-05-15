@@ -205,7 +205,6 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 
 		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 		GetMesh()->SetSimulatePhysics(true);
-
 	}
 }
 
@@ -325,15 +324,11 @@ void ABaseCharacter::AimOffset()
 {
 	float x = 0.0f;
 
-	FRotator ControlRotation = GetControlRotation();
-	FRotator ActorRotation = GetActorRotation();
-
 	FRotator Current = UKismetMathLibrary::MakeRotator(x, aimPitch, aimYaw);
-	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(ControlRotation, ActorRotation);
+	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), GetActorRotation());
 	FRotator MoveToTarget = FMath::RInterpTo(Current, Target, CurrentDeltaTime, 15.0f);
 
 	UKismetMathLibrary::BreakRotator(MoveToTarget, MoveToTarget.Roll, aimPitch, aimYaw);
-
 }
 
 void ABaseCharacter::UpdateCharacterMovement()

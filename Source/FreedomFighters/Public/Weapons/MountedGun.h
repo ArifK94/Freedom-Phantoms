@@ -57,8 +57,14 @@ public:
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
 
+	void SetRotatioInput(FRotator Rotation);
+
 	void SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character);
 	void RemovePlayerControl(APlayerController* OurPlayerController, ACharacter* Character);
+
+	void DropWeapon(bool RemoveOwner = true);
+
+	void ResetCamera();
 
 	virtual void SetIsAiming(bool isAiming) override;
 
@@ -87,5 +93,21 @@ public:
 
 	void SetPotentialOwner(AActor* PotOwner) {
 		PotentialOwner = PotOwner;
+	}
+
+	float GetPitchMin() {
+		return PitchMin;
+	}
+
+	float GetPitchMax() {
+		return PitchMax;
+	}
+
+	float GetYawMin() {
+		return YawMin;
+	}
+
+	float GetYawMax() {
+		return YawMax;
 	}
 };

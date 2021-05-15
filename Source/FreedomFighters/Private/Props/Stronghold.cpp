@@ -222,8 +222,9 @@ void AStronghold::UpdateFaction()
 		return;
 	}
 
-	for (ACombatCharacter* Character : OccupyingCharacters)
+	for (int i = 0; i < OccupyingCharacters.Num(); i++)
 	{
+		ACombatCharacter* Character = OccupyingCharacters[i];
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
 
 		if (CurrentHealth->IsAlive())

@@ -6,6 +6,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
+#include "Components/CapsuleComponent.h"
 
 AMountedGun::AMountedGun()
 {
@@ -56,7 +57,7 @@ void AMountedGun::AddControllerPitchInput(float Val)
 {
 	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, PitchMin, PitchMax);
 	RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
-
+	
 	FollowCamera->SetRelativeRotation(RotationInput);
 }
 
@@ -66,6 +67,15 @@ void AMountedGun::AddControllerYawInput(float Val)
 	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
 
 	FollowCamera->SetRelativeRotation(RotationInput);
+}
+
+void AMountedGun::SetRotatioInput(FRotator Rotation)
+{
+	//Rotation.Yaw = FMath::ClampAngle(Rotation.Yaw, YawMin, YawMax);
+	//Rotation.Yaw = FRotator::ClampAxis(Rotation.Yaw);
+
+	RotationInput = Rotation;
+	FollowCamera->SetWorldRotation(RotationInput);
 }
 
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character)
@@ -82,6 +92,24 @@ void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, AC
 	StopFire();
 	SetIsAiming(false);
 	PotentialOwner = nullptr;
+}
+
+void AMountedGun::DropWeapon(bool RemoveOwner)
+{
+	if (RemoveOwner)
+	{
+		SetOwner(nullptr);
+	}
+
+	SetIsAiming(false);
+	StopFire();
+
+	ResetCamera();
+}
+
+void AMountedGun::ResetCamera()
+{
+	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 }
 
 void AMountedGun::ZoomIn()

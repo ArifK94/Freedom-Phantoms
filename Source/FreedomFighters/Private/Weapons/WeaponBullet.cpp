@@ -174,11 +174,6 @@ void AWeaponBullet::DetectHit()
 				Deactivate();
 			}
 
-			if (ExplosionParticle != NULL)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, OutHit.ImpactPoint);
-			}
-
 			if (ImpactSound != NULL)
 			{
 				UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
@@ -224,6 +219,11 @@ void AWeaponBullet::Explode()
 		{
 			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosiveRadius, 20, FColor::Purple, false, DebugExplosionLifeTime, 0, 2);
 		}
+	}
+
+	if (ExplosionParticle != NULL)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, GetActorLocation());
 	}
 
 	// create tarray for hit results
