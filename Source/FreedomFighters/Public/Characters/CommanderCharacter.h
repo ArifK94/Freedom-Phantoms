@@ -13,6 +13,7 @@ class AOrderIcon;
 class UUserWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRemoveRecruitSignature, ACommanderCharacter*, Commander, int, Index);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOrderSentSignature, UCommanderRecruit*, RecruitInfo);
 
 UENUM(BlueprintType)
 enum class CommanderOrders : uint8
@@ -118,8 +119,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Commander")
 		UCommanderRecruit* GetRecruitInfo(AActor* TargetActor);
 
+	FOnOrderSentSignature OnOrderSent;
+
 	void AddUIWidget();
 
+	void Recruit();
 
 	void Attack(bool CommandAll = false);
 
@@ -133,7 +137,6 @@ private:
 
 	void CheckRecruit();
 
-	void Recruit();
 
 	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, UHealthComponent* TargetHealth, bool isFriendly, FHitResult HitResult);
 
@@ -170,8 +173,6 @@ private:
 	void PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit);
 
 protected:
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;

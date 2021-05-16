@@ -170,13 +170,6 @@ void ABaseCharacter::Tick(float DeltaTime)
 	AimOffset();
 }
 
-// Called to bind functionality to input
-void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	check(PlayerInputComponent);
-}
-
-
 // Firing from the center of camera
 FVector ABaseCharacter::GetPawnViewLocation() const
 {

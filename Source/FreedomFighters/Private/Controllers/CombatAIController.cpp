@@ -8,30 +8,51 @@
 #include "Weapons/MountedGun.h"
 #include "Props/Stronghold.h"
 #include "CustomComponents/CoverPointComponent.h"
-
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
-
 #include "Camera/CameraComponent.h"
 #include "CustomComponents/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
-
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/EngineTypes.h"
-
 #include "NavigationSystem.h"
 #include "NavFilters/NavigationQueryFilter.h"
 #include "Navigation/PathFollowingComponent.h"
-
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISense_Sight.h"
 #include "..\..\Public\Controllers\CombatAIController.h"
-
 #include "DrawDebugHelpers.h"
+
+void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
+{
+	if (RecruitInfo->Recruit != nullptr && RecruitInfo->Recruit != OwningCombatCharacter) {
+		return;
+	}
+
+	MountedGun = nullptr;
+	StayCombatAlert = true;
+
+	float TargetRadius = AcceptanceRadius;
+
+	switch (RecruitInfo->CurrentCommand)
+	{
+	case CommanderOrders::Attack:
+		TargetDestination = RecruitInfo->TargetLocation;
+		CanFindCover = true;
+		break;
+	case CommanderOrders::Defend:
+		TargetDestination = RecruitInfo->TargetLocation;
+		TargetRadius = 0.0f;
+		CanFindCover = true;
+		break;
+	}
+
+	CurrentMovement = MoveToTarget(TargetRadius);
+}
 
 ACombatAIController::ACombatAIController()
 {
@@ -55,52 +76,54 @@ ACombatAIController::ACombatAIController()
 
 void ACombatAIController::Init()
 {
-	if (OwningCombatCharacter)
-	{
-		UpdateCharacterMovement();
-
-		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
-
-		// Get AI Sight Config
-		UAISenseConfig* SightConfig = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
-		if (SightConfig)
-		{
-			AISightConfig = Cast<UAISenseConfig_Sight>(SightConfig);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
-		}
-
-		OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
-
-		// Alternative to AI Sight Perception in case 360 sight is wanted
-		if (TargetSightSphere == nullptr)
-		{
-			TargetSightSphere = NewObject<USphereComponent>(OwningCombatCharacter);
-			if (TargetSightSphere)
-			{
-				TargetSightSphere->RegisterComponent();
-				TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-				TargetSightSphere->SetSphereRadius(TargetSightRadius);
-				TargetSightSphere->SetCollisionProfileName(TEXT("OverlapAll"));
-			}
-		}
-
-		// For detecting MG nearby
-		if (MountedGunSphere == nullptr)
-		{
-			MountedGunSphere = NewObject<USphereComponent>(OwningCombatCharacter);
-			if (MountedGunSphere)
-			{
-				MountedGunSphere->RegisterComponent();
-				MountedGunSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-				MountedGunSphere->SetSphereRadius(MountedGunSightRadius);
-				MountedGunSphere->SetCollisionProfileName(TEXT("OverlapAll"));
-			}
-		}
-
+	if (OwningCombatCharacter == nullptr) {
+		return;
 	}
+
+	UpdateCharacterMovement();
+
+	PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
+
+	// Get AI Sight Config
+	UAISenseConfig* SightConfig = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
+	if (SightConfig)
+	{
+		AISightConfig = Cast<UAISenseConfig_Sight>(SightConfig);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
+	}
+
+	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
+
+	// Alternative to AI Sight Perception in case 360 sight is wanted
+	if (TargetSightSphere == nullptr)
+	{
+		TargetSightSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+		if (TargetSightSphere)
+		{
+			TargetSightSphere->RegisterComponent();
+			TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+			TargetSightSphere->SetSphereRadius(TargetSightRadius);
+			TargetSightSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+		}
+	}
+
+	// For detecting MG nearby
+	if (MountedGunSphere == nullptr)
+	{
+		MountedGunSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+		if (MountedGunSphere)
+		{
+			MountedGunSphere->RegisterComponent();
+			MountedGunSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+			MountedGunSphere->SetSphereRadius(MountedGunSightRadius);
+			MountedGunSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+		}
+	}
+
+	HasAssignedOrderEvent = false;
 }
 
 UAISenseConfig* ACombatAIController::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
@@ -569,11 +592,24 @@ void ACombatAIController::FindMountedGun()
 	// if already using an MG
 	if (OwningCombatCharacter->IsUsingMountedWeapon()) {
 
+		if (MountedGun == nullptr)
+		{
+			OwningCombatCharacter->DropMountedGun();
+			return;
+		}
+
 		// is enemy beind the mounted gun? then drop the MG
 		if (IsEnemyBehindMG() || CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
 		{
 			OwningCombatCharacter->DropMountedGun();
 		}
+
+		if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
+		{
+			MountedGun->SetPotentialOwner(nullptr);
+			MountedGun = nullptr;
+		}
+
 		return;
 	}
 
@@ -971,26 +1007,22 @@ void ACombatAIController::CheckCommanderOrder()
 		return;
 	}
 
+	// Assign Order Event
+	if (!HasAssignedOrderEvent) {
+		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
+		HasAssignedOrderEvent = true;
+	}
+
+	return;
+
 	UCommanderRecruit* CommanderRecruit = Commander->GetRecruitInfo(OwningCombatCharacter);
 
 	if (CommanderRecruit != nullptr && CommanderRecruit->Recruit != nullptr && CommanderRecruit->Recruit == OwningCombatCharacter)
 	{
 		StayCombatAlert = true;
 
-		float TargetRadius = AcceptanceRadius;
-
-		switch (CommanderRecruit->CurrentCommand)
+		if (CommanderRecruit->CurrentCommand == CommanderOrders::Follow)
 		{
-		case CommanderOrders::Attack:
-			TargetDestination = CommanderRecruit->TargetLocation;
-			CanFindCover = true;
-			break;
-		case CommanderOrders::Defend:
-			TargetDestination = CommanderRecruit->TargetLocation;
-			TargetRadius = 0.0f;
-			CanFindCover = true;
-			break;
-		case CommanderOrders::Follow:
 			TargetDestination = Commander->GetActorLocation();
 			CanFindCover = false;
 
@@ -1005,12 +1037,14 @@ void ACombatAIController::CheckCommanderOrder()
 				if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
 					OwningCombatCharacter->UnCrouch();
 			}
-
-			break;
 		}
 
+		CurrentMovement = MoveToTarget(AcceptanceRadius);
 
-		CurrentMovement = MoveToTarget(TargetRadius);
+		//if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
+		//	FindMountedGun();
+		//}
+
 	}
 }
 

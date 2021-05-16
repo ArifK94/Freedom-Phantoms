@@ -14,15 +14,6 @@ ACommanderCharacter::ACommanderCharacter()
 	MaxRecruits = 9;
 }
 
-void ACommanderCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAction("Recruit", IE_Pressed, this, &ACommanderCharacter::Recruit);
-}
-
-
-
 void ACommanderCharacter::AddUIWidget()
 {
 	UWorld* World = GetWorld();
@@ -106,7 +97,6 @@ void ACommanderCharacter::CheckRecruit()
 			if (PotentialRecruit != nullptr && !PotentialRecruit->IsInHelicopter())
 			{
 				PotentialRecruit->ShowCharacterOutline(true);
-				PotentialRecruit->setCommandingOfficer(this);
 			}
 		}
 	}
@@ -124,6 +114,7 @@ void ACommanderCharacter::Recruit()
 		follower->Recruit = PotentialRecruit;
 		follower->CurrentCommand = CommanderOrders::Follow;
 		follower->TargetLocation = GetActorLocation();
+		follower->Recruit->setCommandingOfficer(this);
 
 		SpawnIcon(AttackOverheadClass, follower->AttackOverheadIcon);
 		SpawnIcon(AttackPositionIconClass, follower->AttackPositionIcon);
@@ -255,6 +246,9 @@ void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacte
 
 		DisplayPositionIcon(Recruit->AttackPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
 	}
+
+	OnOrderSent.Broadcast(Recruit);
+
 }
 
 void ACommanderCharacter::DefendArea(bool CommandAll)
@@ -296,9 +290,10 @@ void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
 		Recruit->TargetLocation = GetPositionToNav(GetActorLocation()).Location;
 	}
 	Recruit->CurrentCommand = CommanderOrders::Defend;
-
 	DisplayPositionIcon(Recruit->DefendPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
 	DisplayOverheadIcon(Recruit->DefendOverheadIcon, Recruit->OverheadIconArray);
+
+	OnOrderSent.Broadcast(Recruit);
 }
 
 
@@ -332,6 +327,8 @@ void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit)
 	Recruit->TargetLocation = GetActorLocation();
 
 	DisplayOverheadIcon(Recruit->FollowOverheadIcon, Recruit->OverheadIconArray);
+
+	OnOrderSent.Broadcast(Recruit);
 }
 
 /// <summary>

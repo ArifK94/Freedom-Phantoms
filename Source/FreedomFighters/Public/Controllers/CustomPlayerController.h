@@ -145,6 +145,8 @@ private:
 	////////////// -------------------------- Commander Functions -------------------------- //////////////
 
 private:
+	void Recruit();
+
 	void BeginAttackCommand();
 	void EndAttackCommand();
 	void Attack();

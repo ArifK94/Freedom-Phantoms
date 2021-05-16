@@ -64,11 +64,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float SpawnRate;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float SpawnDelayMin;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float SpawnDelayMax;
+	FTimerHandle THandler_SpawnDelay;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName SpawnAreaComponentTag;
@@ -81,9 +77,7 @@ private:
 
 
 private:
-	int CurrentSpawnedActors;
-
-	FTimerHandle THandler_SpawnDelay;
+	FTimerHandle THandler_OverlappingCombatatant;
 
 	TArray<UBoxComponent*> SpawnAreas;
 
@@ -91,26 +85,28 @@ private:
 
 	FOccupiedFaction* DominantFaction;
 
-	TArray<ACombatCharacter*> OccupyingCharacters;
+	TArray<ACombatCharacter*> TotalOccupyingCombatants;
+	TArray<ACombatCharacter*> DefendingCombatatants;
 
 	TArray<FOccupiedFaction*> OccupiedFactions;
 
 public:	
 	AStronghold();
 
-	void StartSpawn();
-	void StopSpawn();
-
 	UCoverPointComponent* GetCoverPoint(AActor* OwningCharacter);
 
 private:
+	void CheckOverlappingCombatatant();
+
 	void GetSpawnAreas();
 
 	void GetCoverPoints();
 
-	void SpawnCharacter();
+	void SpawnDefender();
 		
-	void UpdateFaction();
+	void UpdateTotalOccupants();
+
+	void UpdateDefenders();
 	
 	void AddFaction(ACombatCharacter* Character, TeamFaction Faction);
 	
@@ -119,12 +115,6 @@ private:
 	bool DoesOccupantExist(ACombatCharacter* Occupant);
 	
 	void GetHighestFaction();
-
-	UFUNCTION()
-		void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-		void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 protected:
 	virtual void BeginPlay() override;

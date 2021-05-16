@@ -84,12 +84,12 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 
 	if (Damage <= 0.0f) return;
 
-	if (DamageCauser != DamagedActor)
-	{
-		if (IsFriendly(DamagedActor, DamageCauser)) {
-			return;
-		}
-	}
+	//if (DamageCauser != DamagedActor)
+	//{
+	//	if (IsFriendly(DamagedActor, DamageCauser)) {
+	//		return;
+	//	}
+	//}
 
 	// Update health clamp
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);

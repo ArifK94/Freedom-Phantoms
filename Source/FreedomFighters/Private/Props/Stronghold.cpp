@@ -38,18 +38,12 @@ AStronghold::AStronghold()
 	FactionFlag->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 	FlagClothMaterialIndex = 0;
 
-
 	StrongholdAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("StrongholdAudio"));
 
 	SpawnMax = 5;
 	SpawnRate = 1.f;
-	SpawnDelayMin = 0.f;
-	SpawnDelayMax = .5f;
 
 	SpawnAreaComponentTag = "SpawnArea";
-
-	StrongholdArea->OnComponentBeginOverlap.AddDynamic(this, &AStronghold::OnBeginOverlap);
-	StrongholdArea->OnComponentEndOverlap.AddDynamic(this, &AStronghold::OnEndOverlap);
 }
 
 void AStronghold::BeginPlay()
@@ -64,15 +58,38 @@ void AStronghold::BeginPlay()
 
 	GetSpawnAreas();
 	GetCoverPoints();
-	StartSpawn();
+
+	GetWorldTimerManager().SetTimer(THandler_SpawnDelay, this, &AStronghold::SpawnDefender, SpawnRate, true);
+	GetWorldTimerManager().SetTimer(THandler_OverlappingCombatatant, this, &AStronghold::CheckOverlappingCombatatant, 0.5f, true);
 }
 
 void AStronghold::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UpdateFaction();
+	UpdateTotalOccupants();
+
 	GetHighestFaction();
+}
+
+void AStronghold::CheckOverlappingCombatatant()
+{
+	TArray<AActor*> OverlappingActors;
+	StrongholdArea->GetOverlappingActors(OverlappingActors, ACombatCharacter::StaticClass());
+
+	for (int i = 0; i < OverlappingActors.Num(); i++)
+	{
+		ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(OverlappingActors[i]);
+		UHealthComponent* HealthComponent = Cast<UHealthComponent>(CombatCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
+
+		if (HealthComponent && HealthComponent->IsAlive())
+		{
+			if (!DoesOccupantExist(CombatCharacter))
+			{
+				TotalOccupyingCombatants.Add(CombatCharacter);
+			}
+		}
+	}
 }
 
 void AStronghold::GetSpawnAreas()
@@ -119,46 +136,15 @@ UCoverPointComponent* AStronghold::GetCoverPoint(AActor* OwningCharacter)
 	return nullptr;
 }
 
-void AStronghold::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor != NULL)
-	{
-		ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(OtherActor);
-
-		if (CombatCharacter)
-		{
-			if (!DoesOccupantExist(CombatCharacter))
-			{
-				OccupyingCharacters.Add(CombatCharacter);
-			}
-		}
-	}
-}
-
-void AStronghold::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (OtherActor != NULL)
-	{
-		ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(OtherActor);
-
-		if (CombatCharacter)
-		{
-			if (DoesOccupantExist(CombatCharacter))
-			{
-				OccupyingCharacters.Remove(CombatCharacter);
-			}
-		}
-	}
-}
-
-void AStronghold::SpawnCharacter()
+void AStronghold::SpawnDefender()
 {
 	// check if captured by a faction
 	if (DominantFaction->Faction == TeamFaction::Neutral) {
 		return;
 	}
 
-	if (CurrentSpawnedActors >= SpawnMax) {
+	if (DefendingCombatatants.Num() >= SpawnMax) {
+		UpdateDefenders();
 		return;
 	}
 
@@ -174,60 +160,46 @@ void AStronghold::SpawnCharacter()
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	for (int i = 0; i < SpawnAreas.Num(); i++)
+	int RandIndex = rand() % SpawnAreas.Num();
+
+	UBoxComponent* SpawnArea = SpawnAreas[RandIndex];
+
+	FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
+
+	// check if location is on the navmesh
+	FNavLocation NavLocation;
+	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+	bool navResult = NavigationArea->ProjectPointToNavigation(Location, NavLocation);
+
+	if (navResult)
 	{
-		UBoxComponent* SpawnArea = SpawnAreas[i];
+		ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionDataSet->OperativeCharacterClass, Location, SpawnArea->GetComponentRotation(), SpawnParams);
 
-		FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
-
-		// check if location is on the navmesh
-		FNavLocation NavLocation;
-		UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-		bool navResult = NavigationArea->ProjectPointToNavigation(Location, NavLocation);
-
-		if (navResult)
+		if (Character)
 		{
-			ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionDataSet->OperativeCharacterClass, Location, SpawnArea->GetComponentRotation(), SpawnParams);
+			ACombatAIController* CombatAI = Cast<ACombatAIController>(Character->GetController());
 
-			if (Character)
-			{
-				CurrentSpawnedActors++;
-
-				ACombatAIController* CombatAI = Cast<ACombatAIController>(Character->GetController());
-
-				if (CombatAI) {
-					CombatAI->SetGuardingStronghold(this);
-				}
+			if (CombatAI) {
+				CombatAI->SetGuardingStronghold(this);
 			}
+
+			DefendingCombatatants.Add(Cast<ACombatCharacter>(Character));
 		}
 	}
 }
 
-
-void AStronghold::StartSpawn()
+void AStronghold::UpdateTotalOccupants()
 {
-	if (!THandler_SpawnDelay.IsValid()) {
-		GetWorldTimerManager().SetTimer(THandler_SpawnDelay, this, &AStronghold::SpawnCharacter, SpawnRate, true);
-	}
-}
-
-void AStronghold::StopSpawn()
-{
-	GetWorldTimerManager().ClearTimer(THandler_SpawnDelay);
-}
-
-void AStronghold::UpdateFaction()
-{
-	if (OccupyingCharacters.Num() <= 0) {
+	if (TotalOccupyingCombatants.Num() <= 0) {
 		return;
 	}
 
-	for (int i = 0; i < OccupyingCharacters.Num(); i++)
+	for (int i = 0; i < TotalOccupyingCombatants.Num(); i++)
 	{
-		ACombatCharacter* Character = OccupyingCharacters[i];
+		ACombatCharacter* Character = TotalOccupyingCombatants[i];
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
 
-		if (CurrentHealth->IsAlive())
+		if (Character && CurrentHealth && CurrentHealth->IsAlive())
 		{
 			FOccupiedFaction* OccupiedFaction = DoesFactionExist(CurrentHealth->GetSelectedFaction());
 			if (OccupiedFaction != nullptr)
@@ -241,14 +213,37 @@ void AStronghold::UpdateFaction()
 		}
 		else
 		{
-			OccupyingCharacters.Remove(Character);
-
-			// update the spawn actor count
-			CurrentSpawnedActors--;
+			// else dead
+			TotalOccupyingCombatants.RemoveAt(i);
 		}
+	}
+}
 
+void AStronghold::UpdateDefenders()
+{
+	if (DefendingCombatatants.Num() <= 0) {
+		return;
 	}
 
+	for (int i = 0; i < DefendingCombatatants.Num(); i++)
+	{
+		ACombatCharacter* Character = DefendingCombatatants[i];
+
+		if (Character)
+		{
+			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			// if dead or has been recruited by commander then it is no longer a stronghold defender
+			if ((CurrentHealth && !CurrentHealth->IsAlive()) || Character->getCommander() != nullptr)
+			{
+				DefendingCombatatants.RemoveAt(i);
+			}
+		}
+		else
+		{
+			DefendingCombatatants.RemoveAt(i);
+		}
+	}
 }
 
 void AStronghold::AddFaction(ACombatCharacter* Character, TeamFaction Faction)
@@ -281,12 +276,14 @@ FOccupiedFaction* AStronghold::DoesFactionExist(TeamFaction Faction)
 
 bool AStronghold::DoesOccupantExist(ACombatCharacter* Occupant)
 {
-	if (OccupyingCharacters.Num() <= 0) {
+	if (TotalOccupyingCombatants.Num() <= 0) {
 		return false;
 	}
 
-	for (ACombatCharacter* Character : OccupyingCharacters)
+	for (int i = 0; i < TotalOccupyingCombatants.Num(); i++)
 	{
+		ACombatCharacter* Character = TotalOccupyingCombatants[i];
+
 		if (Character == Occupant)
 		{
 			return true;
@@ -336,9 +333,6 @@ void AStronghold::GetHighestFaction()
 				StrongholdAudio->Sound = OverrunSound;
 				StrongholdAudio->Play();
 			}
-
-			// reset spawned actors count
-			CurrentSpawnedActors = 0;
 		}
 	}
 

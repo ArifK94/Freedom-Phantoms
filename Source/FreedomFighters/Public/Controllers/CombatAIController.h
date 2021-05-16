@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Characters/CommanderCharacter.h"
 #include "CombatAIController.generated.h"
 
 class AGameModeManager;
@@ -18,6 +19,7 @@ class APumpActionWeapon;
 class USphereComponent;
 class AStronghold;
 class AMountedGun;
+class UCommanderRecruit;
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 {
@@ -134,6 +136,10 @@ public:
 private:
 	void Init();
 
+	UFUNCTION()
+	void OnOrderReceived(UCommanderRecruit* RecruitInfo);
+	bool HasAssignedOrderEvent;
+
 	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
 
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
@@ -148,7 +154,6 @@ private:
 	void EndCoverPeak();
 
 	void UpdateSprint();
-
 
 	void ShootAtEnemy();
 
@@ -178,6 +183,8 @@ protected:
 
 private:
 	virtual void Tick(float DeltaTime) override;
+
+
 
 
 public:

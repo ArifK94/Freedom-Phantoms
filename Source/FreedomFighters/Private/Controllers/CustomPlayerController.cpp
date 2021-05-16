@@ -71,7 +71,8 @@ void ACustomPlayerController::SetupInputComponent()
 
 
 	// Commander Input
-	//InputComponent->BindAction("Recruit", IE_Pressed, this, &ACustomPlayerController::Recruit);
+	InputComponent->BindAction("Recruit", IE_Pressed, this, &ACustomPlayerController::Recruit);
+
 	InputComponent->BindAction("Attack", IE_Pressed, this, &ACustomPlayerController::BeginAttackCommand);
 	InputComponent->BindAction("Attack", IE_Released, this, &ACustomPlayerController::EndAttackCommand);
 
@@ -621,6 +622,16 @@ void ACustomPlayerController::ClearInputHold()
 
 #pragma region Commander Functions
 
+void ACustomPlayerController::Recruit()
+{
+	if (OwningCommander == nullptr) {
+		return;
+	}
+
+	OwningCommander->Recruit();
+}
+
+
 #pragma region Attack
 
 void ACustomPlayerController::Attack()
@@ -642,6 +653,10 @@ void ACustomPlayerController::Attack()
 
 void ACustomPlayerController::BeginAttackCommand()
 {
+	if (OwningCommander == nullptr) {
+		return;
+	}
+
 	// incase another command key is pressed, clear the current time
 	ClearInputHold();
 
@@ -650,6 +665,10 @@ void ACustomPlayerController::BeginAttackCommand()
 
 void ACustomPlayerController::EndAttackCommand()
 {
+	if (OwningCommander == nullptr) {
+		return;
+	}
+
 	if (CurrentInputHoldTime < DesiredInputHoldTime)
 	{
 		OwningCommander->Attack();
@@ -682,6 +701,10 @@ void ACustomPlayerController::Defend()
 
 void ACustomPlayerController::BeginDefendCommand()
 {
+	if (OwningCommander == nullptr) {
+		return;
+	}
+
 	// incase another command key is pressed, clear the current time
 	ClearInputHold();
 
@@ -690,6 +713,10 @@ void ACustomPlayerController::BeginDefendCommand()
 
 void ACustomPlayerController::EndDefendCommand()
 {
+	if (OwningCommander == nullptr) {
+		return;
+	}
+
 	if (CurrentInputHoldTime < DesiredInputHoldTime)
 	{
 		OwningCommander->DefendArea();
@@ -721,6 +748,10 @@ void ACustomPlayerController::Follow()
 
 void ACustomPlayerController::BeginFollowCommand()
 {
+	if (OwningCommander == nullptr) {
+		return;
+	}
+
 	// incase another command key is pressed, clear the current time
 	ClearInputHold();
 
@@ -729,6 +760,10 @@ void ACustomPlayerController::BeginFollowCommand()
 
 void ACustomPlayerController::EndFollowCommand()
 {
+	if (OwningCommander == nullptr) {
+		return;
+	}
+
 	if (CurrentInputHoldTime < DesiredInputHoldTime)
 	{
 		OwningCommander->FollowCommander();
