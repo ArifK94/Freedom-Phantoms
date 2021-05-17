@@ -4,6 +4,22 @@
 
 #include "CoreMinimal.h"
 
+UENUM(BlueprintType)
+enum class TeamFaction : uint8
+{
+	Neutral			UMETA(DisplayName = "Neutral"),
+	ShadowCompany	UMETA(DisplayName = "ShadowCompany"),
+	Russian 		UMETA(DisplayName = "Russian")
+};
+
+UENUM(BlueprintType)
+enum class DeathType : uint8
+{
+	FleshDefault	UMETA(DisplayName = "FleshDefault"),
+	FleshVulnerable	UMETA(DisplayName = "FleshVulnerable"),
+	Head			UMETA(DisplayName = "Head"),
+	Groin 			UMETA(DisplayName = "Groin")
+};
 
 UENUM(BlueprintType)
 enum class WeaponType : uint8

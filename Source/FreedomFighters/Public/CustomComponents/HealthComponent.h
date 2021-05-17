@@ -4,28 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "EnumCollection.h"
 #include "HealthComponent.generated.h"
 
 // OnHealthChanged Event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UHealthComponent*, HealthComp, float, Health, float, HealthDelta, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser);
-
-
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
-enum class TeamFaction : uint8
-{
-	Neutral			UMETA(DisplayName = "Neutral"),
-	ShadowCompany	UMETA(DisplayName = "ShadowCompany"),
-	Russian 		UMETA(DisplayName = "Russian"),
-};
-
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
-enum class DeathType : uint8
-{
-	FleshDefault	UMETA(DisplayName = "FleshDefault"),
-	FleshVulnerable	UMETA(DisplayName = "FleshVulnerable"),
-	Head			UMETA(DisplayName = "Head"),
-	Groin 			UMETA(DisplayName = "Groin"),
-};
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -36,33 +19,35 @@ class FREEDOMFIGHTERS_API UHealthComponent : public UActorComponent
 public:	
 	UHealthComponent();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health Component")
-		TeamFaction SelectedFaction;
-
 private:
 	void RegenerateHealth();
-
 
 private:
 	float mDeltaTime;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TeamFaction SelectedFaction;
+
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float Health;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MaxHealth;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool CanRegenerateHealth;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float RegenPerSecond;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool HasUnlimitedHealth;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Health Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isAlive;
+
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IgnoreFriendlyFire;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		DeathType deathType;
@@ -77,10 +62,10 @@ private:
 private:
 	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable, Category = "Health Component")
+	UFUNCTION(BlueprintCallable)
 		void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
-	UFUNCTION(BlueprintCallable, Category = "Health Component")
+	UFUNCTION(BlueprintCallable)
 	void OnRadialDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, FVector Origin, FHitResult Hit, class AController* InstigatedBy, AActor* DamageCauser);
 
 
@@ -90,8 +75,6 @@ private:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-
-
 	UPROPERTY(BlueprintAssignable, Category = "Health Component")
 		FOnHealthChangedSignature OnHealthChanged;
 

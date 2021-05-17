@@ -84,7 +84,6 @@ void ACombatCharacter::BeginPlay()
 
 	RetrieveFactionDataSet();
 	RetrieveWeaponDataSet();
-	//GetWorldTimerManager().SetTimer(THandler_Datatable, this, &ACombatCharacter::RetrieveWeaponAnimDataSet, .5f, true);
 
 	SpawnHelmet();
 	SpawnLoadout();
@@ -125,21 +124,6 @@ void ACombatCharacter::BeginPlay()
 			underBarrelWeaponObj = currentWeaponObj->getWeaponAttachmentObj()->getUnderBarrelWeaponObj();
 		}
 	}
-}
-
-void ACombatCharacter::InitTimeHandlers()
-{
-	Super::InitTimeHandlers();
-
-	GetWorldTimerManager().SetTimer(THandler_CombatMode, this, &ACombatCharacter::UpdateCombatMode, .5f, true);
-}
-
-void ACombatCharacter::ClearTimeHandlers()
-{
-	Super::ClearTimeHandlers();
-
-	GetWorldTimerManager().ClearTimer(THandler_CombatMode);
-	GetWorldTimerManager().ClearTimer(THandler_RunAndShoot);
 }
 
 void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
@@ -295,18 +279,22 @@ void ACombatCharacter::SpawnLoadout()
 
 }
 
+
 void ACombatCharacter::BeginSprint()
 {
 	Super::BeginSprint();
 
-	UpdateControllerYaw();
+	bUseControllerRotationYaw = false;
 }
 
 void ACombatCharacter::EndSprint()
 {
 	Super::EndSprint();
 
-	UpdateControllerYaw();
+	if (isInCombatMode)
+	{
+		bUseControllerRotationYaw = true;
+	}
 }
 
 // if in combat mode while sprinting and looking backwards then stop sprinting
@@ -331,15 +319,25 @@ void ACombatCharacter::DisableSprint()
 	}
 }
 
-void ACombatCharacter::UpdateControllerYaw()
+void ACombatCharacter::UpdateCombatMode()
 {
-	if (isInCombatMode && !isSprinting)
+	if (currentWeaponObj && hasEquippedWeapon && !isReloading && !isRepellingDown)
 	{
-		bUseControllerRotationYaw = true;
-	}
-	else
-	{
-		bUseControllerRotationYaw = false;
+		if (isAiming || isFiring)
+		{
+			if (!isSprinting) {
+				bUseControllerRotationYaw = true;
+			}
+
+			isInCombatMode = true;
+			SetHandGaurdIK(1.0f);
+
+		}
+		else
+		{
+			isInCombatMode = false;
+			bUseControllerRotationYaw = false;
+		}
 	}
 }
 
@@ -349,6 +347,7 @@ void ACombatCharacter::BeginWeaponSwap()
 	{
 		isSwappingWeapon = true;
 		EndFire();
+		UpdateCombatMode();
 		PlayAnimMontage(WeaponAnimDataSet->HolsterMontage);
 	}
 	else
@@ -387,6 +386,7 @@ void ACombatCharacter::GrabWeapon()
 		if (!Cast<AMountedGun>(currentWeaponObj)) {
 			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
 			hasEquippedWeapon = true;
+			UpdateCombatMode();
 		}
 
 	}
@@ -394,6 +394,7 @@ void ACombatCharacter::GrabWeapon()
 	{
 		HolsterWeapon();
 		hasEquippedWeapon = false;
+		UpdateCombatMode();
 	}
 }
 
@@ -418,6 +419,7 @@ void ACombatCharacter::swapWeapon()
 
 
 	hasEquippedWeapon = false;
+	UpdateCombatMode();
 
 	if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
 	{
@@ -461,7 +463,8 @@ void ACombatCharacter::BeginFire()
 	isFiring = true;
 	currentWeaponObj->StartFire();
 
-	UpdateControllerYaw();
+
+	UpdateCombatMode();
 
 
 	PlayAnimMontage(WeaponAnimDataSet->Shooting);
@@ -475,9 +478,9 @@ void ACombatCharacter::EndFire()
 		currentWeaponObj->StopFire();
 		isFiring = false;
 
-		// in case character is not aiming
-		UpdateControllerYaw();
+		UpdateCombatMode();
 
+		// in case character is not aiming
 		if (!isAiming) {
 			HandGuardAlpha = 0.0f;
 		}
@@ -485,23 +488,6 @@ void ACombatCharacter::EndFire()
 		StopAnimMontage(WeaponAnimDataSet->Shooting);
 	}
 }
-
-void ACombatCharacter::UpdateCombatMode()
-{
-	if (currentWeaponObj && hasEquippedWeapon && !isReloading && !isRepellingDown)
-	{
-		if (isAiming || isFiring)
-		{
-			isInCombatMode = true;
-			SetHandGaurdIK(1.0f);
-		}
-		else
-		{
-			isInCombatMode = false;
-		}
-	}
-}
-
 
 // Begin Auto Reload
 void ACombatCharacter::OnWeaponAmmoEmpty(AWeapon* Weapon)
@@ -533,8 +519,7 @@ void ACombatCharacter::BeginAim()
 		EndSprint();
 	}
 
-	UpdateControllerYaw();
-
+	UpdateCombatMode();
 }
 
 void ACombatCharacter::EndAim()
@@ -545,7 +530,7 @@ void ACombatCharacter::EndAim()
 		currentWeaponObj->SetIsAiming(false);
 	}
 
-	UpdateControllerYaw();
+	UpdateCombatMode();
 }
 
 void ACombatCharacter::AimAutoRotation()
@@ -595,8 +580,9 @@ void ACombatCharacter::BeginReload()
 	}
 
 	isAiming = false;
-
 	EndFire();
+	UpdateCombatMode();
+
 
 	PlayAnimMontage(WeaponAnimDataSet->Reloading);
 
@@ -613,6 +599,7 @@ void ACombatCharacter::EndReload()
 	{
 		currentWeaponObj->EndReload();
 		isReloading = currentWeaponObj->getIsReloading();
+		UpdateCombatMode();
 		StopAnimMontage(WeaponAnimDataSet->Reloading);
 	}
 }
@@ -907,5 +894,6 @@ void ACombatCharacter::SetIsRepellingDown(bool IsRappelling)
 
 	EndAim();
 	EndFire();
+	UpdateCombatMode();
 }
 

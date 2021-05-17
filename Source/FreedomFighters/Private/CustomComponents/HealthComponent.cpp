@@ -24,6 +24,7 @@ UHealthComponent::UHealthComponent()
 
 	HasUnlimitedHealth = false;
 	HasTakenDamage = false;
+	IgnoreFriendlyFire = true;
 
 	RegenerationDelayAmount = 5.0f;
 }
@@ -84,12 +85,16 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 
 	if (Damage <= 0.0f) return;
 
-	//if (DamageCauser != DamagedActor)
-	//{
-	//	if (IsFriendly(DamagedActor, DamageCauser)) {
-	//		return;
-	//	}
-	//}
+	if (IgnoreFriendlyFire)
+	{
+		if (DamageCauser != DamagedActor)
+		{
+			if (IsFriendly(DamagedActor, DamageCauser)) {
+				return;
+			}
+		}
+	}
+
 
 	// Update health clamp
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
@@ -116,8 +121,6 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 			deathType = DeathType::Head;
 			break;
 		case SURFACE_FLESHVULNERABLE:
-			deathType = DeathType::FleshVulnerable;
-			break;
 		case SURFACE_GROIN:
 			deathType = DeathType::FleshVulnerable;
 			break;

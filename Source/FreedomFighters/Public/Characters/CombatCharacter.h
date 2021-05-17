@@ -106,10 +106,6 @@ private:
 	bool HasPlayedTargetFoundSound;
 	bool HasPlayedEnemyKilledSound;
 
-	FTimerHandle THandler_CombatMode;
-	FTimerHandle THandler_FireWeapon;
-	FTimerHandle THandler_RunAndShoot;
-
 	FTimerHandle THandler_VoiceSoundReset;
 
 public:
@@ -138,8 +134,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void ToggleNightVision();
-
-	void UpdateControllerYaw();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginWeaponSwap();
@@ -199,10 +193,6 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void BeginPlay() override;
-
-	virtual void InitTimeHandlers() override;
-
-	virtual void ClearTimeHandlers() override;
 
 	virtual void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser) override;
 
