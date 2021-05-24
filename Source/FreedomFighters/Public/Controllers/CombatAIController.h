@@ -36,7 +36,9 @@ private:
 	AWeapon* CurrentWeapon;
 	UAIPerceptionComponent* PerceptionComp;
 	APumpActionWeapon* PumpActionWeapon;
-	AActor* EnemyActor;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		AActor* EnemyActor;
 
 
 	// to take defensive positions within the stronghold

@@ -70,8 +70,6 @@ void ACustomPlayerController::SetupInputComponent()
 
 	InputComponent->BindAction("UseInteractable", IE_Pressed, this, &ACustomPlayerController::UseInteractableActor);
 
-
-
 	// Commander Input
 	InputComponent->BindAction("Recruit", IE_Pressed, this, &ACustomPlayerController::Recruit);
 
@@ -172,6 +170,11 @@ void ACustomPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (OwningCombatCharacter == nullptr) {
+		PrimaryActorTick.bCanEverTick = false;
+		return;
+	}
+
 	if (!OwningCombatCharacter->IsInCombatMode()) {
 		ShowAircraftView();
 	}
@@ -179,6 +182,8 @@ void ACustomPlayerController::Tick(float DeltaTime)
 	{
 		HideAircraftView();
 	}
+
+
 }
 
 void ACustomPlayerController::AddUIWidgets()
