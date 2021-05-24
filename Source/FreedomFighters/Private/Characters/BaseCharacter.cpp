@@ -215,7 +215,7 @@ FVector ABaseCharacter::GetPawnViewLocation() const
 
 FRotator ABaseCharacter::GetViewRotation() const
 {
-	if (FollowCamera)
+	if (IsInAircraft && FollowCamera)
 	{
 		return FollowCamera->GetComponentRotation();
 	}
