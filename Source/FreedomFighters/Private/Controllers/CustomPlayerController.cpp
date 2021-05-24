@@ -26,6 +26,8 @@ ACustomPlayerController::ACustomPlayerController()
 	DesiredInputHoldTime = .5f;
 
 	InteractionLength = 500.0f;
+
+	AutoReceiveInput = EAutoReceiveInput::Player0;
 }
 
 void ACustomPlayerController::SetupInputComponent()
@@ -100,7 +102,6 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	}
 
 	if (OwningCombatCharacter) {
-
 		// Grab the "Pickup Key" for it to be displayed on the UI 
 		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 		TArray <FInputActionKeyMapping> OutMappings;
@@ -119,6 +120,11 @@ void ACustomPlayerController::BeginPlay()
 	if (OwningCombatCharacter)
 	{
 		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
+
+		if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+		{
+			SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
+		}
 	}
 	AddUIWidgets();
 
@@ -165,6 +171,14 @@ void ACustomPlayerController::PauseGame()
 void ACustomPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (!OwningCombatCharacter->IsInCombatMode()) {
+		ShowAircraftView();
+	}
+	else
+	{
+		HideAircraftView();
+	}
 }
 
 void ACustomPlayerController::AddUIWidgets()
@@ -280,6 +294,18 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 		{
 			ControlledAircraft->AddControllerPitchInput(Val);
 		}
+		else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+		{
+			if (OwningCombatCharacter->IsInCombatMode())
+			{
+				OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, OwningCombatCharacter->GetAircraftSeat());
+				OwningCombatCharacter->UpdateAimCamera();
+			}
+			else
+			{
+				OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, true);
+			}
+		}
 		else if (OwningCombatCharacter->IsUsingMountedWeapon())
 		{
 			MountedGun->AddControllerPitchInput(Val);
@@ -298,6 +324,18 @@ void ACustomPlayerController::AddControllerYawInput(float Val)
 		if (ControlledAircraft)
 		{
 			ControlledAircraft->AddControllerYawInput(Val);
+		}
+		else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+		{
+			if (OwningCombatCharacter->IsInCombatMode())
+			{
+				OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, OwningCombatCharacter->GetAircraftSeat());
+				OwningCombatCharacter->UpdateAimCamera();
+			}
+			else
+			{
+				OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, true);
+			}
 		}
 		else if (OwningCombatCharacter->IsUsingMountedWeapon())
 		{
@@ -416,6 +454,7 @@ void ACustomPlayerController::BeginAim()
 	OwningCombatCharacter->BeginAim();
 
 	OwningCombatCharacter->GetCurrentWeapon()->ChargeUp();
+
 }
 
 void ACustomPlayerController::EndAim()
@@ -614,13 +653,31 @@ void ACustomPlayerController::UseInteractableActor()
 	CurrentInteractable = nullptr;
 }
 
+
+
+void ACustomPlayerController::ShowAircraftView()
+{
+	if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+	{
+		//OwningCombatCharacter->FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+		OwningCombatCharacter->GetAircraftSeat().OwningAircraft->SetPlayerControl(this, false, false);
+	}
+}
+void ACustomPlayerController::HideAircraftView()
+{
+	if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+	{
+		SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
+	}
+}
+
+#pragma region Commander Functions
+
 void ACustomPlayerController::ClearInputHold()
 {
 	CurrentInputHoldTime = 0.0f;
 	GetWorldTimerManager().ClearTimer(THandler_InputHeld);
 }
-
-#pragma region Commander Functions
 
 void ACustomPlayerController::Recruit()
 {

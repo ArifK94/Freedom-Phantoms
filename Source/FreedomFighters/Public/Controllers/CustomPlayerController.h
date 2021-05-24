@@ -126,6 +126,11 @@ private:
 	UPROPERTY(BlueprintAssignable)
 		FOnInteractiveFoundSignature OnInteractionFound;
 
+	////////////// -------------------------- Aircraft Functions -------------------------- //////////////
+
+	void ShowAircraftView();
+	void HideAircraftView();
+
 
 	////////////// -------------------------- Input Functions -------------------------- //////////////
 	FTimerHandle THandler_InputHeld;

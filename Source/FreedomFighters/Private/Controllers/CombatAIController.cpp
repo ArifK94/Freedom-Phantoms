@@ -82,6 +82,9 @@ void ACombatAIController::Init()
 
 	UpdateCharacterMovement();
 
+	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
+	OwningCombatCharacter->SetUseAimCameraSpring(false);
+
 	PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
 
 	// Get AI Sight Config
@@ -95,7 +98,6 @@ void ACombatAIController::Init()
 		UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
 	}
 
-	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
 
 	// Alternative to AI Sight Perception in case 360 sight is wanted
 	if (TargetSightSphere == nullptr)
@@ -150,7 +152,7 @@ void ACombatAIController::SetVisionAngle()
 	}
 
 	// Set Vision angle based whether character is in the helicopter
-	if (OwningCombatCharacter->IsInHelicopter())
+	if (OwningCombatCharacter->GetIsInAircraft())
 	{
 		AISightConfig->PeripheralVisionAngleDegrees = 90.0f;
 	}
@@ -165,8 +167,7 @@ void ACombatAIController::SetVisionAngle()
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
-	if (OwningCombatCharacter->IsInHelicopter())
-	{
+	if (OwningCombatCharacter->GetIsInAircraft()) {
 		return EPathFollowingRequestResult::Failed;
 	}
 
@@ -258,12 +259,31 @@ void ACombatAIController::Tick(float DeltaTime)
 
 	if (OwningCombatCharacter)
 	{
-		UpdateCharacterMovement();
+		//UpdateCharacterMovement();
 
 		if (PerceptionComp != nullptr)
 		{
 			SetVisionAngle();
 		}
+	}
+	else
+	{
+		 AActor* OwningCharacter = GetOwner();
+
+		 if (OwningCharacter)
+		 {
+			 OwningCharacter->Destroy();
+		 }
+
+
+		GetWorldTimerManager().ClearTimer(THandler_BeginFire);
+		GetWorldTimerManager().ClearTimer(THandler_EndFire);
+		GetWorldTimerManager().ClearTimer(THandler_MountedGun);
+		GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
+		GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
+		GetWorldTimerManager().ClearTimer(THandler_Sprint);
+		GetWorldTimerManager().ClearTimer(THandler_CombatAlert);
+		GetWorldTimerManager().ClearTimer(THandler_FindCover);
 	}
 }
 
@@ -286,7 +306,7 @@ void ACombatAIController::UpdateSprint()
 
 void ACombatAIController::UpdateCharacterMovement()
 {
-	if (OwningCombatCharacter->IsInHelicopter())
+	if (OwningCombatCharacter->GetIsInAircraft())
 	{
 		OwningCombatCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
 	}
@@ -361,7 +381,7 @@ void ACombatAIController::FindEnemy()
 	{
 		TargetSightSphere->GetOverlappingActors(ActorsInSight, ABaseCharacter::StaticClass());
 	}
-	else if (OwningCombatCharacter->IsInHelicopter())
+	else if (OwningCombatCharacter->GetIsInAircraft())
 	{
 		PerceptionComp->GetKnownPerceivedActors(TSubclassOf<UAISense_Sight>(), ActorsInSight);
 	}
@@ -502,7 +522,7 @@ void ACombatAIController::ShootAtEnemy()
 
 			float randomDistanceLimit = FMath::RandRange(0.0f, 20.0f);
 
-			if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->IsInHelicopter())
+			if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->GetIsInAircraft())
 			{
 				OwningCombatCharacter->EndFire();
 				OwningCombatCharacter->EndAim();
@@ -573,10 +593,6 @@ void ACombatAIController::ShootAtEnemy()
 // End fire for non pump-action weapons like shotguns
 void ACombatAIController::EndFiring()
 {
-	if (OwningCombatCharacter == nullptr) {
-		return;
-	}
-
 	if (PumpActionWeapon) {
 		return;
 	}
@@ -1050,7 +1066,7 @@ void ACombatAIController::CheckCommanderOrder()
 
 void ACombatAIController::ResetLocation()
 {
-	if (OwningCombatCharacter->IsInHelicopter()) {
+	if (OwningCombatCharacter->GetIsInAircraft()) {
 		return;
 	}
 

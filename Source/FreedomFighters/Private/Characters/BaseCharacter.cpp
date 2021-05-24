@@ -1,5 +1,6 @@
 #include "Characters/BaseCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
+#include "Vehicles/Aircraft.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -24,6 +25,57 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 #include "Engine.h"
+
+void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
+{
+	CurrentAircraftSeat = Seating;
+	if (Seating.OwningAircraft)
+	{
+		IsInAircraft = true;
+	}
+	else
+	{
+		IsInAircraft = false;
+	}
+
+	if (IsInAircraft)
+	{
+		GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
+
+		if (UseAimCameraSpring)
+		{
+			FollowCamera->AttachToComponent(CurrentAircraftSeat.OwningAircraft->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentAircraftSeat.SeatingSocketName);
+			UpdateAimCamera();
+		}
+	}
+	else
+	{
+		if (UseAimCameraSpring)
+		{
+			FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
+
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
+		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
+	}
+}
+
+void ABaseCharacter::SetIsRepellingDown(bool IsRappelling)
+{
+	isRepellingDown = IsRappelling;
+
+	if (IsRappelling)
+	{
+		EndAim();
+	}
+
+	if (UseAimCameraSpring)
+	{
+		FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+
+}
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -62,10 +114,10 @@ ABaseCharacter::ABaseCharacter()
 	CameraBoom->CameraLagMaxDistance = 10.0f;
 
 	AimCameraSpring = CreateDefaultSubobject<USpringArmComponent>(TEXT("AimCameraSpring"));
-	AimCameraSpring->SetupAttachment(RootComponent);
-	AimCameraSpring->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-	AimCameraSpring->TargetArmLength = 100.0f; // The camera follows at this distance behind the character	
-	AimCameraSpring->SocketOffset.Set(0.0f, 40.0f, 50.0f);
+	AimCameraSpring->SetupAttachment(GetMesh());
+	AimCameraSpring->bUsePawnControlRotation = true;
+	AimCameraSpring->TargetArmLength = 0.0f;
+	AimCameraSpring->SocketOffset.Set(0.0f, 0.0f, 0.0f);
 	AimCameraSpring->bEnableCameraLag = false;
 	AimCameraSpring->bEnableCameraRotationLag = false;
 
@@ -119,7 +171,7 @@ void ABaseCharacter::BeginPlay()
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 	DefaultCameraFOV = FollowCamera->FieldOfView;
 
-	AimCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, ShoulderRightSocket);
+	AimCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderRightSocket);
 
 	// Create Animation Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
@@ -141,25 +193,6 @@ void ABaseCharacter::ClearTimeHandlers()
 	GetWorldTimerManager().ClearTimer(THandler_CharacterDirection);
 }
 
-void ABaseCharacter::SetIsInAircraft(bool InAircraft)
-{
-	IsInAircraft = InAircraft;
-
-	if (InAircraft)
-	{
-		GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
-	}
-	else
-	{
-		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
-	}
-}
-
-void ABaseCharacter::SetIsRepellingDown(bool IsRappelling)
-{
-	isRepellingDown = IsRappelling;
-}
-
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -178,6 +211,15 @@ FVector ABaseCharacter::GetPawnViewLocation() const
 		return FollowCamera->GetComponentLocation();
 	}
 	return Super::GetPawnViewLocation();
+}
+
+FRotator ABaseCharacter::GetViewRotation() const
+{
+	if (FollowCamera)
+	{
+		return FollowCamera->GetComponentRotation();
+	}
+	return Super::GetViewRotation();
 }
 
 void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
@@ -317,8 +359,14 @@ void ABaseCharacter::AimOffset()
 {
 	float x = 0.0f;
 
+	FRotator InputRotation = GetControlRotation();
+	if (IsInAircraft)
+	{
+		InputRotation = FollowCamera->GetComponentRotation();
+	}
+
 	FRotator Current = UKismetMathLibrary::MakeRotator(x, aimPitch, aimYaw);
-	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), GetActorRotation());
+	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(InputRotation, GetActorRotation());
 	FRotator MoveToTarget = FMath::RInterpTo(Current, Target, CurrentDeltaTime, 15.0f);
 
 	UKismetMathLibrary::BreakRotator(MoveToTarget, MoveToTarget.Roll, aimPitch, aimYaw);
@@ -716,7 +764,7 @@ void ABaseCharacter::BeginAim()
 {
 	isAiming = true;
 
-	if (UseAimCameraSpring)
+	if (UseAimCameraSpring && !IsInAircraft)
 	{
 		FollowCamera->AttachToComponent(AimCameraSpring, FAttachmentTransformRules::KeepWorldTransform);
 
@@ -730,7 +778,7 @@ void ABaseCharacter::EndAim()
 {
 	isAiming = false;
 
-	if (UseAimCameraSpring)
+	if (UseAimCameraSpring && !IsInAircraft)
 	{
 		FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::KeepWorldTransform);
 
@@ -741,3 +789,7 @@ void ABaseCharacter::EndAim()
 	}
 }
 
+void ABaseCharacter::UpdateAimCamera()
+{
+	FollowCamera->SetWorldLocation(GetMesh()->GetSocketLocation(ShoulderRightSocket));
+}

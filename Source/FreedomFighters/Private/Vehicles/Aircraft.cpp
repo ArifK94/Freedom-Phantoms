@@ -1,10 +1,8 @@
 #include "Vehicles/Aircraft.h"
-
 #include "Characters/BaseCharacter.h"
-
 #include "Props/AircraftSplinePath.h"
+#include "Accessories/Rope.h"
 #include "Props/TargetSystemMarker.h"
-
 #include "Weapons/Weapon.h"
 
 #include "CustomComponents/HealthComponent.h"
@@ -15,14 +13,12 @@
 #include "Camera/CameraComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/WidgetComponent.h"
-
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
-
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
-
+#include "GameFramework/SpringArmComponent.h"
 
 AAircraft::AAircraft()
 {
@@ -38,7 +34,21 @@ AAircraft::AAircraft()
 	EngineAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineAudio"));
 	EngineAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 
+
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	CameraBoom->TargetArmLength = 200.0f; // The camera follows at this distance behind the character	
+	CameraBoom->SocketOffset.Set(0.0f, 40.0f, 50.0f);
+	CameraBoom->bEnableCameraLag = true;
+	CameraBoom->bEnableCameraRotationLag = true;
+	CameraBoom->CameraLagSpeed = 50.0f;
+	CameraBoom->CameraRotationLagSpeed = 50.0f;
+	CameraBoom->CameraLagMaxDistance = 10.0f;
+
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->bUsePawnControlRotation = false;
 
 	ThermalVisionPPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("ThermalVisionPPComp"));
 	ThermalVisionPPComp->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
@@ -54,7 +64,7 @@ AAircraft::AAircraft()
 	WingRotationSpeed = 100000.0;
 
 	PathFollowDuration = 10.0f;
-	TotalLaps = 1;
+	TotalLaps = 0;
 
 	CurrentWeaponIndex = 0;
 
@@ -105,9 +115,8 @@ void AAircraft::BeginPlay()
 
 	FindPath();
 
-	if (AircraftWeapons.Num() > 0) {
-		SpawnWeapon();
-	}
+	SpawnWeapon();
+	
 	EngineAudio->Play();
 
 	SpawnPassenger();
@@ -121,6 +130,10 @@ void AAircraft::Tick(float DeltaTime)
 	CurrentWingSpeed = WingRotationSpeed * DeltaTime;
 
 	SetTargetSystem();
+
+	WaitForRapelling();
+
+	UpdateOccupiedSeats();
 }
 
 void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -221,23 +234,11 @@ void AAircraft::SpawnPassenger()
 
 			if (HeliSeat.CharacterObj)
 			{
-				ABaseCharacter* Character = HeliSeat.CharacterObj;
-				Character->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
-				Character->SetIsInAircraft(true);
-				Character->SetAircraftSeatPosition(HeliSeat.SeatPosition);
 				HeliSeat.OwningAircraft = this;
 
+				ABaseCharacter* Character = HeliSeat.CharacterObj;
+				Character->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
 				Character->SetAircraftSeat(HeliSeat);
-
-
-				FRotator CamRotation = HeliSeat.CharacterObj->FollowCamera->GetComponentRotation();
-
-				float TargetYaw = FMath::Clamp(CamRotation.Yaw, HeliSeat.CameraViewYawMin, HeliSeat.CameraViewYawMax);
-
-				FRotator TargetRotation = UKismetMathLibrary::MakeRotator(CamRotation.Roll, CamRotation.Pitch, TargetYaw);
-				//	HeliSeat.CharacterObj->FollowCamera->SetWorldRotation(TargetRotation);
-
-
 				OccupiedSeats.Add(HeliSeat);
 			}
 		}
@@ -246,6 +247,10 @@ void AAircraft::SpawnPassenger()
 
 void AAircraft::SpawnWeapon()
 {
+	if (AircraftWeapons.Num() <= 0) {
+		return;
+	}
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetOwner();
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -317,6 +322,35 @@ void AAircraft::AddControllerYawInput(float Val)
 	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
 
 	FollowCamera->SetRelativeRotation(RotationInput);
+}
+
+void AAircraft::AddControllerPitchInput(float Val, bool IsCameraRoam)
+{
+	RotationInput.Pitch += Val;
+
+	CameraBoom->SetWorldRotation(RotationInput);
+}
+void AAircraft::AddControllerYawInput(float Val, bool IsCameraRoam)
+{
+	RotationInput.Yaw += Val;
+
+	CameraBoom->SetWorldRotation(RotationInput);
+}
+
+void AAircraft::AddControllerPitchInput(float Val, FAircraftSeating AircraftSeating)
+{
+	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, AircraftSeating.PitchMin, AircraftSeating.PitchMax);
+	RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
+
+	AircraftSeating.CharacterObj->FollowCamera->SetRelativeRotation(RotationInput);
+}
+
+void AAircraft::AddControllerYawInput(float Val, FAircraftSeating AircraftSeating)
+{
+	RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, AircraftSeating.YawMin, AircraftSeating.YawMax);
+	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
+
+	AircraftSeating.CharacterObj->FollowCamera->SetRelativeRotation(RotationInput);
 }
 
 void AAircraft::ShowOutlines(bool CanShow)
@@ -491,6 +525,10 @@ bool AAircraft::DoesEnemyNodeExists(AActor* TargetActor)
 
 void AAircraft::CreateThermalMatInstances()
 {
+	if (ThermalMaterials.Num() <= 0) {
+		return;
+	}
+
 	for (int i = 0; i < ThermalMaterials.Num(); i++)
 	{
 		UMaterialInstanceDynamic* MaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(GetWorld(), ThermalMaterials[i]);
@@ -501,6 +539,10 @@ void AAircraft::CreateThermalMatInstances()
 
 void AAircraft::UpdateCurrentThermalVision(float InWeight)
 {
+	if (ThermalMaterialInstances.Num() <= 0) {
+		return;
+	}
+	
 	ThermalVisionPPComp->AddOrUpdateBlendable(ThermalMaterialInstances[CurrentThermalMatIndex], InWeight);
 }
 
@@ -527,22 +569,138 @@ void AAircraft::ChangeThermalVision()
 }
 
 
-void AAircraft::SetPlayerControl(APlayerController* OurPlayerController)
+void AAircraft::SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP, bool ShowOutline)
 {
 	OurPlayerController->SetViewTargetWithBlend(this, CameraSwitchDelay);
 
-	ThermalVisionPPComp->bEnabled = true;
-	ShowOutlines(true);
-	UpdateCurrentThermalVision(1.0f);
+	ThermalVisionPPComp->bEnabled = EnableThermalPP;
+
+	if (EnableThermalPP)
+	{
+		UpdateCurrentThermalVision(1.0f);
+	}
+
+	ShowOutlines(ShowOutline);
 	AddUIWidget();
 
 	GetWorldTimerManager().SetTimer(THandler_CameraSwitchDelay, this, &AAircraft::PlayPilotSound, CameraSwitchDelay, false);
+}
+
+void AAircraft::RemovePlayerControl()
+{
+
 }
 
 void AAircraft::PlayPilotSound()
 {
 	PilotAudio->Play();
 	GetWorldTimerManager().ClearTimer(THandler_CameraSwitchDelay);
+}
+
+void AAircraft::WaitForRapelling()
+{
+	if (CurrentAircraftMovement == EAircraftMovement::Rappel && OccupiedSeats.Num() > 0)
+	{
+		CurveTimeline.Stop();
+
+		if (RopeClass != nullptr)
+		{
+			if (RopeLeft == nullptr)
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.Owner = this;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				RopeLeft = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+				RopeLeft->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
+			}
+
+			if (RopeRight == nullptr)
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.Owner = this;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				RopeRight = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+				RopeRight->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
+			}
+
+		}
+
+
+		for (int i = 0; i < OccupiedSeats.Num(); i++)
+		{
+			if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
+			{
+				FAircraftSeating Passenger = OccupiedSeats[i];
+
+				if (!Passenger.CharacterObj->GetIsInAircraft()) {
+					OccupiedSeats.RemoveAt(i);
+				}
+				else
+				{
+					if (!Passenger.CharacterObj->IsRepellingDown())
+					{
+						if (Passenger.isRopeLeftSide)
+						{
+							if (!isLeftRappelOccupied)
+							{
+								Passenger.CharacterObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
+								Passenger.CharacterObj->SetIsRepellingDown(true);
+								isLeftRappelOccupied = true;
+							}
+						}
+						else
+						{
+							if (!isRightRappelOccupied)
+							{
+								Passenger.CharacterObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
+								Passenger.CharacterObj->SetIsRepellingDown(true);
+								isRightRappelOccupied = true;
+							}
+						}
+					}
+
+				}
+			}
+		}
+	}
+
+	if (OccupiedSeats.Num() <= 0)
+	{
+		if (RopeLeft) {
+			RopeLeft->DropRope();
+		}
+
+		if (RopeRight) {
+			RopeRight->DropRope();
+		}
+
+		CurveTimeline.Play();
+
+		CurrentAircraftMovement = EAircraftMovement::MovingForward;
+	}
+}
+
+void AAircraft::UpdateOccupiedSeats()
+{
+	// check if passengers still alive
+	for (int i = 0; i < OccupiedSeats.Num(); i++)
+	{
+		if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
+		{
+			FAircraftSeating Passenger = OccupiedSeats[i];
+			if (Passenger.CharacterObj) {
+
+				UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Passenger.CharacterObj->GetComponentByClass(UHealthComponent::StaticClass()));
+
+				if (!CurrentHealth->IsAlive())
+				{
+					OccupiedSeats.RemoveAt(i);
+				}
+			}
+		}
+	}
 }
 
 

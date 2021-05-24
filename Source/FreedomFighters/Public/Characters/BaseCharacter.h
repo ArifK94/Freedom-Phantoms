@@ -15,6 +15,7 @@ class UPostProcessComponent;
 class APlayerCameraManager;
 class AAIController;
 class UDataTable;
+class AAircraft;
 
 UCLASS(config = Game)
 class FREEDOMFIGHTERS_API ABaseCharacter : public ACharacter
@@ -147,9 +148,6 @@ protected:
 		bool IsInAircraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		int32 AircraftSeatPosition;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -203,7 +201,6 @@ private:
 
 	APlayerCameraManager* CamManager;
 
-
 protected:
 
 	virtual void InitTimeHandlers();
@@ -247,8 +244,10 @@ public:
 	void MoveToCover();
 	void EscapeCover();
 
-	void SetIsInAircraft(bool InAircraft);
+	void SetAircraftSeat(FAircraftSeating Seating);
 	virtual void SetIsRepellingDown(bool IsRappelling);
+
+	void UpdateAimCamera();
 
 protected:
 	/** Returns CameraBoom subobject **/
@@ -258,6 +257,10 @@ protected:
 
 
 	virtual FVector GetPawnViewLocation() const override;
+
+	virtual FRotator GetViewRotation() const override;
+
+	
 
 	virtual void BeginPlay() override;
 
@@ -293,7 +296,7 @@ public:
 		return isDead;
 	}
 
-	bool IsInHelicopter() {
+	bool GetIsInAircraft() {
 		return IsInAircraft;
 	}
 
@@ -314,6 +317,9 @@ public:
 	}
 
 
+	void SetUseAimCameraSpring(bool Value) {
+		UseAimCameraSpring = Value;
+	}
 
 	void IsTakingCover(bool Value) {
 		isTakingCover = Value;
@@ -344,15 +350,9 @@ public:
 		CharacterDirection = Value;
 	}
 
-	void SetAircraftSeatPosition(int32 position) {
-		AircraftSeatPosition = position;
-	}
-
-	void SetAircraftSeat(FAircraftSeating CurrentSeating) {
-		CurrentAircraftSeat = CurrentSeating;
-	}
 
 	FAircraftSeating GetAircraftSeat() {
 		return CurrentAircraftSeat;
 	}
+
 };

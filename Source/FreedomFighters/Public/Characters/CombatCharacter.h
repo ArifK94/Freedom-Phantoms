@@ -238,6 +238,11 @@ public:
 		return secondaryWeaponObj;
 	}
 
+
+	bool IsInCombatMode() {
+		return isInCombatMode;
+	}
+
 	void IsInCombatMode(bool Value) {
 		isInCombatMode = Value;
 	}

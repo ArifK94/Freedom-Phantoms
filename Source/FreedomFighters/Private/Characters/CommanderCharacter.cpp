@@ -94,7 +94,7 @@ void ACommanderCharacter::CheckRecruit()
 
 			PotentialRecruit = Cast<ACombatCharacter>(CurrentTargetActor);
 
-			if (PotentialRecruit != nullptr && !PotentialRecruit->IsInHelicopter())
+			if (PotentialRecruit != nullptr && !PotentialRecruit->GetIsInAircraft())
 			{
 				PotentialRecruit->ShowCharacterOutline(true);
 			}

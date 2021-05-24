@@ -225,11 +225,16 @@ public:
 		bool isRopeLeftSide;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float CameraViewYawMin;
+		float PitchMin;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float CameraViewYawMax;
+		float PitchMax;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawMax;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ABaseCharacter> Character;

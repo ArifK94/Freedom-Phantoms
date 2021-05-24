@@ -3,8 +3,7 @@
 
 #include "Animations/HelicopterAnimNotify.h"
 #include "Characters/BaseCharacter.h"
-#include "Vehicles/AircraftTransport.h"
-
+#include "Vehicles/Aircraft.h"
 
 void UHelicopterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
@@ -15,12 +14,12 @@ void UHelicopterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequen
 		if (Character)
 		{
 			FAircraftSeating MySeat = Character->GetAircraftSeat();
-			AAircraftTransport* OwningAircraft = Cast<AAircraftTransport>(MySeat.OwningAircraft);
+			AAircraft* OwningAircraft = MySeat.OwningAircraft;
 
 			if (DetachFromHelicopter)
 			{
 				Character->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-				Character->SetIsInAircraft(false);
+				Character->SetAircraftSeat(FAircraftSeating());
 				Character->SetIsRepellingDown(false);
 			}
 

@@ -17,6 +17,7 @@ class UUserWidget;
 class UPostProcessComponent;
 class ABaseCharacter;
 class ATargetSystemMarker;
+class ARope;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChangeSignature, AAircraft*, Aircraft);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestorySignature, AAircraft*, Aircraft);
@@ -26,11 +27,48 @@ class FREEDOMFIGHTERS_API AAircraft : public AActor
 {
 	GENERATED_BODY()
 
+
+private:
+#pragma region Ropes
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName LeftRopeSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName RightRopeSocket;
+
+	bool isLeftRappelOccupied;
+
+	bool isRightRappelOccupied;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ARope> RopeClass;
+	ARope* RopeLeft;
+	ARope* RopeRight;
+
+	FTimerHandle THandler_Rapelling;
+
+	void WaitForRapelling();
+
+	void UpdateOccupiedSeats();
+
+public:
+	void IsLeftRappelOccupied(bool value) {
+		isLeftRappelOccupied = value;
+	}
+
+	void IsRightRappelOccupied(bool value) {
+		isRightRappelOccupied = value;
+	}
+
+#pragma endregion
+
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CapsuleComponent;
 
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		USkeletalMeshComponent* Mesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* EngineAudio;
@@ -40,6 +78,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ThermalToggleAudio;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FollowCamera;
@@ -107,9 +148,6 @@ private:
 		float CameraSwitchDelay;
 	FTimerHandle THandler_CameraSwitchDelay;
 
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		USkeletalMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FAircraftSeating> AircraftSeats;
@@ -124,10 +162,16 @@ protected:
 public:
 	AAircraft();
 
-	void SetPlayerControl(APlayerController* OurPlayerController);
+	void SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP = true, bool ShowOutline = true);
+
+	void RemovePlayerControl();
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
+	void AddControllerPitchInput(float Val, bool IsCameraRoam);
+	void AddControllerYawInput(float Val, bool IsCameraRoam);
+	void AddControllerPitchInput(float Val, FAircraftSeating AircraftSeating);
+	void AddControllerYawInput(float Val, FAircraftSeating AircraftSeating);
 
 	void ChangeWeapon();
 
@@ -183,6 +227,10 @@ protected:
 
 public:
 	virtual void Tick(float DeltaTime) override;
+
+	USkeletalMeshComponent* GetMesh() {
+		return Mesh;
+	}
 
 
 	FAircraftWeapon GetCurrentAircraftWeapon() {

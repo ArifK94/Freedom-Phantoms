@@ -325,7 +325,7 @@ void ACombatCharacter::UpdateCombatMode()
 	{
 		if (isAiming || isFiring)
 		{
-			if (!isSprinting) {
+			if (!isSprinting && !IsInAircraft) {
 				bUseControllerRotationYaw = true;
 			}
 
@@ -465,7 +465,6 @@ void ACombatCharacter::BeginFire()
 
 
 	UpdateCombatMode();
-
 
 	PlayAnimMontage(WeaponAnimDataSet->Shooting);
 
