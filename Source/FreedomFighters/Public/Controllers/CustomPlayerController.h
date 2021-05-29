@@ -8,7 +8,6 @@ class ACommanderCharacter;
 class ACombatCharacter;
 class AAircraft;
 class AWeapon;
-class AMountedGun;
 class AInteractable;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
@@ -65,9 +64,6 @@ private:
 	/** Line trace length for the interactable actor to be detected */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float InteractionLength;
-
-	AMountedGun* MountedGun;
-
 	
 public:
 	ACustomPlayerController();
@@ -87,6 +83,10 @@ private:
 
 	UFUNCTION(BlueprintCallable)
 		void OnAircraftDestroy(AAircraft* CurrentControlledAircraft);
+
+	UFUNCTION()
+		void OnCombatModeUpdated(ACombatCharacter* CombatCharacter);
+
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
@@ -122,6 +122,8 @@ private:
 	void CheckInteractable();
 
 	void UseInteractableActor();
+
+	void UseMountedGun();
 
 	UPROPERTY(BlueprintAssignable)
 		FOnInteractiveFoundSignature OnInteractionFound;

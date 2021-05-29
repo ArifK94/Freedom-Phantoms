@@ -15,7 +15,7 @@ UHealthComponent::UHealthComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	SelectedFaction == TeamFaction::Neutral;
+	SelectedFaction = TeamFaction::Neutral;
 
 	MaxHealth = 100;
 
@@ -92,13 +92,7 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 		if (DamageCauser != DamagedActor)
 		{
 			if (IsFriendly(DamagedActor, DamageCauser)) {
-
-				UHealthComponent* HealthCompA = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
-				UHealthComponent* HealthCompB = Cast<UHealthComponent>(DamageCauser->GetComponentByClass(UHealthComponent::StaticClass()));
-				if (HealthCompA->SelectedFaction != TeamFaction::Neutral && HealthCompB->SelectedFaction != TeamFaction::Neutral)
-				{
-					return;
-				}
+				return;
 			}
 		}
 	}
@@ -207,11 +201,6 @@ bool UHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 	if (HealthCompA == nullptr || HealthCompB == nullptr)
 	{
 		// Assume Friendly
-		return true;
-	}
-
-	if (HealthCompA->SelectedFaction == TeamFaction::Neutral || HealthCompB->SelectedFaction == TeamFaction::Neutral)
-	{
 		return true;
 	}
 

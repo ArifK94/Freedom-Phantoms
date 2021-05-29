@@ -18,7 +18,6 @@ class AWeapon;
 class APumpActionWeapon;
 class USphereComponent;
 class AStronghold;
-class AMountedGun;
 class UCommanderRecruit;
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
@@ -32,13 +31,10 @@ private:
 	USphereComponent* TargetSightSphere;
 	USphereComponent* MountedGunSphere;
 	UAISenseConfig_Sight* AISightConfig;
-	AMountedGun* MountedGun;
 	AWeapon* CurrentWeapon;
 	UAIPerceptionComponent* PerceptionComp;
 	APumpActionWeapon* PumpActionWeapon;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		AActor* EnemyActor;
+	AActor* EnemyActor;
 
 
 	// to take defensive positions within the stronghold
@@ -147,8 +143,6 @@ private:
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
 
 	void SetVisionAngle();
-
-	void UpdateCharacterMovement();
 
 	void UpdatCombatAlert();
 

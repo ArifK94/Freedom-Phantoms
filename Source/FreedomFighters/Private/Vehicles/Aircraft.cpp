@@ -1,9 +1,11 @@
 #include "Vehicles/Aircraft.h"
 #include "Characters/BaseCharacter.h"
+#include "Characters/CombatCharacter.h"
 #include "Props/AircraftSplinePath.h"
 #include "Accessories/Rope.h"
 #include "Props/TargetSystemMarker.h"
 #include "Weapons/Weapon.h"
+#include "Weapons/MountedGun.h"
 
 #include "CustomComponents/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -222,7 +224,7 @@ void AAircraft::SpawnPassenger()
 	}
 
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	for (int i = 0; i < AircraftSeats.Num(); i++)
 	{
@@ -239,6 +241,15 @@ void AAircraft::SpawnPassenger()
 				ABaseCharacter* Character = HeliSeat.CharacterObj;
 				Character->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
 				Character->SetAircraftSeat(HeliSeat);
+
+				// Set to use weapon, usually a mounted gun would be used
+				if (HeliSeat.AssociatedWeapon > -1)
+				{
+					ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
+					CombatCharacter->SetMountedGun(WeaponObjs[HeliSeat.AssociatedWeapon]);
+					CombatCharacter->UseMountedGun();
+				}
+
 				OccupiedSeats.Add(HeliSeat);
 			}
 		}
@@ -261,13 +272,31 @@ void AAircraft::SpawnWeapon()
 
 		if (Weapon)
 		{
-			Weapon->SetComponentEyeViewPoint(FollowCamera);
+			//Weapon->SetComponentEyeViewPoint(FollowCamera);
 			Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AircraftWeapon.WeaponSocketName);
 			Weapon->GetClipAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			Weapon->GetShotAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 			PilotAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			ThermalToggleAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+			AMountedGun* MG = Cast<AMountedGun>(Weapon);
+
+			// we do not want to adjust character behind MG as character will be spawning behind it
+			// & remove line trace mechanic for it so only spawned characters can use it
+			// & gunner cannot exit from gun
+			if (MG)
+			{
+				MG->SetAdjustBehindMG(false);
+				MG->SetCanTraceInteraction(false);
+				MG->SetCanExit(false);
+
+				MG->SetPitchMin(AircraftWeapon.PitchMin);
+				MG->SetPitchMax(AircraftWeapon.PitchMax);
+				MG->SetYawMin(AircraftWeapon.YawMin);
+				MG->SetYawMax(AircraftWeapon.YawMax);
+
+			}
 
 			WeaponObjs.Add(Weapon);
 		}
@@ -279,6 +308,10 @@ void AAircraft::SpawnWeapon()
 
 void AAircraft::ChangeWeapon()
 {
+	if (AircraftWeapons.Num() <= 0) {
+		return;
+	}
+
 	// increment the index if current index is less than the array of weapons
 	// otherwise go back to the first index
 	if (CurrentWeaponIndex < AircraftWeapons.Num() - 1)
@@ -302,10 +335,15 @@ void AAircraft::UpdateWeaponView()
 	CurrentAircraftWeapon = AircraftWeapons[CurrentWeaponIndex]; // set the current weapon to first weapon by default
 	CurrentWeaponObj = WeaponObjs[CurrentWeaponIndex];
 
-	FollowCamera->AttachToComponent(CurrentWeaponObj->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeaponObj->GetMuzzleSocket()); // Attach to weapon muzzle
-	FollowCamera->SetRelativeRotation(RotationInput); // set the follow camera to rotation input
+	if (CurrentAircraftWeapon.SetCamToMuzzle)
+	{
+		FollowCamera->AttachToComponent(CurrentWeaponObj->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeaponObj->GetMuzzleSocket()); // Attach to weapon muzzle
+		FollowCamera->SetRelativeRotation(RotationInput); // set the follow camera to rotation input
 
-	FollowCamera->SetFieldOfView(CurrentWeaponObj->GetZoomFOV());
+		FollowCamera->SetFieldOfView(CurrentWeaponObj->GetZoomFOV());
+	}
+
+
 	OnUpdateWeaponUI.Broadcast(this);
 }
 

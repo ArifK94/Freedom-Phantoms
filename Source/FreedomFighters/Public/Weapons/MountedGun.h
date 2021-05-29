@@ -41,6 +41,18 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		FName CharacterPositionSocket;
+
+	/** True sets character to stand behind MG, false does not set it as this can be used when character was spawned to use the mounted gun in a helicopter as a mounted gunner */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+		bool AdjustBehindMG;
+
+	/** Use line trace to interact in order to use the weapon, aircraft built in MG's would likely to be set false */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+		bool CanTraceInteraction;
+
+	/** Can stop using MG, aircraft mounted guns may not have this set to true */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+		bool CanExit;
 	
 	float DefaultFOV;
 	float TargetFOV;
@@ -91,9 +103,6 @@ public:
 		return FollowCamera;
 	}
 
-	void SetPotentialOwner(AActor* PotOwner) {
-		PotentialOwner = PotOwner;
-	}
 
 	float GetPitchMin() {
 		return PitchMin;
@@ -109,5 +118,48 @@ public:
 
 	float GetYawMax() {
 		return YawMax;
+	}
+
+	bool GetCanTraceInteraction() {
+		return CanTraceInteraction;
+	}
+
+	bool GetAdjustBehindMG() {
+		return AdjustBehindMG;
+	}
+
+	bool GetCanExitMG() {
+		return CanExit;
+	}
+
+	void SetPotentialOwner(AActor* PotOwner) {
+		PotentialOwner = PotOwner;
+	}
+
+	void SetAdjustBehindMG(bool Adjust) {
+		AdjustBehindMG = Adjust;
+	}
+
+	void SetCanTraceInteraction(bool CanLineTrace) {
+		CanTraceInteraction = CanLineTrace;
+	}
+
+	void SetCanExit(bool HasExit) {
+		CanExit = HasExit;
+	}
+
+	void SetPitchMin(float Value) {
+		PitchMin = Value;
+	}
+
+	void SetPitchMax(float Value) {
+		PitchMax = Value;
+	}
+
+	void SetYawMin(float Value) {
+		YawMin = Value;
+	}
+	void SetYawMax(float Value) {
+		YawMax = Value;
 	}
 };

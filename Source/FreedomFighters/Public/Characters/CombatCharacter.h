@@ -7,7 +7,11 @@
 #include "CombatCharacter.generated.h"
 
 class AWeapon;
+class AMountedGun;
 class ACommanderCharacter;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCharacter*, CombatCharacter);
+
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
 {
@@ -91,6 +95,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AWeapon* underBarrelWeaponObj;
+	AMountedGun* MountedGun;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
@@ -111,7 +116,7 @@ private:
 public:
 	ACombatCharacter();
 
-	void UpdateCombatMode();
+	FOnCombatUpdatedignature OnCombatUpdated;
 
 	virtual void BeginSprint() override;
 	virtual void EndSprint() override;
@@ -178,9 +183,12 @@ public:
 
 	void ShowCharacterOutline(bool CanShow) override;
 
-	void UseMountedGun(AWeapon* MountedGun);
+	void SetMountedGun(AWeapon* Mount);
+
+	void UseMountedGun();
 
 	virtual void SetIsRepellingDown(bool IsRappelling) override;
+
 
 private:
 	AHeadgear* Headgear;
@@ -188,6 +196,8 @@ private:
 
 	void SpawnHelmet();
 	void SpawnLoadout();
+
+	void UpdateCombatMode();
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -238,6 +248,9 @@ public:
 		return secondaryWeaponObj;
 	}
 
+	AMountedGun* GetMountedGun() {
+		return MountedGun;
+	}
 
 	bool IsInCombatMode() {
 		return isInCombatMode;

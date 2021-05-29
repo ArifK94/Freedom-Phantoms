@@ -220,6 +220,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		int32 RappelAnimIndex;
 
+	/** FAircraftWeapon list index, leave as -1 meaning it does have a weapon */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		int32 AssociatedWeapon;
+
 	/** Check if rope is occupied */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		bool isRopeLeftSide;
@@ -245,7 +249,7 @@ public:
 
 	FAircraftSeating()
 	{
-
+		AssociatedWeapon = -1;
 	}
 };
 
@@ -265,23 +269,28 @@ public:
 		FName CameraSocketName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float YawMin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float YawMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float PitchMin;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float PitchMax;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawMax;
+
+	/** Aircraft camera will be attached to the weapon muzzle, eg. AC130 weapons will be viewing camera from muzzle positions.
+		Helicopter mounted weapons will want not want it set as Mounted guns already have a camera in them */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool SetCamToMuzzle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;
 
 	FAircraftWeapon()
 	{
-
+		SetCamToMuzzle = true;
 	}
 };
 

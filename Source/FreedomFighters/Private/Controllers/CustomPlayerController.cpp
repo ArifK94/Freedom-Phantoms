@@ -115,18 +115,28 @@ void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AddUIWidgets();
+
+	BeginCheckInteractable();
+
+	OnInteractionFound.Broadcast("");
+
 	if (OwningCombatCharacter)
 	{
 		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
+		OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
+		OnCombatModeUpdated(OwningCombatCharacter);
 
 		if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
 		{
 			SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
 		}
-	}
-	AddUIWidgets();
 
-	BeginCheckInteractable();
+		if (OwningCombatCharacter->GetMountedGun())
+		{
+			UseMountedGun();
+		}
+	}
 }
 
 void ACustomPlayerController::PauseGame()
@@ -174,16 +184,6 @@ void ACustomPlayerController::Tick(float DeltaTime)
 		PrimaryActorTick.bCanEverTick = false;
 		return;
 	}
-
-	if (!OwningCombatCharacter->IsInCombatMode()) {
-		ShowAircraftView();
-	}
-	else
-	{
-		HideAircraftView();
-	}
-
-
 }
 
 void ACustomPlayerController::AddUIWidgets()
@@ -290,67 +290,86 @@ void ACustomPlayerController::OnAircraftDestroy(AAircraft* CurrentControlledAirc
 	BeginCheckInteractable();
 }
 
+void ACustomPlayerController::OnCombatModeUpdated(ACombatCharacter* CombatCharacter)
+{
+	// When using Mounted Gun in an aircraft, only MG camera can be shown and not the aircradt third person view
+	if (CombatCharacter->IsInCombatMode() || OwningCombatCharacter->IsUsingMountedWeapon())
+	{
+		HideAircraftView();
+	}
+	else
+	{
+		ShowAircraftView();
+	}
+}
+
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
 {
-	if (Val != 0.f && IsLocalPlayerController())
+	if (Val == 0.f || !IsLocalPlayerController())
 	{
-		if (ControlledAircraft)
+		return;
+	}
+
+	if (ControlledAircraft) // if controlling an aircraft
+	{
+		ControlledAircraft->AddControllerPitchInput(Val);
+	}
+	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon()) // if in an aircraft
+	{
+		if (OwningCombatCharacter->IsInCombatMode())
 		{
-			ControlledAircraft->AddControllerPitchInput(Val);
-		}
-		else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
-		{
-			if (OwningCombatCharacter->IsInCombatMode())
-			{
-				OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, OwningCombatCharacter->GetAircraftSeat());
-				OwningCombatCharacter->UpdateAimCamera();
-			}
-			else
-			{
-				OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, true);
-			}
-		}
-		else if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			MountedGun->AddControllerPitchInput(Val);
+			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, OwningCombatCharacter->GetAircraftSeat());
+			OwningCombatCharacter->UpdateAimCamera();
 		}
 		else
 		{
-			AddPitchInput(Val);
+			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, true); // Roam around aircraft view
 		}
 	}
+	else if (OwningCombatCharacter->IsUsingMountedWeapon())	// When using MG
+	{
+		OwningCombatCharacter->GetMountedGun()->AddControllerPitchInput(Val);
+	}
+	else	// normal character movement
+	{
+		AddPitchInput(Val); 
+	}
+
 }
 
 void ACustomPlayerController::AddControllerYawInput(float Val)
 {
-	if (Val != 0.f && IsLocalPlayerController())
+	if (Val == 0.f || !IsLocalPlayerController())
 	{
-		if (ControlledAircraft)
+		return;
+	}
+
+	if (ControlledAircraft)
+	{
+		ControlledAircraft->AddControllerYawInput(Val);
+	}
+	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon())
+	{
+		if (OwningCombatCharacter->IsInCombatMode())
 		{
-			ControlledAircraft->AddControllerYawInput(Val);
-		}
-		else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
-		{
-			if (OwningCombatCharacter->IsInCombatMode())
-			{
-				OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, OwningCombatCharacter->GetAircraftSeat());
-				OwningCombatCharacter->UpdateAimCamera();
-			}
-			else
-			{
-				OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, true);
-			}
-		}
-		else if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			MountedGun->AddControllerYawInput(Val);
+			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, OwningCombatCharacter->GetAircraftSeat());
+			OwningCombatCharacter->UpdateAimCamera();
 		}
 		else
 		{
-			AddYawInput(Val);
+			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, true);
 		}
 	}
+	else if (OwningCombatCharacter->IsUsingMountedWeapon())
+	{
+		OwningCombatCharacter->GetMountedGun()->AddControllerYawInput(Val);
+	}
+	else
+	{
+		AddYawInput(Val);
+	}
+
 }
 
 void ACustomPlayerController::TurnAtRate(float Rate)
@@ -458,7 +477,9 @@ void ACustomPlayerController::BeginAim()
 {
 	OwningCombatCharacter->BeginAim();
 
-	OwningCombatCharacter->GetCurrentWeapon()->ChargeUp();
+	if (OwningCombatCharacter->GetCurrentWeapon()) {
+		OwningCombatCharacter->GetCurrentWeapon()->ChargeUp();
+	}
 
 }
 
@@ -466,7 +487,9 @@ void ACustomPlayerController::EndAim()
 {
 	OwningCombatCharacter->EndAim();
 
-	OwningCombatCharacter->GetCurrentWeapon()->ChargeDown();
+	if (OwningCombatCharacter->GetCurrentWeapon()) {
+		OwningCombatCharacter->GetCurrentWeapon()->ChargeDown();
+	}
 }
 
 void ACustomPlayerController::TakeCover()
@@ -562,20 +585,20 @@ void ACustomPlayerController::CheckInteractable()
 			FocusedInteractable = Interactable;
 
 			// Mounted Gun?
-			MountedGun = Cast<AMountedGun>(TargetActor);
+			OwningCombatCharacter->SetMountedGun(Cast<AMountedGun>(TargetActor));
 
 			if (Interactable)
 			{
 				ActionMessage = Interactable->GetActionMessage();
 			}
-			else if (MountedGun)
+			else if (OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetCanTraceInteraction())
 			{
 				// As we would need another UI message to display message to stop using the gun, 
 				// we check if the current weapon is not the mounted gun, meaning the player is not using it
 				// also check if not already in use
-				if (OwningCombatCharacter->GetCurrentWeapon() != MountedGun && MountedGun->GetOwner() == nullptr)
+				if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetOwner() == nullptr)
 				{
-					ActionMessage = MountedGun->GetPickupMessage();
+					ActionMessage = OwningCombatCharacter->GetMountedGun()->GetPickupMessage();
 				}
 			}
 			else
@@ -600,36 +623,27 @@ void ACustomPlayerController::PickupInteractable()
 		FocusedInteractable->SetActorEnableCollision(false);
 		FocusedInteractable->SetActorTickEnabled(false);
 	}
-	else if (MountedGun) 		// Use Mounted Gun
+	else if (OwningCombatCharacter->GetMountedGun()) 		// Use Mounted Gun
 	{
 		// Stop using the mounted gun if currently using it
-		if (OwningCombatCharacter->GetCurrentWeapon() == MountedGun)
+		if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetMountedGun())
 		{
-			MountedGun->RemovePlayerControl(this, OwningCombatCharacter);
+			if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
+			{
+				OwningCombatCharacter->GetMountedGun()->RemovePlayerControl(this, OwningCombatCharacter);
 
-			MountedGun = nullptr;
+				OwningCombatCharacter->DropMountedGun();
 
-			OwningCombatCharacter->DropMountedGun();
+				BeginCheckInteractable();
 
-			BeginCheckInteractable();
-
-			// renable character input
-			OwningCombatCharacter->EnableInput(this);
+				// renable character input
+				OwningCombatCharacter->EnableInput(this);
+			}
 		}
 		else
 		{
-			// disable character input
-			OwningCombatCharacter->DisableInput(this);
-
-			// don't need to check for interaction if already using it
-			GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
-
-			MountedGun->SetPlayerControl(this, OwningCombatCharacter);
-
-			OwningCombatCharacter->UseMountedGun(MountedGun);
-
-			// Display "Stop" message if using the mounted gun
-			OnInteractionFound.Broadcast(MountedGun->GetStopUsingMessage());
+			OwningCombatCharacter->UseMountedGun();
+			UseMountedGun();
 		}
 	}
 }
@@ -640,7 +654,7 @@ void ACustomPlayerController::UseInteractableActor()
 		return;
 	}
 
-	MountedGun = nullptr;
+	OwningCombatCharacter->SetMountedGun(nullptr);
 
 	CurrentInteractable->BeginInteraction(OwningCombatCharacter, this);
 
@@ -658,19 +672,39 @@ void ACustomPlayerController::UseInteractableActor()
 	CurrentInteractable = nullptr;
 }
 
+void ACustomPlayerController::UseMountedGun()
+{
+	// don't need to check for interaction if already using it
+	GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
+
+	// disable character input
+	OwningCombatCharacter->DisableInput(this);
+
+	OwningCombatCharacter->GetMountedGun()->SetPlayerControl(this, OwningCombatCharacter);
+
+	if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
+	{
+		// Display "Stop" message if using the mounted gun
+		OnInteractionFound.Broadcast(OwningCombatCharacter->GetMountedGun()->GetStopUsingMessage());
+	}
+
+}
 
 
 void ACustomPlayerController::ShowAircraftView()
 {
 	if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
 	{
-		//OwningCombatCharacter->FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 		OwningCombatCharacter->GetAircraftSeat().OwningAircraft->SetPlayerControl(this, false, false);
 	}
 }
 void ACustomPlayerController::HideAircraftView()
 {
-	if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+	if (OwningCombatCharacter->GetMountedGun())
+	{
+		OwningCombatCharacter->GetMountedGun()->SetPlayerControl(this, OwningCombatCharacter);
+	}
+	else
 	{
 		SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
 	}

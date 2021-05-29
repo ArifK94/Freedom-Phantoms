@@ -15,7 +15,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/EngineTypes.h"
 #include "NavigationSystem.h"
 #include "NavFilters/NavigationQueryFilter.h"
@@ -33,7 +32,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 		return;
 	}
 
-	MountedGun = nullptr;
+	OwningCombatCharacter->SetMountedGun(nullptr);
 	StayCombatAlert = true;
 
 	float TargetRadius = AcceptanceRadius;
@@ -60,7 +59,7 @@ ACombatAIController::ACombatAIController()
 
 	AcceptanceRadius = 300.0f;
 	DistanceDiffSprint = 200.0f;
-	CoverRadius = 10000.0f;
+	CoverRadius = 1000.0f;
 	NumberOfCoverTraces = 35.0f;
 	TargetSightRadius = 7000.0f;
 	MountedGunSightRadius = 500.0f;
@@ -79,8 +78,6 @@ void ACombatAIController::Init()
 	if (OwningCombatCharacter == nullptr) {
 		return;
 	}
-
-	UpdateCharacterMovement();
 
 	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
 	OwningCombatCharacter->SetUseAimCameraSpring(false);
@@ -259,8 +256,6 @@ void ACombatAIController::Tick(float DeltaTime)
 
 	if (OwningCombatCharacter)
 	{
-		//UpdateCharacterMovement();
-
 		if (PerceptionComp != nullptr)
 		{
 			SetVisionAngle();
@@ -302,18 +297,6 @@ void ACombatAIController::UpdateSprint()
 	//{
 	//	OwningCombatCharacter->EndSprint();
 	//}
-}
-
-void ACombatAIController::UpdateCharacterMovement()
-{
-	if (OwningCombatCharacter->GetIsInAircraft())
-	{
-		OwningCombatCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
-	}
-	else
-	{
-		OwningCombatCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
-	}
 }
 
 void ACombatAIController::UpdatCombatAlert()
@@ -398,7 +381,7 @@ void ACombatAIController::FindEnemy()
 
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(PotentialEnemy->GetComponentByClass(UHealthComponent::StaticClass()));
 
-		if (CurrentHealth && CurrentHealth->IsAlive())
+		if (CurrentHealth && CurrentHealth->IsAlive() && CurrentHealth->GetSelectedFaction() != TeamFaction::Neutral)
 		{
 			bool IsEnemy = !UHealthComponent::IsFriendly(OwningCombatCharacter, PotentialEnemy);
 
@@ -447,15 +430,15 @@ void ACombatAIController::FindEnemy()
 	{
 		OwningCombatCharacter->TargetFound();
 
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && MountedGun)
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
 		{
 			FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(OwnerLocation, CurrentActor->GetActorLocation());
 
 
-			bool Check1 = TargetRot.Yaw < MountedGun->GetYawMin();
-			bool Check2 = TargetRot.Yaw > MountedGun->GetYawMax();
-			bool Check3 = TargetRot.Pitch < MountedGun->GetPitchMin();
-			bool Check4 = TargetRot.Pitch > MountedGun->GetPitchMax();
+			bool Check1 = TargetRot.Yaw < OwningCombatCharacter->GetMountedGun()->GetYawMin();
+			bool Check2 = TargetRot.Yaw > OwningCombatCharacter->GetMountedGun()->GetYawMax();
+			bool Check3 = TargetRot.Pitch < OwningCombatCharacter->GetMountedGun()->GetPitchMin();
+			bool Check4 = TargetRot.Pitch > OwningCombatCharacter->GetMountedGun()->GetPitchMax();
 			bool Check5 = IsEnemyBehindMG(CurrentActor);
 
 			// check if enemy position is within turret's pitch and yaw boundaries and is not behind the MG
@@ -467,9 +450,9 @@ void ACombatAIController::FindEnemy()
 	}
 	else
 	{
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && MountedGun)
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
 		{
-			MountedGun->ResetCamera();
+			OwningCombatCharacter->GetMountedGun()->ResetCamera();
 		}
 	}
 
@@ -509,7 +492,7 @@ void ACombatAIController::ShootAtEnemy()
 		if (OwningCombatCharacter->IsUsingMountedWeapon())
 		{
 			FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
-			MountedGun->SetRotatioInput(TargetRot);
+			OwningCombatCharacter->GetMountedGun()->SetRotatioInput(TargetRot);
 		}
 
 		OwningCombatCharacter->BeginAim();
@@ -564,9 +547,9 @@ void ACombatAIController::ShootAtEnemy()
 		ClearFocus(EAIFocusPriority::Gameplay);
 
 		// look straight ahead with the MG direction
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
 		{
-			OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(MountedGun->GetCharacterStandRot());
+			OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(OwningCombatCharacter->GetMountedGun()->GetCharacterStandRot());
 		}
 
 
@@ -608,7 +591,7 @@ void ACombatAIController::FindMountedGun()
 	// if already using an MG
 	if (OwningCombatCharacter->IsUsingMountedWeapon()) {
 
-		if (MountedGun == nullptr)
+		if (OwningCombatCharacter->GetMountedGun() == nullptr)
 		{
 			OwningCombatCharacter->DropMountedGun();
 			return;
@@ -622,25 +605,25 @@ void ACombatAIController::FindMountedGun()
 
 		if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
 		{
-			MountedGun->SetPotentialOwner(nullptr);
-			MountedGun = nullptr;
+			OwningCombatCharacter->GetMountedGun()->SetPotentialOwner(nullptr);
+			OwningCombatCharacter->SetMountedGun(nullptr);
 		}
 
 		return;
 	}
 
-	if (MountedGun != nullptr) {
+	if (OwningCombatCharacter->GetMountedGun() != nullptr) {
 
 		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal && !IsEnemyBehindMG() && !OwningCombatCharacter->IsReloading())
 		{
-			OwningCombatCharacter->UseMountedGun(MountedGun);
+			OwningCombatCharacter->UseMountedGun();
 			return;
 		}
 
 		// in case player or another NPC has reached the MG before AI
-		if (MountedGun->GetPotentialOwner() != OwningCombatCharacter || MountedGun->GetOwner() != nullptr)
+		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter || OwningCombatCharacter->GetMountedGun()->GetOwner() != nullptr)
 		{
-			MountedGun = nullptr;
+			OwningCombatCharacter->SetMountedGun(nullptr);
 			CanFindCover = true;
 		}
 		else
@@ -671,7 +654,7 @@ void ACombatAIController::FindMountedGun()
 				bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
 				bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() != nullptr && PotentialMG->GetPotentialOwner() == OwningCombatCharacter;
 
-				if (HasNoOwner || IsSamePotentialOwner)
+				if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
 				{
 					FVector MGLocation = PotentialMG->GetActorLocation();
 
@@ -716,12 +699,12 @@ void ACombatAIController::FindMountedGun()
 		}
 	}
 
-	MountedGun = SelectedMG;
+	OwningCombatCharacter->SetMountedGun(SelectedMG);
 
-	if (MountedGun)
+	if (OwningCombatCharacter->GetMountedGun())
 	{
-		MountedGun->SetPotentialOwner(OwningCombatCharacter);
-		TargetDestination = MountedGun->GetCharacterStandPos();
+		OwningCombatCharacter->GetMountedGun()->SetPotentialOwner(OwningCombatCharacter);
+		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
 		CanFindCover = false;
 	}
 
@@ -1110,7 +1093,7 @@ void ACombatAIController::ResetLocation()
 
 bool ACombatAIController::IsEnemyBehindMG(AActor* Enemy)
 {
-	if (MountedGun == nullptr) {
+	if (OwningCombatCharacter->GetMountedGun() == nullptr) {
 		return false;
 	}
 
@@ -1120,8 +1103,8 @@ bool ACombatAIController::IsEnemyBehindMG(AActor* Enemy)
 
 	if (Enemy)
 	{
-		FVector MGForwardPos = UKismetMathLibrary::GetForwardVector(MountedGun->GetActorRotation());
-		FVector Normalised = Enemy->GetActorLocation() - MountedGun->GetActorLocation();
+		FVector MGForwardPos = UKismetMathLibrary::GetForwardVector(OwningCombatCharacter->GetMountedGun()->GetActorRotation());
+		FVector Normalised = Enemy->GetActorLocation() - OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 		UKismetMathLibrary::Vector_Normalize(Normalised);
 		float Angle = UKismetMathLibrary::Dot_VectorVector(MGForwardPos, Normalised);
 

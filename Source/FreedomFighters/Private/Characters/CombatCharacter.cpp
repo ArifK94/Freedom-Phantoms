@@ -32,6 +32,18 @@
 #include "GameFramework/Controller.h"
 
 
+void ACombatCharacter::SetMountedGun(AWeapon* Mount)
+{
+	if (Mount)
+	{
+		MountedGun = Cast<AMountedGun>(Mount);
+	}
+	else
+	{
+		MountedGun = nullptr;
+	}
+}
+
 ACombatCharacter::ACombatCharacter()
 {
 	currentWeaponObj = nullptr;
@@ -145,7 +157,7 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 			// Incase using a mounted gun or special weapon other than primary and secondary, currentWeaponObj can be used for all types of weapons
 			currentWeaponObj->SetOwner(nullptr);
 			primaryWeaponObj->SetOwner(nullptr);
-			secondaryWeaponObj->SetOwner(nullptr);			
+			secondaryWeaponObj->SetOwner(nullptr);
 		}
 	}
 
@@ -338,6 +350,8 @@ void ACombatCharacter::UpdateCombatMode()
 			isInCombatMode = false;
 			bUseControllerRotationYaw = false;
 		}
+
+		OnCombatUpdated.Broadcast(this);
 	}
 }
 
@@ -371,6 +385,10 @@ void ACombatCharacter::BeginEquipWeapon()
 		EndReload();
 	}
 
+	if (currentWeaponObj == MountedGun) {
+		return;
+	}
+
 	EndFire();
 
 	isEquippingWeapon = true;
@@ -381,6 +399,10 @@ void ACombatCharacter::BeginEquipWeapon()
 
 void ACombatCharacter::GrabWeapon()
 {
+	if (currentWeaponObj == MountedGun) {
+		return;
+	}
+
 	if (!hasEquippedWeapon)
 	{
 		if (!Cast<AMountedGun>(currentWeaponObj)) {
@@ -409,6 +431,10 @@ void ACombatCharacter::EndEquipWeapon()
 
 void ACombatCharacter::swapWeapon()
 {
+	if (currentWeaponObj == MountedGun) {
+		return;
+	}
+
 	if (!isSwappingWeapon) {
 		return;
 	}
@@ -436,13 +462,17 @@ void ACombatCharacter::swapWeapon()
 
 void ACombatCharacter::HolsterWeapon()
 {
+	if (currentWeaponObj == MountedGun) {
+		return;
+	}
+
 	currentWeaponObj->setWeaponSocket(Loadout->GetMesh(), currentWeaponObj->getHolsterSocket());
 }
 
 
 void ACombatCharacter::BeginFire()
 {
-	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isFiring) {
+	if (currentWeaponObj == nullptr || isFiring || !hasEquippedWeapon) {
 		return;
 	}
 
@@ -723,7 +753,7 @@ ACombatCharacter* ACombatCharacter::FindNearestEnemy(float TargetRange)
 			bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
 			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentCombatant);
 
-			if (!isFriendly && IsAlive)
+			if (!isFriendly && IsAlive && CurrentHealth->GetSelectedFaction() != TeamFaction::Neutral)
 			{
 				ClosestEnemy = CurrentCombatant;
 
@@ -831,8 +861,12 @@ void ACombatCharacter::ShowCharacterOutline(bool CanShow)
 	}
 }
 
-void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
+void ACombatCharacter::UseMountedGun()
 {
+	if (MountedGun == nullptr) {
+		return;
+	}
+
 	EndFire();
 	EndAim();
 
@@ -840,41 +874,43 @@ void ACombatCharacter::UseMountedGun(AWeapon* MountedGun)
 	HolsterWeapon();
 	MountedGun->SetOwner(this);
 	currentWeaponObj = MountedGun;
-	
+
 	RetrieveWeaponAnimDataSet();
 
-	FLatentActionInfo LatentInfo;
-	LatentInfo.CallbackTarget = this;
+	if (MountedGun->GetAdjustBehindMG())
+	{
+		FLatentActionInfo LatentInfo;
+		LatentInfo.CallbackTarget = this;
 
-	AMountedGun* Mount = Cast<AMountedGun>(MountedGun);
 
-	UKismetSystemLibrary::MoveComponentTo(
-		GetCapsuleComponent(),
-		Mount->GetCharacterStandPos(),
-		Mount->GetCharacterStandRot(),
-		false,
-		false,
-		.2f,
-		false,
-		EMoveComponentAction::Type::Move,
-		LatentInfo
-	);
+		UKismetSystemLibrary::MoveComponentTo(
+			GetCapsuleComponent(),
+			MountedGun->GetCharacterStandPos(),
+			MountedGun->GetCharacterStandRot(),
+			false,
+			false,
+			.2f,
+			false,
+			EMoveComponentAction::Type::Move,
+			LatentInfo
+		);
+	}
+
+	// in case character was spawned to use MG
+	hasEquippedWeapon = true;
 }
 
 void ACombatCharacter::DropMountedGun()
 {
 	isUsingMountedWeapon = false;
 
-
-	AMountedGun* Mount = Cast<AMountedGun>(currentWeaponObj);
-
-	if (Mount)
+	if (MountedGun)
 	{
-		Mount->DropWeapon();
+		MountedGun->DropWeapon();
 	}
 
 	// Go back a bit behind the mounted gun
-	FVector BehindMGPos = FVector(GetActorLocation().X- 50.0f, GetActorLocation().Y, GetActorLocation().Z);
+	FVector BehindMGPos = FVector(GetActorLocation().X - 50.0f, GetActorLocation().Y, GetActorLocation().Z);
 	SetActorLocation(BehindMGPos);
 
 	EndFire();

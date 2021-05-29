@@ -8,15 +8,6 @@
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
 
-AMountedGun::AMountedGun()
-{
-	PrimaryActorTick.bCanEverTick = false;
-
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-
-	CameraPositionSocket = "CamPos";
-	CharacterPositionSocket = "CharacterPosition";
-}
 
 void AMountedGun::SetIsAiming(bool isAiming)
 {
@@ -37,6 +28,20 @@ void AMountedGun::SetIsAiming(bool isAiming)
 		GetWorldTimerManager().SetTimer(THandler_ZoomFOVOut, this, &AMountedGun::ZoomOut, .01f, true);
 	}
 
+}
+
+AMountedGun::AMountedGun()
+{
+	PrimaryActorTick.bCanEverTick = false;
+
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+
+	CameraPositionSocket = "CamPos";
+	CharacterPositionSocket = "CharacterPosition";
+
+	AdjustBehindMG = true;
+	CanTraceInteraction = true;
+	CanExit = true;
 }
 
 void AMountedGun::BeginPlay()
@@ -71,9 +76,6 @@ void AMountedGun::AddControllerYawInput(float Val)
 
 void AMountedGun::SetRotatioInput(FRotator Rotation)
 {
-	//Rotation.Yaw = FMath::ClampAngle(Rotation.Yaw, YawMin, YawMax);
-	//Rotation.Yaw = FRotator::ClampAxis(Rotation.Yaw);
-
 	RotationInput = Rotation;
 	FollowCamera->SetWorldRotation(RotationInput);
 }
