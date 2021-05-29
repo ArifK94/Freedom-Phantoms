@@ -475,6 +475,10 @@ void ACustomPlayerController::EndSprint()
 
 void ACustomPlayerController::BeginAim()
 {
+	if (ControlledAircraft) {
+		return;
+	}
+
 	OwningCombatCharacter->BeginAim();
 
 	if (OwningCombatCharacter->GetCurrentWeapon()) {

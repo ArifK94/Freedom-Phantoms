@@ -272,7 +272,11 @@ void AAircraft::SpawnWeapon()
 
 		if (Weapon)
 		{
-			//Weapon->SetComponentEyeViewPoint(FollowCamera);
+			if (AircraftWeapon.SetCamToMuzzle)
+			{
+				Weapon->SetComponentEyeViewPoint(FollowCamera);
+			}
+
 			Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AircraftWeapon.WeaponSocketName);
 			Weapon->GetClipAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			Weapon->GetShotAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
