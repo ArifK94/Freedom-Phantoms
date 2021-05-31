@@ -105,7 +105,7 @@ void ACombatAIController::Init()
 			TargetSightSphere->RegisterComponent();
 			TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
-			TargetSightSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
 		}
 	}
 
@@ -118,11 +118,18 @@ void ACombatAIController::Init()
 			MountedGunSphere->RegisterComponent();
 			MountedGunSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 			MountedGunSphere->SetSphereRadius(MountedGunSightRadius);
-			MountedGunSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+			MountedGunSphere->SetCollisionProfileName(TEXT("AITargetSight"));
 		}
 	}
 
 	HasAssignedOrderEvent = false;
+
+	// if assigned an MG at the beginning
+	if (OwningCombatCharacter->GetMountedGun())
+	{
+		CurrentMovement = EPathFollowingRequestResult::AlreadyAtGoal;
+		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
+	}
 }
 
 UAISenseConfig* ACombatAIController::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
@@ -238,10 +245,10 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		// Attach Follow Camera to head socket
 		OwningCombatCharacter->FollowCamera->AttachToComponent(OwningCombatCharacter->GetMesh(), FAttachmentTransformRules::KeepWorldTransform, OwningCombatCharacter->GetHeadSocket());
 
+		GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_BeginFire, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_Sprint, this, &ACombatAIController::UpdateSprint, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CombatAlert, this, &ACombatAIController::UpdatCombatAlert, 1.0f, true);
@@ -442,7 +449,7 @@ void ACombatAIController::FindEnemy()
 			bool Check5 = IsEnemyBehindMG(CurrentActor);
 
 			// check if enemy position is within turret's pitch and yaw boundaries and is not behind the MG
-			if (Check5)
+			if (Check5 && OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
 			{
 				OwningCombatCharacter->DropMountedGun();
 			}
@@ -489,7 +496,8 @@ void ACombatAIController::ShootAtEnemy()
 	{
 		SetFocus(EnemyActor);
 
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		// if using a mounted gun
+		if (OwningCombatCharacter->GetMountedGun())
 		{
 			FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
 			OwningCombatCharacter->GetMountedGun()->SetRotatioInput(TargetRot);
@@ -547,7 +555,7 @@ void ACombatAIController::ShootAtEnemy()
 		ClearFocus(EAIFocusPriority::Gameplay);
 
 		// look straight ahead with the MG direction
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetAdjustBehindMG())
 		{
 			OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(OwningCombatCharacter->GetMountedGun()->GetCharacterStandRot());
 		}
@@ -594,6 +602,11 @@ void ACombatAIController::FindMountedGun()
 		if (OwningCombatCharacter->GetMountedGun() == nullptr)
 		{
 			OwningCombatCharacter->DropMountedGun();
+			return;
+		}
+
+		if (!OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
+		{
 			return;
 		}
 

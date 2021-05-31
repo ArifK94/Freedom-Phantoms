@@ -245,9 +245,12 @@ void AAircraft::SpawnPassenger()
 				// Set to use weapon, usually a mounted gun would be used
 				if (HeliSeat.AssociatedWeapon > -1)
 				{
-					ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
-					CombatCharacter->SetMountedGun(WeaponObjs[HeliSeat.AssociatedWeapon]);
-					CombatCharacter->UseMountedGun();
+					if (Cast<AMountedGun>(WeaponObjs[HeliSeat.AssociatedWeapon])) // if it's a mounted gun
+					{
+						ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
+						CombatCharacter->SetMountedGun(WeaponObjs[HeliSeat.AssociatedWeapon]);
+						CombatCharacter->UseMountedGun();
+					}
 				}
 
 				OccupiedSeats.Add(HeliSeat);

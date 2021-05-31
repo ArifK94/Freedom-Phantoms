@@ -55,6 +55,8 @@ void AMountedGun::BeginPlay()
 	
 	// So that the weapon fires from the FollowCamera view
 	SetComponentEyeViewPoint(FollowCamera);
+
+	ResetCamera();
 }
 
 
@@ -77,6 +79,7 @@ void AMountedGun::AddControllerYawInput(float Val)
 void AMountedGun::SetRotatioInput(FRotator Rotation)
 {
 	RotationInput = Rotation;
+
 	FollowCamera->SetWorldRotation(RotationInput);
 }
 
@@ -111,7 +114,8 @@ void AMountedGun::DropWeapon(bool RemoveOwner)
 
 void AMountedGun::ResetCamera()
 {
-	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+	RotationInput = FRotator::ZeroRotator;
+	FollowCamera->SetRelativeRotation(RotationInput);
 }
 
 void AMountedGun::ZoomIn()
