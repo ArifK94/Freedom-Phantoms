@@ -131,11 +131,10 @@ void ACustomPlayerController::BeginPlay()
 		{
 			SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
 		}
-
-		if (OwningCombatCharacter->GetMountedGun())
-		{
-			UseMountedGun();
-		}
+		
+		// Character can be spawned in to use MG such as helicopter gunner
+		UseMountedGun();
+		
 	}
 }
 
@@ -589,20 +588,20 @@ void ACustomPlayerController::CheckInteractable()
 			FocusedInteractable = Interactable;
 
 			// Mounted Gun?
-			OwningCombatCharacter->SetMountedGun(Cast<AMountedGun>(TargetActor));
+			MG = Cast<AMountedGun>(TargetActor);
 
 			if (Interactable)
 			{
 				ActionMessage = Interactable->GetActionMessage();
 			}
-			else if (OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetCanTraceInteraction())
+			else if (MG && MG->GetCanTraceInteraction())
 			{
 				// As we would need another UI message to display message to stop using the gun, 
 				// we check if the current weapon is not the mounted gun, meaning the player is not using it
 				// also check if not already in use
-				if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetOwner() == nullptr)
+				if (OwningCombatCharacter->GetCurrentWeapon() != MG && MG->GetOwner() == nullptr)
 				{
-					ActionMessage = OwningCombatCharacter->GetMountedGun()->GetPickupMessage();
+					ActionMessage = MG->GetPickupMessage();
 				}
 			}
 			else
@@ -627,7 +626,7 @@ void ACustomPlayerController::PickupInteractable()
 		FocusedInteractable->SetActorEnableCollision(false);
 		FocusedInteractable->SetActorTickEnabled(false);
 	}
-	else if (OwningCombatCharacter->GetMountedGun()) 		// Use Mounted Gun
+	else if (MG) 		// Use Mounted Gun
 	{
 		// Stop using the mounted gun if currently using it
 		if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetMountedGun())
@@ -637,6 +636,7 @@ void ACustomPlayerController::PickupInteractable()
 				OwningCombatCharacter->GetMountedGun()->RemovePlayerControl(this, OwningCombatCharacter);
 
 				OwningCombatCharacter->DropMountedGun();
+				MG = nullptr;
 
 				BeginCheckInteractable();
 
@@ -646,6 +646,7 @@ void ACustomPlayerController::PickupInteractable()
 		}
 		else
 		{
+			OwningCombatCharacter->SetMountedGun(MG);
 			OwningCombatCharacter->UseMountedGun();
 			UseMountedGun();
 		}
@@ -678,6 +679,10 @@ void ACustomPlayerController::UseInteractableActor()
 
 void ACustomPlayerController::UseMountedGun()
 {
+	if (OwningCombatCharacter->GetMountedGun() == nullptr) {
+		return;
+	}
+
 	// don't need to check for interaction if already using it
 	GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
 
@@ -704,6 +709,10 @@ void ACustomPlayerController::ShowAircraftView()
 }
 void ACustomPlayerController::HideAircraftView()
 {
+	if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft == nullptr) {
+		return;
+	}
+
 	if (OwningCombatCharacter->GetMountedGun())
 	{
 		OwningCombatCharacter->GetMountedGun()->SetPlayerControl(this, OwningCombatCharacter);

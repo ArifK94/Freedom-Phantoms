@@ -159,6 +159,12 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 			primaryWeaponObj->SetOwner(nullptr);
 			secondaryWeaponObj->SetOwner(nullptr);
 		}
+
+		if (MountedGun) {
+			MountedGun->SetPotentialOwner(nullptr);
+		}
+		DropMountedGun();
+
 	}
 
 	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser);
@@ -405,12 +411,9 @@ void ACombatCharacter::GrabWeapon()
 
 	if (!hasEquippedWeapon)
 	{
-		if (!Cast<AMountedGun>(currentWeaponObj)) {
-			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
-			hasEquippedWeapon = true;
-			UpdateCombatMode();
-		}
-
+		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		hasEquippedWeapon = true;
+		UpdateCombatMode();
 	}
 	else
 	{
@@ -902,12 +905,13 @@ void ACombatCharacter::UseMountedGun()
 
 void ACombatCharacter::DropMountedGun()
 {
+	if (MountedGun == nullptr) {
+		return;
+	}
+
 	isUsingMountedWeapon = false;
 
-	if (MountedGun)
-	{
-		MountedGun->DropWeapon();
-	}
+	MountedGun->DropWeapon();
 
 	// Go back a bit behind the mounted gun
 	FVector BehindMGPos = FVector(GetActorLocation().X - 50.0f, GetActorLocation().Y, GetActorLocation().Z);

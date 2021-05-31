@@ -9,6 +9,7 @@ class ACombatCharacter;
 class AAircraft;
 class AWeapon;
 class AInteractable;
+class AMountedGun;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
 
@@ -21,6 +22,7 @@ private:
 	APawn* OwningPawn;
 	ACombatCharacter* OwningCombatCharacter;
 	ACommanderCharacter* OwningCommander;
+	AMountedGun* MG;
 
 	FTimerHandle THandler_CheckInteractable;
 

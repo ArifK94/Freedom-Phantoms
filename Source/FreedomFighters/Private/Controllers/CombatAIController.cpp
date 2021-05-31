@@ -32,7 +32,8 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 		return;
 	}
 
-	OwningCombatCharacter->SetMountedGun(nullptr);
+	OwningCombatCharacter->GetMountedGun()->SetPotentialOwner(nullptr);
+	OwningCombatCharacter->DropMountedGun();
 	StayCombatAlert = true;
 
 	float TargetRadius = AcceptanceRadius;

@@ -94,8 +94,7 @@ void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, AC
 {
 	Character->GetCapsuleComponent()->IgnoreActorWhenMoving(Character, false);
 	OurPlayerController->SetViewTargetWithBlend(Character, 0.0f);
-	StopFire();
-	SetIsAiming(false);
+	DropWeapon(true);
 	PotentialOwner = nullptr;
 }
 
