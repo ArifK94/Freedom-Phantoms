@@ -659,7 +659,7 @@ void ACustomPlayerController::UseInteractableActor()
 		return;
 	}
 
-	OwningCombatCharacter->SetMountedGun(nullptr);
+	OwningCombatCharacter->DropMountedGun();
 
 	CurrentInteractable->BeginInteraction(OwningCombatCharacter, this);
 

@@ -34,6 +34,8 @@ AMountedGun::AMountedGun()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	MeshComp->SetCollisionProfileName(TEXT("MountedWeapon"));
+
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 
 	CameraPositionSocket = "CamPos";

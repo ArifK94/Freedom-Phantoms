@@ -903,7 +903,7 @@ void ACombatCharacter::UseMountedGun()
 	hasEquippedWeapon = true;
 }
 
-void ACombatCharacter::DropMountedGun()
+void ACombatCharacter::DropMountedGun(bool ClearMG)
 {
 	if (MountedGun == nullptr) {
 		return;
@@ -919,6 +919,12 @@ void ACombatCharacter::DropMountedGun()
 
 	EndFire();
 	EndAim();
+
+	if (ClearMG) {
+		MountedGun->SetOwner(nullptr);
+		MountedGun->SetPotentialOwner(nullptr);
+		MountedGun = nullptr;
+	}
 
 	currentWeaponObj = primaryWeaponObj;
 

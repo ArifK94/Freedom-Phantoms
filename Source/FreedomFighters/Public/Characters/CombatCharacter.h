@@ -151,8 +151,6 @@ public:
 
 	void HolsterWeapon();
 
-	void DropMountedGun();
-
 	void AimAutoRotation();
 
 	void DisableSprint();
@@ -186,6 +184,8 @@ public:
 	void SetMountedGun(AWeapon* Mount);
 
 	void UseMountedGun();
+
+	void DropMountedGun(bool ClearMG = true);
 
 	virtual void SetIsRepellingDown(bool IsRappelling) override;
 

@@ -280,6 +280,7 @@ void AAircraft::SpawnWeapon()
 				Weapon->SetComponentEyeViewPoint(FollowCamera);
 			}
 
+			Weapon->getMeshComp()->SetCollisionProfileName(TEXT("NoCollision")); // To allow line trace to go ignore this weapon, for AI sights for example
 			Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AircraftWeapon.WeaponSocketName);
 			Weapon->GetClipAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			Weapon->GetShotAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
@@ -302,7 +303,6 @@ void AAircraft::SpawnWeapon()
 				MG->SetPitchMax(AircraftWeapon.PitchMax);
 				MG->SetYawMin(AircraftWeapon.YawMin);
 				MG->SetYawMax(AircraftWeapon.YawMax);
-
 			}
 
 			WeaponObjs.Add(Weapon);
