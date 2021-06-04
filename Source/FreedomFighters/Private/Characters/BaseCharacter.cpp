@@ -29,7 +29,7 @@
 void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
 {
 	CurrentAircraftSeat = Seating;
-	if (Seating.OwningAircraft)
+	if (CurrentAircraftSeat.OwningAircraft != nullptr)
 	{
 		IsInAircraft = true;
 	}
@@ -68,12 +68,14 @@ void ABaseCharacter::SetIsRepellingDown(bool IsRappelling)
 	if (IsRappelling)
 	{
 		EndAim();
+
+		if (UseAimCameraSpring)
+		{
+			FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
 	}
 
-	if (UseAimCameraSpring)
-	{
-		FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-	}
+	OnRappelUpdate.Broadcast(this);
 
 }
 

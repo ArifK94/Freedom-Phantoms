@@ -690,7 +690,8 @@ void AAircraft::WaitForRapelling()
 						{
 							if (!isLeftRappelOccupied)
 							{
-								Passenger.CharacterObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
+								Passenger.CharacterObj->SetActorLocationAndRotation(Mesh->GetSocketLocation(LeftRopeSocket), FRotator::ZeroRotator);
+
 								Passenger.CharacterObj->SetIsRepellingDown(true);
 								isLeftRappelOccupied = true;
 							}
@@ -699,7 +700,8 @@ void AAircraft::WaitForRapelling()
 						{
 							if (!isRightRappelOccupied)
 							{
-								Passenger.CharacterObj->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
+								Passenger.CharacterObj->SetActorLocationAndRotation(Mesh->GetSocketLocation(RightRopeSocket), FRotator::ZeroRotator);
+
 								Passenger.CharacterObj->SetIsRepellingDown(true);
 								isRightRappelOccupied = true;
 							}

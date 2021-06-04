@@ -125,6 +125,8 @@ void ACustomPlayerController::BeginPlay()
 	{
 		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
 		OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
+		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
+
 		OnCombatModeUpdated(OwningCombatCharacter);
 
 		if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
@@ -183,6 +185,8 @@ void ACustomPlayerController::Tick(float DeltaTime)
 		PrimaryActorTick.bCanEverTick = false;
 		return;
 	}
+
+
 }
 
 void ACustomPlayerController::AddUIWidgets()
@@ -302,6 +306,19 @@ void ACustomPlayerController::OnCombatModeUpdated(ACombatCharacter* CombatCharac
 	}
 }
 
+void ACustomPlayerController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
+{
+	if (BaseCharacter->IsRepellingDown())
+	{
+		OwningCombatCharacter->DisableInput(this);
+		SetViewTargetWithBlend(OwningCombatCharacter, 0.2f);
+	}
+	else
+	{
+		OwningCombatCharacter->EnableInput(this);
+	}
+}
+
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
 {
@@ -314,7 +331,10 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 	{
 		ControlledAircraft->AddControllerPitchInput(Val);
 	}
-	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon()) // if in an aircraft
+	// else if in an aircraft
+	// mounted gun has its own control input so use that  in the next condition
+	// allow player to rotate around character when repelling
+	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown()) 
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
@@ -348,7 +368,7 @@ void ACustomPlayerController::AddControllerYawInput(float Val)
 	{
 		ControlledAircraft->AddControllerYawInput(Val);
 	}
-	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon())
+	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown())
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
@@ -497,11 +517,17 @@ void ACustomPlayerController::EndAim()
 
 void ACustomPlayerController::TakeCover()
 {
-
+	if (OwningCombatCharacter->IsRepellingDown()) {
+		return;
+	}
 }
 
 void ACustomPlayerController::BeginFire()
 {
+	if (OwningCombatCharacter->IsRepellingDown()) {
+		return;
+	}
+
 	if (ControlledAircraft)
 	{
 		AWeapon* CurrentWeapon = ControlledAircraft->GetCurrentWeaponObj();
@@ -655,7 +681,7 @@ void ACustomPlayerController::PickupInteractable()
 
 void ACustomPlayerController::UseInteractableActor()
 {
-	if (CurrentInteractable == nullptr) {
+	if (CurrentInteractable == nullptr || OwningCombatCharacter->IsRepellingDown()) {
 		return;
 	}
 

@@ -4,6 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CustomPlayerController.generated.h"
 
+class ABaseCharacter;
 class ACommanderCharacter;
 class ACombatCharacter;
 class AAircraft;
@@ -88,6 +89,9 @@ private:
 
 	UFUNCTION()
 		void OnCombatModeUpdated(ACombatCharacter* CombatCharacter);
+
+	UFUNCTION()
+		void OnRappelUpdated(ABaseCharacter* BaseCharacter);
 
 
 	void AddControllerPitchInput(float Val);

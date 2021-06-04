@@ -17,6 +17,7 @@ class AAIController;
 class UDataTable;
 class AAircraft;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRappelUpdateignature, ABaseCharacter*, BaseCharacter);
 UCLASS(config = Game)
 class FREEDOMFIGHTERS_API ABaseCharacter : public ACharacter
 {
@@ -229,6 +230,8 @@ private:
 	void ResetInitialDirectionBool();
 
 public:
+	FOnRappelUpdateignature OnRappelUpdate;
+
 	virtual void ShowCharacterOutline(bool CanShow);
 
 	void BeginCrouch();

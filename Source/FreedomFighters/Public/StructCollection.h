@@ -249,6 +249,7 @@ public:
 
 	FAircraftSeating()
 	{
+		OwningAircraft = nullptr;
 		AssociatedWeapon = -1;
 	}
 };

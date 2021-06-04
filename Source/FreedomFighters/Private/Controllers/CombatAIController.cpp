@@ -609,12 +609,6 @@ void ACombatAIController::FindMountedGun()
 	// if already using an MG
 	if (OwningCombatCharacter->IsUsingMountedWeapon()) {
 
-		if (OwningCombatCharacter->GetMountedGun() == nullptr)
-		{
-			OwningCombatCharacter->DropMountedGun(false);
-			return;
-		}
-
 		if (!OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
 		{
 			return;
@@ -628,8 +622,7 @@ void ACombatAIController::FindMountedGun()
 
 		if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
 		{
-			OwningCombatCharacter->GetMountedGun()->SetPotentialOwner(nullptr);
-			OwningCombatCharacter->SetMountedGun(nullptr);
+			OwningCombatCharacter->DropMountedGun(false);
 		}
 
 		return;

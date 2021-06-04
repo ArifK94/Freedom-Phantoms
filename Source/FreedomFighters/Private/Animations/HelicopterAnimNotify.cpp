@@ -5,6 +5,8 @@
 #include "Characters/BaseCharacter.h"
 #include "Vehicles/Aircraft.h"
 
+#include "Components/CapsuleComponent.h"
+
 void UHelicopterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	if (MeshComp != NULL && MeshComp->GetOwner() != NULL)
