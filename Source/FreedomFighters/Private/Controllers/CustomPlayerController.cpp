@@ -748,6 +748,8 @@ void ACustomPlayerController::UseInteractableActor()
 
 	CurrentInteractable->BeginInteraction(OwningCombatCharacter, this);
 
+	CurrentInteractable->PlayInteractSound();
+
 	if (CurrentInteractable->GetAircraft())
 	{
 		ControlledAircraft = CurrentInteractable->GetAircraft();

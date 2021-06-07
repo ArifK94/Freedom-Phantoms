@@ -48,6 +48,13 @@ void AInteractable::PlayPickupSound()
 	UGameplayStatics::PlaySound2D(GetWorld(), PickupSound);
 }
 
+void AInteractable::PlayInteractSound()
+{
+	if (InteractSound == nullptr) return;
+
+	UGameplayStatics::PlaySound2D(GetWorld(), InteractSound);
+}
+
 void AInteractable::PlayVoiceOverSound(TeamFaction Faction)
 {
 	for (int i = 0; i < SupportSoundsSet.Num(); i++)

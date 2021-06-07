@@ -34,6 +34,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USoundBase* PickupSound;
 
+	/** When user beings to interact with the object */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* InteractSound;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FSupportPackageVoiceOverSet> SupportSoundsSet;
 	
@@ -45,6 +49,8 @@ public:
 	void SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController);
 
 	void PlayPickupSound();
+
+	void PlayInteractSound();
 
 	void PlayVoiceOverSound(TeamFaction Faction);
 
