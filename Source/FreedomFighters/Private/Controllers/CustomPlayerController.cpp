@@ -140,6 +140,9 @@ void ACustomPlayerController::BeginPlay()
 		// Character can be spawned in to use MG such as helicopter gunner
 		UseMountedGun();
 
+		UHealthComponent* HealthComp = Cast<UHealthComponent>(OwningCombatCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
+		PlayerFaction = HealthComp->GetSelectedFaction();
+
 	}
 }
 
@@ -693,7 +696,9 @@ void ACustomPlayerController::PickupInteractable()
 
 		FocusedInteractable->SetActorEnableCollision(false);
 		FocusedInteractable->SetActorTickEnabled(false);
+		FocusedInteractable->PlayPickupSound();
 
+		FocusedInteractable->PlayVoiceOverSound(PlayerFaction);
 
 		// update support package event for UI
 		SupportPackages.Add(FocusedInteractable);

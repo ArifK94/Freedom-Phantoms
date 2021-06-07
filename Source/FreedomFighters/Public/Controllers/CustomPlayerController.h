@@ -32,6 +32,7 @@ private:
 	ACombatCharacter* OwningCombatCharacter;
 	ACommanderCharacter* OwningCommander;
 	AMountedGun* MG;
+	TeamFaction PlayerFaction;
 
 	FTimerHandle THandler_CheckInteractable;
 

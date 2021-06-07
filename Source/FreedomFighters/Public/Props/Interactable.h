@@ -8,6 +8,7 @@ class AAircraft;
 class ABaseCharacter;
 class APlayerController;
 class UTexture;
+class USoundBase;
 UCLASS()
 class FREEDOMFIGHTERS_API AInteractable : public AActor
 {
@@ -29,6 +30,12 @@ private:
 	/** Icon displayed for UI */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UTexture* Icon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* PickupSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<FSupportPackageVoiceOverSet> SupportSoundsSet;
 	
 public:	
 	AInteractable();
@@ -36,6 +43,10 @@ public:
 	void BeginInteraction(ABaseCharacter* Character, APlayerController* PlayerController);
 
 	void SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController);
+
+	void PlayPickupSound();
+
+	void PlayVoiceOverSound(TeamFaction Faction);
 
 
 protected:

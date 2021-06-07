@@ -76,6 +76,25 @@ public:
 	}
 };
 
+USTRUCT(BlueprintType)
+struct FSupportPackageVoiceOverSet : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* ReadyToUseSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TeamFaction Faction;
+
+	FSupportPackageVoiceOverSet()
+	{
+		ReadyToUseSound = nullptr;
+		Faction = TeamFaction::Neutral;
+	}
+};
+
 
 USTRUCT(BlueprintType)
 struct FAccessorySet : public FTableRowBase

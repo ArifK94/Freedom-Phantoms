@@ -2,6 +2,7 @@
 #include "Vehicles/Aircraft.h"
 #include "Characters/BaseCharacter.h"
 
+#include "Kismet/GameplayStatics.h"
 
 AInteractable::AInteractable()
 {
@@ -36,6 +37,27 @@ void AInteractable::SpawnAircraft(ABaseCharacter* Character, APlayerController* 
 		{
 			//Character->DisableInput(PlayerController);
 			//Aircraft->SetPlayerControl(PlayerController);
+		}
+	}
+}
+
+void AInteractable::PlayPickupSound()
+{
+	if (PickupSound == nullptr) return;
+
+	UGameplayStatics::PlaySound2D(GetWorld(), PickupSound);
+}
+
+void AInteractable::PlayVoiceOverSound(TeamFaction Faction)
+{
+	for (int i = 0; i < SupportSoundsSet.Num(); i++)
+	{
+		FSupportPackageVoiceOverSet SupportPackageVoiceOverSet = SupportSoundsSet[i];
+
+		if (SupportPackageVoiceOverSet.Faction == Faction && SupportPackageVoiceOverSet.ReadyToUseSound != nullptr)
+		{
+			UGameplayStatics::PlaySound2D(GetWorld(), SupportPackageVoiceOverSet.ReadyToUseSound);
+			return;
 		}
 	}
 }
