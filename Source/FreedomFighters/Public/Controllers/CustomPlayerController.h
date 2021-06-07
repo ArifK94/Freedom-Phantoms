@@ -13,6 +13,7 @@ class AInteractable;
 class AMountedGun;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, AInteractable*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
 
 UCLASS()
 class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
@@ -20,6 +21,13 @@ class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
 	GENERATED_BODY()
 
 private:
+	UPROPERTY(BlueprintAssignable)
+		FOnInteractiveFoundSignature OnInteractionFound;
+
+	UPROPERTY(BlueprintAssignable)
+		FOnSupportPackageUpdateSignature OnSupportPackageUpdate;
+
+
 	APawn* OwningPawn;
 	ACombatCharacter* OwningCombatCharacter;
 	ACommanderCharacter* OwningCommander;
@@ -27,15 +35,15 @@ private:
 
 	FTimerHandle THandler_CheckInteractable;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AAircraft* ControlledAircraft;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float BaseTurnRate;
 
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float BaseLookUpRate;
 
 
@@ -52,6 +60,14 @@ private:
 	UUserWidget* WeaponCrosshairWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> InventoryWidgetClass;
+	UUserWidget* InventoryWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> SupportPackageWidgetClass;
+	UUserWidget* SupportPackageWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> InteractWidgetClass;
 	UUserWidget* InteractWidget;
 
@@ -63,6 +79,15 @@ private:
 		AInteractable* FocusedInteractable;
 
 	AInteractable* CurrentInteractable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TArray<AInteractable*> SupportPackages;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		int32 CurrentSupportPackageIndex;
+
+	uint8 MaxSupportPackages;
+
 
 	/** Line trace length for the interactable actor to be detected */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -92,6 +117,7 @@ private:
 
 	UFUNCTION()
 		void OnRappelUpdated(ABaseCharacter* BaseCharacter);
+
 
 
 	void AddControllerPitchInput(float Val);
@@ -129,10 +155,9 @@ private:
 
 	void UseInteractableActor();
 
-	void UseMountedGun();
+	void SortSupportPackages();
 
-	UPROPERTY(BlueprintAssignable)
-		FOnInteractiveFoundSignature OnInteractionFound;
+	void UseMountedGun();
 
 	////////////// -------------------------- Aircraft Functions -------------------------- //////////////
 

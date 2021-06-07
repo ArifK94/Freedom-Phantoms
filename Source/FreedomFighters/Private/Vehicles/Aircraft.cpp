@@ -691,7 +691,6 @@ void AAircraft::WaitForRapelling()
 							if (!isLeftRappelOccupied)
 							{
 								Passenger.CharacterObj->SetActorLocationAndRotation(Mesh->GetSocketLocation(LeftRopeSocket), FRotator::ZeroRotator);
-
 								Passenger.CharacterObj->SetIsRepellingDown(true);
 								isLeftRappelOccupied = true;
 							}
@@ -701,7 +700,6 @@ void AAircraft::WaitForRapelling()
 							if (!isRightRappelOccupied)
 							{
 								Passenger.CharacterObj->SetActorLocationAndRotation(Mesh->GetSocketLocation(RightRopeSocket), FRotator::ZeroRotator);
-
 								Passenger.CharacterObj->SetIsRepellingDown(true);
 								isRightRappelOccupied = true;
 							}

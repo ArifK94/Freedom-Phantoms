@@ -7,6 +7,7 @@
 class AAircraft;
 class ABaseCharacter;
 class APlayerController;
+class UTexture;
 UCLASS()
 class FREEDOMFIGHTERS_API AInteractable : public AActor
 {
@@ -24,6 +25,10 @@ private:
 	/** Is the Spawned Actor Controllable such as aircrafts */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsControllable;
+
+	/** Icon displayed for UI */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTexture* Icon;
 	
 public:	
 	AInteractable();

@@ -28,6 +28,9 @@ ACustomPlayerController::ACustomPlayerController()
 	InteractionLength = 500.0f;
 
 	AutoReceiveInput = EAutoReceiveInput::Player0;
+
+	CurrentSupportPackageIndex = 0;
+	MaxSupportPackages = 4;
 }
 
 void ACustomPlayerController::SetupInputComponent()
@@ -133,10 +136,10 @@ void ACustomPlayerController::BeginPlay()
 		{
 			SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
 		}
-		
+
 		// Character can be spawned in to use MG such as helicopter gunner
 		UseMountedGun();
-		
+
 	}
 }
 
@@ -197,7 +200,7 @@ void ACustomPlayerController::AddUIWidgets()
 		return;
 	}
 
-	// Weapon Ammo
+
 	if (WeaponAmmoWidgetClass)
 	{
 		WeaponAmmoWidget = CreateWidget<UUserWidget>(World, WeaponAmmoWidgetClass);
@@ -207,6 +210,9 @@ void ACustomPlayerController::AddUIWidgets()
 			WeaponAmmoWidget->AddToViewport();
 		}
 	}
+
+
+
 
 	// Weapon Crosshairs
 	if (WeaponCrosshairhWidgetClass)
@@ -219,6 +225,7 @@ void ACustomPlayerController::AddUIWidgets()
 		}
 	}
 
+
 	if (HealthWidgetClass)
 	{
 		HealthWidget = CreateWidget<UUserWidget>(World, HealthWidgetClass);
@@ -230,6 +237,7 @@ void ACustomPlayerController::AddUIWidgets()
 	}
 
 
+
 	if (InteractWidgetClass)
 	{
 		InteractWidget = CreateWidget<UUserWidget>(World, InteractWidgetClass);
@@ -239,6 +247,32 @@ void ACustomPlayerController::AddUIWidgets()
 			InteractWidget->AddToViewport();
 		}
 	}
+
+
+
+	if (InventoryWidgetClass)
+	{
+		InventoryWidget = CreateWidget<UUserWidget>(World, InventoryWidgetClass);
+
+		if (InventoryWidget)
+		{
+			InventoryWidget->AddToViewport();
+		}
+	}
+
+
+
+	if (SupportPackageWidgetClass)
+	{
+		SupportPackageWidget = CreateWidget<UUserWidget>(World, SupportPackageWidgetClass);
+
+		if (SupportPackageWidget)
+		{
+			SupportPackageWidget->AddToViewport();
+		}
+	}
+
+
 
 
 	// Commander UI
@@ -334,7 +368,7 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 	// else if in an aircraft
 	// mounted gun has its own control input so use that  in the next condition
 	// allow player to rotate around character when repelling
-	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown()) 
+	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown())
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
@@ -352,7 +386,7 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 	}
 	else	// normal character movement
 	{
-		AddPitchInput(Val); 
+		AddPitchInput(Val);
 	}
 
 }
@@ -609,9 +643,16 @@ void ACustomPlayerController::CheckInteractable()
 		{
 			AActor* TargetActor = OutHit.GetActor();
 
+
 			// Interactable object?
-			AInteractable* Interactable = Cast<AInteractable>(TargetActor);
-			FocusedInteractable = Interactable;
+			AInteractable* Interactable = nullptr;
+
+			// check if can add more interactables
+			if (SupportPackages.Num() < MaxSupportPackages)
+			{
+				Interactable = Cast<AInteractable>(TargetActor);
+				FocusedInteractable = Interactable;
+			}
 
 			// Mounted Gun?
 			MG = Cast<AMountedGun>(TargetActor);
@@ -644,6 +685,7 @@ void ACustomPlayerController::PickupInteractable()
 {
 	if (FocusedInteractable)
 	{
+		// only add the support package if there isn't one assigned, this way the player can have the first one always secleted rather than the latest one
 		CurrentInteractable = FocusedInteractable;
 
 		FocusedInteractable->SetActorHiddenInGame(true);
@@ -651,6 +693,13 @@ void ACustomPlayerController::PickupInteractable()
 
 		FocusedInteractable->SetActorEnableCollision(false);
 		FocusedInteractable->SetActorTickEnabled(false);
+
+
+		// update support package event for UI
+		SupportPackages.Add(FocusedInteractable);
+		CurrentSupportPackageIndex = SupportPackages.Find(FocusedInteractable);
+		OnSupportPackageUpdate.Broadcast(FocusedInteractable, SupportPackages.Find(FocusedInteractable), true);
+
 	}
 	else if (MG) 		// Use Mounted Gun
 	{
@@ -685,6 +734,11 @@ void ACustomPlayerController::UseInteractableActor()
 		return;
 	}
 
+	// only control one aircraft at a time
+	if (ControlledAircraft != nullptr) {
+		return;
+	}
+
 	OwningCombatCharacter->DropMountedGun();
 
 	CurrentInteractable->BeginInteraction(OwningCombatCharacter, this);
@@ -700,7 +754,48 @@ void ACustomPlayerController::UseInteractableActor()
 		GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
 	}
 
-	CurrentInteractable = nullptr;
+	// update support package event for UI
+	SupportPackages.Remove(CurrentInteractable);
+
+	SortSupportPackages();
+	OnSupportPackageUpdate.Broadcast(CurrentInteractable, CurrentSupportPackageIndex, false);
+
+}
+
+/// <summary>
+/// Fill the gap between empty indices
+/// Update the current support package index
+/// </summary>
+void ACustomPlayerController::SortSupportPackages()
+{
+	for (int i = 0; i < SupportPackages.Num(); i++)
+	{
+		AInteractable* Current = SupportPackages[i];
+
+		// if current index is empty
+		if (Current == nullptr)
+		{
+			AInteractable* Next = nullptr;
+
+			if (i + 1 < SupportPackages.Num())
+			{
+				Next = SupportPackages[i + 1];
+				Current = Next;
+				SupportPackages[i + 1] = nullptr;
+			}
+		}
+	}
+
+	if (SupportPackages.Num() > 0)
+	{
+		CurrentSupportPackageIndex = CurrentSupportPackageIndex - 1;
+		CurrentInteractable = SupportPackages[CurrentSupportPackageIndex];
+	}
+	else
+	{
+		CurrentInteractable = nullptr;
+		CurrentSupportPackageIndex = -1;
+	}
 }
 
 void ACustomPlayerController::UseMountedGun()
