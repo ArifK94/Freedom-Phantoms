@@ -1,15 +1,12 @@
 #include "Controllers/CustomPlayerController.h"
-
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
-
+#include "CustomComponents/HealthComponent.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponBullet.h"
 #include "Weapons/AmmoCrate.h"
 #include "Weapons/MountedGun.h"
-
 #include "Vehicles/Aircraft.h"
-
 #include "Props/Interactable.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -37,6 +34,11 @@ void ACustomPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
+	InitInputComponent();
+}
+
+void ACustomPlayerController::InitInputComponent()
+{
 	FInputActionBinding PauseInput = InputComponent->BindAction("Pause", IE_Pressed, this, &ACustomPlayerController::PauseGame);
 	PauseInput.bExecuteWhenPaused = true;
 

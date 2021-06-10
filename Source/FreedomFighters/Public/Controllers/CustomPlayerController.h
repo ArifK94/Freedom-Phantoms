@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "EnumCollection.h"
 #include "CustomPlayerController.generated.h"
 
 class ABaseCharacter;
@@ -20,6 +21,9 @@ class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
+protected:
+	ACombatCharacter* OwningCombatCharacter;
+
 private:
 	UPROPERTY(BlueprintAssignable)
 		FOnInteractiveFoundSignature OnInteractionFound;
@@ -29,7 +33,6 @@ private:
 
 
 	APawn* OwningPawn;
-	ACombatCharacter* OwningCombatCharacter;
 	ACommanderCharacter* OwningCommander;
 	AMountedGun* MG;
 	TeamFaction PlayerFaction;
@@ -97,8 +100,10 @@ private:
 public:
 	ACustomPlayerController();
 
-private:
 	virtual void SetupInputComponent() override;
+
+	/** This exists to help unarmed controller class not inherit all combat bind action mapping */
+	virtual void InitInputComponent();
 
 	virtual void OnPossess(APawn* InPawn) override;
 
@@ -138,12 +143,12 @@ private:
 	void BeginJump();
 	void EndJump();
 
-	void BeginAim();
+	virtual void BeginAim();
 	void EndAim();
 
 	void TakeCover();
 
-	void BeginFire();
+	virtual void BeginFire();
 	void EndFire();
 
 	void SwitchWeapon();
