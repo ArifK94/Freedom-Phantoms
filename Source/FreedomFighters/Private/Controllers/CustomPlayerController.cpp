@@ -8,6 +8,7 @@
 #include "Weapons/MountedGun.h"
 #include "Vehicles/Aircraft.h"
 #include "Props/Interactable.h"
+#include "Objectives/BaseObjective.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetInputLibrary.h"
@@ -144,7 +145,6 @@ void ACustomPlayerController::BeginPlay()
 
 		UHealthComponent* HealthComp = Cast<UHealthComponent>(OwningCombatCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
 		PlayerFaction = HealthComp->GetSelectedFaction();
-
 	}
 }
 
@@ -277,7 +277,15 @@ void ACustomPlayerController::AddUIWidgets()
 		}
 	}
 
+	if (ObjectiveWidgetClass)
+	{
+		ObjectiveWidget = CreateWidget<UUserWidget>(World, ObjectiveWidgetClass);
 
+		if (ObjectiveWidget)
+		{
+			ObjectiveWidget->AddToViewport();
+		}
+	}
 
 
 	// Commander UI
@@ -358,6 +366,32 @@ void ACustomPlayerController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 	}
 }
 
+void ACustomPlayerController::OnObjectiveCompleted(ABaseObjective* Objective)
+{
+	auto Index = MissionObjectives.Find(Objective);
+	MissionObjectives.RemoveAt(Index);
+
+	// set the next objective
+	if (Index - 1 > -1)
+	{
+		CurrentMissionObjective = MissionObjectives[Index - 1];
+	}
+	else
+	{
+		CurrentMissionObjective = nullptr;
+	}
+
+}
+
+void ACustomPlayerController::AddMissionObjective(ABaseObjective* Objective)
+{
+	MissionObjectives.Add(Objective);
+	Objective->OnObjectiveCompleted.AddDynamic(this, &ACustomPlayerController::OnObjectiveCompleted);
+
+	if (CurrentMissionObjective == nullptr) {
+		CurrentMissionObjective = Objective;
+	}
+}
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
 {

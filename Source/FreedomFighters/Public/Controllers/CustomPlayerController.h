@@ -12,6 +12,7 @@ class AAircraft;
 class AWeapon;
 class AInteractable;
 class AMountedGun;
+class ABaseObjective;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, AInteractable*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
@@ -75,6 +76,10 @@ private:
 		TSubclassOf<UUserWidget> InteractWidgetClass;
 	UUserWidget* InteractWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> ObjectiveWidgetClass;
+	UUserWidget* ObjectiveWidget;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FText InteractKeyDisplayName;
 
@@ -96,6 +101,12 @@ private:
 	/** Line trace length for the interactable actor to be detected */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float InteractionLength;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TArray<ABaseObjective*> MissionObjectives;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		ABaseObjective* CurrentMissionObjective;
 	
 public:
 	ACustomPlayerController();
@@ -124,7 +135,11 @@ public:
 	UFUNCTION()
 		void OnRappelUpdated(ABaseCharacter* BaseCharacter);
 
+	UFUNCTION()
+		void OnObjectiveCompleted(ABaseObjective* Objective);
 
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
+		void AddMissionObjective(ABaseObjective* Objective);
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
