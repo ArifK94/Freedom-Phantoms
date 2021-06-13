@@ -17,6 +17,7 @@ ABaseObjective::ABaseObjective()
 	BoxCollider->CanCharacterStepUpOn = ECB_No;
 
 	IsObjectiveComplete = false;
+	IsFinalObjective = false;
 
 }
 

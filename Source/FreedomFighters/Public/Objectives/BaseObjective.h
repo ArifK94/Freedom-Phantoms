@@ -32,6 +32,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		bool IsObjectiveComplete;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		bool IsFinalObjective;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USoundBase* ObjectiveCompleteSound;	
 public:	
@@ -41,4 +44,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	void ObjectiveComplete();
+
+public:
+	bool GetIsFinalObjective() {
+		return IsFinalObjective;
+	}
+
 };

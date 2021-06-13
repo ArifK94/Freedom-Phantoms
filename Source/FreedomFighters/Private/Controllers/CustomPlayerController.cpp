@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetInputLibrary.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/InputSettings.h"
@@ -379,6 +380,12 @@ void ACustomPlayerController::OnObjectiveCompleted(ABaseObjective* Objective)
 	else
 	{
 		CurrentMissionObjective = nullptr;
+	}
+
+	if (Objective->GetIsFinalObjective())
+	{
+		UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
+		OwningCombatCharacter->DisableInput(this);
 	}
 
 }
