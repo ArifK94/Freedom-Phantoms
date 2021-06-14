@@ -147,8 +147,6 @@ void AWeapon::ConvertWeaponName()
 	FString Left, Right;
 	WeaponTypeName.ToString().Split(TEXT("::"), &Left, &Right);
 	WeaponName = *Right;
-
-
 }
 
 FVector AWeapon::getMuzzleLocation()

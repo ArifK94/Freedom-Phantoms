@@ -193,7 +193,23 @@ void ACombatCharacter::RetrieveWeaponAnimDataSet()
 	FName WeaponTypeName = currentWeaponObj->GetWeaponName();
 
 	static const FString ContextString(TEXT("Weapons Animation DataSet"));
-	WeaponAnimDataSet = WeaponsAnimationDatatable->FindRow<FWeaponAnimSet>(WeaponTypeName, ContextString, true);
+	FWeaponAnimSet* AnimSet = WeaponsAnimationDatatable->FindRow<FWeaponAnimSet>(WeaponTypeName, ContextString, true);
+
+	// if anim set is null, maybe because the name has been provided for the weapon but the weapon row name does not exist in the data set
+	// then try find the row based on the weapon type
+	if (AnimSet == nullptr)
+	{
+		const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("WeaponType"), true);
+		WeaponTypeName = EnumPtr->GetNameByValue((int64)currentWeaponObj->GetWeaponType());
+
+		FString Left, Right;
+		WeaponTypeName.ToString().Split(TEXT("::"), &Left, &Right);
+		WeaponTypeName = *Right;
+
+		AnimSet = WeaponsAnimationDatatable->FindRow<FWeaponAnimSet>(WeaponTypeName, ContextString, true);
+	}
+
+	WeaponAnimDataSet = AnimSet;
 
 	if (WeaponAnimDataSet)
 	{
@@ -368,7 +384,10 @@ void ACombatCharacter::BeginWeaponSwap()
 		isSwappingWeapon = true;
 		EndFire();
 		UpdateCombatMode();
-		PlayAnimMontage(WeaponAnimDataSet->HolsterMontage);
+
+		if (WeaponAnimDataSet) {
+			PlayAnimMontage(WeaponAnimDataSet->HolsterMontage);
+		}
 	}
 	else
 	{
@@ -399,8 +418,9 @@ void ACombatCharacter::BeginEquipWeapon()
 
 	isEquippingWeapon = true;
 
-
-	PlayAnimMontage(WeaponAnimDataSet->DrawMontage);
+	if (WeaponAnimDataSet) {
+		PlayAnimMontage(WeaponAnimDataSet->DrawMontage);
+	}
 }
 
 void ACombatCharacter::GrabWeapon()
@@ -428,7 +448,9 @@ void ACombatCharacter::EndEquipWeapon()
 	isEquippingWeapon = false;
 	isSwappingWeapon = false;
 
-	StopAnimMontage(WeaponAnimDataSet->DrawMontage);
+	if (WeaponAnimDataSet) {
+		StopAnimMontage(WeaponAnimDataSet->DrawMontage);
+	}
 }
 
 
@@ -499,7 +521,9 @@ void ACombatCharacter::BeginFire()
 
 	UpdateCombatMode();
 
-	PlayAnimMontage(WeaponAnimDataSet->Shooting);
+	if (WeaponAnimDataSet) {
+		PlayAnimMontage(WeaponAnimDataSet->Shooting);
+	}
 
 }
 
@@ -517,7 +541,9 @@ void ACombatCharacter::EndFire()
 			HandGuardAlpha = 0.0f;
 		}
 
-		StopAnimMontage(WeaponAnimDataSet->Shooting);
+		if (WeaponAnimDataSet) {
+			StopAnimMontage(WeaponAnimDataSet->Shooting);
+		}
 	}
 }
 
@@ -615,8 +641,9 @@ void ACombatCharacter::BeginReload()
 	EndFire();
 	UpdateCombatMode();
 
-
-	PlayAnimMontage(WeaponAnimDataSet->Reloading);
+	if (WeaponAnimDataSet) {
+		PlayAnimMontage(WeaponAnimDataSet->Reloading);
+	}
 
 	if (GetVoiceClipsSet()->ReloadingSound != NULL)
 	{
@@ -632,7 +659,10 @@ void ACombatCharacter::EndReload()
 		currentWeaponObj->EndReload();
 		isReloading = currentWeaponObj->getIsReloading();
 		UpdateCombatMode();
-		StopAnimMontage(WeaponAnimDataSet->Reloading);
+
+		if (WeaponAnimDataSet) {
+			StopAnimMontage(WeaponAnimDataSet->Reloading);
+		}
 	}
 }
 

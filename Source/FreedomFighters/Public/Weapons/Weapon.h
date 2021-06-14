@@ -15,6 +15,7 @@ class UAudioComponent;
 class AWeaponClip;
 class AWeaponBullet;
 class UObjectPoolComponent;
+class UTexture;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEmptyAmmoClipSignature, AWeapon*, Weapon);
 
@@ -83,6 +84,13 @@ protected:
 	FTimerHandle THandler_AutoReloadBegin;
 	FTimerHandle THandler_AutoReloadEnd;
 
+	/** For image to be displayed when selecting a weapon */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTexture* WeaponThumbnail;
+
+	/** For image to be displayed next to current weapon during gameplay */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTexture* WeaponThumbnailWireframe;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		WeaponType weaponType;
@@ -243,6 +251,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		float ShotLineDuration;
+
+
+
 
 private:
 	float CurrentVerticleRecoil;
