@@ -119,22 +119,22 @@ public:
 USTRUCT(BlueprintType)
 struct FWeaponsSet : public FTableRowBase
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Category = "Assault")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<TSubclassOf<AWeapon>> AssaultRifles;
 
-	UPROPERTY(EditAnywhere, Category = "SMG")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<TSubclassOf<AWeapon>> SMGs;
 
-	UPROPERTY(EditAnywhere, Category = "Shotgun")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<TSubclassOf<AWeapon>> Shotguns;
 
-	UPROPERTY(EditAnywhere, Category = "LMG")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<TSubclassOf<AWeapon>> LMGs;
 
-	UPROPERTY(EditAnywhere, Category = "Secondary")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<TSubclassOf<AWeapon>> SecondaryWeapons;
 
 

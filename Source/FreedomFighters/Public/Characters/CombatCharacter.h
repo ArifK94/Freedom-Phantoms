@@ -79,6 +79,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName WeaponHandSocket;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accessory", meta = (AllowPrivateAccess = "true"))
+		AHeadgear* Headgear;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accessory", meta = (AllowPrivateAccess = "true"))
+		ALoadout* Loadout;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Faction Manager", meta = (AllowPrivateAccess = "true"))
 		ACommanderCharacter* CommandingOfficer;
@@ -191,8 +198,6 @@ public:
 
 
 private:
-	AHeadgear* Headgear;
-	ALoadout* Loadout;
 
 	void SpawnHelmet();
 	void SpawnLoadout();
