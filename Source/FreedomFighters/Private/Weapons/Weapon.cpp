@@ -90,8 +90,24 @@ AWeapon::AWeapon()
 	ShotLineDuration = 5.0f;
 }
 
+void AWeapon::OnDestroyWeapon(AActor* Actor)
+{
+	TArray<AActor*> AttachedActors;
+	GetAttachedActors(AttachedActors);
+
+	for (AActor* ChildActor : AttachedActors)
+	{
+		ChildActor->Destroy();
+	}
+
+	Actor->Destroy();
+}
+
+
 void AWeapon::ConfigSetup()
 {
+	OnDestroyed.AddDynamic(this, &AWeapon::OnDestroyWeapon);
+
 	ConvertWeaponName();
 
 	HandguardMesh = MeshComp;

@@ -265,4 +265,9 @@ public:
 		isInCombatMode = Value;
 	}
 
+
+	void SetPrimaryWeapon(AWeapon* Weapon);
+
+	void SetSecondaryWeapon(AWeapon* Weapon);
+
 };

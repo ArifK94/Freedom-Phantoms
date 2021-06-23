@@ -1,4 +1,5 @@
 #include "Controllers/CustomPlayerController.h"
+#include "Managers/GameInstanceController.h"
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "CustomComponents/HealthComponent.h"
@@ -121,6 +122,23 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameInstanceController = Cast<UGameInstanceController>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	if (GameInstanceController)
+	{
+		ACombatCharacter* CombatCharacter =	GameInstanceController->SpawnCombatCharacter();
+
+		if (CombatCharacter)
+		{
+			CombatCharacter->SetPrimaryWeapon(GameInstanceController->SpawnPrimaryWeapon(CombatCharacter));
+			CombatCharacter->SetSecondaryWeapon(GameInstanceController->SpawnSecondaryWeapon(CombatCharacter));
+
+			OwningCombatCharacter = CombatCharacter;
+			Possess(OwningCombatCharacter);
+		}
+	}
+
 
 	AddUIWidgets();
 

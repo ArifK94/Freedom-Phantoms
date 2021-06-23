@@ -27,6 +27,9 @@ class FREEDOMFIGHTERS_API AWeapon : public AActor
 private:
 	FTimerHandle THandler_BulletSpread;
 
+	/** Destroy the actor */
+	UFUNCTION()
+		void OnDestroyWeapon(AActor* Actor);
 
 protected:
 	int BurstAmmountCount;

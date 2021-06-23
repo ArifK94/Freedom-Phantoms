@@ -13,6 +13,7 @@ class AWeapon;
 class AInteractable;
 class AMountedGun;
 class ABaseObjective;
+class UGameInstanceController;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, AInteractable*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
@@ -35,6 +36,7 @@ private:
 
 	APawn* OwningPawn;
 	ACommanderCharacter* OwningCommander;
+	UGameInstanceController* GameInstanceController;
 	AMountedGun* MG;
 	TeamFaction PlayerFaction;
 

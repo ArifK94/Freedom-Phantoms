@@ -44,6 +44,31 @@ void ACombatCharacter::SetMountedGun(AWeapon* Mount)
 	}
 }
 
+void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr)
+	{
+		primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
+	}
+	else
+	{
+		if (primaryWeaponObj)
+		{
+			primaryWeaponObj->Destroy();
+		}
+
+		primaryWeaponObj = Weapon;
+		currentWeaponObj = primaryWeaponObj;
+	}
+	RetrieveWeaponAnimDataSet();
+
+}
+
+void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
+{
+
+}
+
 ACombatCharacter::ACombatCharacter()
 {
 	currentWeaponObj = nullptr;
@@ -103,8 +128,16 @@ void ACombatCharacter::BeginPlay()
 
 	if (Loadout)
 	{
-		primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
-		secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
+		// get random weapon if not selected from main menu, this is should be null for AI characters
+		if (primaryWeaponObj == nullptr)
+		{
+			primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
+		}
+
+		if (secondaryWeaponObj == nullptr)
+		{
+			secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
+		}
 	}
 
 	if (primaryWeaponObj)
