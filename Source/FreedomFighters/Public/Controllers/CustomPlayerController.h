@@ -10,13 +10,13 @@ class ACommanderCharacter;
 class ACombatCharacter;
 class AAircraft;
 class AWeapon;
-class AInteractable;
+class ASupportPackage;
 class AMountedGun;
 class ABaseObjective;
 class UGameInstanceController;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, AInteractable*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, ASupportPackage*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
 
 UCLASS()
 class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
@@ -87,12 +87,12 @@ private:
 
 	/** the interactable actor that is being line traced if found */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		AInteractable* FocusedInteractable;
+		ASupportPackage* FocusedInteractable;
 
-	AInteractable* CurrentInteractable;
+	ASupportPackage* CurrentInteractable;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TArray<AInteractable*> SupportPackages;
+		TArray<ASupportPackage*> SupportPackages;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		int32 CurrentSupportPackageIndex;

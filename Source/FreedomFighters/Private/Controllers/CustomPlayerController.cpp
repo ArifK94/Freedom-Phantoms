@@ -8,7 +8,7 @@
 #include "Weapons/AmmoCrate.h"
 #include "Weapons/MountedGun.h"
 #include "Vehicles/Aircraft.h"
-#include "Props/Interactable.h"
+#include "Props/SupportPackage.h"
 #include "Objectives/BaseObjective.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -133,18 +133,12 @@ void ACustomPlayerController::BeginPlay()
 		{
 			CombatCharacter->SetPrimaryWeapon(GameInstanceController->SpawnPrimaryWeapon(CombatCharacter));
 			CombatCharacter->SetSecondaryWeapon(GameInstanceController->SpawnSecondaryWeapon(CombatCharacter));
-
+			CombatCharacter->AutoPossessAI = EAutoPossessAI::Disabled;
+			CombatCharacter->SetUseAimCameraSpring(true);
 			OwningCombatCharacter = CombatCharacter;
 			Possess(OwningCombatCharacter);
 		}
 	}
-
-
-	AddUIWidgets();
-
-	BeginCheckInteractable();
-
-	OnInteractionFound.Broadcast("");
 
 	if (OwningCombatCharacter)
 	{
@@ -164,7 +158,32 @@ void ACustomPlayerController::BeginPlay()
 
 		UHealthComponent* HealthComp = Cast<UHealthComponent>(OwningCombatCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
 		PlayerFaction = HealthComp->GetSelectedFaction();
+
+		for (ASupportPackage* SP : GameInstanceController->GetSupportPackage())
+		{
+			SupportPackages.Add(SP);
+		}
+
+		if (SupportPackages.Num() > 0)
+		{
+			CurrentSupportPackageIndex = SupportPackages.Num() - 1;
+			CurrentInteractable = SupportPackages[CurrentSupportPackageIndex];
+
+			CurrentInteractable->PlayVoiceOverSound(PlayerFaction);
+			CurrentInteractable->PlayInteractSound();
+		}
+		else
+		{
+			CurrentInteractable = nullptr;
+			CurrentSupportPackageIndex = -1;
+		}
 	}
+
+	AddUIWidgets();
+
+	BeginCheckInteractable();
+
+	OnInteractionFound.Broadcast("");
 }
 
 void ACustomPlayerController::PauseGame()
@@ -709,21 +728,21 @@ void ACustomPlayerController::CheckInteractable()
 
 
 			// Interactable object?
-			AInteractable* Interactable = nullptr;
+			ASupportPackage* SupportPackage = nullptr;
 
 			// check if can add more interactables
 			if (SupportPackages.Num() < MaxSupportPackages)
 			{
-				Interactable = Cast<AInteractable>(TargetActor);
-				FocusedInteractable = Interactable;
+				SupportPackage = Cast<ASupportPackage>(TargetActor);
+				FocusedInteractable = SupportPackage;
 			}
 
 			// Mounted Gun?
 			MG = Cast<AMountedGun>(TargetActor);
 
-			if (Interactable)
+			if (SupportPackage)
 			{
-				ActionMessage = Interactable->GetActionMessage();
+				ActionMessage = SupportPackage->GetActionMessage();
 			}
 			else if (MG && MG->GetCanTraceInteraction())
 			{
@@ -838,12 +857,12 @@ void ACustomPlayerController::SortSupportPackages()
 {
 	for (int i = 0; i < SupportPackages.Num(); i++)
 	{
-		AInteractable* Current = SupportPackages[i];
+		ASupportPackage* Current = SupportPackages[i];
 
 		// if current index is empty
 		if (Current == nullptr)
 		{
-			AInteractable* Next = nullptr;
+			ASupportPackage* Next = nullptr;
 
 			if (i + 1 < SupportPackages.Num())
 			{

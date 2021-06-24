@@ -24,6 +24,8 @@ class UAnimationAsset;
 class UAnimMontage;
 class UAnimSequence;
 class UAimOffsetBlendSpace;
+class UTexture;
+class ASupportPackage;
 
 USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase
@@ -77,11 +79,29 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FSupportPackageSet : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<ASupportPackage> SupportActorClass;
+
+	FSupportPackageSet()
+	{
+
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FSupportPackageVoiceOverSet : public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* AnnoucementReadToUse;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* ReadyToUseSound;
 
@@ -90,10 +110,13 @@ public:
 
 	FSupportPackageVoiceOverSet()
 	{
+		AnnoucementReadToUse = nullptr;
 		ReadyToUseSound = nullptr;
 		Faction = TeamFaction::Neutral;
 	}
 };
+
+
 
 
 USTRUCT(BlueprintType)

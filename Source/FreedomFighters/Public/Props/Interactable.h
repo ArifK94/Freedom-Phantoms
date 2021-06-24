@@ -19,6 +19,9 @@ private:
 		TSubclassOf<AAircraft> AircraftClass;
 	AAircraft* Aircraft;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName DisplayName;
+
 	/** Message to be displayed on the UI */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName ActionMessage;
@@ -30,6 +33,9 @@ private:
 	/** Icon displayed for UI */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UTexture* Icon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTexture* PreviewImage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USoundBase* PickupSound;
@@ -48,7 +54,8 @@ public:
 
 	void SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController);
 
-	void PlayPickupSound();
+	UFUNCTION(BlueprintCallable)
+		void PlayPickupSound();
 
 	void PlayInteractSound();
 

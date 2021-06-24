@@ -1,5 +1,6 @@
 #include "Managers/GameInstanceController.h"
 #include "Weapons/Weapon.h"
+#include "Props/SupportPackage.h"
 
 #include "MoviePlayer.h"
 #include "Components/Widget.h"
@@ -54,6 +55,31 @@ AWeapon* UGameInstanceController::SpawnSecondaryWeapon(AActor* Owner)
 	SpawnParams.Owner = Owner;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	return GetWorld()->SpawnActor<AWeapon>(PrimaryWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+}
+
+TArray<ASupportPackage*> UGameInstanceController::GetSupportPackage()
+{
+	TArray<ASupportPackage*> Packages;
+
+	for (TSubclassOf<ASupportPackage> SPClass : SupportPackageClasses)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		ASupportPackage* SupportPackage = GetWorld()->SpawnActor<ASupportPackage>(SPClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+		if (SupportPackage)
+		{
+			SupportPackage->SetActorHiddenInGame(true);
+			SupportPackage->SetHidden(true);
+
+			SupportPackage->SetActorEnableCollision(false);
+			SupportPackage->SetActorTickEnabled(false);
+		}
+
+		Packages.Add(SupportPackage);
+	}
+
+	return Packages;
 }
 
 void UGameInstanceController::Init()

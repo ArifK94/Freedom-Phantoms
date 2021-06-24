@@ -6,6 +6,7 @@
 
 class AWeapon;
 class ACombatCharacter;
+class ASupportPackage;
 UCLASS()
 class FREEDOMFIGHTERS_API UGameInstanceController : public UGameInstance
 {
@@ -19,6 +20,9 @@ private:
     TSubclassOf<AWeapon> PrimaryWeaponClass;
     TSubclassOf<AWeapon> SecondaryWeaponClass;
 
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+        TArray<TSubclassOf<ASupportPackage>> SupportPackageClasses;
 
     TSubclassOf<ACombatCharacter> CombatCharacterClass;
 
@@ -39,12 +43,15 @@ public:
     UFUNCTION(BlueprintCallable)
         void SetCombatCharacterClass(TSubclassOf<ACombatCharacter> CharacterClass);
 
+
+
+
     AWeapon* SpawnPrimaryWeapon(AActor* Owner);
 
     AWeapon* SpawnSecondaryWeapon(AActor* Owner);
 
     ACombatCharacter* SpawnCombatCharacter();
 
-
+    TArray<ASupportPackage*> GetSupportPackage();
 
 };
