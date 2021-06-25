@@ -31,6 +31,8 @@ ACustomPlayerController::ACustomPlayerController()
 
 	CurrentSupportPackageIndex = 0;
 	MaxSupportPackages = 4;
+
+	HasGameEnded = false;
 }
 
 void ACustomPlayerController::SetupInputComponent()
@@ -127,7 +129,7 @@ void ACustomPlayerController::BeginPlay()
 
 	if (GameInstanceController)
 	{
-		ACombatCharacter* CombatCharacter =	GameInstanceController->SpawnCombatCharacter();
+		ACombatCharacter* CombatCharacter = GameInstanceController->SpawnCombatCharacter();
 
 		if (CombatCharacter)
 		{
@@ -156,8 +158,11 @@ void ACustomPlayerController::BeginPlay()
 		// Character can be spawned in to use MG such as helicopter gunner
 		UseMountedGun();
 
-		UHealthComponent* HealthComp = Cast<UHealthComponent>(OwningCombatCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
+		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
+		HealthComp->SetRegenerateHealth(true);
 		PlayerFaction = HealthComp->GetSelectedFaction();
+		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthChanged);
+
 
 		for (ASupportPackage* SP : GameInstanceController->GetSupportPackage())
 		{
@@ -231,8 +236,6 @@ void ACustomPlayerController::Tick(float DeltaTime)
 		PrimaryActorTick.bCanEverTick = false;
 		return;
 	}
-
-
 }
 
 void ACustomPlayerController::AddUIWidgets()
@@ -333,6 +336,47 @@ void ACustomPlayerController::AddUIWidgets()
 	}
 }
 
+void ACustomPlayerController::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (HasGameEnded) {
+		return;
+	}
+
+	if (Health <= 0.0f)
+	{
+		HasGameEnded = true;
+		EndFire();
+		SetViewTargetWithBlend(OwningCombatCharacter);
+		DisableInput(this);
+		ControlledAircraft = nullptr;
+
+		UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
+
+		GetWorldTimerManager().SetTimer(THandler_PostDeath, this, &ACustomPlayerController::PostDeath, 0.2f, false);
+
+		if (MissionFailedWidgetClass)
+		{
+			MissionFailedWidget = CreateWidget<UUserWidget>(GetWorld(), MissionFailedWidgetClass);
+
+			if (MissionFailedWidget)
+			{
+				MissionFailedWidget->AddToViewport();
+
+				SetShowMouseCursor(true);
+				FInputModeUIOnly InData;
+				InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+				InData.SetWidgetToFocus(MissionFailedWidget->TakeWidget());
+				SetInputMode(InData);
+			}
+		}
+	}
+}
+
+void ACustomPlayerController::PostDeath()
+{
+	OwningCombatCharacter->DetachFromControllerPendingDestroy();
+}
+
 void ACustomPlayerController::OnCharacterHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (OtherActor == NULL || OtherActor == OwningCombatCharacter) {
@@ -372,10 +416,15 @@ void ACustomPlayerController::OnCharacterHit(UPrimitiveComponent* HitComp, AActo
 
 void ACustomPlayerController::OnAircraftDestroy(AAircraft* CurrentControlledAircraft)
 {
+	if (HasGameEnded) {
+		return;
+	}
+
 	AddUIWidgets();
 	ControlledAircraft = nullptr;
 	OwningCombatCharacter->EnableInput(this);
 	BeginCheckInteractable();
+
 }
 
 void ACustomPlayerController::OnCombatModeUpdated(ACombatCharacter* CombatCharacter)
@@ -421,8 +470,31 @@ void ACustomPlayerController::OnObjectiveCompleted(ABaseObjective* Objective)
 
 	if (Objective->GetIsFinalObjective())
 	{
+		HasGameEnded = true;
+
 		UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
 		OwningCombatCharacter->DisableInput(this);
+
+		SetViewTargetWithBlend(OwningCombatCharacter);
+		DisableInput(this);
+		ControlledAircraft = nullptr;
+
+
+		if (MissionCompleteWidgetClass)
+		{
+			MissionCompleteWidget = CreateWidget<UUserWidget>(GetWorld(), MissionCompleteWidgetClass);
+
+			if (MissionCompleteWidget)
+			{
+				MissionCompleteWidget->AddToViewport();
+
+				SetShowMouseCursor(true);
+				FInputModeUIOnly InData;
+				InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+				InData.SetWidgetToFocus(MissionCompleteWidget->TakeWidget());
+				SetInputMode(InData);
+			}
+		}
 	}
 
 }

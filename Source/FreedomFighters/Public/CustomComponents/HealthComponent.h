@@ -101,6 +101,10 @@ public:
 		HitInfo = Hit;
 	}
 
+	void SetRegenerateHealth(bool Value) {
+		CanRegenerateHealth = Value;
+	}
+
 	TeamFaction GetSelectedFaction() {
 		return SelectedFaction;
 	}

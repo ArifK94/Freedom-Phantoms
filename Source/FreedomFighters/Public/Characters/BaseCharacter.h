@@ -340,6 +340,9 @@ public:
 		RightInputValue = Value;
 	}
 
+	UHealthComponent* GetHealthComp() {
+		return HealthComp;
+	}
 
 	UPostProcessComponent* getCharacterOutlinePPComp() {
 		return  CharacterOutlinePPComp;

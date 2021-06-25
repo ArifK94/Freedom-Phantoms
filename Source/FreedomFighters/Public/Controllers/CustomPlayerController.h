@@ -14,6 +14,7 @@ class ASupportPackage;
 class AMountedGun;
 class ABaseObjective;
 class UGameInstanceController;
+class UHealthComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, ASupportPackage*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
@@ -41,6 +42,8 @@ private:
 	TeamFaction PlayerFaction;
 
 	FTimerHandle THandler_CheckInteractable;
+	FTimerHandle THandler_PostDeath;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AAircraft* ControlledAircraft;
@@ -82,6 +85,14 @@ private:
 		TSubclassOf<UUserWidget> ObjectiveWidgetClass;
 	UUserWidget* ObjectiveWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> MissionCompleteWidgetClass;
+	UUserWidget* MissionCompleteWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> MissionFailedWidgetClass;
+	UUserWidget* MissionFailedWidget;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FText InteractKeyDisplayName;
 
@@ -109,7 +120,13 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		ABaseObjective* CurrentMissionObjective;
+
+
+	bool HasGameEnded;
 	
+private:
+	void PostDeath();
+
 public:
 	ACustomPlayerController();
 
@@ -124,6 +141,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void AddUIWidgets();
+
+
+	UFUNCTION()
+	void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	UFUNCTION()
 		void OnCharacterHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
