@@ -16,12 +16,16 @@ class FREEDOMFIGHTERS_API ASupportPackage : public AActor
 {
 	GENERATED_BODY()
 	
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AAircraft> AircraftClass;
 	AAircraft* Aircraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName DisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName Description;
 
 	/** Message to be displayed on the UI */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -73,6 +77,10 @@ public:
 
 	FName GetActionMessage() {
 		return ActionMessage;
+	}
+
+	bool GetIsControllable() {
+		return IsControllable;
 	}
 
 };

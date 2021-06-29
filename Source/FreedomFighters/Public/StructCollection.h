@@ -100,13 +100,13 @@ struct FSupportPackageVoiceOverSet : public FTableRowBase
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TeamFaction Faction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* AnnoucementReadToUse;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* ReadyToUseSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TeamFaction Faction;
 
 	FSupportPackageVoiceOverSet()
 	{

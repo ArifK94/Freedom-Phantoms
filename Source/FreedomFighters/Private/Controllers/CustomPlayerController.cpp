@@ -904,13 +904,16 @@ void ACustomPlayerController::UseInteractableActor()
 
 	if (CurrentInteractable->GetAircraft())
 	{
-		ControlledAircraft = CurrentInteractable->GetAircraft();
-		OwningCombatCharacter->DisableInput(this);
-		ControlledAircraft->SetPlayerControl(this);
-		ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
+		if (CurrentInteractable->GetIsControllable())
+		{
+			ControlledAircraft = CurrentInteractable->GetAircraft();
+			OwningCombatCharacter->DisableInput(this);
+			ControlledAircraft->SetPlayerControl(this);
+			ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
 
-		// if controlling aircraft then do not check for interactions
-		GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
+			// if controlling aircraft then do not check for interactions
+			GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
+		}
 	}
 
 	// update support package event for UI
