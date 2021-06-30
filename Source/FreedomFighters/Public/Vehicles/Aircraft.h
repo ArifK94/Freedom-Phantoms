@@ -102,6 +102,9 @@ private:
 	UUserWidget* HUDWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool RemoveExistingHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AAircraftSplinePath* AircraftPath;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -163,8 +166,6 @@ public:
 	AAircraft();
 
 	void SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP = true, bool ShowOutline = true);
-
-	void RemovePlayerControl();
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);

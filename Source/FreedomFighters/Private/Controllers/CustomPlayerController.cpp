@@ -917,8 +917,7 @@ void ACustomPlayerController::UseInteractableActor()
 	}
 
 	// update support package event for UI
-	SupportPackages.Remove(CurrentInteractable);
-
+	SupportPackages.RemoveAt(SupportPackages.Find(CurrentInteractable));
 	SortSupportPackages();
 	OnSupportPackageUpdate.Broadcast(CurrentInteractable, CurrentSupportPackageIndex, false);
 

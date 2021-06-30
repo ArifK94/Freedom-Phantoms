@@ -64,13 +64,12 @@ AAircraft::AAircraft()
 
 
 	WingRotationSpeed = 100000.0;
-
 	PathFollowDuration = 10.0f;
 	TotalLaps = 0;
-
 	CurrentWeaponIndex = 0;
-
 	CameraSwitchDelay = .5f;
+
+	RemoveExistingHUD = false;
 }
 
 void AAircraft::AddUIWidget()
@@ -79,13 +78,16 @@ void AAircraft::AddUIWidget()
 
 	if (!World) return;
 
+	if (RemoveExistingHUD) {
+		UWidgetLayoutLibrary::RemoveAllWidgets(World);
+	}
+
 	if (HUDWidgetClass)
 	{
 		HUDWidget = CreateWidget<UUserWidget>(World, HUDWidgetClass);
 
 		if (HUDWidget)
 		{
-			UWidgetLayoutLibrary::RemoveAllWidgets(World);
 			HUDWidget->AddToViewport();
 		}
 	}
@@ -629,11 +631,6 @@ void AAircraft::SetPlayerControl(APlayerController* OurPlayerController, bool En
 	AddUIWidget();
 
 	GetWorldTimerManager().SetTimer(THandler_CameraSwitchDelay, this, &AAircraft::PlayPilotSound, CameraSwitchDelay, false);
-}
-
-void AAircraft::RemovePlayerControl()
-{
-
 }
 
 void AAircraft::PlayPilotSound()

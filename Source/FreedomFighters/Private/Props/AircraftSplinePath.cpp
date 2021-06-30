@@ -117,6 +117,10 @@ void AAircraftSplinePath::UpdatePointIndex()
 
 void AAircraftSplinePath::UpdateCollisionBox()
 {
+	if (SplinePathComp->GetNumberOfSplinePoints() <= 0) {
+		return;
+	}
+
 	// setting the collision boxes
 	for (int i = 0; i < SplinePathComp->GetNumberOfSplinePoints(); i++)
 	{
