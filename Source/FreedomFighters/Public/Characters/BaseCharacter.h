@@ -202,6 +202,8 @@ private:
 
 	APlayerCameraManager* CamManager;
 
+	AAIController* DefaultAIController;
+
 protected:
 
 	virtual void InitTimeHandlers();
@@ -271,6 +273,11 @@ protected:
 
 
 public:
+	AAIController* GetDefaultAIController() {
+		return DefaultAIController;
+	}
+
+
 	FName GetHeadSocket() {
 		return HeadSocket;
 	}

@@ -95,6 +95,10 @@ public:
 		return StopUsingMessage;
 	}
 
+	FName GetCameraPositionSocket() {
+		return CameraPositionSocket;
+	}
+
 	AActor* GetPotentialOwner() {
 		return PotentialOwner;
 	}
@@ -103,6 +107,9 @@ public:
 		return FollowCamera;
 	}
 
+	FRotator GetRotationInput() {
+		return RotationInput;
+	}
 
 	float GetPitchMin() {
 		return PitchMin;

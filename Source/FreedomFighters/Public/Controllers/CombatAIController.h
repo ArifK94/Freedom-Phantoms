@@ -134,6 +134,8 @@ public:
 private:
 	void Init();
 
+	void ClearTimers();
+
 	UFUNCTION()
 	void OnOrderReceived(UCommanderRecruit* RecruitInfo);
 	bool HasAssignedOrderEvent;
@@ -176,10 +178,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
 
 private:
 	virtual void Tick(float DeltaTime) override;
-
 
 
 

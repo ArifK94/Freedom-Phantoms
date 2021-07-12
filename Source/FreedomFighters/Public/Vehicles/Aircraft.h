@@ -8,7 +8,7 @@
 #include "StructCollection.h"
 #include "Aircraft.generated.h"
 
-class AWeapon;
+class AMountedGun;
 class AAircraftSplinePath;
 class UCurveFloat;
 class UCapsuleComponent;
@@ -102,9 +102,6 @@ private:
 	UUserWidget* HUDWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool RemoveExistingHUD;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AAircraftSplinePath* AircraftPath;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -131,7 +128,14 @@ private:
 		FRotator RotationInput;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		AWeapon* CurrentWeaponObj;
+		AMountedGun* CurrentWeaponObj;
+
+	/** Use aircraft follow camera to navigate weapons, useful for ac130 to navigate all weapons to face in same direction when switching between them */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool UseFollowCamNavigation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool HighlightCharacters;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Target System", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ATargetSystemMarker> FriendlyMarkerClass;
@@ -174,6 +178,9 @@ public:
 	void AddControllerPitchInput(float Val, FAircraftSeating AircraftSeating);
 	void AddControllerYawInput(float Val, FAircraftSeating AircraftSeating);
 
+	void BeginAim();
+	void EndAim();
+
 	void ChangeWeapon();
 
 	UPROPERTY(BlueprintAssignable, Category = "Weapon UI")
@@ -183,7 +190,7 @@ public:
 		FOnDestorySignature OnAircraftDestroy;
 	
 
-	TArray<AWeapon*> WeaponObjs; // holding this variable in the FAircraftWeapon returns null after weapon spawning
+	TArray<AMountedGun*> WeaponObjs; // holding this variable in the FAircraftWeapon returns null after weapon spawning
 
 	void ChangeThermalVision();
 
@@ -223,6 +230,8 @@ private:
 
 	void OnDestroy();
 
+	void DetroyChildActor(TArray<AActor*> ParentActor);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -238,7 +247,7 @@ public:
 		return CurrentAircraftWeapon;
 	}
 
-	AWeapon* GetCurrentWeaponObj() {
+	AMountedGun* GetCurrentWeaponObj() {
 		return CurrentWeaponObj;
 	}
 

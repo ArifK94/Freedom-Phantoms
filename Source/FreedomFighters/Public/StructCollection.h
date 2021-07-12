@@ -13,6 +13,7 @@ class ACommanderCharacter;
 class AAircraft;
 class ATargetSystemMarker;
 class AWeapon;
+class AMountedGun;
 class UUserWidget;
 class USoundBase;
 class AHeadgear;
@@ -303,13 +304,10 @@ struct FAircraftWeapon
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TSubclassOf<AWeapon> Weapon;
+		TSubclassOf<AMountedGun> Weapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		FName WeaponSocketName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		FName CameraSocketName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float PitchMin;
@@ -323,17 +321,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float YawMax;
 
-	/** Aircraft camera will be attached to the weapon muzzle, eg. AC130 weapons will be viewing camera from muzzle positions.
-		Helicopter mounted weapons will want not want it set as Mounted guns already have a camera in them */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		bool SetCamToMuzzle;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;
 
 	FAircraftWeapon()
 	{
-		SetCamToMuzzle = true;
+
 	}
 };
 

@@ -165,6 +165,7 @@ void ABaseCharacter::BeginPlay()
 	RetrieveAccessoryDataSet();
 
 	defaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	DefaultAIController = Cast<AAIController>(GetController());
 
 	CamManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 	DefaultCamViewYawMin = CamManager->ViewYawMin;

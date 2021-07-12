@@ -21,6 +21,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/Controller.h"
+#include "AIController.h"
 
 AAircraft::AAircraft()
 {
@@ -53,14 +55,14 @@ AAircraft::AAircraft()
 	FollowCamera->bUsePawnControlRotation = false;
 
 	ThermalVisionPPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("ThermalVisionPPComp"));
-	ThermalVisionPPComp->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
+	ThermalVisionPPComp->SetupAttachment(FollowCamera);
 
 	// follow will contain any interior sounds so these sounds cannot be heard outside of the aircraft
 	PilotAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("PilotAudio"));
-	PilotAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
+	PilotAudio->SetupAttachment(FollowCamera);
 
 	ThermalToggleAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("ThermalToggleAudio"));
-	ThermalToggleAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::KeepRelativeTransform);
+	ThermalToggleAudio->SetupAttachment(FollowCamera);
 
 
 	WingRotationSpeed = 100000.0;
@@ -69,7 +71,8 @@ AAircraft::AAircraft()
 	CurrentWeaponIndex = 0;
 	CameraSwitchDelay = .5f;
 
-	RemoveExistingHUD = false;
+	UseFollowCamNavigation = false;
+	HighlightCharacters = false;
 }
 
 void AAircraft::AddUIWidget()
@@ -78,9 +81,7 @@ void AAircraft::AddUIWidget()
 
 	if (!World) return;
 
-	if (RemoveExistingHUD) {
-		UWidgetLayoutLibrary::RemoveAllWidgets(World);
-	}
+	UWidgetLayoutLibrary::RemoveAllWidgets(World);
 
 	if (HUDWidgetClass)
 	{
@@ -120,7 +121,7 @@ void AAircraft::BeginPlay()
 	FindPath();
 
 	SpawnWeapon();
-	
+
 	EngineAudio->Play();
 
 	SpawnPassenger();
@@ -186,6 +187,15 @@ void AAircraft::FindPath()
 				CurveTimeline.SetLooping(false);
 				CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
 				CurveTimeline.PlayFromStart();
+
+
+				//USplineComponent* SplinePathComp = AircraftPath->GetSplinePathComp();
+				//float Alpha = UKismetMathLibrary::Lerp(0.0f, SplinePathComp->GetSplineLength(), SplinePathComp->GetSplineLength());
+
+				//FVector TargetLocation = SplinePathComp->GetLocationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
+				//FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
+
+				//SetActorLocationAndRotation(TargetLocation, TargetRotation);
 			}
 			break;
 		}
@@ -202,7 +212,6 @@ void AAircraft::FollowSplinePath(float Value)
 	FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
 
 	SetActorLocationAndRotation(TargetLocation, TargetRotation);
-
 
 	// if reached the end
 	if (Alpha >= SplinePathComp->GetSplineLength())
@@ -273,41 +282,30 @@ void AAircraft::SpawnWeapon()
 
 	for (FAircraftWeapon AircraftWeapon : AircraftWeapons)
 	{
-		AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(AircraftWeapon.Weapon, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		AMountedGun* MG = GetWorld()->SpawnActor<AMountedGun>(AircraftWeapon.Weapon, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-		if (Weapon)
+		if (MG)
 		{
-			if (AircraftWeapon.SetCamToMuzzle)
-			{
-				Weapon->SetComponentEyeViewPoint(FollowCamera);
-			}
-
-			Weapon->getMeshComp()->SetCollisionProfileName(TEXT("NoCollision")); // To allow line trace to go ignore this weapon, for AI sights for example
-			Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AircraftWeapon.WeaponSocketName);
-			Weapon->GetClipAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			Weapon->GetShotAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
-			PilotAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			ThermalToggleAudio->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
-			AMountedGun* MG = Cast<AMountedGun>(Weapon);
+			MG->getMeshComp()->SetCollisionProfileName(TEXT("NoCollision")); // To allow line trace to go ignore this weapon, for AI sights for example
+			MG->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AircraftWeapon.WeaponSocketName);
+			MG->GetClipAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			MG->GetShotAudioComponent()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 			// we do not want to adjust character behind MG as character will be spawning behind it
 			// & remove line trace mechanic for it so only spawned characters can use it
 			// & gunner cannot exit from gun
-			if (MG)
-			{
-				MG->SetAdjustBehindMG(false);
-				MG->SetCanTraceInteraction(false);
-				MG->SetCanExit(false);
 
-				MG->SetPitchMin(AircraftWeapon.PitchMin);
-				MG->SetPitchMax(AircraftWeapon.PitchMax);
-				MG->SetYawMin(AircraftWeapon.YawMin);
-				MG->SetYawMax(AircraftWeapon.YawMax);
-			}
+			MG->SetAdjustBehindMG(false);
+			MG->SetCanTraceInteraction(false);
+			MG->SetCanExit(false);
 
-			WeaponObjs.Add(Weapon);
+			MG->SetPitchMin(AircraftWeapon.PitchMin);
+			MG->SetPitchMax(AircraftWeapon.PitchMax);
+			MG->SetYawMin(AircraftWeapon.YawMin);
+			MG->SetYawMax(AircraftWeapon.YawMax);
+
+
+			WeaponObjs.Add(MG);
 		}
 	}
 
@@ -337,40 +335,91 @@ void AAircraft::ChangeWeapon()
 	}
 
 	UpdateWeaponView();
+	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeaponObj);
+
 }
 
 void AAircraft::UpdateWeaponView()
 {
+	// return previous characters back to AI posession
+	if (OccupiedSeats.Num() > 0 && CurrentWeaponIndex - 1 > 0)
+	{
+		FAircraftSeating HeliSeat = OccupiedSeats[CurrentWeaponIndex - 1];
+		HeliSeat.CharacterObj->AutoPossessPlayer = EAutoReceiveInput::Disabled;
+		HeliSeat.CharacterObj->GetDefaultAIController()->Possess(HeliSeat.CharacterObj);
+		HeliSeat.CharacterObj->SetAircraftSeat(HeliSeat); // so AI does not fall to the ground when repossessed
+	}
+
 	CurrentAircraftWeapon = AircraftWeapons[CurrentWeaponIndex]; // set the current weapon to first weapon by default
 	CurrentWeaponObj = WeaponObjs[CurrentWeaponIndex];
 
-	if (CurrentAircraftWeapon.SetCamToMuzzle)
-	{
-		FollowCamera->AttachToComponent(CurrentWeaponObj->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeaponObj->GetMuzzleSocket()); // Attach to weapon muzzle
-		FollowCamera->SetRelativeRotation(RotationInput); // set the follow camera to rotation input
+	CurrentWeaponObj->StopFire();
+	CurrentWeaponObj->ChargeDown();
 
-		FollowCamera->SetFieldOfView(CurrentWeaponObj->GetZoomFOV());
+	// Player possessing is required if the character is posseseed by the AI controller
+	if (OccupiedSeats.Num() > 0)
+	{
+		FAircraftSeating HeliSeat = OccupiedSeats[CurrentWeaponIndex];
+		HeliSeat.CharacterObj->GetDefaultAIController()->UnPossess();
+		HeliSeat.CharacterObj->AutoPossessPlayer = EAutoReceiveInput::Player0;
+		HeliSeat.CharacterObj->EndAim();
 	}
 
+	if (UseFollowCamNavigation)
+	{
+		FollowCamera->AttachToComponent(CurrentWeaponObj->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeaponObj->GetCameraPositionSocket());
+		CurrentWeaponObj->GetFollowCamera()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		FollowCamera->SetRelativeRotation(RotationInput);
+		FollowCamera->SetFieldOfView(CurrentWeaponObj->GetFollowCamera()->FieldOfView);
+	}
+	else
+	{
+		FollowCamera->AttachToComponent(CurrentWeaponObj->GetFollowCamera(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
 
 	OnUpdateWeaponUI.Broadcast(this);
 }
 
+/// <summary>
+/// Weapon control
+/// </summary>
+/// <param name="Val"></param>
 void AAircraft::AddControllerPitchInput(float Val)
 {
-	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, CurrentAircraftWeapon.PitchMin, CurrentAircraftWeapon.PitchMax);
-	RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
+	if (UseFollowCamNavigation)
+	{
+		RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, CurrentAircraftWeapon.PitchMin, CurrentAircraftWeapon.PitchMax);
+		RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
 
-	FollowCamera->SetRelativeRotation(RotationInput);
+		FollowCamera->SetRelativeRotation(RotationInput);
+	}
+	else
+	{
+		CurrentWeaponObj->AddControllerPitchInput(Val);
+		RotationInput = CurrentWeaponObj->GetRotationInput();
+	}
 }
 void AAircraft::AddControllerYawInput(float Val)
 {
-	RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, CurrentAircraftWeapon.YawMin, CurrentAircraftWeapon.YawMax);
-	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
+	if (UseFollowCamNavigation)
+	{
+		RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, CurrentAircraftWeapon.YawMin, CurrentAircraftWeapon.YawMax);
+		RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
 
-	FollowCamera->SetRelativeRotation(RotationInput);
+		FollowCamera->SetRelativeRotation(RotationInput);
+	}
+	else
+	{
+		CurrentWeaponObj->AddControllerYawInput(Val);
+		RotationInput = CurrentWeaponObj->GetRotationInput();
+	}
 }
 
+/// <summary>
+/// Third person view of the aircraft control
+/// </summary>
+/// <param name="Val"></param>
+/// <param name="IsCameraRoam"></param>
 void AAircraft::AddControllerPitchInput(float Val, bool IsCameraRoam)
 {
 	RotationInput.Pitch += Val;
@@ -384,6 +433,11 @@ void AAircraft::AddControllerYawInput(float Val, bool IsCameraRoam)
 	CameraBoom->SetWorldRotation(RotationInput);
 }
 
+/// <summary>
+/// Passenger Pitch Control
+/// </summary>
+/// <param name="Val"></param>
+/// <param name="AircraftSeating"></param>
 void AAircraft::AddControllerPitchInput(float Val, FAircraftSeating AircraftSeating)
 {
 	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, AircraftSeating.PitchMin, AircraftSeating.PitchMax);
@@ -398,6 +452,16 @@ void AAircraft::AddControllerYawInput(float Val, FAircraftSeating AircraftSeatin
 	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
 
 	AircraftSeating.CharacterObj->FollowCamera->SetRelativeRotation(RotationInput);
+}
+
+void AAircraft::BeginAim()
+{
+	CurrentWeaponObj->SetIsAiming(true);
+}
+
+void AAircraft::EndAim()
+{
+	CurrentWeaponObj->SetIsAiming(false);
 }
 
 void AAircraft::ShowOutlines(bool CanShow)
@@ -589,7 +653,7 @@ void AAircraft::UpdateCurrentThermalVision(float InWeight)
 	if (ThermalMaterialInstances.Num() <= 0) {
 		return;
 	}
-	
+
 	ThermalVisionPPComp->AddOrUpdateBlendable(ThermalMaterialInstances[CurrentThermalMatIndex], InWeight);
 }
 
@@ -619,6 +683,9 @@ void AAircraft::ChangeThermalVision()
 void AAircraft::SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP, bool ShowOutline)
 {
 	OurPlayerController->SetViewTargetWithBlend(this, CameraSwitchDelay);
+	UpdateWeaponView();
+	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeaponObj, CameraSwitchDelay);
+
 
 	ThermalVisionPPComp->bEnabled = EnableThermalPP;
 
@@ -627,7 +694,10 @@ void AAircraft::SetPlayerControl(APlayerController* OurPlayerController, bool En
 		UpdateCurrentThermalVision(1.0f);
 	}
 
-	ShowOutlines(ShowOutline);
+	if (HighlightCharacters)
+	{
+		ShowOutlines(ShowOutline);
+	}
 	AddUIWidget();
 
 	GetWorldTimerManager().SetTimer(THandler_CameraSwitchDelay, this, &AAircraft::PlayPilotSound, CameraSwitchDelay, false);
@@ -749,20 +819,53 @@ void AAircraft::UpdateOccupiedSeats()
 void AAircraft::OnDestroy()
 {
 	RemoveUIWidget();
-	ShowOutlines(false);
+
+	if (HighlightCharacters)
+	{
+		ShowOutlines(false);
+	}
 
 	OnAircraftDestroy.Broadcast(this);
+
+
+	// destroy markers
+	if (FriendlyMarkerNodes.Num() > 0)
+	{
+		for (FTargetSystemNode* node : FriendlyMarkerNodes)
+		{
+			node->Marker->Destroy();
+		}
+	}
+
+	if (FriendlyMarkerNodes.Num() > 0)
+	{
+		for (FTargetSystemNode* node : EnemySystemNodes)
+		{
+			node->Marker->Destroy();
+		}
+	}
 
 
 	// destroy all attached actors to this aircraft
 	TArray<AActor*> AttachedActors;
 	GetAttachedActors(AttachedActors);
+	DetroyChildActor(AttachedActors);
+	Destroy();
+}
 
-	for (AActor* ChildActor : AttachedActors)
+// Recursively destroy children actors
+void AAircraft::DetroyChildActor(TArray<AActor*> ParentActor)
+{
+	for (AActor* ChildActor : ParentActor)
 	{
+		TArray<AActor*> ChildAttachedActors;
+		ChildActor->GetAttachedActors(ChildAttachedActors);
+
+		if (ChildAttachedActors.Num() > 0)
+		{
+			DetroyChildActor(ChildAttachedActors);
+		}
+
 		ChildActor->Destroy();
 	}
-
-	Destroy();
-
 }

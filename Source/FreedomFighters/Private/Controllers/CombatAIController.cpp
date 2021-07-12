@@ -217,17 +217,7 @@ void ACombatAIController::BeginPlay()
 
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
 
-	OwningCombatCharacter = Cast<ACombatCharacter>(AController::GetPawn());
-
 	StayCombatAlert = false;
-
-	Init();
-
-	// run behavior tree if specified
-	if (BTAsset)
-	{
-		AAIController::RunBehaviorTree(BTAsset);
-	}
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -256,6 +246,19 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::FindCover, 1.0f, true);
 		//GetWorldTimerManager().SetTimer(THandler_ResetMovement, this, &ACombatAIController::ResetLocation, 2.0f, true);
 	}
+
+	// run behavior tree if specified
+	if (BTAsset)
+	{
+		AAIController::RunBehaviorTree(BTAsset);
+	}
+}
+
+void ACombatAIController::OnUnPossess()
+{
+	ClearTimers();
+
+	Super::OnUnPossess();
 }
 
 void ACombatAIController::Tick(float DeltaTime)
@@ -271,23 +274,27 @@ void ACombatAIController::Tick(float DeltaTime)
 	}
 	else
 	{
+		ClearTimers();
+
 		 AActor* OwningCharacter = GetOwner();
 
 		 if (OwningCharacter)
 		 {
 			 OwningCharacter->Destroy();
 		 }
-
-
-		GetWorldTimerManager().ClearTimer(THandler_BeginFire);
-		GetWorldTimerManager().ClearTimer(THandler_EndFire);
-		GetWorldTimerManager().ClearTimer(THandler_MountedGun);
-		GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
-		GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
-		GetWorldTimerManager().ClearTimer(THandler_Sprint);
-		GetWorldTimerManager().ClearTimer(THandler_CombatAlert);
-		GetWorldTimerManager().ClearTimer(THandler_FindCover);
 	}
+}
+
+void ACombatAIController::ClearTimers()
+{
+	GetWorldTimerManager().ClearTimer(THandler_BeginFire);
+	GetWorldTimerManager().ClearTimer(THandler_EndFire);
+	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
+	GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
+	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
+	GetWorldTimerManager().ClearTimer(THandler_Sprint);
+	GetWorldTimerManager().ClearTimer(THandler_CombatAlert);
+	GetWorldTimerManager().ClearTimer(THandler_FindCover);
 }
 
 

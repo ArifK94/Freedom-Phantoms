@@ -257,9 +257,6 @@ void ACustomPlayerController::AddUIWidgets()
 		}
 	}
 
-
-
-
 	// Weapon Crosshairs
 	if (WeaponCrosshairhWidgetClass)
 	{
@@ -684,23 +681,31 @@ void ACustomPlayerController::EndSprint()
 void ACustomPlayerController::BeginAim()
 {
 	if (ControlledAircraft) {
-		return;
+		ControlledAircraft->BeginAim();
 	}
+	else
+	{
+		OwningCombatCharacter->BeginAim();
 
-	OwningCombatCharacter->BeginAim();
-
-	if (OwningCombatCharacter->GetCurrentWeapon()) {
-		OwningCombatCharacter->GetCurrentWeapon()->ChargeUp();
+		if (OwningCombatCharacter->GetCurrentWeapon()) {
+			OwningCombatCharacter->GetCurrentWeapon()->ChargeUp();
+		}
 	}
-
 }
 
 void ACustomPlayerController::EndAim()
 {
-	OwningCombatCharacter->EndAim();
+	if (ControlledAircraft)
+	{
+		ControlledAircraft->EndAim();
+	}
+	else
+	{
+		OwningCombatCharacter->EndAim();
 
-	if (OwningCombatCharacter->GetCurrentWeapon()) {
-		OwningCombatCharacter->GetCurrentWeapon()->ChargeDown();
+		if (OwningCombatCharacter->GetCurrentWeapon()) {
+			OwningCombatCharacter->GetCurrentWeapon()->ChargeDown();
+		}
 	}
 }
 
@@ -908,6 +913,7 @@ void ACustomPlayerController::UseInteractableActor()
 		{
 			ControlledAircraft = CurrentInteractable->GetAircraft();
 			OwningCombatCharacter->DisableInput(this);
+			AutoReceiveInput = EAutoReceiveInput::Disabled;
 			ControlledAircraft->SetPlayerControl(this);
 			ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
 
