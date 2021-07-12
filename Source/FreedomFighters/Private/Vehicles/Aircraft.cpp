@@ -177,7 +177,6 @@ void AAircraft::FindPath()
 
 		if (AircraftPath != nullptr)
 		{
-
 			// setup time line for following the path
 			if (CurveFloat)
 			{
@@ -187,17 +186,8 @@ void AAircraft::FindPath()
 				CurveTimeline.SetLooping(false);
 				CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
 				CurveTimeline.PlayFromStart();
-
-
-				//USplineComponent* SplinePathComp = AircraftPath->GetSplinePathComp();
-				//float Alpha = UKismetMathLibrary::Lerp(0.0f, SplinePathComp->GetSplineLength(), SplinePathComp->GetSplineLength());
-
-				//FVector TargetLocation = SplinePathComp->GetLocationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
-				//FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
-
-				//SetActorLocationAndRotation(TargetLocation, TargetRotation);
+				break;
 			}
-			break;
 		}
 	}
 
@@ -342,7 +332,7 @@ void AAircraft::ChangeWeapon()
 void AAircraft::UpdateWeaponView()
 {
 	// return previous characters back to AI posession
-	if (OccupiedSeats.Num() > 0 && CurrentWeaponIndex - 1 > 0)
+	if (OccupiedSeats.Num() > 0 && CurrentWeaponIndex - 1 >= 0)
 	{
 		FAircraftSeating HeliSeat = OccupiedSeats[CurrentWeaponIndex - 1];
 		HeliSeat.CharacterObj->AutoPossessPlayer = EAutoReceiveInput::Disabled;
