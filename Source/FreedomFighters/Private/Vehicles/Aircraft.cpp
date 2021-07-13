@@ -839,7 +839,12 @@ void AAircraft::OnDestroy()
 	// destroy all attached actors to this aircraft
 	TArray<AActor*> AttachedActors;
 	GetAttachedActors(AttachedActors);
-	DetroyChildActor(AttachedActors);
+
+	if (AttachedActors.Num() > 0)
+	{
+		DetroyChildActor(AttachedActors);
+	}
+
 	Destroy();
 }
 
