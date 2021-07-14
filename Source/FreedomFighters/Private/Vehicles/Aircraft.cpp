@@ -180,12 +180,22 @@ void AAircraft::FindPath()
 			// setup time line for following the path
 			if (CurveFloat)
 			{
-				FOnTimelineFloat TimelineProgress;
-				TimelineProgress.BindUFunction(this, FName("FollowSplinePath"));
-				CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
-				CurveTimeline.SetLooping(false);
-				CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
-				CurveTimeline.PlayFromStart();
+				//FOnTimelineFloat TimelineProgress;
+				//TimelineProgress.BindUFunction(this, FName("FollowSplinePath"));
+				//CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+				//CurveTimeline.SetLooping(false);
+				//CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+				//CurveTimeline.PlayFromStart();
+
+
+				USplineComponent* SplinePathComp = AircraftPath->GetSplinePathComp();
+				float Alpha = SplinePathComp->GetSplineLength();
+
+				FVector TargetLocation = SplinePathComp->GetLocationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
+				FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
+
+				SetActorLocationAndRotation(TargetLocation, TargetRotation);
+
 				break;
 			}
 		}
