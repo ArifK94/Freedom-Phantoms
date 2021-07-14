@@ -80,21 +80,6 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSupportPackageSet : public FTableRowBase
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TSubclassOf<ASupportPackage> SupportActorClass;
-
-	FSupportPackageSet()
-	{
-
-	}
-};
-
-USTRUCT(BlueprintType)
 struct FSupportPackageVoiceOverSet : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -116,6 +101,58 @@ public:
 		Faction = TeamFaction::Neutral;
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FSupportPackageSet : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<ASupportPackage> SupportActorClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AAircraft> AircraftClass;
+	AAircraft* Aircraft;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName DisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName Description;
+
+	/** Message to be displayed on the UI */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName ActionMessage;
+
+	/** Is the Spawned Actor Controllable such as aircrafts */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool IsControllable;
+
+	/** Icon displayed for UI */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTexture* Icon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTexture* PreviewImage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* PickupSound;
+
+	/** When user beings to interact with the object */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* InteractSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<FSupportPackageVoiceOverSet> SupportSoundsSet;
+
+	FSupportPackageSet()
+	{
+
+	}
+};
+
+
 
 
 
