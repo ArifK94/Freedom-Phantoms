@@ -11,7 +11,7 @@
 ACommanderCharacter::ACommanderCharacter()
 {
 	CurrentRecruitIndex = 0;
-	MaxRecruits = 9;
+	MaxRecruits = 12;
 }
 
 void ACommanderCharacter::AddUIWidget()
