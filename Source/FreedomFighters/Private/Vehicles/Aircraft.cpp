@@ -839,27 +839,26 @@ void AAircraft::OnDestroy()
 	// destroy all attached actors to this aircraft
 	TArray<AActor*> AttachedActors;
 	GetAttachedActors(AttachedActors);
-
-	if (AttachedActors.Num() > 0)
-	{
-		DetroyChildActor(AttachedActors);
-	}
-
+	DetroyChildActor(AttachedActors);
 	Destroy();
 }
 
 // Recursively destroy children actors
 void AAircraft::DetroyChildActor(TArray<AActor*> ParentActor)
 {
-	for (AActor* ChildActor : ParentActor)
-	{
-		TArray<AActor*> ChildAttachedActors;
-		ChildActor->GetAttachedActors(ChildAttachedActors);
+	if (ParentActor.Num() <= 0) {
+		return;
+	}
 
-		if (ChildAttachedActors.Num() > 0)
-		{
-			DetroyChildActor(ChildAttachedActors);
-		}
+	for (int i = 0; i < ParentActor.Num(); i++)
+	{
+		AActor* ChildActor = ParentActor[i];
+
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You are hitting: %s"), *ChildActor->GetName()));
+
+		//TArray<AActor*> ChildAttachedActors;
+		//ChildActor->GetAttachedActors(ChildAttachedActors);
+		//DetroyChildActor(ChildAttachedActors);
 
 		ChildActor->Destroy();
 	}
