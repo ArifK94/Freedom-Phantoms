@@ -198,6 +198,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<TSubclassOf<AWeapon>> SecondaryWeapons;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<TSubclassOf<AWeapon>> Handguns;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<TSubclassOf<AWeapon>> MachinePistols;
+
 
 	FWeaponsSet()
 	{

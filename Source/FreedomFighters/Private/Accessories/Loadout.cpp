@@ -76,8 +76,16 @@ AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 	}
 	else
 	{
-		RandomIndex = rand() % WeaponsDataSet->SecondaryWeapons.Num();
-		Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->SecondaryWeapons[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		if (rand() % 1 == 0)
+		{
+			RandomIndex = rand() % WeaponsDataSet->Handguns.Num();
+			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->Handguns[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		}
+		else
+		{
+			RandomIndex = rand() % WeaponsDataSet->MachinePistols.Num();
+			Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->MachinePistols[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		}
 	}
 
 
