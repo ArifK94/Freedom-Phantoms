@@ -32,6 +32,11 @@ private:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
         bool IsCrosshairEnabled = true;
 
+    /** For UMG main menu to allow other widgets to be translated downwards to accomodate the navbar height and display their UI elements below it */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+        FVector2D MenuNavbarSize;
+
+
 
 public:
     virtual void Init() override;
