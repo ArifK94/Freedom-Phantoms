@@ -123,3 +123,14 @@ void UGameInstanceController::EndLoadingScreen(UWorld* InLoadedWorld)
 {
 
 }
+
+
+void UGameInstanceController::ToggleBlood()
+{
+	IsBloodEnabled = !IsBloodEnabled;
+}
+
+void UGameInstanceController::ToggleCrosshairs() 
+{
+	IsCrosshairEnabled = !IsCrosshairEnabled;
+}

@@ -26,6 +26,12 @@ private:
 
     TSubclassOf<ACombatCharacter> CombatCharacterClass;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+        bool IsBloodEnabled = true;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+        bool IsCrosshairEnabled = true;
+
 
 public:
     virtual void Init() override;
@@ -43,7 +49,11 @@ public:
     UFUNCTION(BlueprintCallable)
         void SetCombatCharacterClass(TSubclassOf<ACombatCharacter> CharacterClass);
 
+    UFUNCTION(BlueprintCallable)
+        void ToggleBlood();
 
+    UFUNCTION(BlueprintCallable)
+        void ToggleCrosshairs();
 
 
     AWeapon* SpawnPrimaryWeapon(AActor* Owner);
@@ -53,5 +63,15 @@ public:
     ACombatCharacter* SpawnCombatCharacter();
 
     TArray<ASupportPackage*> GetSupportPackage();
+
+
+
+    bool GetIsBloodEnabled() {
+        return IsBloodEnabled;
+    }
+
+    bool GetIsCrosshairEnabled() {
+        return IsCrosshairEnabled;
+    }
 
 };
