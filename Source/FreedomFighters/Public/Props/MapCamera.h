@@ -7,6 +7,7 @@
 #include "StructCollection.h"
 #include "MapCamera.generated.h"
 
+class USceneCaptureComponent2D;
 class ATargetSystemMarker;
 UCLASS()
 class FREEDOMFIGHTERS_API AMapCamera : public AActor
@@ -16,6 +17,9 @@ class FREEDOMFIGHTERS_API AMapCamera : public AActor
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* Camera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class USceneCaptureComponent2D* SceneCaptureComponent2D;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class UPostProcessComponent* PostProcessor;
@@ -28,8 +32,47 @@ private:
 		TSubclassOf<ATargetSystemMarker> EnemyMarkerClass;
 	TArray<FTargetSystemNode*> EnemyMarkerNodes;
 
+	/** Go back to default location after panning around or zooming in */
+	FVector DefaultLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float PanningSpeedMultiplier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float PanningMinX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float PanningMaxX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float PanningMinY;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float PanningMaxY;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float ZoomSpeedMultiplier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float ZoomMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float ZoomMax;
+
+	FVector LocationInput;
+
+
 public:	
 	AMapCamera();
+
+	UFUNCTION(BlueprintCallable)
+		void MoveToPlayerLocation();
+
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+
+
+	void Zoom(float Value);
 
 protected:
 	virtual void BeginPlay() override;

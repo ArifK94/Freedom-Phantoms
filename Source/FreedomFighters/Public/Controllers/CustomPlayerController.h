@@ -15,6 +15,7 @@ class AMountedGun;
 class ABaseObjective;
 class UGameInstanceController;
 class UHealthComponent;
+class AMapCamera;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, ASupportPackage*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
@@ -43,6 +44,9 @@ private:
 
 	FTimerHandle THandler_CheckInteractable;
 	FTimerHandle THandler_PostDeath;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		AMapCamera* MapCamera;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -172,6 +176,10 @@ public:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+
+	void Zoom(float Value);
+	void ZoomIn();
+	void ZoomOut();
 
 	void BeginCrouch();
 

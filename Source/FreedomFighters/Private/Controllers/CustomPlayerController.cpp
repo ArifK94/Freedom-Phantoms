@@ -9,6 +9,7 @@
 #include "Weapons/MountedGun.h"
 #include "Vehicles/Aircraft.h"
 #include "Props/SupportPackage.h"
+#include "Props/MapCamera.h"
 #include "Objectives/BaseObjective.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -44,7 +45,7 @@ void ACustomPlayerController::SetupInputComponent()
 
 void ACustomPlayerController::InitInputComponent()
 {
-	FInputActionBinding PauseInput = InputComponent->BindAction("Pause", IE_Pressed, this, &ACustomPlayerController::PauseGame);
+	FInputActionBinding& PauseInput = InputComponent->BindAction("Pause", IE_Pressed, this, &ACustomPlayerController::PauseGame);
 	PauseInput.bExecuteWhenPaused = true;
 
 	InputComponent->BindAxis("Turn", this, &ACustomPlayerController::AddControllerYawInput);
@@ -53,8 +54,22 @@ void ACustomPlayerController::InitInputComponent()
 	InputComponent->BindAxis("LookUp", this, &ACustomPlayerController::AddControllerPitchInput);
 	InputComponent->BindAxis("LookUpRate", this, &ACustomPlayerController::LookUpAtRate);
 
-	InputComponent->BindAxis("MoveForward", this, &ACustomPlayerController::MoveForward);
-	InputComponent->BindAxis("MoveRight", this, &ACustomPlayerController::MoveRight);
+	FInputAxisBinding& MoveForwardInput = InputComponent->BindAxis("MoveForward", this, &ACustomPlayerController::MoveForward);
+	MoveForwardInput.bExecuteWhenPaused = true;
+	FInputAxisBinding& MoveRightInput = InputComponent->BindAxis("MoveRight", this, &ACustomPlayerController::MoveRight);
+	MoveRightInput.bExecuteWhenPaused = true;
+
+	InputComponent->BindAxis("Zoom", this, &ACustomPlayerController::Zoom);
+
+	FInputAxisBinding& ZoomInput = InputComponent->BindAxis("Zoom", this, &ACustomPlayerController::Zoom);
+	ZoomInput.bExecuteWhenPaused = true;
+
+	FInputActionBinding& ZoomInInput = InputComponent->BindAction("ZoomIn", IE_Pressed, this, &ACustomPlayerController::ZoomIn);
+	ZoomInInput.bExecuteWhenPaused = true;
+
+	FInputActionBinding& ZoomOutInput = InputComponent->BindAction("ZoomOut", IE_Pressed, this, &ACustomPlayerController::ZoomOut);
+	ZoomOutInput.bExecuteWhenPaused = true;
+
 
 	InputComponent->BindAction("Jump", IE_Pressed, this, &ACustomPlayerController::BeginJump);
 	InputComponent->BindAction("Jump", IE_Released, this, &ACustomPlayerController::EndJump);
@@ -183,6 +198,10 @@ void ACustomPlayerController::BeginPlay()
 			CurrentSupportPackageIndex = -1;
 		}
 	}
+
+	// Get Map camera
+	AActor* MapActor = UGameplayStatics::GetActorOfClass(GetWorld(), AMapCamera::StaticClass());
+	MapCamera = Cast<AMapCamera>(MapActor);
 
 	AddUIWidgets();
 
@@ -596,29 +615,35 @@ void ACustomPlayerController::MoveForward(float Value)
 		return;
 	}
 
-	if (!OwningCombatCharacter->InputEnabled()) {
-		return;
-	}
-
-	if (!OwningCombatCharacter->IsTakingCover())
+	if (MapCamera != nullptr && UGameplayStatics::IsGamePaused(GetWorld())) // navigate map
 	{
-		// find out which way is forward
-		const FRotator Rotation = GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		OwningCombatCharacter->AddMovementInput(Direction, Value);
+		MapCamera->MoveForward(Value);
 	}
-	else
+	else // navigate character
 	{
-		if (Value == -1.0f)
+		if (!OwningCombatCharacter->InputEnabled()) {
+			return;
+		}
+
+		if (!OwningCombatCharacter->IsTakingCover())
 		{
-			OwningCombatCharacter->EscapeCover();
+			// find out which way is forward
+			const FRotator Rotation = GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			// get forward vector
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+			OwningCombatCharacter->AddMovementInput(Direction, Value);
+		}
+		else
+		{
+			if (Value == -1.0f)
+			{
+				OwningCombatCharacter->EscapeCover();
+			}
 		}
 	}
-
 }
 
 void ACustomPlayerController::MoveRight(float Value)
@@ -630,27 +655,69 @@ void ACustomPlayerController::MoveRight(float Value)
 		return;
 	}
 
-	if (!OwningCombatCharacter->InputEnabled()) {
+	if (MapCamera != nullptr && UGameplayStatics::IsGamePaused(GetWorld())) // navigate map
+	{
+		MapCamera->MoveRight(Value);
+	}
+	else // navigate character
+	{
+		if (!OwningCombatCharacter->InputEnabled()) {
+			return;
+		}
+
+		//if (isTakingCover && !isAtCoverCorner)
+		//	RightInputValue = Value;
+
+		if (!OwningCombatCharacter->IsTakingCover())
+		{
+			//find out which way is right
+			const FRotator Rotation = GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			// get right vector 
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			// add movement in that direction
+			OwningCombatCharacter->AddMovementInput(Direction, Value);
+		}
+		else
+		{
+			OwningCombatCharacter->CoverMovement(Value);
+		}
+	}
+}
+
+void ACustomPlayerController::Zoom(float Value)
+{
+	if (Value == 0.0f) {
 		return;
 	}
 
-	//if (isTakingCover && !isAtCoverCorner)
-	//	RightInputValue = Value;
-
-	if (!OwningCombatCharacter->IsTakingCover())
+	// If input is positive then zoom in
+	if (Value > 0.0f)
 	{
-		//find out which way is right
-		const FRotator Rotation = GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Zoom IN!"));
 
-		// get right vector 
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		// add movement in that direction
-		OwningCombatCharacter->AddMovementInput(Direction, Value);
 	}
 	else
 	{
-		OwningCombatCharacter->CoverMovement(Value);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ZOOM OUT!"));
+	}
+}
+
+
+void ACustomPlayerController::ZoomIn()
+{
+	if (MapCamera != nullptr && UGameplayStatics::IsGamePaused(GetWorld())) // zoom map
+	{
+		MapCamera->Zoom(-1.0f);
+	}
+}
+
+void ACustomPlayerController::ZoomOut()
+{
+	if (MapCamera != nullptr && UGameplayStatics::IsGamePaused(GetWorld())) // zoom map
+	{
+		MapCamera->Zoom(1.0f);
 	}
 }
 
