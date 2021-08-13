@@ -57,7 +57,7 @@ void AMapCamera::MoveToPlayerLocation()
 {
 	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 
-	FVector TargetLocation = FVector(Player->GetActorLocation().X, Player->GetActorLocation().Y, DefaultLocation.Z);
+	FVector TargetLocation = FVector(Player->GetActorLocation().X, Player->GetActorLocation().Y, GetActorLocation().Z);
 	SetActorLocation(TargetLocation);
 
 	LocationInput = GetActorLocation();
@@ -75,7 +75,10 @@ void AMapCamera::MoveForward(float Value)
 		Amount *= -1.0f;
 	}
 
-	LocationInput.X = FMath::Clamp(GetActorLocation().X + Amount, PanningMinX, PanningMaxX);
+	float Min = PanningMinX - GetActorLocation().Z;
+	float Max = PanningMaxX + GetActorLocation().Z;
+
+	LocationInput.X = FMath::Clamp(GetActorLocation().X + Amount, Min, Max);
 	SetActorLocation(LocationInput);
 }
 
@@ -90,7 +93,11 @@ void AMapCamera::MoveRight(float Value)
 	{
 		Amount *= -1.0f;
 	}
-	LocationInput.Y = FMath::Clamp(GetActorLocation().Y + Amount, PanningMinY, PanningMaxY);
+
+	float Min = PanningMinY - GetActorLocation().Z;
+	float Max = PanningMaxY + GetActorLocation().Z;
+
+	LocationInput.Y = FMath::Clamp(GetActorLocation().Y + Amount, Min, Max);
 	SetActorLocation(LocationInput);
 }
 
@@ -108,4 +115,11 @@ void AMapCamera::Zoom(float Value)
 
 	LocationInput.Z = FMath::Clamp(GetActorLocation().Z + Amount, ZoomMin, ZoomMax);
 	SetActorLocation(LocationInput);
+
+
+	// Updaye the location limits, add a positive then a negative since the camera can be at the limit for x or y
+	MoveForward(1.0f);
+	MoveForward(-1.0f);
+	MoveRight(1.0f);
+	MoveRight(-1.0f);
 }
