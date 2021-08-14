@@ -59,6 +59,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float ZoomMax;
 
+	/** Locking input for pause menu, when switching to different tabs, the movement should not take place  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool LockInput;
+
 	FVector LocationInput;
 
 
@@ -68,11 +72,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void MoveToPlayerLocation();
 
-	void MoveForward(float Value);
-	void MoveRight(float Value);
+	UFUNCTION(BlueprintCallable)
+		void MoveForward(float Value);
 
+	UFUNCTION(BlueprintCallable)
+		void MoveRight(float Value);
 
-	void Zoom(float Value);
+	UFUNCTION(BlueprintCallable)
+		void Zoom(float Value);
 
 protected:
 	virtual void BeginPlay() override;

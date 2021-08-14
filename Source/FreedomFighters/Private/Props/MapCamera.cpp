@@ -28,6 +28,8 @@ AMapCamera::AMapCamera()
 
 	ZoomMin = 0.0f;
 	ZoomMax = 0.0f;
+
+	LockInput = false;
 }
 
 void AMapCamera::BeginPlay()
@@ -65,6 +67,10 @@ void AMapCamera::MoveToPlayerLocation()
 
 void AMapCamera::MoveForward(float Value)
 {
+	if (LockInput) {
+		return;
+	}
+
 	if (Value == 0.0f) {
 		return;
 	}
@@ -84,6 +90,10 @@ void AMapCamera::MoveForward(float Value)
 
 void AMapCamera::MoveRight(float Value)
 {
+	if (LockInput) {
+		return;
+	}
+
 	if (Value == 0.0f) {
 		return;
 	}
@@ -103,6 +113,10 @@ void AMapCamera::MoveRight(float Value)
 
 void AMapCamera::Zoom(float Value)
 {
+	if (LockInput) {
+		return;
+	}
+
 	if (Value == 0.0f) {
 		return;
 	}
