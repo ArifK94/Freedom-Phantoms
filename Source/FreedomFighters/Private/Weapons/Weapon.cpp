@@ -53,7 +53,7 @@ AWeapon::AWeapon()
 	ClipSocket = "Clip";
 	HolsterSocket = "holster1";
 	EjectorSocket = "Ejector";
-	HandguardSocket = "HandguardSocket";
+	HandguardSocket = "tag_ik_loc_le";
 	ReloadClipHandSocket = "clip_hand";
 	OpticsSocket = "Optics";
 	LaserSocket = "Laser";

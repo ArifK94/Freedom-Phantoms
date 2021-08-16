@@ -402,6 +402,7 @@ void ACombatCharacter::UpdateCombatMode()
 		}
 		else
 		{
+			SetHandGaurdIK(0.0f);
 			isInCombatMode = false;
 			bUseControllerRotationYaw = false;
 		}
