@@ -950,17 +950,21 @@ void ACombatCharacter::UseMountedGun()
 		LatentInfo.CallbackTarget = this;
 
 
-		UKismetSystemLibrary::MoveComponentTo(
-			GetCapsuleComponent(),
-			MountedGun->GetCharacterStandPos(),
-			MountedGun->GetCharacterStandRot(),
-			false,
-			false,
-			.2f,
-			false,
-			EMoveComponentAction::Type::Move,
-			LatentInfo
-		);
+		//UKismetSystemLibrary::MoveComponentTo(
+		//	GetCapsuleComponent(),
+		//	MountedGun->GetCharacterStandPos(),
+		//	MountedGun->GetCharacterStandRot(),
+		//	false,
+		//	false,
+		//	.2f,
+		//	false,
+		//	EMoveComponentAction::Type::Move,
+		//	LatentInfo
+		//);
+
+
+		AttachToComponent(MountedGun->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MountedGun->GetCharacterPositionSocket());
+		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	}
 
 	// in case character was spawned to use MG
@@ -976,10 +980,6 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 	isUsingMountedWeapon = false;
 
 	MountedGun->DropWeapon();
-
-	// Go back a bit behind the mounted gun
-	FVector BehindMGPos = FVector(GetActorLocation().X - 50.0f, GetActorLocation().Y, GetActorLocation().Z);
-	SetActorLocation(BehindMGPos);
 
 	EndFire();
 	EndAim();

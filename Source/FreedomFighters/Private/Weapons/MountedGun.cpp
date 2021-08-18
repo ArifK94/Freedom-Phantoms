@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 void AMountedGun::SetIsAiming(bool isAiming)
@@ -44,6 +45,8 @@ AMountedGun::AMountedGun()
 	AdjustBehindMG = true;
 	CanTraceInteraction = true;
 	CanExit = true;
+
+	StepBackAmount = 50.0f;
 }
 
 void AMountedGun::BeginPlay()
@@ -102,6 +105,16 @@ void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, AC
 
 void AMountedGun::DropWeapon(bool RemoveOwner)
 {
+	AActor* MyOwner = GetOwner();
+
+	// Get owner to step back behind the mounted gun
+	if (MyOwner)
+	{
+		FVector NegativeVector =  UKismetMathLibrary::NegateVector(MyOwner->GetActorForwardVector());
+		FVector TargetLocation = (NegativeVector * StepBackAmount) + MyOwner->GetActorLocation();
+		MyOwner->SetActorLocation(TargetLocation);
+	}
+
 	if (RemoveOwner)
 	{
 		SetOwner(nullptr);

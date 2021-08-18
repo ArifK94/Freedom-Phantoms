@@ -20,16 +20,16 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		FRotator RotationInput;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		float PitchMin;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		float PitchMax;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		float YawMin;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		float YawMax;
 
 	/** Message to be displayed on the UI */
@@ -43,16 +43,21 @@ private:
 		FName CharacterPositionSocket;
 
 	/** True sets character to stand behind MG, false does not set it as this can be used when character was spawned to use the mounted gun in a helicopter as a mounted gunner */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		bool AdjustBehindMG;
 
 	/** Use line trace to interact in order to use the weapon, aircraft built in MG's would likely to be set false */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		bool CanTraceInteraction;
 
 	/** Can stop using MG, aircraft mounted guns may not have this set to true */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		bool CanExit;
+
+	/** Make owner step back after dropping the MG, how much of a step back should they take? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+		float StepBackAmount;
+
 	
 	float DefaultFOV;
 	float TargetFOV;
@@ -97,6 +102,10 @@ public:
 
 	FName GetCameraPositionSocket() {
 		return CameraPositionSocket;
+	}
+
+	FName GetCharacterPositionSocket() {
+		return CharacterPositionSocket;
 	}
 
 	AActor* GetPotentialOwner() {
