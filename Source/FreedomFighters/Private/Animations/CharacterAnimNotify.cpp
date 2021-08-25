@@ -13,7 +13,7 @@ void UCharacterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		if (Character)
 		{
 			if (MoveBackToCover) {
-				Character->MoveToCover();
+				
 			}
 
 			if (ShouldCrouch)

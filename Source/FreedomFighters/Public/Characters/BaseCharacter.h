@@ -127,6 +127,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isCoveringLow;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float CoverDistance;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isRepellingDown;
 
@@ -176,11 +179,6 @@ protected:
 
 	UAnimInstance* AnimInstance;
 
-	bool CoverSelected;
-	FVector WallLocation;
-	FVector WallNormal;
-
-
 private:
 
 	float LastCharDirection;
@@ -189,18 +187,9 @@ private:
 
 	float DefaultCameraFOV;
 
-	float DefaultCamViewYawMin;
-	float DefaultCamViewYawMax;
-
-	FVector CoverStart;
-	FVector CoverForwardAxis;
-
-
 	FTimerHandle THandler_ResetInitialDirectionBool;
 	FTimerHandle THandler_CharacterMovement;
 	FTimerHandle THandler_CharacterDirection;
-
-	APlayerCameraManager* CamManager;
 
 	AAIController* DefaultAIController;
 
@@ -231,6 +220,8 @@ private:
 
 	void ResetInitialDirectionBool();
 
+	void StartCover(FHitResult OutHit);
+
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
 
@@ -246,8 +237,7 @@ public:
 
 	void TakeCover();
 	void CoverMovement(float Value);
-	void MoveToCover();
-	void EscapeCover();
+	virtual void StopCover();
 
 	void SetAircraftSeat(FAircraftSeating Seating);
 	virtual void SetIsRepellingDown(bool IsRappelling);

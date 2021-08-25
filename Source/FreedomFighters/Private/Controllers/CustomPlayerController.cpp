@@ -625,7 +625,14 @@ void ACustomPlayerController::MoveForward(float Value)
 			return;
 		}
 
-		if (!OwningCombatCharacter->IsTakingCover())
+		if (OwningCombatCharacter->IsTakingCover())
+		{
+			if (Value < 0.0f)
+			{
+				OwningCombatCharacter->StopCover();
+			}
+		}
+		else
 		{
 			// find out which way is forward
 			const FRotator Rotation = GetControlRotation();
@@ -636,20 +643,12 @@ void ACustomPlayerController::MoveForward(float Value)
 
 			OwningCombatCharacter->AddMovementInput(Direction, Value);
 		}
-		else
-		{
-			if (Value == -1.0f)
-			{
-				OwningCombatCharacter->EscapeCover();
-			}
-		}
 	}
 }
 
 void ACustomPlayerController::MoveRight(float Value)
 {
-	//if (!isTakingCover || isAtCoverCorner)
-	//	RightInputValue = Value;
+	OwningCombatCharacter->SetRightInputValue(Value);
 
 	if (Value == 0.0f) {
 		return;
@@ -665,10 +664,18 @@ void ACustomPlayerController::MoveRight(float Value)
 			return;
 		}
 
-		//if (isTakingCover && !isAtCoverCorner)
-		//	RightInputValue = Value;
-
-		if (!OwningCombatCharacter->IsTakingCover())
+		if (OwningCombatCharacter->IsTakingCover()) // move while in cover
+		{
+			if (OwningCombatCharacter->IsInCombatMode()) // break cover if in combat mode & moving
+			{
+				OwningCombatCharacter->StopCover();
+			}
+			else
+			{
+				OwningCombatCharacter->CoverMovement(Value);
+			}
+		}
+		else // normal movement
 		{
 			//find out which way is right
 			const FRotator Rotation = GetControlRotation();
@@ -678,10 +685,6 @@ void ACustomPlayerController::MoveRight(float Value)
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			// add movement in that direction
 			OwningCombatCharacter->AddMovementInput(Direction, Value);
-		}
-		else
-		{
-			OwningCombatCharacter->CoverMovement(Value);
 		}
 	}
 }
@@ -781,6 +784,8 @@ void ACustomPlayerController::TakeCover()
 	if (OwningCombatCharacter->IsRepellingDown()) {
 		return;
 	}
+
+	OwningCombatCharacter->TakeCover();
 }
 
 void ACustomPlayerController::BeginFire()

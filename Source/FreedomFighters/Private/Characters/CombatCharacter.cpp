@@ -386,6 +386,13 @@ void ACombatCharacter::DisableSprint()
 	}
 }
 
+void ACombatCharacter::StopCover()
+{
+	Super::StopCover();
+
+	UpdateCombatMode();
+}
+
 void ACombatCharacter::UpdateCombatMode()
 {
 	if (currentWeaponObj && hasEquippedWeapon && !isReloading && !isRepellingDown)
@@ -396,12 +403,14 @@ void ACombatCharacter::UpdateCombatMode()
 				bUseControllerRotationYaw = true;
 			}
 
+			GetCharacterMovement()->bOrientRotationToMovement = false;
 			isInCombatMode = true;
 			SetHandGaurdIK(1.0f);
 
 		}
 		else
 		{
+			GetCharacterMovement()->bOrientRotationToMovement = true;
 			SetHandGaurdIK(0.0f);
 			isInCombatMode = false;
 			bUseControllerRotationYaw = false;
@@ -602,7 +611,7 @@ void ACombatCharacter::BeginAim()
 	else
 	{
 		Super::BeginAim();
-		currentWeaponObj->SetIsAiming(true);
+		currentWeaponObj->SetIsAiming(isAiming);
 	}
 
 	// if sprinting then stop

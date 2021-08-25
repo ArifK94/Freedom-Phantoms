@@ -17,15 +17,6 @@ private:
 	UFUNCTION()
 		void OnCompEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	/** Returns true if the socket is close to the player */
-	bool IsCloseToPlayer(FName SocketName);
-
-	/** Determines the movement direction and the facing direction of the player */
-	void DetermineMovementDirection(FVector& MovementDirection, FRotator& FacingDirection);
-
-	/** Returns the name of the nearby socket */
-	FName GetNearbySocket();
-
 protected:
 
 	UPROPERTY(VisibleAnywhere)
@@ -42,8 +33,5 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 		UStaticMeshComponent* SM;
-
-	/** Retrieves the movement direction and the facing rotation of the player */
-	void RetrieveMovementDirectionAndFacingRotation(FVector& MovementDirection, FRotator& FacingRotation);
 
 };

@@ -128,14 +128,19 @@ public:
 	virtual void BeginSprint() override;
 	virtual void EndSprint() override;
 
+
+
+	virtual	void BeginAim() override;
+	virtual	void EndAim() override;
+
+	virtual void StopCover() override;
+
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginFire();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void EndFire();
-
-	virtual	void BeginAim() override;
-	virtual	void EndAim() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginReload();
