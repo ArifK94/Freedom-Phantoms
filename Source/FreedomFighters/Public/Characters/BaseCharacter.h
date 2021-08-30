@@ -154,8 +154,21 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FVector PeakDirection;
+	/** Left cover corner camera constraint pitch (x => minimum, y => maximum)  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector2D CoverRotationLeftPitch;
+
+	/** Left cover corner camera constraint yaw (x => minimum, y => maximum)  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector2D CoverRotationLeftYaw;
+
+	/** Right cover corner camera constraint pitch (x => minimum, y => maximum)  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector2D CoverRotationRightPitch;
+
+	/** Right cover corner camera constraint yaw (x => minimum, y => maximum)  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector2D CoverRotationRightYaw;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UPostProcessComponent* CharacterOutlinePPComp;
@@ -180,6 +193,7 @@ protected:
 	UAnimInstance* AnimInstance;
 
 private:
+	FRotator RotationInput; // input for controller when looking around while taking cover and aiming
 
 	float LastCharDirection;
 	float LastForwardInputVal;
@@ -214,8 +228,6 @@ protected:
 		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 private:
-	void CheckCoverType();
-
 	void UpdateDirection();
 
 	void ResetInitialDirectionBool();
@@ -224,6 +236,9 @@ private:
 
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
+
+	void AddControllerPitchInput(float Val);
+	void AddControllerYawInput(float Val);
 
 	virtual void ShowCharacterOutline(bool CanShow);
 
@@ -335,6 +350,11 @@ public:
 
 	void SetRightInputValue(float Value) {
 		RightInputValue = Value;
+	}
+
+
+	FRotator GetRotationInput() {
+		return RotationInput;
 	}
 
 	UHealthComponent* GetHealthComp() {

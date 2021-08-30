@@ -95,9 +95,12 @@ void AStronghold::CheckOverlappingCombatatant()
 void AStronghold::GetSpawnAreas()
 {
 	SpawnAreas.Add(SpawnBox);
-	for (UActorComponent* component : GetComponentsByTag(UBoxComponent::StaticClass(), SpawnAreaComponentTag))
+
+	TArray<UActorComponent*> SpawnPoints = GetComponentsByTag(UBoxComponent::StaticClass(), SpawnAreaComponentTag);
+
+	for (int i = 0; i < SpawnPoints.Num(); i++)
 	{
-		UBoxComponent* SpawnArea = Cast<UBoxComponent>(component);
+		UBoxComponent* SpawnArea = Cast<UBoxComponent>(SpawnPoints[i]);
 		if (SpawnArea)
 		{
 			SpawnAreas.Add(SpawnArea);
@@ -107,12 +110,15 @@ void AStronghold::GetSpawnAreas()
 
 void AStronghold::GetCoverPoints()
 {
-	for (UActorComponent* component : GetComponentsByClass(UCoverPointComponent::StaticClass()))
+	TArray<UCoverPointComponent*> CoverPoints;
+	GetComponents<UCoverPointComponent>(CoverPoints);
+
+	for (int i = 0; i < CoverPoints.Num(); i++)
 	{
-		UCoverPointComponent* CoverPointComp = Cast<UCoverPointComponent>(component);
-		if (CoverPointComp)
+		UCoverPointComponent* CoverPoint = CoverPoints[i];
+		if (CoverPoint)
 		{
-			CoverPointComponents.Add(CoverPointComp);
+			CoverPointComponents.Add(CoverPoint);
 		}
 	}
 }

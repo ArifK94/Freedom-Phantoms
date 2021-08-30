@@ -399,14 +399,13 @@ void ACombatCharacter::UpdateCombatMode()
 	{
 		if (isAiming || isFiring)
 		{
-			if (!isSprinting && !IsInAircraft) {
+			if (!isSprinting && !IsInAircraft && !isTakingCover) {
 				bUseControllerRotationYaw = true;
 			}
 
 			GetCharacterMovement()->bOrientRotationToMovement = false;
 			isInCombatMode = true;
 			SetHandGaurdIK(1.0f);
-
 		}
 		else
 		{

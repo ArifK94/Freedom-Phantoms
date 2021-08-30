@@ -555,6 +555,10 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 	{
 		OwningCombatCharacter->GetMountedGun()->AddControllerPitchInput(Val);
 	}
+	else if (OwningCombatCharacter->IsTakingCover() && OwningCombatCharacter->IsAtCoverCorner())
+	{
+		OwningCombatCharacter->AddControllerPitchInput(Val);
+	}
 	else	// normal character movement
 	{
 		AddPitchInput(Val);
@@ -588,6 +592,10 @@ void ACustomPlayerController::AddControllerYawInput(float Val)
 	else if (OwningCombatCharacter->IsUsingMountedWeapon())
 	{
 		OwningCombatCharacter->GetMountedGun()->AddControllerYawInput(Val);
+	}
+	else if (OwningCombatCharacter->IsTakingCover() && OwningCombatCharacter->IsAtCoverCorner())
+	{
+		OwningCombatCharacter->AddControllerYawInput(Val);
 	}
 	else
 	{

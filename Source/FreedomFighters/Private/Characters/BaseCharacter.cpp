@@ -75,7 +75,6 @@ void ABaseCharacter::SetIsRepellingDown(bool IsRappelling)
 	}
 
 	OnRappelUpdate.Broadcast(this);
-
 }
 
 ABaseCharacter::ABaseCharacter()
@@ -154,6 +153,11 @@ ABaseCharacter::ABaseCharacter()
 	RightHandSocket = "j_wrist_ri";
 	ShoulderRightSocket = "j_shoulder_ri";
 
+	CoverRotationLeftPitch = FVector2D(-10.0f, 10.0f);
+	CoverRotationLeftYaw = FVector2D(-20.0f, 0.0f);
+	CoverRotationRightPitch = FVector2D(-10.0f, 10.0f);
+	CoverRotationRightYaw = FVector2D(0.0f, 20.0f);
+
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
 
@@ -175,9 +179,9 @@ void ABaseCharacter::BeginPlay()
 	// Create Animation Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 
-	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
-
 	InitTimeHandlers();
+
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
 }
 
 void ABaseCharacter::InitTimeHandlers()
@@ -250,6 +254,43 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 		GetCapsuleComponent()->IgnoreActorWhenMoving(Character, true);
 		Character->GetCapsuleComponent()->IgnoreActorWhenMoving(this, true);
 	}
+}
+
+void ABaseCharacter::AddControllerPitchInput(float Val)
+{
+	if (isTakingCover && isAtCoverCorner)
+	{
+		if (isFacingCoverRHS)
+		{
+			RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, CoverRotationRightPitch.X, CoverRotationRightPitch.Y);
+		}
+		else
+		{
+			RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, CoverRotationLeftPitch.X, CoverRotationLeftPitch.Y);
+		}
+
+		RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
+	}
+	FollowCamera->SetRelativeRotation(RotationInput);
+}
+
+void ABaseCharacter::AddControllerYawInput(float Val)
+{
+	if (isTakingCover && isAtCoverCorner)
+	{
+		if (isFacingCoverRHS)
+		{
+			RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, CoverRotationRightYaw.X, CoverRotationRightYaw.Y);
+		}
+		else
+		{
+			RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, CoverRotationLeftYaw.X, CoverRotationLeftYaw.Y);
+		}
+
+		RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
+	}
+	FollowCamera->SetRelativeRotation(RotationInput);
+	FollowCamera->SetRelativeLocation(FollowCamera->GetComponentRotation().Vector());
 }
 
 void ABaseCharacter::RetrieveVoiceDataSet()
@@ -357,7 +398,7 @@ void ABaseCharacter::AimOffset()
 	float x = 0.0f;
 
 	FRotator InputRotation = GetControlRotation();
-	if (IsInAircraft)
+	if (IsInAircraft || (isTakingCover && isAtCoverCorner))
 	{
 		InputRotation = FollowCamera->GetComponentRotation();
 	}
@@ -561,6 +602,9 @@ void ABaseCharacter::StopCover()
 	bUseControllerRotationYaw = false;
 	isTakingCover = false;
 	isAtCoverCorner = false;
+
+	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+
 }
 
 void ABaseCharacter::CoverMovement(float Value)
@@ -629,6 +673,7 @@ void ABaseCharacter::CoverMovement(float Value)
 		isFacingCoverRHS = true;
 
 		SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
+		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 
 	}
 	else if (LineTraceRight) // if reached left corner
@@ -638,11 +683,14 @@ void ABaseCharacter::CoverMovement(float Value)
 			AddMovementInput(Dir, Value);
 		}
 
+
+		GetCharacterMovement()->bOrientRotationToMovement = false;
 		bUseControllerRotationYaw = false; // based on corner animation being used, set to false
 		isAtCoverCorner = true;
 		isFacingCoverRHS = false;
 
 		SetActorRotation(FRotator(0.0f, 90.0f, 0.0f));
+		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 	}
 }
 
