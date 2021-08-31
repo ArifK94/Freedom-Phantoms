@@ -679,7 +679,7 @@ void ACombatCharacter::BeginReload()
 		return;
 	}
 
-	isAiming = false;
+	EndAim();
 	EndFire();
 	UpdateCombatMode();
 
