@@ -9,6 +9,7 @@
 #include "Weapons/Pistol.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
+#include "Weapons/WeaponBullet.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -171,7 +172,7 @@ void ACombatCharacter::BeginPlay()
 	}
 }
 
-void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
 	if (isDead)
 	{
@@ -200,7 +201,7 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 	}
 
-	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser);
+	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
 }
 
 void ACombatCharacter::RetrieveWeaponDataSet()
@@ -1014,3 +1015,14 @@ void ACombatCharacter::SetIsRepellingDown(bool IsRappelling)
 	UpdateCombatMode();
 }
 
+void ACombatCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+{
+	if (isUsingMountedWeapon && !Bullet->IsExplosive())
+	{
+		DeathAnimationAsset = DeathAnimation->MountedGuns[rand() % DeathAnimation->MountedGuns.Num()];
+	}
+	else
+	{
+		Super::PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
+	}
+}

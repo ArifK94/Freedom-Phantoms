@@ -414,3 +414,44 @@ public:
 
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FDeathAnimation : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> Defaults;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> Vulernables;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> Headshots;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> Groins;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> Sprints;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> SprintExplosions;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> Shotguns;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> Pistols;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> MountedGuns;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> Crouches;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> StandExplosions;
+
+};

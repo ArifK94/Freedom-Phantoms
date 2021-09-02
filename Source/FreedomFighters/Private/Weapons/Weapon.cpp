@@ -141,7 +141,17 @@ void AWeapon::ConfigSetup()
 			ObjectPoolParams->PoolSize = AmmoPerClip;
 		}
 
-		ObjectPoolComponent->AddToPool(ObjectPoolParams);
+		TArray<FObjectPoolParameters*> PoolActors = ObjectPoolComponent->AddToPool(ObjectPoolParams);
+
+		for (int i = 0; i < PoolActors.Num(); i++)
+		{
+			AWeaponBullet* Bullet = Cast<AWeaponBullet>(PoolActors[i]->PoolableActor);
+
+			if (Bullet)
+			{
+				Bullet->SetWeaponParent(this);
+			}
+		}
 	}
 
 	TimeBetweenShots = 60 / RateOfFire;

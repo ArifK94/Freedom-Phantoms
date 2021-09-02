@@ -39,7 +39,7 @@ private:
 public:	
 	UObjectPoolComponent();
 
-	void AddToPool(FObjectPoolParameters* ObjectPoolParams);
+	TArray<FObjectPoolParameters*> AddToPool(FObjectPoolParameters* ObjectPoolParams);
 
 	void ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation);
 

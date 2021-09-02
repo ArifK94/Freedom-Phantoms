@@ -1,6 +1,8 @@
 #include "Characters/BaseCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
 #include "Vehicles/Aircraft.h"
+#include "Weapons/Weapon.h"
+#include "Weapons/WeaponBullet.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -167,6 +169,7 @@ void ABaseCharacter::BeginPlay()
 
 	RetrieveVoiceDataSet();
 	RetrieveAccessoryDataSet();
+	RetrieveDeathAnimDataSet();
 
 	defaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	DefaultAIController = Cast<AAIController>(GetController());
@@ -225,7 +228,7 @@ FRotator ABaseCharacter::GetViewRotation() const
 	return Super::GetViewRotation();
 }
 
-void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
 	if (Health <= 0.0f && !isDead)
 	{
@@ -237,10 +240,8 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 		ShowCharacterOutline(false);
 
 		GetCharacterMovement()->StopMovementImmediately();
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-		GetMesh()->SetSimulatePhysics(true);
+		PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
 	}
 }
 
@@ -314,6 +315,16 @@ void ABaseCharacter::RetrieveAccessoryDataSet()
 
 	static const FString ContextString(TEXT("Accessory DataSet"));
 	AccessorySet = AccessoryDatatable->FindRow<FAccessorySet>(AccessoryRowName, ContextString, true);
+}
+
+void ABaseCharacter::RetrieveDeathAnimDataSet()
+{
+	if (DeathAnimDatatable == nullptr) {
+		return;
+	}
+
+	static const FString ContextString(TEXT("DeathAnim DataSet"));
+	DeathAnimation = DeathAnimDatatable->FindRow<FDeathAnimation>("0", ContextString, true);
 }
 
 void ABaseCharacter::UpdateCameraView()
@@ -755,4 +766,63 @@ void ABaseCharacter::EndAim()
 void ABaseCharacter::UpdateAimCamera()
 {
 	FollowCamera->SetWorldLocation(GetMesh()->GetSocketLocation(ShoulderRightSocket));
+}
+
+void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+{
+	if (Bullet->IsExplosive())
+	{
+		if (isSprinting)
+		{
+			DeathAnimationAsset = DeathAnimation->SprintExplosions[rand() % DeathAnimation->SprintExplosions.Num()];
+		}
+		else
+		{
+			DeathAnimationAsset = DeathAnimation->StandExplosions[rand() % DeathAnimation->StandExplosions.Num()];
+		}
+		return;
+	}
+
+	if (WeaponCauser->GetWeaponType() == WeaponType::Shotgun)
+	{
+		int RandomIndex = rand() % DeathAnimation->Shotguns.Num();
+		DeathAnimationAsset = DeathAnimation->Shotguns[RandomIndex];
+		return;
+	}
+
+	if (isSprinting)
+	{
+		int RandomIndex = rand() % DeathAnimation->Sprints.Num();
+		DeathAnimationAsset = DeathAnimation->Sprints[RandomIndex];
+		return;
+	}
+
+	if (GetCharacterMovement()->IsCrouching())
+	{
+		int RandomIndex = rand() % DeathAnimation->Crouches.Num();
+		DeathAnimationAsset = DeathAnimation->Crouches[RandomIndex];
+		return;
+	}
+
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
+
+	switch (SurfaceType)
+	{
+	case SURFACE_HEAD:
+		DeathAnimationAsset = DeathAnimation->Headshots[rand() % DeathAnimation->Headshots.Num()];
+		return;
+	case SURFACE_FLESHVULNERABLE:
+		DeathAnimationAsset = DeathAnimation->Vulernables[rand() % DeathAnimation->Vulernables.Num()];
+		return;
+	case SURFACE_GROIN:
+		DeathAnimationAsset = DeathAnimation->Groins[rand() % DeathAnimation->Groins.Num()];
+		return;
+	default:
+		DeathAnimationAsset = DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
+		return;
+	}
+
+	//GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	//GetMesh()->SetSimulatePhysics(true);
+	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

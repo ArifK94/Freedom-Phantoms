@@ -352,7 +352,7 @@ void ACustomPlayerController::AddUIWidgets()
 	}
 }
 
-void ACustomPlayerController::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+void ACustomPlayerController::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
 	if (HasGameEnded) {
 		return;

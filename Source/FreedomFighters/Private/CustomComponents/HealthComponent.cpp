@@ -38,14 +38,6 @@ void UHealthComponent::BeginPlay()
 	Health = MaxHealth;
 	CurrentRegenerationDelay = RegenerationDelayAmount;
 	isAlive = true;
-
-	AActor* MyOwner = GetOwner();
-
-	if (MyOwner)
-	{
-		MyOwner->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::HandleTakeAnyDamage);
-		MyOwner->OnTakeRadialDamage.AddDynamic(this, &UHealthComponent::OnRadialDamage);
-	}
 }
 
 void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -63,23 +55,7 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 }
 
-void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
-{
-	if (DamageCauser) {
-		OnDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
-	}
-}
-
-void UHealthComponent::OnRadialDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, FVector Origin, FHitResult Hit, AController* InstigatedBy, AActor* DamageCauser)
-{
-	AActor* MyOwner = DamageCauser->GetOwner();
-
-	if (MyOwner) {
-		OnDamage(DamagedActor, Damage, DamageType, InstigatedBy, MyOwner);
-	}
-}
-
-void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
 	if (HasUnlimitedHealth) return;
 
@@ -117,19 +93,19 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 		// set death type
 		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
 
-		switch (SurfaceType)
-		{
-		case SURFACE_HEAD:
-			deathType = DeathType::Head;
-			break;
-		case SURFACE_FLESHVULNERABLE:
-		case SURFACE_GROIN:
-			deathType = DeathType::FleshVulnerable;
-			break;
-		default:
-			deathType = DeathType::FleshDefault;
-			break;
-		}
+		//switch (SurfaceType)
+		//{
+		//case SURFACE_HEAD:
+		//	deathType = DeathType::Head;
+		//	break;
+		//case SURFACE_FLESHVULNERABLE:
+		//case SURFACE_GROIN:
+		//	deathType = DeathType::FleshVulnerable;
+		//	break;
+		//default:
+		//	deathType = DeathType::FleshDefault;
+		//	break;
+		//}
 
 
 		if (DamageCauser->IsA(ACombatCharacter::StaticClass()))
@@ -156,7 +132,7 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 		}
 	}
 
-	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
+	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
 }
 
 void UHealthComponent::RegenerateHealth()
@@ -180,7 +156,8 @@ void UHealthComponent::RegenerateHealth()
 		{
 			Health = FMath::Clamp(Health + RegenPerSecond * mDeltaTime, 0.0f, MaxHealth);
 
-			OnHealthChanged.Broadcast(this, Health, 0, 0, 0, 0);
+			FHitResult HitInfo;
+			OnHealthChanged.Broadcast(this, Health, 0, 0, 0, 0, nullptr, nullptr, HitInfo);
 		}
 	}
 }

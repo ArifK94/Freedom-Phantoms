@@ -10,6 +10,7 @@ class UParticleSystem;
 class USoundBase;
 class UDamageType;
 class UAudioComponent;
+class AWeapon;
 UCLASS()
 class FREEDOMFIGHTERS_API AWeaponBullet : public AObjectPoolActor
 {
@@ -92,16 +93,17 @@ private:
 
 	FVector Acceleration;
 
-
 	FVector NextPosition;
 	FVector PreviousPosition;
+
+	AWeapon* WeaponParent;
 
 private:
 
 	void Movement();
 	void DetectHit();
 
-	void Explode();
+	void Explode(FVector ImpactPoint);
 
 	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
 
@@ -120,6 +122,14 @@ public:
 
 	UStaticMeshComponent* getMesh() {
 		return Mesh;
+	}
+
+	void SetWeaponParent(AWeapon* Weapon) {
+		WeaponParent = Weapon;
+	}
+
+	bool IsExplosive() {
+		return isAnExplosive;
 	}
 
 };

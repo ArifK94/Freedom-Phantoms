@@ -29,7 +29,7 @@ void UObjectPoolComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 	}
 }
 
-void UObjectPoolComponent::AddToPool(FObjectPoolParameters* ObjectPoolParams)
+TArray<FObjectPoolParameters*> UObjectPoolComponent::AddToPool(FObjectPoolParameters* ObjectPoolParams)
 {
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -51,6 +51,7 @@ void UObjectPoolComponent::AddToPool(FObjectPoolParameters* ObjectPoolParams)
 			ActorsInObjectPool.Add(ObjectPoolParameters);
 		}
 	}
+	return ActorsInObjectPool;
 }
 
 
@@ -63,7 +64,6 @@ void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, AA
 	{
 		if (ActorsInObjectPool[i]->PoolableActorClass == ActorClass)
 		{
-
 			AObjectPoolActor* PoolableActor = ActorsInObjectPool[i]->PoolableActor;
 
 			if (ObjectPoolParams == nullptr) {
@@ -87,9 +87,6 @@ void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, AA
 					return;
 				}
 			}
-
-
-
 		}
 	}
 
@@ -100,5 +97,4 @@ void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, AA
 		AddToPool(ObjectPoolParams);
 		ActivatePoolObject(ObjectPoolParams->PoolableActorClass, Owner, Location, Rotation);
 	}
-
 }

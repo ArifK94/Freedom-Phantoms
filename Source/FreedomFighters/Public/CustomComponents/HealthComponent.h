@@ -8,9 +8,10 @@
 #include "HealthComponent.generated.h"
 
 // OnHealthChanged Event
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UHealthComponent*, HealthComp, float, Health, float, HealthDelta, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_NineParams(FOnHealthChangedSignature, UHealthComponent*, HealthComp, float, Health, float, HealthDelta, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser, AWeapon*, WeaponCauser, AWeaponBullet*, Bullet, FHitResult, HitInfo);
 
-
+class AWeapon;
+class AWeaponBullet;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UHealthComponent : public UActorComponent
 {
@@ -53,24 +54,12 @@ private:
 		DeathType deathType;
 
 private:
-	FHitResult HitInfo;
-
 	bool HasTakenDamage;
 	float RegenerationDelayAmount;
 	float CurrentRegenerationDelay;
 
 private:
 	virtual void BeginPlay() override;
-
-	UFUNCTION(BlueprintCallable)
-		void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-
-	UFUNCTION(BlueprintCallable)
-	void OnRadialDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, FVector Origin, FHitResult Hit, class AController* InstigatedBy, AActor* DamageCauser);
-
-
-	void OnDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -83,6 +72,8 @@ public:
 		static bool IsFriendly(AActor* AActorA, AActor* ActorB);
 
 
+	void OnDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
+
 	float getCurrentHealth() {
 		return Health;
 	}
@@ -94,11 +85,6 @@ public:
 	void SetDeathType(DeathType type)
 	{
 		deathType = type;
-	}
-
-	void SetHitInfo(FHitResult Hit)
-	{
-		HitInfo = Hit;
 	}
 
 	void SetRegenerateHealth(bool Value) {

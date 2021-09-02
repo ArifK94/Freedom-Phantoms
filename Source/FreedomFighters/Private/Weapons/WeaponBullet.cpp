@@ -153,22 +153,21 @@ void AWeaponBullet::DetectHit()
 				BulletMovementAudio->Stop();
 			}
 
-			UHealthComponent* HealthComponent = Cast<UHealthComponent>(OtherActor->GetComponentByClass(UHealthComponent::StaticClass()));
-
-			if (HealthComponent)
-			{
-				HealthComponent->SetHitInfo(OutHit);
-			}
-
 			if (isAnExplosive) {
-				Explode();
+				Explode(OutHit.ImpactPoint);
 			}
 			else
 			{
+
 				AActor* MyOwner = GetOwner();
 				if (MyOwner)
 				{
-					UGameplayStatics::ApplyPointDamage(OtherActor, ActualDamage, FVector::ZeroVector, OutHit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
+					UHealthComponent* HealthComponent = Cast<UHealthComponent>(OtherActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+					if (HealthComponent)
+					{
+						HealthComponent->OnDamage(OtherActor, ActualDamage, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, OutHit);
+					}
 				}
 
 				Deactivate();
@@ -190,7 +189,7 @@ void AWeaponBullet::DetectHit()
 
 }
 
-void AWeaponBullet::Explode()
+void AWeaponBullet::Explode(FVector ImpactPoint)
 {
 	UWorld* World = GetWorld();
 
@@ -200,66 +199,54 @@ void AWeaponBullet::Explode()
 
 	AActor* MyOwner = GetOwner();
 
-	if (MyOwner)
-	{
-		TArray<AActor*> ignoredActors;
-
-		UGameplayStatics::ApplyRadialDamage(
-			World,
-			DamageAmount,
-			GetActorLocation(),
-			ExplosiveRadius,
-			DamageType,
-			ignoredActors,
-			this, // damage does not work if assiginng the owner, therefore health component will need to get the owner of this bullet class
-			MyOwner->GetInstigatorController()
-		);
-
-		if (ShowExplosionRadius)
-		{
-			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosiveRadius, 20, FColor::Purple, false, DebugExplosionLifeTime, 0, 2);
-		}
-	}
-
 	if (ExplosionParticle != NULL)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, GetActorLocation());
 	}
 
-	// create tarray for hit results
-	TArray<FHitResult> OutHits;
-
-	// get actor locations
-	FVector MyLocation = GetActorLocation();
-
 	// create a collision sphere
 	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadius);
 
-	// draw collision sphere
-	//DrawDebugSphere(GetWorld(), GetActorLocation(), MyColSphere.GetSphereRadius(), 50, FColor::Cyan, true);
+	// create tarray for hit results
+	TArray<FHitResult> OutHits;
 
 	// check if something got hit in the sweep
-	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, MyLocation, MyLocation, FQuat::Identity, ECC_WorldStatic, MyColSphere);
+	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, ImpactPoint, ImpactPoint, FQuat::Identity, ECC_Visibility, MyColSphere);
+
+	if (ShowExplosionRadius)
+	{
+		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadius, 20, FColor::Purple, false, DebugExplosionLifeTime, 0, 2);
+	}
 
 	if (isHit)
 	{
 		// loop through TArray
 		for (auto& Hit : OutHits)
 		{
+			AActor* DamagedActor = Hit.GetActor();
+			if (DamagedActor)
+			{
+				UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+				if (HealthComponent)
+				{
+					HealthComponent->OnDamage(DamagedActor, DamageAmount, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, Hit);
+				}
+			}
+
 			UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>((Hit.GetActor())->GetRootComponent());
 
 			if (MeshComp)
 			{
 				// alternivly you can use  ERadialImpulseFalloff::RIF_Linear for the impulse to get linearly weaker as it gets further from origin.
 				// set the float radius to 500 and the float strength to 2000.
-				MeshComp->AddRadialImpulse(GetActorLocation(), ExplosiveRadius, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
+				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadius, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
 			}
 		}
 	}
 
 	Deactivate();
 }
-
 
 
 

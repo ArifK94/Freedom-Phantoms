@@ -16,6 +16,7 @@ class APlayerCameraManager;
 class AAIController;
 class UDataTable;
 class AAircraft;
+class AWeapon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRappelUpdateignature, ABaseCharacter*, BaseCharacter);
 UCLASS(config = Game)
@@ -63,9 +64,14 @@ protected:
 		FName AccessoryRowName;
 	FAccessorySet* AccessorySet;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* DeathAnimDatatable;
+	FDeathAnimation* DeathAnimation;
+
 private:
 	void RetrieveVoiceDataSet();
 	void RetrieveAccessoryDataSet();
+	void RetrieveDeathAnimDataSet();
 
 #pragma endregion
 
@@ -182,6 +188,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAnimSequence* DeathAnimationAsset;
+
 protected:
 
 	float defaultMaxWalkSpeed;
@@ -222,7 +231,8 @@ protected:
 	void UpdateCharacterMovement();
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
-		virtual void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+		virtual void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
+	virtual void PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
 
 	UFUNCTION()
 		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -269,8 +279,6 @@ protected:
 	virtual FVector GetPawnViewLocation() const override;
 
 	virtual FRotator GetViewRotation() const override;
-
-	
 
 	virtual void BeginPlay() override;
 
