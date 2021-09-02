@@ -29,4 +29,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Notify", meta = (AllowPrivateAccess = "true"))
 		bool StopAlignHandguardIK;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Notify", meta = (AllowPrivateAccess = "true"))
+		bool IsPostDeath;
 };

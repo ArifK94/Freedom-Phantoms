@@ -131,6 +131,10 @@ void ACombatAIController::Init()
 		CurrentMovement = EPathFollowingRequestResult::AlreadyAtGoal;
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 	}
+
+	UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
+	HealthComp->SetRegenerateHealth(true);
+	HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthChanged);
 }
 
 UAISenseConfig* ACombatAIController::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
@@ -284,6 +288,17 @@ void ACombatAIController::Tick(float DeltaTime)
 		 }
 	}
 }
+
+void ACombatAIController::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+{
+	if (Health <= 0.0f)
+	{
+		ClearTimers();
+
+		OwningCombatCharacter->DetachFromControllerPendingDestroy();
+	}
+}
+
 
 void ACombatAIController::ClearTimers()
 {

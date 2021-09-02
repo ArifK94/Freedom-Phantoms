@@ -385,6 +385,8 @@ void ACustomPlayerController::OnHealthChanged(UHealthComponent* OwningHealthComp
 				SetInputMode(InData);
 			}
 		}
+
+		OwningCombatCharacter->DetachFromControllerPendingDestroy();
 	}
 }
 

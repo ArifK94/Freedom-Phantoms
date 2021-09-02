@@ -255,6 +255,11 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 		GetCapsuleComponent()->IgnoreActorWhenMoving(Character, true);
 		Character->GetCapsuleComponent()->IgnoreActorWhenMoving(this, true);
 	}
+
+	if (isDead && OtherActor != this)
+	{
+		PostDeath();
+	}
 }
 
 void ABaseCharacter::AddControllerPitchInput(float Val)
@@ -822,7 +827,13 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 		return;
 	}
 
-	//GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-	//GetMesh()->SetSimulatePhysics(true);
-	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+}
+
+void ABaseCharacter::PostDeath()
+{
+	GetMesh()->SetAnimInstanceClass(NULL);
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

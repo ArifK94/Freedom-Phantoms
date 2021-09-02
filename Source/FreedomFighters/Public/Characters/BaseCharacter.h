@@ -269,6 +269,8 @@ public:
 
 	void UpdateAimCamera();
 
+	void PostDeath();
+
 protected:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }

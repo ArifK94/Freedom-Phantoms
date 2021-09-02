@@ -31,6 +31,11 @@ void UCharacterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenc
 			{
 				Character->SetHandGaurdIK(0.0f);
 			}
+
+			if (IsPostDeath)
+			{
+				Character->PostDeath();
+			}
 		}
 	}
 }
