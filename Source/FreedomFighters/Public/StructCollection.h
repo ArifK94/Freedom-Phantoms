@@ -437,9 +437,6 @@ public:
 		TArray<UAnimSequence*> Sprints;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TArray<UAnimSequence*> SprintExplosions;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<UAnimSequence*> Shotguns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -451,7 +448,32 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<UAnimSequence*> Crouches;
 
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TArray<UAnimSequence*> StandExplosions;
+		TArray<UAnimSequence*> SprintExplosionsFront;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> SprintExplosionsBack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> SprintExplosionsLeft;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> SprintExplosionsRight;
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> StandExplosionsFront;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> StandExplosionsBack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> StandExplosionsLeft;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> StandExplosionsRight;
 
 };

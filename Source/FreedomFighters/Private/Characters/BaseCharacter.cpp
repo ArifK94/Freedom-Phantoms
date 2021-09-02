@@ -775,15 +775,70 @@ void ABaseCharacter::UpdateAimCamera()
 
 void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
+
+	// Use dot product to determine where the character stands based on the impact point.
+	float DotProduct = FVector::DotProduct(HitInfo.ImpactNormal, GetActorForwardVector());
+
+	bool IsExplosiveFront, IsExplosiveLeft, IsExplosiveRight = false;
+
+	if (DotProduct > 0.5f) // If facing the impact point
+	{
+		IsExplosiveFront = true;
+	}
+	else if (DotProduct > 0.0f && DotProduct < 0.5f) // if facing left of impact
+	{
+		IsExplosiveLeft = true;
+	}
+	else if (DotProduct < 0.0f && DotProduct > -0.5f) // if facing right of impact
+	{
+		IsExplosiveRight = true;
+	}
+	//  else behind impact
+
+		// DotProduct > 0.0f Same direction
+		// DotProduct == 0.0f Perpendicular direction
+		// DotProduct < 0.0f Opposite direction
+
+
 	if (Bullet->IsExplosive())
 	{
 		if (isSprinting)
 		{
-			DeathAnimationAsset = DeathAnimation->SprintExplosions[rand() % DeathAnimation->SprintExplosions.Num()];
+			if (IsExplosiveFront)
+			{
+				DeathAnimationAsset = DeathAnimation->SprintExplosionsBack[rand() % DeathAnimation->SprintExplosionsBack.Num()];
+			}
+			else if (IsExplosiveLeft)
+			{
+				DeathAnimationAsset = DeathAnimation->SprintExplosionsRight[rand() % DeathAnimation->SprintExplosionsRight.Num()];
+			}
+			else if (IsExplosiveRight)
+			{
+				DeathAnimationAsset = DeathAnimation->SprintExplosionsLeft[rand() % DeathAnimation->SprintExplosionsLeft.Num()];
+			}
+			else
+			{
+				DeathAnimationAsset = DeathAnimation->SprintExplosionsFront[rand() % DeathAnimation->SprintExplosionsFront.Num()];
+			}
 		}
 		else
 		{
-			DeathAnimationAsset = DeathAnimation->StandExplosions[rand() % DeathAnimation->StandExplosions.Num()];
+			if (IsExplosiveFront)
+			{
+				DeathAnimationAsset = DeathAnimation->StandExplosionsBack[rand() % DeathAnimation->StandExplosionsBack.Num()];
+			}
+			else if (IsExplosiveLeft)
+			{
+				DeathAnimationAsset = DeathAnimation->StandExplosionsRight[rand() % DeathAnimation->StandExplosionsRight.Num()];
+			}
+			else if (IsExplosiveRight)
+			{
+				DeathAnimationAsset = DeathAnimation->StandExplosionsLeft[rand() % DeathAnimation->StandExplosionsLeft.Num()];
+			}
+			else
+			{
+				DeathAnimationAsset = DeathAnimation->StandExplosionsFront[rand() % DeathAnimation->StandExplosionsFront.Num()];
+			}
 		}
 		return;
 	}
@@ -826,8 +881,6 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 		DeathAnimationAsset = DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
 		return;
 	}
-
-
 }
 
 void ABaseCharacter::PostDeath()
