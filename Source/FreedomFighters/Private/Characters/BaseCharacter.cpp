@@ -775,23 +775,24 @@ void ABaseCharacter::UpdateAimCamera()
 
 void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
 
 	// Use dot product to determine where the character stands based on the impact point.
 	float DotProduct = FVector::DotProduct(HitInfo.ImpactNormal, GetActorForwardVector());
 
-	bool IsExplosiveFront, IsExplosiveLeft, IsExplosiveRight = false;
+	bool HasHitFront, HasHitLeft, HasHitRight = false;
 
 	if (DotProduct > 0.5f) // If facing the impact point
 	{
-		IsExplosiveFront = true;
+		HasHitFront = true;
 	}
 	else if (DotProduct > 0.0f && DotProduct < 0.5f) // if facing left of impact
 	{
-		IsExplosiveLeft = true;
+		HasHitLeft = true;
 	}
 	else if (DotProduct < 0.0f && DotProduct > -0.5f) // if facing right of impact
 	{
-		IsExplosiveRight = true;
+		HasHitRight = true;
 	}
 	//  else behind impact
 
@@ -804,15 +805,11 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 	{
 		if (isSprinting)
 		{
-			if (IsExplosiveFront)
-			{
-				DeathAnimationAsset = DeathAnimation->SprintExplosionsBack[rand() % DeathAnimation->SprintExplosionsBack.Num()];
-			}
-			else if (IsExplosiveLeft)
+			if (HasHitLeft)
 			{
 				DeathAnimationAsset = DeathAnimation->SprintExplosionsRight[rand() % DeathAnimation->SprintExplosionsRight.Num()];
 			}
-			else if (IsExplosiveRight)
+			else if (HasHitRight)
 			{
 				DeathAnimationAsset = DeathAnimation->SprintExplosionsLeft[rand() % DeathAnimation->SprintExplosionsLeft.Num()];
 			}
@@ -823,15 +820,15 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 		}
 		else
 		{
-			if (IsExplosiveFront)
+			if (HasHitFront)
 			{
 				DeathAnimationAsset = DeathAnimation->StandExplosionsBack[rand() % DeathAnimation->StandExplosionsBack.Num()];
 			}
-			else if (IsExplosiveLeft)
+			else if (HasHitLeft)
 			{
 				DeathAnimationAsset = DeathAnimation->StandExplosionsRight[rand() % DeathAnimation->StandExplosionsRight.Num()];
 			}
-			else if (IsExplosiveRight)
+			else if (HasHitRight)
 			{
 				DeathAnimationAsset = DeathAnimation->StandExplosionsLeft[rand() % DeathAnimation->StandExplosionsLeft.Num()];
 			}
@@ -845,9 +842,26 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 
 	if (WeaponCauser->GetWeaponType() == WeaponType::Shotgun)
 	{
-		int RandomIndex = rand() % DeathAnimation->Shotguns.Num();
-		DeathAnimationAsset = DeathAnimation->Shotguns[RandomIndex];
-		return;
+		if (SurfaceType == SURFACE_LEGS)
+		{
+			DeathAnimationAsset = DeathAnimation->ShotgunHitsLegs[rand() % DeathAnimation->ShotgunHitsLegs.Num()];
+			return;
+		}
+		else if (HasHitFront) 
+		{
+			DeathAnimationAsset = DeathAnimation->ShotgunHitsFront[rand() % DeathAnimation->ShotgunHitsFront.Num()];
+			return;
+		}
+		else if (HasHitLeft)
+		{
+			DeathAnimationAsset = DeathAnimation->ShotgunHitsLeft[rand() % DeathAnimation->ShotgunHitsLeft.Num()];
+			return;
+		}
+		else if (HasHitRight)
+		{
+			DeathAnimationAsset = DeathAnimation->ShotgunHitsRight[rand() % DeathAnimation->ShotgunHitsRight.Num()];
+			return;
+		}
 	}
 
 	if (isSprinting)
@@ -864,7 +878,6 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 		return;
 	}
 
-	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
 
 	switch (SurfaceType)
 	{

@@ -8,6 +8,7 @@
 #define SURFACE_FLESHVULNERABLE		SurfaceType2
 #define SURFACE_HEAD				SurfaceType3
 #define SURFACE_GROIN				SurfaceType4
+#define SURFACE_LEGS				SurfaceType5
 
 #define COLLISION_WEAPON			ECC_GameTraceChannel1
 #define COLLISION_COVER				ECC_GameTraceChannel2

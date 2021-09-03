@@ -437,9 +437,6 @@ public:
 		TArray<UAnimSequence*> Sprints;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TArray<UAnimSequence*> Shotguns;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<UAnimSequence*> Pistols;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -448,6 +445,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<UAnimSequence*> Crouches;
 
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> ShotgunHitsFront;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> ShotgunHitsLegs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> ShotgunHitsLeft;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<UAnimSequence*> ShotgunHitsRight;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
