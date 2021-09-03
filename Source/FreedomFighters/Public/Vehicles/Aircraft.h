@@ -89,6 +89,37 @@ private:
 		UPostProcessComponent* ThermalVisionPPComp;
 
 
+	/** Play at the start when taking control of the aircraft */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		USoundBase* InitialPilotSound;
+
+	/** Interval based sound where pilot talks every few seconds */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		USoundBase* RandomPilotSound;
+	FTimerHandle THandler_RandomPiotSound;
+
+	/** Kill Confirmed Sounds */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		USoundBase* KillConfirmedSound;
+
+	/** Single Kill Parameter Name in sound base or cue */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		FName KillConfirmedParamName;
+
+	/** Single Kill index defined in sound cue */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		int SingleKillIndex;
+
+	/** Double Kill index defined in sound cue */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		int DoubleKillIndex;
+
+	/** Multi Kill index defined in sound cue */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		int MultiKillIndex;
+
+
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<FAircraftWeapon> AircraftWeapons;
@@ -207,6 +238,9 @@ private:
 	UFUNCTION()
 		void FollowSplinePath(float Value);
 
+	UFUNCTION()
+		void OnWeaponKillConfirm(bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill);
+
 	void SpawnPassenger();
 
 	void SpawnWeapon();
@@ -226,7 +260,10 @@ private:
 
 	void CreateThermalMatInstances();
 
-	void PlayPilotSound();
+	/** Called when taking control of aircraft */
+	void InitialContolSetup();
+
+	void PlayRandomPilotSound();
 
 	void OnDestroy();
 

@@ -4,13 +4,16 @@
 #include "ObjectPoolActor.h"
 #include "WeaponBullet.generated.h"
 
-class UArrowComponent;
-class USphereComponent;
 class UParticleSystem;
 class USoundBase;
 class UDamageType;
-class UAudioComponent;
 class AWeapon;
+class UHealthComponent;
+class UAudioComponent;
+class UArrowComponent;
+class USphereComponent;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKillConfirmedSignature, bool, IsSingleKill, bool, IsDoubleKill, bool, IsMultiKill);
 UCLASS()
 class FREEDOMFIGHTERS_API AWeaponBullet : public AObjectPoolActor
 {
@@ -18,6 +21,9 @@ class FREEDOMFIGHTERS_API AWeaponBullet : public AObjectPoolActor
 	
 public:	
 	AWeaponBullet();
+
+	UPROPERTY(BlueprintAssignable)
+		FOnKillConfirmedSignature OnKillConfirmed;
 
 private:
 
@@ -98,6 +104,10 @@ private:
 
 	AWeapon* WeaponParent;
 
+	int KillCount;
+
+	UHealthComponent* OwnerHealth;
+
 private:
 
 	void Movement();
@@ -109,13 +119,14 @@ private:
 
 	virtual void Activate() override;
 
+	virtual void Deactivate() override;
+
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
 
 public:	
-
 	float getDamageAmount() {
 		return DamageAmount;
 	}

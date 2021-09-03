@@ -6,8 +6,10 @@
 #include "Props/TargetSystemMarker.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
-
+#include "Weapons/WeaponBullet.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/ObjectPoolComponent.h"
+
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AudioComponent.h"
@@ -73,6 +75,11 @@ AAircraft::AAircraft()
 
 	UseFollowCamNavigation = false;
 	HighlightCharacters = false;
+
+	KillConfirmedParamName = "KillConfirmed";
+	SingleKillIndex = 0;
+	DoubleKillIndex = 1;
+	MultiKillIndex = 2;
 }
 
 void AAircraft::AddUIWidget()
@@ -218,6 +225,35 @@ void AAircraft::FollowSplinePath(float Value)
 	}
 }
 
+void AAircraft::OnWeaponKillConfirm(bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
+{
+	// Prioritise the kill confirmed sounds over random voice sounds
+	if (RandomPilotSound && PilotAudio->Sound == RandomPilotSound)
+	{
+		PilotAudio->Stop();
+	}
+
+	// allow the initial voice sounds to play before playing kill confirmed sounds
+	if (!PilotAudio->IsPlaying())
+	{
+		PilotAudio->Sound = KillConfirmedSound;
+
+		if (IsSingleKill)
+		{
+			PilotAudio->SetIntParameter(KillConfirmedParamName, SingleKillIndex);
+		}
+		else if (IsDoubleKill)
+		{
+			PilotAudio->SetIntParameter(KillConfirmedParamName, DoubleKillIndex);
+		}
+		else if (IsMultiKill)
+		{
+			PilotAudio->SetIntParameter(KillConfirmedParamName, MultiKillIndex);
+		}
+		PilotAudio->Play();
+	}
+}
+
 void AAircraft::SpawnPassenger()
 {
 	if (AircraftSeats.Num() <= 0) {
@@ -294,6 +330,18 @@ void AAircraft::SpawnWeapon()
 			MG->SetYawMin(AircraftWeapon.YawMin);
 			MG->SetYawMax(AircraftWeapon.YawMax);
 
+
+			// register bullet kill confirms for pilot reaction in an AC130 for instance
+			for (int i = 0; i < MG->GetObjectPoolComponent()->GetActorsInObjectPool().Num(); i++)
+			{
+				FObjectPoolParameters* ObjectPool = MG->GetObjectPoolComponent()->GetActorsInObjectPool()[i];
+				AWeaponBullet* Bullet = Cast<AWeaponBullet>(ObjectPool->PoolableActor);
+
+				if (Bullet)
+				{
+					Bullet->OnKillConfirmed.AddDynamic(this, &AAircraft::OnWeaponKillConfirm);
+				}
+			}
 
 			WeaponObjs.Add(MG);
 		}
@@ -676,27 +724,60 @@ void AAircraft::SetPlayerControl(APlayerController* OurPlayerController, bool En
 	UpdateWeaponView();
 	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeaponObj, CameraSwitchDelay);
 
-
 	ThermalVisionPPComp->bEnabled = EnableThermalPP;
-
-	if (EnableThermalPP)
-	{
-		UpdateCurrentThermalVision(1.0f);
-	}
 
 	if (HighlightCharacters)
 	{
 		ShowOutlines(ShowOutline);
 	}
+
+	if (ThermalVisionPPComp->bEnabled)
+	{
+		UpdateCurrentThermalVision(1.0f);
+	}
+
 	AddUIWidget();
 
-	GetWorldTimerManager().SetTimer(THandler_CameraSwitchDelay, this, &AAircraft::PlayPilotSound, CameraSwitchDelay, false);
+	// Play as soon as the player camera is set to aircraft camera
+	GetWorldTimerManager().SetTimer(THandler_CameraSwitchDelay, this, &AAircraft::InitialContolSetup, CameraSwitchDelay, false);
 }
 
-void AAircraft::PlayPilotSound()
+void AAircraft::InitialContolSetup()
 {
-	PilotAudio->Play();
+	if (InitialPilotSound)
+	{
+		PilotAudio->Sound = InitialPilotSound;
+		PilotAudio->Play();
+	}
+
 	GetWorldTimerManager().ClearTimer(THandler_CameraSwitchDelay);
+
+	float Delay = 5.0f;
+	if (InitialPilotSound)
+	{
+		Delay = InitialPilotSound->Duration;
+	}
+	GetWorldTimerManager().SetTimer(THandler_RandomPiotSound, this, &AAircraft::PlayRandomPilotSound, Delay, true);
+}
+
+void AAircraft::PlayRandomPilotSound()
+{
+	if (RandomPilotSound == nullptr) {
+		GetWorldTimerManager().ClearTimer(THandler_RandomPiotSound);
+		return;
+	}
+
+	if (PilotAudio->IsPlaying()) {
+		return;
+	}
+
+	PilotAudio->Sound = RandomPilotSound;
+	PilotAudio->Play();
+
+	// reset the timer based on the current sound being played as the new minimum delay
+	GetWorldTimerManager().ClearTimer(THandler_RandomPiotSound);
+	GetWorldTimerManager().SetTimer(THandler_RandomPiotSound, this, &AAircraft::PlayRandomPilotSound, RandomPilotSound->Duration, true);
+
 }
 
 void AAircraft::WaitForRapelling()

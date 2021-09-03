@@ -22,7 +22,7 @@ public:
 	void SetActive(bool InpActive);
 	bool IsActive();
 	virtual void Activate();
-	void Deactivate();
+	virtual void Deactivate();
 
 protected:
 	virtual void BeginPlay() override;

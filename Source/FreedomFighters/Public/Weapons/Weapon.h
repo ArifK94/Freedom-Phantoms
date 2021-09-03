@@ -389,6 +389,10 @@ public:
 		return ZoomFOV;
 	}
 
+	UObjectPoolComponent* GetObjectPoolComponent() {
+		return ObjectPoolComponent;
+	}
+
 	UAudioComponent* GetShotAudioComponent() {
 		return ShotAudioComponent;
 	}

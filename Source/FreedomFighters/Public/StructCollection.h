@@ -7,6 +7,7 @@
 #include "Engine/DataTable.h"
 #include "StructCollection.generated.h"
 
+class AObjectPoolActor;
 class ABaseCharacter;
 class ACombatCharacter;
 class ACommanderCharacter;
@@ -27,6 +28,22 @@ class UAnimSequence;
 class UAimOffsetBlendSpace;
 class UTexture;
 class ASupportPackage;
+
+USTRUCT(BlueprintType)
+struct FREEDOMFIGHTERS_API FObjectPoolParameters
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	UPROPERTY()
+		TSubclassOf<AObjectPoolActor> PoolableActorClass;
+
+	UPROPERTY()
+		AObjectPoolActor* PoolableActor;
+
+	UPROPERTY()
+		int PoolSize;
+};
 
 USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase

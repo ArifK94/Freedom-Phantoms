@@ -97,7 +97,19 @@ void AWeaponBullet::Activate()
 		BulletMovementAudio->Play();
 	}
 
+	if (OwnerHealth == nullptr && GetOwner())
+	{
+		OwnerHealth = Cast<UHealthComponent>(GetOwner()->GetComponentByClass(UHealthComponent::StaticClass()));
+	}
+
 	Super::Activate();
+}
+
+void AWeaponBullet::Deactivate()
+{
+	KillCount = 0;
+
+	Super::Deactivate();
 }
 
 void AWeaponBullet::DetectHit()
@@ -228,9 +240,22 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 			{
 				UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
-				if (HealthComponent)
+				if (HealthComponent && HealthComponent->IsAlive())
 				{
 					HealthComponent->OnDamage(DamagedActor, DamageAmount, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, Hit);
+
+					// confirm kill if
+					// damaged actor is not the owner
+					// damaged actor is dead &
+					// damaged actor is not on the same faction side as the owner of this bullet &
+					// damaged is not neutral
+					if (!HealthComponent->IsAlive() 
+						&& HealthComponent != OwnerHealth 
+						&& HealthComponent->GetSelectedFaction() != OwnerHealth->GetSelectedFaction() 
+						&& HealthComponent->GetSelectedFaction() != TeamFaction::Neutral)
+					{
+						KillCount++;
+					}
 				}
 			}
 
@@ -242,6 +267,28 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 				// set the float radius to 500 and the float strength to 2000.
 				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadius, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
 			}
+		}
+
+		if (KillCount > 0)
+		{
+			bool IsSingleKill = false;
+			bool IsDoubleKill = false;
+			bool IsMultiKill = false;
+
+			if (KillCount == 1)
+			{
+				IsSingleKill = true;
+			}
+			else if (KillCount == 2)
+			{
+				IsDoubleKill = true;
+			}
+			else if (KillCount > 2)
+			{
+				IsMultiKill = true;
+			}
+
+			OnKillConfirmed.Broadcast(IsSingleKill, IsDoubleKill, IsMultiKill);
 		}
 	}
 

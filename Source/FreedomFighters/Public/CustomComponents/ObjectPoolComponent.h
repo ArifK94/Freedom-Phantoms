@@ -2,26 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "StructCollection.h"
+
 #include "ObjectPoolComponent.generated.h"
 
 class AObjectPoolActor;
-USTRUCT(BlueprintType)
-struct FREEDOMFIGHTERS_API FObjectPoolParameters
-{
-	GENERATED_USTRUCT_BODY()
-
-public:
-	UPROPERTY()
-		TSubclassOf<AObjectPoolActor> PoolableActorClass;
-
-	UPROPERTY()
-		AObjectPoolActor* PoolableActor;
-
-	UPROPERTY()
-		int PoolSize;
-};
-
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UObjectPoolComponent : public UActorComponent
 {
@@ -48,5 +33,9 @@ protected:
 
 	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
+public:
+	TArray<FObjectPoolParameters*> GetActorsInObjectPool() {
+		return ActorsInObjectPool;
+	}
 
 };
