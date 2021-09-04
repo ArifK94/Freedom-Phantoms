@@ -24,7 +24,6 @@ ABaseObjective::ABaseObjective()
 void ABaseObjective::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 
