@@ -5,15 +5,12 @@
 #include "EnumCollection.h"
 #include "CustomPlayerController.generated.h"
 
+class UGameInstanceController;
+class AGameStateBaseCustom;
 class ABaseCharacter;
 class ACommanderCharacter;
-class ACombatCharacter;
-class AAircraft;
-class AWeapon;
-class ASupportPackage;
 class AMountedGun;
 class ABaseObjective;
-class UGameInstanceController;
 class UHealthComponent;
 class AMapCamera;
 
@@ -248,4 +245,11 @@ private:
 	void Follow();
 	void BeginFollowCommand();
 	void EndFollowCommand();
+
+public:
+	void SetCurrentMissionObjective(ABaseObjective* Objective) {
+		CurrentMissionObjective = Objective;
+	}
+
+
 };

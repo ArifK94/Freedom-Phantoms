@@ -6,10 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "BaseObjective.generated.h"
 
+class AGameStateBaseCustom;
 class UBoxComponent;
 class USoundBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnObjectiveCompletedSignature, ABaseObjective*, Objective);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnObjectiveUpdateSignature, ABaseObjective*, Objective, float, Progress);
 UCLASS()
 class FREEDOMFIGHTERS_API ABaseObjective : public AActor
 {
@@ -17,9 +19,12 @@ class FREEDOMFIGHTERS_API ABaseObjective : public AActor
 
 public:
 	FOnObjectiveCompletedSignature OnObjectiveCompleted;
-
+	FOnObjectiveUpdateSignature OnObjectiveUpdate;
 
 protected:
+	AGameStateBaseCustom* GameStateBaseCustom;
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* Root;
 
@@ -35,10 +40,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		bool IsFinalObjective;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		float Progress;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USoundBase* ObjectiveCompleteSound;	
 public:	
 	ABaseObjective();
+
+private:
+	void AddToPlayer();
 
 protected:
 	virtual void BeginPlay() override;
@@ -48,6 +59,10 @@ protected:
 public:
 	bool GetIsFinalObjective() {
 		return IsFinalObjective;
+	}
+
+	float GetProgress() {
+		return Progress;
 	}
 
 };

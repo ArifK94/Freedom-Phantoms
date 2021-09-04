@@ -130,7 +130,6 @@ ABaseCharacter::ABaseCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
-
 	VoiceAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 	CharacterOutlinePPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("CharacterOutlinePPComp"));
@@ -780,7 +779,9 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 	// Use dot product to determine where the character stands based on the impact point.
 	float DotProduct = FVector::DotProduct(HitInfo.ImpactNormal, GetActorForwardVector());
 
-	bool HasHitFront, HasHitLeft, HasHitRight = false;
+	bool HasHitFront = false;
+	bool HasHitLeft = false;
+	bool HasHitRight = false;
 
 	if (DotProduct > 0.5f) // If facing the impact point
 	{

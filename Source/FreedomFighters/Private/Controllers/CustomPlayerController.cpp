@@ -514,7 +514,6 @@ void ACustomPlayerController::OnObjectiveCompleted(ABaseObjective* Objective)
 			}
 		}
 	}
-
 }
 
 void ACustomPlayerController::AddMissionObjective(ABaseObjective* Objective)

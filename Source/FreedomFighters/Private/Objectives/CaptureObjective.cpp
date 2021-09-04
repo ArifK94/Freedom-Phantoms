@@ -2,10 +2,12 @@
 
 
 #include "Objectives/CaptureObjective.h"
+#include "Controllers/CustomPlayerController.h"
+
+#include "Components/BoxComponent.h"
 
 ACaptureObjective::ACaptureObjective()
 {
-	CaptureProgress = 0.0f;
 	CaptureRate = 1.0f;
 
 	IsPlayerCapturing = false;
@@ -42,9 +44,15 @@ void ACaptureObjective::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 		{
 			IsPlayerCapturing = true;
 
+			ACustomPlayerController* CustomPlayerController = Cast<ACustomPlayerController>(Pawn->GetController());
+
+			if (CustomPlayerController)
+			{
+				CustomPlayerController->SetCurrentMissionObjective(this);
+			}
+
 			GetWorldTimerManager().SetTimer(THandler_CaptureProgress, this, &ACaptureObjective::UpdateCaptureProgress, CaptureRate, true);
 		}
-
 	}
 }
 
@@ -75,17 +83,20 @@ void ACaptureObjective::UpdateCaptureProgress()
 		return;
 	}
 
-	if (CaptureProgress < 1.0f)
+	if (Progress < 1.0f)
 	{
-		CaptureProgress += .1f;
+		Progress += .1f;
 	}
 	else // Objective Complete!
 	{
 		GetWorldTimerManager().ClearTimer(THandler_CaptureProgress);
 
-		CaptureProgress = 1.0f;
+		Progress = 1.0f;
 		IsPlayerCapturing = false;
 
 		ObjectiveComplete();
 	}
+
+	OnObjectiveUpdate.Broadcast(this, Progress);
+
 }
