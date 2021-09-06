@@ -5,6 +5,7 @@
 #include "Objectives/BaseObjective.h"
 
 #include "Components/AudioComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AGameStateBaseCustom::AGameStateBaseCustom()
 {

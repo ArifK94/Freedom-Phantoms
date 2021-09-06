@@ -7,6 +7,7 @@
 
 class UGameInstanceController;
 class AGameStateBaseCustom;
+class AGameStateBaseCustom;
 class ABaseCharacter;
 class ACommanderCharacter;
 class AMountedGun;
@@ -36,6 +37,7 @@ private:
 	APawn* OwningPawn;
 	ACommanderCharacter* OwningCommander;
 	UGameInstanceController* GameInstanceController;
+	AGameStateBaseCustom* GameStateBaseCustom;
 	AMountedGun* MG;
 	TeamFaction PlayerFaction;
 

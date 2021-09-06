@@ -1,5 +1,6 @@
 #include "Controllers/CustomPlayerController.h"
 #include "Managers/GameInstanceController.h"
+#include "Managers/GameStateBaseCustom.h"
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "CustomComponents/HealthComponent.h"
@@ -139,6 +140,13 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
+
+	if (GameStateBaseCustom)
+	{
+		MissionObjectives = GameStateBaseCustom->GetObjectives();
+	}
 
 	GameInstanceController = Cast<UGameInstanceController>(UGameplayStatics::GetGameInstance(GetWorld()));
 
@@ -486,7 +494,7 @@ void ACustomPlayerController::OnObjectiveCompleted(ABaseObjective* Objective)
 		CurrentMissionObjective = nullptr;
 	}
 
-	if (Objective->GetIsFinalObjective())
+	if (CurrentMissionObjective == nullptr)
 	{
 		HasGameEnded = true;
 

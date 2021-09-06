@@ -52,4 +52,9 @@ protected:
 private:
 	virtual void Tick(float DeltaTime) override;
 
+public:
+	TArray<ABaseObjective*> GetObjectives() {
+		return Objectives;
+	}
+
 };
