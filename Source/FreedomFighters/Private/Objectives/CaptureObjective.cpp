@@ -3,6 +3,7 @@
 
 #include "Objectives/CaptureObjective.h"
 #include "Controllers/CustomPlayerController.h"
+#include "CustomComponents/HealthComponent.h"
 
 #include "Components/BoxComponent.h"
 
@@ -42,16 +43,20 @@ void ACaptureObjective::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 
 		if (Pawn->IsPlayerControlled())
 		{
-			IsPlayerCapturing = true;
+			HealthComponent = Cast<UHealthComponent>(Pawn->GetComponentByClass(UHealthComponent::StaticClass()));
 
-			ACustomPlayerController* CustomPlayerController = Cast<ACustomPlayerController>(Pawn->GetController());
-
-			if (CustomPlayerController)
+			if (HealthComponent && HealthComponent->IsAlive())
 			{
-				CustomPlayerController->SetCurrentMissionObjective(this);
-			}
+				ACustomPlayerController* CustomPlayerController = Cast<ACustomPlayerController>(Pawn->GetController());
 
-			GetWorldTimerManager().SetTimer(THandler_CaptureProgress, this, &ACaptureObjective::UpdateCaptureProgress, CaptureRate, true);
+				if (CustomPlayerController)
+				{
+					CustomPlayerController->SetCurrentMissionObjective(this);
+					IsPlayerCapturing = true;
+				}
+
+				GetWorldTimerManager().SetTimer(THandler_CaptureProgress, this, &ACaptureObjective::UpdateCaptureProgress, CaptureRate, true);
+			}
 		}
 	}
 }
@@ -72,6 +77,8 @@ void ACaptureObjective::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, 
 		{
 			IsPlayerCapturing = false;
 
+			HealthComponent = nullptr;
+
 			GetWorldTimerManager().ClearTimer(THandler_CaptureProgress);
 		}
 	}
@@ -80,6 +87,12 @@ void ACaptureObjective::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, 
 void ACaptureObjective::UpdateCaptureProgress()
 {
 	if (!IsPlayerCapturing) {
+		GetWorldTimerManager().ClearTimer(THandler_CaptureProgress);
+		return;
+	}
+
+	if (HealthComponent && !HealthComponent->IsAlive()) {
+		GetWorldTimerManager().ClearTimer(THandler_CaptureProgress);
 		return;
 	}
 
@@ -87,7 +100,8 @@ void ACaptureObjective::UpdateCaptureProgress()
 	{
 		Progress += .1f;
 	}
-	else // Objective Complete!
+
+	if (Progress >= 1.0f) // Objective Complete!
 	{
 		GetWorldTimerManager().ClearTimer(THandler_CaptureProgress);
 

@@ -113,6 +113,9 @@ private:
 		float HandGuardAlpha;
 
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+		int KillCount;
+
 	bool IsInAimOffSetRotation;
 
 	bool HasPlayedTargetFoundSound;
@@ -276,4 +279,7 @@ public:
 
 	void SetSecondaryWeapon(AWeapon* Weapon);
 
+	void SetKillCount(int Amount) {
+		KillCount += Amount;
+	}
 };

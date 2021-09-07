@@ -6,9 +6,7 @@
 #include "Objectives/BaseObjective.h"
 #include "CaptureObjective.generated.h"
 
-/**
- * 
- */
+class UHealthComponent;
 UCLASS()
 class FREEDOMFIGHTERS_API ACaptureObjective : public ABaseObjective
 {
@@ -22,6 +20,8 @@ private:
 		bool IsPlayerCapturing;
 
 	FTimerHandle THandler_CaptureProgress;
+
+	UHealthComponent* HealthComponent;
 
 public:
 	ACaptureObjective();

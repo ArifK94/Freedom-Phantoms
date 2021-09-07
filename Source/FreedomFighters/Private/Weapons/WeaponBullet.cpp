@@ -1,18 +1,17 @@
 #include "Weapons/WeaponBullet.h"
-
 #include "FreedomFighters/FreedomFighters.h"
 #include "CustomComponents/HealthComponent.h"
+#include "Characters/CombatCharacter.h"
+
+
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/AudioComponent.h"
-
 #include "PhysicalMaterials/PhysicalMaterial.h"
-
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-
 #include "DrawDebugHelpers.h"
 
 AWeaponBullet::AWeaponBullet()
@@ -91,15 +90,18 @@ void AWeaponBullet::Movement()
 
 void AWeaponBullet::Activate()
 {
+	KillCount = 0;
+
 	if (TravelSound != NULL)
 	{
 		BulletMovementAudio->Sound = TravelSound;
 		BulletMovementAudio->Play();
 	}
 
-	if (OwnerHealth == nullptr && GetOwner())
+	if (GetOwner())
 	{
-		OwnerHealth = Cast<UHealthComponent>(GetOwner()->GetComponentByClass(UHealthComponent::StaticClass()));
+		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
+		OwnerHealth = OwningCombatCharacter->GetHealthComp();
 	}
 
 	Super::Activate();
@@ -143,62 +145,89 @@ void AWeaponBullet::DetectHit()
 	);
 
 
-	if (SphereTrace)
+	if (!SphereTrace)
 	{
-		if (OutHit.bBlockingHit)
+		return;
+	}
+	if (!OutHit.bBlockingHit)
+	{
+		return;
+	}
+
+
+	AActor* OtherActor = OutHit.GetActor();
+
+	float ActualDamage = DamageAmount;
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(OutHit.PhysMaterial.Get());
+	if (SurfaceType == SURFACE_HEAD)
+	{
+		ActualDamage = 100;
+	}
+	else if (SurfaceType == SURFACE_FLESHVULNERABLE)
+	{
+		ActualDamage *= 2.0f;
+	}
+
+	if (BulletMovementAudio->IsPlaying())
+	{
+		BulletMovementAudio->Stop();
+	}
+
+	if (isAnExplosive) {
+		Explode(OutHit.ImpactPoint);
+	}
+	else
+	{
+		AActor* MyOwner = GetOwner();
+		if (MyOwner)
 		{
-			AActor* OtherActor = OutHit.GetActor();
+			UHealthComponent* HealthComponent = Cast<UHealthComponent>(OtherActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
-			float ActualDamage = DamageAmount;
-			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(OutHit.PhysMaterial.Get());
-			if (SurfaceType == SURFACE_HEAD)
+			if (HealthComponent && HealthComponent->IsAlive())
 			{
-				ActualDamage = 100;
+				HealthComponent->OnDamage(OtherActor, ActualDamage, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, OutHit);
+
+				AddKill(HealthComponent);
 			}
-			else if (SurfaceType == SURFACE_FLESHVULNERABLE)
-			{
-				ActualDamage *= 2.0f;
-			}
-
-			if (BulletMovementAudio->IsPlaying())
-			{
-				BulletMovementAudio->Stop();
-			}
-
-			if (isAnExplosive) {
-				Explode(OutHit.ImpactPoint);
-			}
-			else
-			{
-
-				AActor* MyOwner = GetOwner();
-				if (MyOwner)
-				{
-					UHealthComponent* HealthComponent = Cast<UHealthComponent>(OtherActor->GetComponentByClass(UHealthComponent::StaticClass()));
-
-					if (HealthComponent)
-					{
-						HealthComponent->OnDamage(OtherActor, ActualDamage, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, OutHit);
-					}
-				}
-
-				Deactivate();
-			}
-
-			if (ImpactSound != NULL)
-			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
-			}
-
-			UParticleSystem* ImpactParticle = CheckSurface(SurfaceType);
-			if (ImpactParticle)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, OutHit.ImpactPoint, OutHit.ImpactNormal.Rotation());
-			}
-
 		}
 	}
 
+	if (ImpactSound != NULL)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
+	}
+
+	UParticleSystem* ImpactParticle = CheckSurface(SurfaceType);
+	if (ImpactParticle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, OutHit.ImpactPoint, OutHit.ImpactNormal.Rotation());
+	}
+
+	if (KillCount > 0)
+	{
+		bool IsSingleKill = false;
+		bool IsDoubleKill = false;
+		bool IsMultiKill = false;
+
+		if (KillCount == 1)
+		{
+			IsSingleKill = true;
+		}
+		else if (KillCount == 2)
+		{
+			IsDoubleKill = true;
+		}
+		else if (KillCount > 2)
+		{
+			IsMultiKill = true;
+		}
+
+		OwningCombatCharacter->SetKillCount(KillCount);
+
+		OnKillConfirmed.Broadcast(IsSingleKill, IsDoubleKill, IsMultiKill);
+	}
+
+	Deactivate();
 }
 
 void AWeaponBullet::Explode(FVector ImpactPoint)
@@ -244,18 +273,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 				{
 					HealthComponent->OnDamage(DamagedActor, DamageAmount, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, Hit);
 
-					// confirm kill if
-					// damaged actor is not the owner
-					// damaged actor is dead &
-					// damaged actor is not on the same faction side as the owner of this bullet &
-					// damaged is not neutral
-					if (!HealthComponent->IsAlive() 
-						&& HealthComponent != OwnerHealth 
-						&& HealthComponent->GetSelectedFaction() != OwnerHealth->GetSelectedFaction() 
-						&& HealthComponent->GetSelectedFaction() != TeamFaction::Neutral)
-					{
-						KillCount++;
-					}
+					AddKill(HealthComponent);
 				}
 			}
 
@@ -268,31 +286,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadius, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
 			}
 		}
-
-		if (KillCount > 0)
-		{
-			bool IsSingleKill = false;
-			bool IsDoubleKill = false;
-			bool IsMultiKill = false;
-
-			if (KillCount == 1)
-			{
-				IsSingleKill = true;
-			}
-			else if (KillCount == 2)
-			{
-				IsDoubleKill = true;
-			}
-			else if (KillCount > 2)
-			{
-				IsMultiKill = true;
-			}
-
-			OnKillConfirmed.Broadcast(IsSingleKill, IsDoubleKill, IsMultiKill);
-		}
 	}
-
-	Deactivate();
 }
 
 
@@ -310,5 +304,21 @@ UParticleSystem* AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 	default:
 		return DefaultImpactEffect;
 		break;
+	}
+}
+
+void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth)
+{
+	// confirm kill if
+	// damaged actor is not the owner
+	// damaged actor is dead &
+	// damaged actor is not on the same faction side as the owner of this bullet &
+	// damaged is not neutral
+	if (!DamagedActorHealth->IsAlive()
+		&& DamagedActorHealth != OwnerHealth
+		&& DamagedActorHealth->GetSelectedFaction() != OwnerHealth->GetSelectedFaction()
+		&& DamagedActorHealth->GetSelectedFaction() != TeamFaction::Neutral)
+	{
+		KillCount++;
 	}
 }

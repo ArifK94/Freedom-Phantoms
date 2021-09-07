@@ -12,6 +12,7 @@ class UHealthComponent;
 class UAudioComponent;
 class UArrowComponent;
 class USphereComponent;
+class ACombatCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKillConfirmedSignature, bool, IsSingleKill, bool, IsDoubleKill, bool, IsMultiKill);
 UCLASS()
@@ -106,6 +107,7 @@ private:
 
 	int KillCount;
 
+	ACombatCharacter* OwningCombatCharacter;
 	UHealthComponent* OwnerHealth;
 
 private:
@@ -116,6 +118,8 @@ private:
 	void Explode(FVector ImpactPoint);
 
 	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
+
+	void AddKill(UHealthComponent* DamagedActorHealth);
 
 	virtual void Activate() override;
 
