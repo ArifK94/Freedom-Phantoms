@@ -114,7 +114,7 @@ private:
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-		int KillCount;
+		int KillCounter;
 
 	bool IsInAimOffSetRotation;
 
@@ -157,6 +157,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginWeaponSwap();
+
+	UFUNCTION()
+		void OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill);
+	void RegisterKillEvent(AWeapon* Weapon, bool BindEvent);
 
 	void BeginEquipWeapon();
 	void GrabWeapon();
@@ -280,6 +284,6 @@ public:
 	void SetSecondaryWeapon(AWeapon* Weapon);
 
 	void SetKillCount(int Amount) {
-		KillCount += Amount;
+		KillCounter += Amount;
 	}
 };

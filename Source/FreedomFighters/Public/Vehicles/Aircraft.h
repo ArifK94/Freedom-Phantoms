@@ -239,7 +239,7 @@ private:
 		void FollowSplinePath(float Value);
 
 	UFUNCTION()
-		void OnWeaponKillConfirm(bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill);
+		void OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill);
 
 	void SpawnPassenger();
 

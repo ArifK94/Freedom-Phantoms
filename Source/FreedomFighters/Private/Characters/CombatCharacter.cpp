@@ -10,6 +10,7 @@
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
 #include "Weapons/WeaponBullet.h"
+#include "CustomComponents/ObjectPoolComponent.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -148,8 +149,10 @@ void ACombatCharacter::BeginPlay()
 		if (CanAutoReloadWeapon) {
 			primaryWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 		}
+
+		RegisterKillEvent(primaryWeaponObj, true);
 	}
-	else
+	else if (secondaryWeaponObj)
 	{
 		currentWeaponObj = secondaryWeaponObj;
 
@@ -157,6 +160,7 @@ void ACombatCharacter::BeginPlay()
 			secondaryWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 		}
 
+		RegisterKillEvent(secondaryWeaponObj, true);
 	}
 
 
@@ -203,6 +207,33 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
 }
+
+void ACombatCharacter::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
+{
+	//KillCounter += KillCount;
+}
+
+void ACombatCharacter::RegisterKillEvent(AWeapon* Weapon, bool BindEvent)
+{
+	for (int i = 0; i < Weapon->GetObjectPoolComponent()->GetActorsInObjectPool().Num(); i++)
+	{
+		FObjectPoolParameters* ObjectPool = Weapon->GetObjectPoolComponent()->GetActorsInObjectPool()[i];
+		AWeaponBullet* Bullet = Cast<AWeaponBullet>(ObjectPool->PoolableActor);
+
+		if (Bullet)
+		{
+			if (BindEvent)
+			{
+				Bullet->OnKillConfirmed.AddDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
+			}
+			else
+			{
+				Bullet->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
+			}
+		}
+	}
+}
+
 
 void ACombatCharacter::RetrieveWeaponDataSet()
 {
@@ -445,7 +476,6 @@ void ACombatCharacter::BeginWeaponSwap()
 		}
 	}
 }
-
 
 void ACombatCharacter::BeginEquipWeapon()
 {
@@ -951,6 +981,8 @@ void ACombatCharacter::UseMountedGun()
 	MountedGun->SetOwner(this);
 	currentWeaponObj = MountedGun;
 
+	RegisterKillEvent(MountedGun, true);
+
 	RetrieveWeaponAnimDataSet();
 
 	if (MountedGun->GetAdjustBehindMG())
@@ -985,6 +1017,8 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 	if (MountedGun == nullptr) {
 		return;
 	}
+
+	RegisterKillEvent(MountedGun, false);
 
 	isUsingMountedWeapon = false;
 

@@ -14,7 +14,7 @@ class UArrowComponent;
 class USphereComponent;
 class ACombatCharacter;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKillConfirmedSignature, bool, IsSingleKill, bool, IsDoubleKill, bool, IsMultiKill);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnKillConfirmedSignature, int, KillCount, bool, IsSingleKill, bool, IsDoubleKill, bool, IsMultiKill);
 UCLASS()
 class FREEDOMFIGHTERS_API AWeaponBullet : public AObjectPoolActor
 {

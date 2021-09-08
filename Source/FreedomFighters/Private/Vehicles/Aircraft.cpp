@@ -225,7 +225,7 @@ void AAircraft::FollowSplinePath(float Value)
 	}
 }
 
-void AAircraft::OnWeaponKillConfirm(bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
+void AAircraft::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
 {
 	// Prioritise the kill confirmed sounds over random voice sounds
 	if (RandomPilotSound && PilotAudio->Sound == RandomPilotSound)

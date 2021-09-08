@@ -224,7 +224,7 @@ void AWeaponBullet::DetectHit()
 
 		OwningCombatCharacter->SetKillCount(KillCount);
 
-		OnKillConfirmed.Broadcast(IsSingleKill, IsDoubleKill, IsMultiKill);
+		OnKillConfirmed.Broadcast(KillCount, IsSingleKill, IsDoubleKill, IsMultiKill);
 	}
 
 	Deactivate();
