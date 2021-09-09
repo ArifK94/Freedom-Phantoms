@@ -17,6 +17,9 @@ AGameStateBaseCustom::AGameStateBaseCustom()
 	MusicStateParamName = "State";
 
 	TotalObjectives = 0;
+
+	HasGameEnded = false;
+	IsMissionPassed = false;
 }
 
 void AGameStateBaseCustom::BeginPlay()
@@ -65,5 +68,21 @@ void AGameStateBaseCustom::CalculateTotalProgression()
 		Objective->OnObjectiveUpdate.AddDynamic(this, &AGameStateBaseCustom::OnObjectiveUpdate);
 
 		Objectives.Add(Objective);
+	}
+}
+
+void AGameStateBaseCustom::EndGame(bool MissionPassed)
+{
+	HasGameEnded = true;
+	IsMissionPassed = MissionPassed;
+
+	if (MissionPassed)
+	{
+
+	}
+	else
+	{
+		MusicAudioComponent->Sound = MissionFailedMusic;
+		MusicAudioComponent->Play();
 	}
 }

@@ -220,6 +220,10 @@ void ACustomPlayerController::BeginPlay()
 
 void ACustomPlayerController::PauseGame()
 {
+	if (HasGameEnded) {
+		return;
+	}
+
 	UWorld* World = GetWorld();
 
 	if (!World) {
@@ -368,35 +372,11 @@ void ACustomPlayerController::OnHealthChanged(UHealthComponent* OwningHealthComp
 
 	if (Health <= 0.0f)
 	{
-		HasGameEnded = true;
-		EndFire();
-		SetViewTargetWithBlend(OwningCombatCharacter);
-		DisableInput(this);
-		ControlledAircraft = nullptr;
-
-		UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
-
-		GetWorldTimerManager().SetTimer(THandler_PostDeath, this, &ACustomPlayerController::PostDeath, 0.2f, false);
-
-		if (MissionFailedWidgetClass)
-		{
-			MissionFailedWidget = CreateWidget<UUserWidget>(GetWorld(), MissionFailedWidgetClass);
-
-			if (MissionFailedWidget)
-			{
-				MissionFailedWidget->AddToViewport();
-
-				SetShowMouseCursor(true);
-				FInputModeUIOnly InData;
-				InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-				InData.SetWidgetToFocus(MissionFailedWidget->TakeWidget());
-				SetInputMode(InData);
-			}
-		}
-
-		OwningCombatCharacter->DetachFromControllerPendingDestroy();
+		GameStateBaseCustom->EndGame(false);
+		DisplayEndGameUMG();
 	}
 }
+
 
 void ACustomPlayerController::PostDeath()
 {
@@ -496,31 +476,8 @@ void ACustomPlayerController::OnObjectiveCompleted(ABaseObjective* Objective)
 
 	if (CurrentMissionObjective == nullptr)
 	{
-		HasGameEnded = true;
-
-		UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
-		OwningCombatCharacter->DisableInput(this);
-
-		SetViewTargetWithBlend(OwningCombatCharacter);
-		DisableInput(this);
-		ControlledAircraft = nullptr;
-
-
-		if (MissionCompleteWidgetClass)
-		{
-			MissionCompleteWidget = CreateWidget<UUserWidget>(GetWorld(), MissionCompleteWidgetClass);
-
-			if (MissionCompleteWidget)
-			{
-				MissionCompleteWidget->AddToViewport();
-
-				SetShowMouseCursor(true);
-				FInputModeUIOnly InData;
-				InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-				InData.SetWidgetToFocus(MissionCompleteWidget->TakeWidget());
-				SetInputMode(InData);
-			}
-		}
+		GameStateBaseCustom->EndGame(true);
+		DisplayEndGameUMG();
 	}
 }
 
@@ -531,6 +488,35 @@ void ACustomPlayerController::AddMissionObjective(ABaseObjective* Objective)
 
 	if (CurrentMissionObjective == nullptr) {
 		CurrentMissionObjective = Objective;
+	}
+}
+
+void ACustomPlayerController::DisplayEndGameUMG()
+{
+	HasGameEnded = true;
+	EndFire();
+	SetViewTargetWithBlend(OwningCombatCharacter);
+	DisableInput(this);
+	ControlledAircraft = nullptr;
+
+	UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
+
+	GetWorldTimerManager().SetTimer(THandler_PostDeath, this, &ACustomPlayerController::PostDeath, 0.2f, false);
+
+	if (EndGameWidgetClass)
+	{
+		EndGameWidget = CreateWidget<UUserWidget>(GetWorld(), EndGameWidgetClass);
+
+		if (EndGameWidget)
+		{
+			EndGameWidget->AddToViewport();
+
+			SetShowMouseCursor(true);
+			FInputModeUIOnly InData;
+			InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			InData.SetWidgetToFocus(EndGameWidget->TakeWidget());
+			SetInputMode(InData);
+		}
 	}
 }
 

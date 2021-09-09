@@ -8,6 +8,7 @@
 
 class UAudioComponent;
 class ABaseObjective;
+class USoundBase;
 UCLASS()
 class FREEDOMFIGHTERS_API AGameStateBaseCustom : public AGameStateBase
 {
@@ -36,15 +37,28 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MusicChangeInterpolation;
 
+	bool HasGameEnded;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsMissionPassed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundBase* MissionPassedMusic;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundBase* MissionFailedMusic;
+
+
 public:
 	AGameStateBaseCustom();
+
+	void EndGame(bool MissionPassed);
 
 private:
 	UFUNCTION()
 		void OnObjectiveUpdate(ABaseObjective* Objective, float Progress);
 
 	void CalculateTotalProgression();
-
 
 protected:
 	virtual void BeginPlay() override;
@@ -57,4 +71,7 @@ public:
 		return Objectives;
 	}
 
+	bool GetHasGameEnded() {
+		return HasGameEnded;
+	}
 };

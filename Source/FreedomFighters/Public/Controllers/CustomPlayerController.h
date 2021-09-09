@@ -89,12 +89,8 @@ private:
 	UUserWidget* ObjectiveWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> MissionCompleteWidgetClass;
-	UUserWidget* MissionCompleteWidget;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> MissionFailedWidgetClass;
-	UUserWidget* MissionFailedWidget;
+		TSubclassOf<UUserWidget> EndGameWidgetClass;
+	UUserWidget* EndGameWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FText InteractKeyDisplayName;
@@ -129,6 +125,8 @@ private:
 	
 private:
 	void PostDeath();
+
+	void DisplayEndGameUMG();
 
 public:
 	ACustomPlayerController();
