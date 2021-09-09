@@ -210,6 +210,7 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 void ACombatCharacter::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
 {
+	OnKillConfirm.Broadcast(KillCount);
 	//KillCounter += KillCount;
 }
 

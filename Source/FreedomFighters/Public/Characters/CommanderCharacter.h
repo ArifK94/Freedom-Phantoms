@@ -112,6 +112,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AOrderIcon> FollowOverheadClass;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		int OperativeKillCounter;
 
 public:
 	ACommanderCharacter();
@@ -132,6 +134,9 @@ public:
 	void FollowCommander(bool CommandAll = false);
 
 private:
+
+	UFUNCTION()
+		void OnOperativeKillConfirm(int KillCount);
 
 	FHitResult GetCurrentTraceHit(float Length = 500.0f);
 
@@ -173,7 +178,5 @@ private:
 	void PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit);
 
 protected:
-	virtual void BeginPlay() override;
-
 	virtual void Tick(float DeltaTime) override;
 };

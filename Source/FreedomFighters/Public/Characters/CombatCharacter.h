@@ -11,6 +11,7 @@ class AMountedGun;
 class ACommanderCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCharacter*, CombatCharacter);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
 
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
@@ -127,11 +128,10 @@ public:
 	ACombatCharacter();
 
 	FOnCombatUpdatedignature OnCombatUpdated;
+	FOnKillConfirmSignature OnKillConfirm; // to be triggered for commander to recieve when an operative gets a kill
 
 	virtual void BeginSprint() override;
 	virtual void EndSprint() override;
-
-
 
 	virtual	void BeginAim() override;
 	virtual	void EndAim() override;

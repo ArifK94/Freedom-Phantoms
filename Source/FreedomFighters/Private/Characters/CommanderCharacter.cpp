@@ -31,12 +31,6 @@ void ACommanderCharacter::AddUIWidget()
 	}
 }
 
-
-void ACommanderCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 void ACommanderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -47,6 +41,10 @@ void ACommanderCharacter::Tick(float DeltaTime)
 	UpdateActiveRecruits();
 }
 
+void ACommanderCharacter::OnOperativeKillConfirm(int KillCount)
+{
+	OperativeKillCounter += KillCount;
+}
 
 FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 {
@@ -84,7 +82,7 @@ void ACommanderCharacter::CheckRecruit()
 	FHitResult HitResult = GetCurrentTraceHit();
 	if (HitResult.bBlockingHit)
 	{
-		auto CurrentTargetActor = HitResult.GetActor();
+		AActor* CurrentTargetActor = HitResult.GetActor();
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
 		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
 
@@ -92,11 +90,15 @@ void ACommanderCharacter::CheckRecruit()
 		{
 			ResetTargetActor();
 
-			PotentialRecruit = Cast<ACombatCharacter>(CurrentTargetActor);
+			auto Character = Cast<ACombatCharacter>(CurrentTargetActor);
 
-			if (PotentialRecruit != nullptr && !PotentialRecruit->GetIsInAircraft())
+			if (Character && !Character->IsPlayerControlled()) // if not controlled by player
 			{
-				PotentialRecruit->ShowCharacterOutline(true);
+				if (!Character->GetIsInAircraft())
+				{
+					PotentialRecruit = Character;
+					PotentialRecruit->ShowCharacterOutline(true);
+				}
 			}
 		}
 	}
@@ -115,6 +117,8 @@ void ACommanderCharacter::Recruit()
 		follower->CurrentCommand = CommanderOrders::Follow;
 		follower->TargetLocation = GetActorLocation();
 		follower->Recruit->setCommandingOfficer(this);
+
+		follower->Recruit->OnKillConfirm.AddDynamic(this, &ACommanderCharacter::OnOperativeKillConfirm);
 
 		SpawnIcon(AttackOverheadClass, follower->AttackOverheadIcon);
 		SpawnIcon(AttackPositionIconClass, follower->AttackPositionIcon);
