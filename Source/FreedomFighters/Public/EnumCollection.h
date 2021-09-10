@@ -76,3 +76,11 @@ enum class EAircraftRole : uint8
 	SideGunner 			UMETA(DisplayName = "SideGunner"),
 	MountedGunnner		UMETA(DisplayName = "MountedGunnner")
 };
+
+UENUM(BlueprintType)
+enum class CommanderOrders : uint8
+{
+	Follow		UMETA(DisplayName = "Follow"),
+	Attack		UMETA(DisplayName = "Attack"),
+	Defend 		UMETA(DisplayName = "Defend")
+};

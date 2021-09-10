@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CombatCharacter.h"
-
+#include "EnumCollection.h"
 #include "Engine/DataTable.h"
 
 #include "CommanderCharacter.generated.h"
@@ -15,13 +15,6 @@ class UUserWidget;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRemoveRecruitSignature, ACommanderCharacter*, Commander, int, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOrderSentSignature, UCommanderRecruit*, RecruitInfo);
 
-UENUM(BlueprintType)
-enum class CommanderOrders : uint8
-{
-	Attack		UMETA(DisplayName = "Attack"),
-	Defend 		UMETA(DisplayName = "Defend"),
-	Follow		UMETA(DisplayName = "Follow")
-};
 
 UCLASS(Blueprintable)
 class FREEDOMFIGHTERS_API UCommanderRecruit : public UObject

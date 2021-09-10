@@ -114,10 +114,9 @@ void ACommanderCharacter::Recruit()
 	{
 		UCommanderRecruit* follower = NewObject<UCommanderRecruit>(this);
 		follower->Recruit = PotentialRecruit;
-		follower->CurrentCommand = CommanderOrders::Follow;
-		follower->TargetLocation = GetActorLocation();
 		follower->Recruit->setCommandingOfficer(this);
-
+		follower->CurrentCommand = CommanderOrders::Follow; // follow command by default
+		follower->TargetLocation = GetActorLocation();
 		follower->Recruit->OnKillConfirm.AddDynamic(this, &ACommanderCharacter::OnOperativeKillConfirm);
 
 		SpawnIcon(AttackOverheadClass, follower->AttackOverheadIcon);
@@ -153,8 +152,10 @@ void ACommanderCharacter::Recruit()
 		// display the follow overhead icon each time someone has been recruited
 		DisplayOverheadIcon(follower->FollowOverheadIcon, OverheadIconArray);
 
+
 		ActiveRecruits.Add(follower);
 
+		// If only one recruit, then make this the current recruit to order around
 		if (ActiveRecruits.Num() <= 1)
 		{
 			CurrentRecruitIndex = 0;

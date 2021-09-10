@@ -29,8 +29,9 @@
 
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 {
-	if (RecruitInfo->Recruit != nullptr && RecruitInfo->Recruit != OwningCombatCharacter) {
-		return;
+	if (OwningCombatCharacter->IsTakingCover())
+	{
+		OwningCombatCharacter->StopCover();
 	}
 
 	OwningCombatCharacter->DropMountedGun();
@@ -38,16 +39,13 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	float TargetRadius = AcceptanceRadius;
 
-	switch (RecruitInfo->CurrentCommand)
+	CurrentCommand = RecruitInfo->CurrentCommand;
+	TargetDestination = RecruitInfo->TargetLocation;
+
+	switch (CurrentCommand)
 	{
-	case CommanderOrders::Attack:
-		TargetDestination = RecruitInfo->TargetLocation;
-		CanFindCover = true;
-		break;
 	case CommanderOrders::Defend:
-		TargetDestination = RecruitInfo->TargetLocation;
 		TargetRadius = 0.0f;
-		CanFindCover = true;
 		break;
 	}
 
@@ -280,12 +278,12 @@ void ACombatAIController::Tick(float DeltaTime)
 	{
 		ClearTimers();
 
-		 AActor* OwningCharacter = GetOwner();
+		AActor* OwningCharacter = GetOwner();
 
-		 if (OwningCharacter)
-		 {
-			 OwningCharacter->Destroy();
-		 }
+		if (OwningCharacter)
+		{
+			OwningCharacter->Destroy();
+		}
 	}
 }
 
@@ -802,7 +800,7 @@ void ACombatAIController::FindCover()
 		HasChosenCover = false;
 	}
 
-	CurrentMovement = MoveToTarget(0.0f);
+	//CurrentMovement = MoveToTarget(0.0f);
 
 	TakeCover();
 
@@ -1039,8 +1037,7 @@ void ACombatAIController::CheckCommanderOrder()
 {
 	Commander = OwningCombatCharacter->getCommander();
 
-	if (Commander == nullptr)
-	{
+	if (Commander == nullptr) {
 		return;
 	}
 
@@ -1050,39 +1047,35 @@ void ACombatAIController::CheckCommanderOrder()
 		HasAssignedOrderEvent = true;
 	}
 
-	return;
 
-	UCommanderRecruit* CommanderRecruit = Commander->GetRecruitInfo(OwningCombatCharacter);
+	StayCombatAlert = true;
 
-	if (CommanderRecruit != nullptr && CommanderRecruit->Recruit != nullptr && CommanderRecruit->Recruit == OwningCombatCharacter)
+	if (CurrentCommand == CommanderOrders::Follow)
 	{
-		StayCombatAlert = true;
+		TargetDestination = Commander->GetActorLocation();
+		CanFindCover = false;
 
-		if (CommanderRecruit->CurrentCommand == CommanderOrders::Follow)
+		// Crouch if the commander is crouched
+		if (Commander->GetCharacterMovement()->IsCrouching())
 		{
-			TargetDestination = Commander->GetActorLocation();
-			CanFindCover = false;
-
-			// Crouch if the commander is crouched
-			if (Commander->GetCharacterMovement()->IsCrouching())
-			{
-				if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-					OwningCombatCharacter->Crouch();
-			}
-			else
-			{
-				if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-					OwningCombatCharacter->UnCrouch();
-			}
+			if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+				OwningCombatCharacter->Crouch();
+		}
+		else
+		{
+			if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+				OwningCombatCharacter->UnCrouch();
 		}
 
 		CurrentMovement = MoveToTarget(AcceptanceRadius);
-
-		//if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
-		//	FindMountedGun();
-		//}
-
 	}
+
+
+	//if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
+	//	FindMountedGun();
+	//}
+
+
 }
 
 void ACombatAIController::ResetLocation()

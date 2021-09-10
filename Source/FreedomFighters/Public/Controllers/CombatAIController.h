@@ -35,6 +35,7 @@ private:
 	UAIPerceptionComponent* PerceptionComp;
 	APumpActionWeapon* PumpActionWeapon;
 	AActor* EnemyActor;
+	CommanderOrders CurrentCommand;
 
 
 	// to take defensive positions within the stronghold
