@@ -80,7 +80,7 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 void ACommanderCharacter::CheckRecruit()
 {
 	FHitResult HitResult = GetCurrentTraceHit();
-	if (HitResult.bBlockingHit)
+	if (HitResult.GetActor())
 	{
 		AActor* CurrentTargetActor = HitResult.GetActor();
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));

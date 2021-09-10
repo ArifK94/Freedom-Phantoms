@@ -19,6 +19,7 @@ class APumpActionWeapon;
 class USphereComponent;
 class AStronghold;
 class UCommanderRecruit;
+
 UCLASS()
 class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 {
@@ -29,7 +30,6 @@ private:
 	AGameModeManager* GameModeManager;
 	ACombatCharacter* OwningCombatCharacter;
 	USphereComponent* TargetSightSphere;
-	USphereComponent* MountedGunSphere;
 	UAISenseConfig_Sight* AISightConfig;
 	AWeapon* CurrentWeapon;
 	UAIPerceptionComponent* PerceptionComp;

@@ -49,7 +49,10 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 		break;
 	}
 
-	CurrentMovement = MoveToTarget(TargetRadius);
+	CanFindCover = true;
+
+
+	 MoveToTarget(TargetRadius);
 }
 
 ACombatAIController::ACombatAIController()
@@ -105,19 +108,6 @@ void ACombatAIController::Init()
 			TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
-		}
-	}
-
-	// For detecting MG nearby
-	if (MountedGunSphere == nullptr)
-	{
-		MountedGunSphere = NewObject<USphereComponent>(OwningCombatCharacter);
-		if (MountedGunSphere)
-		{
-			MountedGunSphere->RegisterComponent();
-			MountedGunSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-			MountedGunSphere->SetSphereRadius(MountedGunSightRadius);
-			MountedGunSphere->SetCollisionProfileName(TEXT("AITargetSight"));
 		}
 	}
 
@@ -178,7 +168,7 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 		return EPathFollowingRequestResult::Failed;
 	}
 
-	EPathFollowingRequestResult::Type Movment = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
+	CurrentMovement = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
 
 	// Walk when close to desination
 	if (WalkNearTarget)
@@ -198,7 +188,7 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 	}
 	else
 	{
-		if (Movment != EPathFollowingRequestResult::AlreadyAtGoal)
+		if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
 		{
 			OwningCombatCharacter->BeginSprint();
 		}
@@ -209,7 +199,7 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 	}
 
 
-	return Movment;
+	return CurrentMovement;
 }
 
 void ACombatAIController::BeginPlay()
@@ -648,7 +638,8 @@ void ACombatAIController::FindMountedGun()
 		return;
 	}
 
-	if (OwningCombatCharacter->GetMountedGun() != nullptr) {
+	// If an MG has been assigned
+	if (OwningCombatCharacter->GetMountedGun()) {
 
 		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal && !IsEnemyBehindMG() && !OwningCombatCharacter->IsReloading())
 		{
@@ -657,24 +648,21 @@ void ACombatAIController::FindMountedGun()
 		}
 
 		// in case player or another NPC has reached the MG before AI
-		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter || OwningCombatCharacter->GetMountedGun()->GetOwner() != nullptr)
+		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter || OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
 		{
-			OwningCombatCharacter->DropMountedGun(false);
+			OwningCombatCharacter->DropMountedGun(true);
 			CanFindCover = true;
 		}
 		else
 		{
-			CurrentMovement = MoveToTarget(0.0f, false);
+			MoveToTarget(0.0f, false);
 			CanFindCover = false;
 			return;
 		}
 	}
 
 	AMountedGun* SelectedMG = nullptr;
-	TArray<AActor*> MountedGunsRadius;
-	float TargetSightDistance = TargetSightRadius;
-
-	FVector CharacterLocation = OwningCombatCharacter->GetActorLocation();
+	float TargetSightDistance = MountedGunSightRadius;
 
 	if (CurrentStronghold)
 	{
@@ -694,7 +682,7 @@ void ACombatAIController::FindMountedGun()
 				{
 					FVector MGLocation = PotentialMG->GetActorLocation();
 
-					float DistanceDiff = FVector::Dist(CharacterLocation, MGLocation);
+					float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), MGLocation);
 
 					if (DistanceDiff < TargetSightDistance)
 					{
@@ -707,32 +695,52 @@ void ACombatAIController::FindMountedGun()
 	}
 	else
 	{
-		if (MountedGunSphere == nullptr) {
-			return;
-		}
+		// create a collision sphere
+		FCollisionShape MyColSphere = FCollisionShape::MakeSphere(MountedGunSightRadius);
 
-		MountedGunSphere->GetOverlappingActors(MountedGunsRadius, AMountedGun::StaticClass());
+		// create tarray for hit results
+		TArray<FHitResult> OutHits;
 
-		for (int index = 0; index < MountedGunsRadius.Num(); index++)
+		// check if something got hit in the sweep
+		bool isHit = GetWorld()->SweepMultiByChannel(OutHits, OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetActorLocation(), FQuat::Identity, ECC_Visibility, MyColSphere);
+
+		if (isHit)
 		{
-
-			AMountedGun* PotentialMG = Cast<AMountedGun>(MountedGunsRadius[index]);
-
-			// check if mounted gun is present in the stronghold and has no owner as well as no potential owner in case another AI wishes to use it
-			if (PotentialMG && PotentialMG->GetPotentialOwner() == nullptr && PotentialMG->GetOwner() == nullptr)
+			// loop through TArray
+			for (auto& Hit : OutHits)
 			{
+				AActor* HitActor = Hit.GetActor();
 
-				FVector MGLocation = PotentialMG->GetActorLocation();
-
-				float DistanceDiff = FVector::Dist(CharacterLocation, MGLocation);
-
-				if (DistanceDiff < TargetSightDistance)
+				if (HitActor)
 				{
-					TargetSightDistance = DistanceDiff;
-					SelectedMG = PotentialMG;
+					AMountedGun* PotentialMG = Cast<AMountedGun>(HitActor);
+
+					if (PotentialMG)
+					{
+						// check if mounted gun is present in the stronghold and has no owner as well as no potential owner in case another AI wishes to use it
+						bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
+						bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() != nullptr && PotentialMG->GetPotentialOwner() == OwningCombatCharacter;
+
+						if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
+						{
+							FVector MGLocation = PotentialMG->GetActorLocation();
+
+							float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), MGLocation);
+
+							if (DistanceDiff < TargetSightDistance)
+							{
+								TargetSightDistance = DistanceDiff;
+								SelectedMG = PotentialMG;
+							}
+						}
+					}
+
+
 				}
+
 			}
 		}
+
 	}
 
 	OwningCombatCharacter->SetMountedGun(SelectedMG);
@@ -1067,13 +1075,20 @@ void ACombatAIController::CheckCommanderOrder()
 				OwningCombatCharacter->UnCrouch();
 		}
 
-		CurrentMovement = MoveToTarget(AcceptanceRadius);
+		 MoveToTarget(AcceptanceRadius);
+
+		 if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
+			 FindMountedGun();
+		 }
+		 else
+		 {
+			 // exit from MG if currently using or if an MG has been assigned
+			 if (OwningCombatCharacter->GetMountedGun())
+			 {
+				 OwningCombatCharacter->DropMountedGun(true);
+			 }
+		 }
 	}
-
-
-	//if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
-	//	FindMountedGun();
-	//}
 
 
 }
