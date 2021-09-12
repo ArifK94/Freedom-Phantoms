@@ -571,7 +571,7 @@ void ACombatCharacter::HolsterWeapon()
 
 void ACombatCharacter::BeginFire()
 {
-	if (currentWeaponObj == nullptr || isFiring || !hasEquippedWeapon) {
+	if (currentWeaponObj == nullptr || !hasEquippedWeapon) {
 		return;
 	}
 
@@ -700,7 +700,7 @@ void ACombatCharacter::AimAutoRotation()
 
 void ACombatCharacter::BeginReload()
 {
-	if (currentWeaponObj == nullptr || isReloading) {
+	if (currentWeaponObj == nullptr || isReloading || isSwappingWeapon) {
 		return;
 	}
 
@@ -980,6 +980,7 @@ void ACombatCharacter::UseMountedGun()
 	isUsingMountedWeapon = true;
 	HolsterWeapon();
 	MountedGun->SetOwner(this);
+	MountedGun->SetPotentialOwner(this);
 	currentWeaponObj = MountedGun;
 
 	RegisterKillEvent(MountedGun, true);

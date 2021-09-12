@@ -149,6 +149,7 @@ public:
 		void BeginReload();
 	void EndReload();
 
+
 	UFUNCTION(BlueprintCallable)
 		void OnWeaponAmmoEmpty(AWeapon* Weapon);
 
@@ -233,21 +234,12 @@ public:
 		return isUsingMountedWeapon;
 	}
 	
-	FFaction* GetFactionDataSet() {
-		return FactionDataSet;
-	}
-
-
-	void setCommandingOfficer(ACommanderCharacter* Commander) {
-		CommandingOfficer = Commander;
-	}
-
-	ACommanderCharacter* getCommander() {
-		return CommandingOfficer;
-	}
-
 	bool IsReloading() {
 		return isReloading;
+	}
+
+	bool IsSwappingWeapon() {
+		return isSwappingWeapon;
 	}
 
 	AWeapon* GetCurrentWeapon() {
@@ -276,6 +268,19 @@ public:
 
 	void IsInCombatMode(bool Value) {
 		isInCombatMode = Value;
+	}
+
+	FFaction* GetFactionDataSet() {
+		return FactionDataSet;
+	}
+
+
+	void setCommandingOfficer(ACommanderCharacter* Commander) {
+		CommandingOfficer = Commander;
+	}
+
+	ACommanderCharacter* getCommander() {
+		return CommandingOfficer;
 	}
 
 

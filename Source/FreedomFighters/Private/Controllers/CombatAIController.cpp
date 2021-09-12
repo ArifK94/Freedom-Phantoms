@@ -52,7 +52,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	CanFindCover = true;
 
 
-	 MoveToTarget(TargetRadius);
+	MoveToTarget(TargetRadius);
 }
 
 ACombatAIController::ACombatAIController()
@@ -162,10 +162,10 @@ void ACombatAIController::SetVisionAngle()
 
 }
 
-EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
+void ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
 	if (OwningCombatCharacter->GetIsInAircraft()) {
-		return EPathFollowingRequestResult::Failed;
+		return;
 	}
 
 	CurrentMovement = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
@@ -197,9 +197,6 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 			OwningCombatCharacter->EndSprint();
 		}
 	}
-
-
-	return CurrentMovement;
 }
 
 void ACombatAIController::BeginPlay()
@@ -237,6 +234,8 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_CombatAlert, this, &ACombatAIController::UpdatCombatAlert, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::FindCover, 1.0f, true);
 		//GetWorldTimerManager().SetTimer(THandler_ResetMovement, this, &ACombatAIController::ResetLocation, 2.0f, true);
+
+		PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetPrimaryWeapon());
 	}
 
 	// run behavior tree if specified
@@ -488,7 +487,7 @@ void ACombatAIController::FindEnemy()
 
 void ACombatAIController::ShootAtEnemy()
 {
-	if (OwningCombatCharacter->IsRepellingDown())
+	if (OwningCombatCharacter->IsRepellingDown() || OwningCombatCharacter->IsSwappingWeapon())
 	{
 		OwningCombatCharacter->EndFire();
 		OwningCombatCharacter->EndAim();
@@ -525,47 +524,47 @@ void ACombatAIController::ShootAtEnemy()
 
 		OwningCombatCharacter->BeginAim();
 
-		if (CurrentWeapon->getCurrentAmmo() <= 0)
+		if (CurrentWeapon->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
 		{
-			// check if enemy distance is close, if so then pull out pistol
-			// otherwise reload
-			float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
-
-			float randomDistanceLimit = FMath::RandRange(0.0f, 20.0f);
-
-			if (DistanceDiff < randomDistanceLimit && CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->GetIsInAircraft())
-			{
-				OwningCombatCharacter->EndFire();
-				OwningCombatCharacter->EndAim();
-				OwningCombatCharacter->BeginWeaponSwap();
-			}
-			else
-			{
-				OwningCombatCharacter->BeginReload();
-			}
+			ReloadWeapon();
 		}
 		else
 		{
-			// Shotguns requires bolt action rather than constant firing of weapon
-			// check if using shotgun weapon type
-			PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetCurrentWeapon());
+			// check if enemy distance is close, if so then pull out pistol
+			float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
+			float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);
+			bool IsTargetClose = DistanceDiff < randomDistanceLimit;
 
-			if (PumpActionWeapon)
+			if (!IsTargetClose && CurrentWeapon == OwningCombatCharacter->GetSecondaryWeaponObj() // if target is not close, then switch back to primary
+				&& !OwningCombatCharacter->GetIsInAircraft())
 			{
-				if (PumpActionWeapon->GetHasLoadedShell())
+				OwningCombatCharacter->EndAim();
+				OwningCombatCharacter->BeginWeaponSwap();
+			}
+			else // Fire the weapon
+			{
+				// Shotguns require bolt action rather than constant firing of weapon
+				// check if using shotgun weapon type
+
+				if (PumpActionWeapon)
 				{
-					OwningCombatCharacter->BeginFire();
+					if (PumpActionWeapon->GetHasLoadedShell())
+					{
+						OwningCombatCharacter->BeginFire();
+					}
+					else
+					{
+						OwningCombatCharacter->EndFire();
+					}
 				}
 				else
 				{
-					OwningCombatCharacter->EndFire();
+					OwningCombatCharacter->BeginFire();
 				}
 			}
-			else
-			{
-				OwningCombatCharacter->BeginFire();
-			}
 		}
+
+
 	}
 	else
 	{
@@ -611,6 +610,46 @@ void ACombatAIController::EndFiring()
 	if (OwningCombatCharacter->IsFiring())
 	{
 		OwningCombatCharacter->EndFire();
+	}
+}
+
+void ACombatAIController::ReloadWeapon()
+{
+	// check if enemy distance is close, if so then pull out pistol
+	float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
+	float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);
+	bool IsTargetClose = DistanceDiff < randomDistanceLimit;
+
+	if (CurrentWeapon->getCurrentAmmo() <= 0 && !PumpActionWeapon) // Reload the weapon
+	{
+		if (IsTargetClose &&
+			CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && // if using primary weapon & enemy is nearby, then swap to secondary
+			!OwningCombatCharacter->GetIsInAircraft())
+		{
+			OwningCombatCharacter->EndAim();
+			OwningCombatCharacter->BeginWeaponSwap();
+		}
+		else
+		{
+			OwningCombatCharacter->BeginReload();
+		}
+	}
+	else if (PumpActionWeapon && (CurrentWeapon->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())) // pump action weapons can be fired as soon as the first ammo shell is inserted, so better to add few more bullets first before firing again
+	{
+		int RandomAmount = rand() % CurrentWeapon->getAmmoPerClip();
+
+		if (CurrentWeapon->getCurrentAmmo() <= 0 || CurrentWeapon->getCurrentAmmo() < RandomAmount)
+		{
+			OwningCombatCharacter->BeginReload();
+		}
+		else
+		{
+			OwningCombatCharacter->EndReload();
+		}
+	}
+	else
+	{
+		OwningCombatCharacter->EndReload();
 	}
 }
 
@@ -760,18 +799,13 @@ void ACombatAIController::FindCover()
 		return;
 	}
 
-
-	if (EnemyActor)
+	if (!HasChosenCover)
 	{
-		if (!HasChosenCover)
+		if (EnemyActor)
 		{
-			//			GenerateCoverPoints(EnemyActor);
+			GenerateCoverPoints(EnemyActor);
 		}
-	}
-	else
-	{
-
-		if (!HasChosenCover)
+		else
 		{
 			if (CurrentStronghold)
 			{
@@ -780,22 +814,13 @@ void ACombatAIController::FindCover()
 				if (ChosenCoverPointComponent)
 				{
 					TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
-					CoverLocationPoints.Add(ChosenCoverPointComponent->GetComponentLocation());
+					CoverLocationPoints.Add(TargetDestination);
+					HasChosenCover = true;
 				}
-				else
-				{
-					//	GenerateCoverPoints(OwningCombatCharacter);
-				}
-
-				HasChosenCover = true;
-			}
-			else
-			{	// pick a random cover point
-				//GenerateCoverPoints(OwningCombatCharacter);
-				HasChosenCover = true;
 			}
 		}
 	}
+
 
 	// check if current cover has been taken,
 	// if so, then find another cover point
@@ -808,10 +833,13 @@ void ACombatAIController::FindCover()
 		HasChosenCover = false;
 	}
 
-	//CurrentMovement = MoveToTarget(0.0f);
+	// Update nav movement
+	if (HasChosenCover)
+	{
+		MoveToTarget(0.0f);
 
-	TakeCover();
-
+		TakeCover();
+	}
 }
 
 void ACombatAIController::GenerateCoverPoints(AActor* TargetActor)
@@ -1075,19 +1103,20 @@ void ACombatAIController::CheckCommanderOrder()
 				OwningCombatCharacter->UnCrouch();
 		}
 
-		 MoveToTarget(AcceptanceRadius);
+		MoveToTarget(AcceptanceRadius);
 
-		 if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
-			 FindMountedGun();
-		 }
-		 else
-		 {
-			 // exit from MG if currently using or if an MG has been assigned
-			 if (OwningCombatCharacter->GetMountedGun())
-			 {
-				 OwningCombatCharacter->DropMountedGun(true);
-			 }
-		 }
+		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal)
+		{
+			FindMountedGun();
+		}
+		else
+		{
+			// exit from MG if currently using or if an MG has been assigned
+			if (OwningCombatCharacter->GetMountedGun())
+			{
+				OwningCombatCharacter->DropMountedGun(true);
+			}
+		}
 	}
 
 

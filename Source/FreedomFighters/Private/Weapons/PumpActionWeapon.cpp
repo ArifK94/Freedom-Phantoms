@@ -23,8 +23,8 @@
 
 APumpActionWeapon::APumpActionWeapon()
 {
-	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bStartWithTickEnabled = true;
+	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	weaponType = WeaponType::Shotgun;
 
@@ -56,6 +56,8 @@ void APumpActionWeapon::Fire()
 
 void APumpActionWeapon::BeginLoadShell()
 {
+	StopFire();
+
 	// pull the handguard
 	IsPullingPump = true;
 
@@ -74,7 +76,6 @@ void APumpActionWeapon::EndLoadShell()
 
 	IsPullingPump = false;
 	HasLoadedShell = true;
-	//isReloading = false;
 }
 
 

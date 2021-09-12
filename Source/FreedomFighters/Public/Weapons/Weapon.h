@@ -310,7 +310,6 @@ private:
 	void ConvertWeaponName();
 
 	void BurstDelay();
-	void SemiFireDelay();
 
 	void AutoReloadBegin();
 	void AutoReloadEnd();

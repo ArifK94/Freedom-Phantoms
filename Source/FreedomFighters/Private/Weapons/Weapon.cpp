@@ -407,15 +407,7 @@ void AWeapon::BurstDelay()
 {
 	if (BurstAmmountCount < 3)
 	{
-		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, 0.0f);
-	}
-}
-
-void AWeapon::SemiFireDelay()
-{
-	if (BurstAmmountCount < 1)
-	{
-		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, 0.0f);
+		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true);
 	}
 }
 
@@ -430,10 +422,10 @@ void AWeapon::StartFire()
 		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
 		break;
 	case SelectiveFire::SemiAutomatic:
-		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::SemiFireDelay, TimeBetweenShots, true, FirstDelay);
+		Fire();
 		break;
 	case SelectiveFire::Burst:
-		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::BurstDelay, TimeBetweenShots, true, FirstDelay);
+		BurstDelay();
 		break;
 	default:
 		Fire();

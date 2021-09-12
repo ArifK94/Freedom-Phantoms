@@ -144,7 +144,7 @@ private:
 	void OnOrderReceived(UCommanderRecruit* RecruitInfo);
 	bool HasAssignedOrderEvent;
 
-	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
+	void MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
 
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
 
@@ -160,6 +160,8 @@ private:
 	void ShootAtEnemy();
 
 	void EndFiring();
+
+	void ReloadWeapon();
 
 	void FindMountedGun();
 
@@ -196,5 +198,9 @@ public:
 
 	void SetGuardingStronghold(AStronghold* Stronghold) {
 		CurrentStronghold = Stronghold;
+	}
+
+	void SetTargetDestination(FVector Destination) {
+		TargetDestination = Destination;
 	}
 };
