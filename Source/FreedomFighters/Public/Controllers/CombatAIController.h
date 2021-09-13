@@ -35,6 +35,7 @@ private:
 	UAIPerceptionComponent* PerceptionComp;
 	APumpActionWeapon* PumpActionWeapon;
 	AActor* EnemyActor;
+	AActor* LastSeenEnemyActor;
 	CommanderOrders CurrentCommand;
 
 
@@ -113,6 +114,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MountedGunSightRadius;
 
+	/** Duration in seconds to forget the last seen enemy */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float LastSeenDuration;
+	float LastSeenTimeCurrent;
+	FVector LastSeenPosition;
+
 
 	FTimerHandle THandler_Sprint;
 	FTimerHandle THandler_BeginFire;
@@ -125,6 +132,7 @@ private:
 	FTimerHandle THandler_BeginPeakCover;
 	FTimerHandle THandler_EndPeakCover;
 	FTimerHandle THandler_ResetMovement;
+	FTimerHandle THandler_LastSeenEnemy;
 
 
 public:
@@ -156,6 +164,8 @@ private:
 	void EndCoverPeak();
 
 	void UpdateSprint();
+
+	void UpdateLastSeen();
 
 	void ShootAtEnemy();
 
