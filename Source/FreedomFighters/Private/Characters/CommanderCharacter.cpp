@@ -92,13 +92,10 @@ void ACommanderCharacter::CheckRecruit()
 		{
 			auto Character = Cast<ACombatCharacter>(CurrentTargetActor);
 
-			if (Character && !Character->IsPlayerControlled()) // if not controlled by player
+			if (Character && !Character->IsPlayerControlled() && !Character->GetIsInAircraft()) // if not controlled by player
 			{
-				if (!Character->GetIsInAircraft())
-				{
-					PotentialRecruit = Character;
-					PotentialRecruit->ShowCharacterOutline(true);
-				}
+				PotentialRecruit = Character;
+				PotentialRecruit->ShowCharacterOutline(true);
 			}
 		}
 	}
