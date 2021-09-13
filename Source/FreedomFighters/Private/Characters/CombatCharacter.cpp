@@ -436,13 +436,13 @@ void ACombatCharacter::UpdateCombatMode()
 				bUseControllerRotationYaw = true;
 			}
 
-			GetCharacterMovement()->bOrientRotationToMovement = false;
+			//GetCharacterMovement()->bOrientRotationToMovement = false;
 			isInCombatMode = true;
 			SetHandGaurdIK(1.0f);
 		}
 		else
 		{
-			GetCharacterMovement()->bOrientRotationToMovement = true;
+			//GetCharacterMovement()->bOrientRotationToMovement = true;
 			SetHandGaurdIK(0.0f);
 			isInCombatMode = false;
 			bUseControllerRotationYaw = false;

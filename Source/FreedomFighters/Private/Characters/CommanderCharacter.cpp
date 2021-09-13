@@ -82,14 +82,14 @@ void ACommanderCharacter::CheckRecruit()
 	FHitResult HitResult = GetCurrentTraceHit();
 	if (HitResult.GetActor())
 	{
+		ResetTargetActor();
+
 		AActor* CurrentTargetActor = HitResult.GetActor();
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
 		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
 
 		if (CurrentHealth && CurrentHealth->IsAlive() && isFriendly && !IfAlreadyRecruited(CurrentTargetActor))
 		{
-			ResetTargetActor();
-
 			auto Character = Cast<ACombatCharacter>(CurrentTargetActor);
 
 			if (Character && !Character->IsPlayerControlled()) // if not controlled by player
@@ -110,62 +110,63 @@ void ACommanderCharacter::CheckRecruit()
 
 void ACommanderCharacter::Recruit()
 {
-	if (PotentialRecruit != nullptr)
-	{
-		UCommanderRecruit* follower = NewObject<UCommanderRecruit>(this);
-		follower->Recruit = PotentialRecruit;
-		follower->Recruit->setCommandingOfficer(this);
-		follower->CurrentCommand = CommanderOrders::Follow; // follow command by default
-		follower->TargetLocation = GetActorLocation();
-		follower->Recruit->OnKillConfirm.AddDynamic(this, &ACommanderCharacter::OnOperativeKillConfirm);
-
-		SpawnIcon(AttackOverheadClass, follower->AttackOverheadIcon);
-		SpawnIcon(AttackPositionIconClass, follower->AttackPositionIcon);
-		SpawnIcon(HighValueTargetOverheadClass, follower->HighValueTargetOverheadIcon);
-		SpawnIcon(DefendIconPositionClass, follower->DefendPositionIcon);
-		SpawnIcon(DefendOverheadClass, follower->DefendOverheadIcon);
-		SpawnIcon(FollowOverheadClass, follower->FollowOverheadIcon);
-
-		TArray<AOrderIcon*> OrderIconArray;
-		OrderIconArray.Add(follower->AttackPositionIcon);
-		OrderIconArray.Add(follower->HighValueTargetOverheadIcon);
-		OrderIconArray.Add(follower->DefendPositionIcon);
-
-		TArray<AOrderIcon*> OverheadIconArray;
-		OverheadIconArray.Add(follower->AttackOverheadIcon);
-		OverheadIconArray.Add(follower->DefendOverheadIcon);
-		OverheadIconArray.Add(follower->FollowOverheadIcon);
-
-		// set the overhead to attach to its head socket location
-		// so the position can follow the character without updating the position every frame
-		FVector HeadLocation = follower->Recruit->GetMesh()->GetSocketLocation(follower->Recruit->GetHeadSocket());
-
-		for (AOrderIcon* OverheadIcon : OverheadIconArray)
-		{
-			OverheadIcon->AttachToComponent(follower->Recruit->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
-			OverheadIcon->SetActorLocation(HeadLocation);
-		}
-
-		follower->OrderIconArray = OrderIconArray;
-		follower->OverheadIconArray = OverheadIconArray;
-
-		// display the follow overhead icon each time someone has been recruited
-		DisplayOverheadIcon(follower->FollowOverheadIcon, OverheadIconArray);
-
-
-		ActiveRecruits.Add(follower);
-
-		// If only one recruit, then make this the current recruit to order around
-		if (ActiveRecruits.Num() <= 1)
-		{
-			CurrentRecruitIndex = 0;
-			CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
-		}
-
-		PlayVoiceSound(GetVoiceClipsSet()->RecruitSound, follower);
-
-		ResetTargetActor();
+	if (PotentialRecruit == nullptr) {
+		return;
 	}
+
+	UCommanderRecruit* follower = NewObject<UCommanderRecruit>(this);
+	follower->Recruit = PotentialRecruit;
+	follower->Recruit->setCommandingOfficer(this);
+	follower->CurrentCommand = CommanderOrders::Follow; // follow command by default
+	follower->TargetLocation = GetActorLocation();
+	follower->Recruit->OnKillConfirm.AddDynamic(this, &ACommanderCharacter::OnOperativeKillConfirm);
+
+	SpawnIcon(AttackOverheadClass, follower->AttackOverheadIcon);
+	SpawnIcon(AttackPositionIconClass, follower->AttackPositionIcon);
+	SpawnIcon(HighValueTargetOverheadClass, follower->HighValueTargetOverheadIcon);
+	SpawnIcon(DefendIconPositionClass, follower->DefendPositionIcon);
+	SpawnIcon(DefendOverheadClass, follower->DefendOverheadIcon);
+	SpawnIcon(FollowOverheadClass, follower->FollowOverheadIcon);
+
+	TArray<AOrderIcon*> OrderIconArray;
+	OrderIconArray.Add(follower->AttackPositionIcon);
+	OrderIconArray.Add(follower->HighValueTargetOverheadIcon);
+	OrderIconArray.Add(follower->DefendPositionIcon);
+
+	TArray<AOrderIcon*> OverheadIconArray;
+	OverheadIconArray.Add(follower->AttackOverheadIcon);
+	OverheadIconArray.Add(follower->DefendOverheadIcon);
+	OverheadIconArray.Add(follower->FollowOverheadIcon);
+
+	// set the overhead to attach to its head socket location
+	// so the position can follow the character without updating the position every frame
+	FVector HeadLocation = follower->Recruit->GetMesh()->GetSocketLocation(follower->Recruit->GetHeadSocket());
+
+	for (AOrderIcon* OverheadIcon : OverheadIconArray)
+	{
+		OverheadIcon->AttachToComponent(follower->Recruit->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+		OverheadIcon->SetActorLocation(HeadLocation);
+	}
+
+	follower->OrderIconArray = OrderIconArray;
+	follower->OverheadIconArray = OverheadIconArray;
+
+	// display the follow overhead icon each time someone has been recruited
+	DisplayOverheadIcon(follower->FollowOverheadIcon, OverheadIconArray);
+
+
+	ActiveRecruits.Add(follower);
+
+	// If only one recruit, then make this the current recruit to order around
+	if (ActiveRecruits.Num() <= 1)
+	{
+		CurrentRecruitIndex = 0;
+		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
+	}
+
+	PlayVoiceSound(GetVoiceClipsSet()->RecruitSound, follower);
+
+	ResetTargetActor();
 }
 
 
