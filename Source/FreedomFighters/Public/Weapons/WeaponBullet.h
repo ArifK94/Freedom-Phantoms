@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "ObjectPoolActor.h"
+#include "StructCollection.h"
 #include "WeaponBullet.generated.h"
 
 class UParticleSystem;
@@ -39,17 +40,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* BulletMovementAudio;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* ExplosionParticle;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* DefaultImpactEffect;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* FleshImpactEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
-		USoundBase* ImpactSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* SurfaceImpactDatatable;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		FName RowName;
+	FSurfaceImpact* SurfaceImpact;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
 		USoundAttenuation* ImpactAttenuation;
@@ -111,19 +106,21 @@ private:
 	UHealthComponent* OwnerHealth;
 
 private:
+	virtual void Activate() override;
+
+	virtual void Deactivate() override;
+
+	void RetrieveSurfaceImpactSet();
 
 	void Movement();
 	void DetectHit();
 
 	void Explode(FVector ImpactPoint);
 
-	UParticleSystem* CheckSurface(EPhysicalSurface SurfaceType);
+	FSurfaceImpactSet CheckSurface(EPhysicalSurface SurfaceType);
 
 	void AddKill(UHealthComponent* DamagedActorHealth);
 
-	virtual void Activate() override;
-
-	virtual void Deactivate() override;
 
 protected:
 	virtual void BeginPlay() override;

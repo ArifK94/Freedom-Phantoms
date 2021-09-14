@@ -40,6 +40,8 @@ AWeaponBullet::AWeaponBullet()
 	Mass = 500.f;
 	Drag = 0.1f;
 	Gravity = FVector(0.f, 0.f, -980.f);
+
+	RowName = "Bullet";
 }
 
 void AWeaponBullet::BeginPlay()
@@ -48,16 +50,14 @@ void AWeaponBullet::BeginPlay()
 
 	BulletMovementAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 	BulletMovementAudio->SetRelativeLocation(FVector::ZeroVector);
+
+	RetrieveSurfaceImpactSet();
 }
 
 void AWeaponBullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	CurrentDeltaTime = DeltaTime;
-
-	//if (!IsActive()) {
-	//	return;
-	//}
 
 	Movement();
 }
@@ -112,6 +112,16 @@ void AWeaponBullet::Deactivate()
 	KillCount = 0;
 
 	Super::Deactivate();
+}
+
+void AWeaponBullet::RetrieveSurfaceImpactSet()
+{
+	if (SurfaceImpactDatatable == nullptr) {
+		return;
+	}
+
+	static const FString ContextString(TEXT("Surface Impact DataSet"));
+	SurfaceImpact = SurfaceImpactDatatable->FindRow<FSurfaceImpact>(RowName, ContextString, true);
 }
 
 void AWeaponBullet::DetectHit()
@@ -192,15 +202,16 @@ void AWeaponBullet::DetectHit()
 		}
 	}
 
-	if (ImpactSound != NULL)
+	auto ImpactSurface = CheckSurface(SurfaceType);
+	if (ImpactSurface.ParticleEffect)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, OutHit.ImpactPoint);
 	}
 
-	UParticleSystem* ImpactParticle = CheckSurface(SurfaceType);
-	if (ImpactParticle)
+
+	if (ImpactSurface.Sound)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, OutHit.ImpactPoint, OutHit.ImpactNormal.Rotation());
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
 	}
 
 	if (KillCount > 0)
@@ -240,10 +251,10 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 
 	AActor* MyOwner = GetOwner();
 
-	if (ExplosionParticle != NULL)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, GetActorLocation());
-	}
+	//if (ExplosionParticle != NULL)
+	//{
+	//	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, GetActorLocation());
+	//}
 
 	// create a collision sphere
 	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadius);
@@ -291,20 +302,41 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 
 
 
-UParticleSystem* AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
+FSurfaceImpactSet AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 {
+	FSurfaceImpactSet SurfaceImpactSet = SurfaceImpact->Default;
+
 	switch (SurfaceType)
 	{
 	case SURFACE_HEAD:
 	case SURFACE_GROIN:
 	case SURFACE_FLESHDEFAULT:
 	case SURFACE_FLESHVULNERABLE:
-		return FleshImpactEffect;
+		SurfaceImpactSet = SurfaceImpact->Flesh;
 		break;
-	default:
-		return DefaultImpactEffect;
+	case SURFACE_WATER:
+		SurfaceImpactSet = SurfaceImpact->Water;
+		break;
+	case SURFACE_GRASS:
+		SurfaceImpactSet = SurfaceImpact->Grass;
+		break;
+	case SURFACE_WOOD:
+		SurfaceImpactSet = SurfaceImpact->Wood;
+		break;
+	case SURFACE_ROCK:
+		SurfaceImpactSet = SurfaceImpact->Rock;
+		break;
+	case SURFACE_SAND:
+		SurfaceImpactSet = SurfaceImpact->Sand;
 		break;
 	}
+
+	// handle error by assigning default
+	if (SurfaceImpactSet.ParticleEffect == nullptr && SurfaceImpactSet.Sound == nullptr) {
+		SurfaceImpactSet = SurfaceImpact->Default;
+	}
+
+	return SurfaceImpactSet;
 }
 
 void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth)

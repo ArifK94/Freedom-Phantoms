@@ -28,6 +28,7 @@ class UAnimSequence;
 class UAimOffsetBlendSpace;
 class UTexture;
 class ASupportPackage;
+class UParticleSystem;
 
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FObjectPoolParameters
@@ -504,3 +505,59 @@ public:
 		TArray<UAnimSequence*> StandExplosionsRight;
 
 };
+
+USTRUCT(BlueprintType)
+struct FSurfaceImpactSet
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UParticleSystem* ParticleEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* Sound;
+
+	FSurfaceImpactSet()
+	{
+
+	}
+};
+
+
+USTRUCT(BlueprintType)
+struct FSurfaceImpact : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FSurfaceImpactSet Default;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FSurfaceImpactSet Concrete;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FSurfaceImpactSet Flesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FSurfaceImpactSet Grass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FSurfaceImpactSet Rock;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FSurfaceImpactSet Sand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FSurfaceImpactSet Wood;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FSurfaceImpactSet Water;
+
+	FSurfaceImpact()
+	{
+
+	}
+};
+
