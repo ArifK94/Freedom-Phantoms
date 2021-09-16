@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
+#include "Niagara/Public/NiagaraFunctionLibrary.h"
 
 AWeaponBullet::AWeaponBullet()
 {
@@ -202,17 +203,23 @@ void AWeaponBullet::DetectHit()
 		}
 	}
 
-	auto ImpactSurface = CheckSurface(SurfaceType);
-	if (ImpactSurface.ParticleEffect)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, OutHit.ImpactPoint);
-	}
-
+	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
 
 	if (ImpactSurface.Sound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
 	}
+
+	if (ImpactSurface.ParticleEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, OutHit.ImpactPoint);
+	}
+
+	if (ImpactSurface.NiagaraEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, OutHit.ImpactPoint);
+	}
+
 
 	if (KillCount > 0)
 	{
@@ -250,11 +257,6 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 	}
 
 	AActor* MyOwner = GetOwner();
-
-	//if (ExplosionParticle != NULL)
-	//{
-	//	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, GetActorLocation());
-	//}
 
 	// create a collision sphere
 	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadius);
@@ -329,11 +331,6 @@ FSurfaceImpactSet AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 	case SURFACE_SAND:
 		SurfaceImpactSet = SurfaceImpact->Sand;
 		break;
-	}
-
-	// handle error by assigning default
-	if (SurfaceImpactSet.ParticleEffect == nullptr && SurfaceImpactSet.Sound == nullptr) {
-		SurfaceImpactSet = SurfaceImpact->Default;
 	}
 
 	return SurfaceImpactSet;

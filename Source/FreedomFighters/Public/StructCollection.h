@@ -29,6 +29,7 @@ class UAimOffsetBlendSpace;
 class UTexture;
 class ASupportPackage;
 class UParticleSystem;
+class UNiagaraSystem;
 
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FObjectPoolParameters
@@ -514,6 +515,9 @@ struct FSurfaceImpactSet
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UParticleSystem* ParticleEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UNiagaraSystem* NiagaraEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USoundBase* Sound;
