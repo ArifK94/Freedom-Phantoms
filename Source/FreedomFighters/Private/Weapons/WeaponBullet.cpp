@@ -145,15 +145,26 @@ void AWeaponBullet::DetectHit()
 
 
 	FHitResult OutHit;
-	bool SphereTrace = GetWorld()->SweepSingleByObjectType(
-		OutHit,
-		PreviousPosition,
-		NextPosition,
-		FQuat(),
-		ObjectParams,
+	//bool SphereTrace = GetWorld()->SweepSingleByObjectType(
+	//	OutHit,
+	//	PreviousPosition,
+	//	NextPosition,
+	//	FQuat(),
+	//	ObjectParams,
+	//	FCollisionShape::MakeSphere(CapsuleComponent->GetScaledSphereRadius()),
+	//	QueryParams
+	//);
+
+	// Use line trace by channelto allow trace to hit on surfaces such as water where characters can move through
+	// charactermesh collision profile needs to have visibility on block
+	bool SphereTrace = GetWorld()->SweepSingleByChannel(
+		OutHit, 
+		PreviousPosition, 
+		NextPosition, 
+		FQuat::Identity, 
+		ECC_Visibility,
 		FCollisionShape::MakeSphere(CapsuleComponent->GetScaledSphereRadius()),
-		QueryParams
-	);
+		QueryParams);
 
 
 	if (!SphereTrace)
@@ -165,11 +176,11 @@ void AWeaponBullet::DetectHit()
 		return;
 	}
 
-
 	AActor* OtherActor = OutHit.GetActor();
 
 	float ActualDamage = DamageAmount;
 	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(OutHit.PhysMaterial.Get());
+
 	if (SurfaceType == SURFACE_HEAD)
 	{
 		ActualDamage = 100;
