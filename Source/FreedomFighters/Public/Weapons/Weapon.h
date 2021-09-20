@@ -53,6 +53,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UObjectPoolComponent* ObjectPoolComponent;
 
+	/** Not all weapons may need to have bullet object pooled */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool UseObjectPool;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponClip> weaponClip;
 	AWeaponClip* weaponClipObj;
@@ -377,6 +381,10 @@ public:
 
 	void SetUnlimitedAmmo(bool IsUnlimited) {
 		HasUnlimitedAmmo = IsUnlimited;
+	}
+
+	USceneComponent* GetEyeViewPointComponent() {
+		return EyeViewPointComponent;
 	}
 
 	void SetComponentEyeViewPoint(USceneComponent* Comp) {

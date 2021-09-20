@@ -44,6 +44,8 @@ AWeapon::AWeapon()
 	MeshComp->CanCharacterStepUpOn = ECB_No;
 
 	ObjectPoolComponent = CreateDefaultSubobject<UObjectPoolComponent>(TEXT("ObjectPoolComponent"));
+	UseObjectPool = true;
+
 	ShotAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotAudioComponent"));
 	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));
 	ChargingAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ChargingAudioComponent"));
@@ -126,7 +128,7 @@ void AWeapon::ConfigSetup()
 	}
 
 	// Add neccessary Actors to the Object pool
-	if (BulletClass)
+	if (UseObjectPool && BulletClass)
 	{
 		FObjectPoolParameters* ObjectPoolParams = new FObjectPoolParameters();
 		ObjectPoolParams->PoolableActorClass = BulletClass;
@@ -333,7 +335,22 @@ void AWeapon::CreateBullet()
 
 		if (BulletClass)
 		{
-			ObjectPoolComponent->ActivatePoolObject(BulletClass, MyOwner, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+			if (UseObjectPool)
+			{
+				ObjectPoolComponent->ActivatePoolObject(BulletClass, MyOwner, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+			}
+			else
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				AWeaponBullet* Bullet = GetWorld()->SpawnActor<AWeaponBullet>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+
+				if (Bullet)
+				{
+					Bullet->SetWeaponParent(this);
+				}
+			}
 		}
 
 		if (DrawShotLine)

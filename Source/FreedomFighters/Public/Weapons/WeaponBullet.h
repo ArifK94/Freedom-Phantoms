@@ -67,8 +67,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		bool IgnoreOwner;
 
-	FTimerHandle THandler_TimeBetweenShots;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		bool ShowExplosionRadius;
@@ -77,8 +75,18 @@ private:
 		float DebugExplosionLifeTime;
 
 
+	/** Homing projectile to follow the direction of the weapon's direction */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Homing", meta = (AllowPrivateAccess = "true"))
+		bool HomingFollowWeaponEyePoint;
 
-	// Projectile Movement
+	/** Homing projectile to lerp to target direction */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Homing", meta = (AllowPrivateAccess = "true"))
+		float HomingFollowFactor;
+
+	// Custom Projectile Movement
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+		bool UseCustomProjectileMovement;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
 		float InitialSpeed;
 
@@ -90,13 +98,14 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
 		FVector Gravity;
-
 	FVector Velocity;
-
 	FVector Acceleration;
-
 	FVector NextPosition;
 	FVector PreviousPosition;
+
+	/** Destroy projectile rather than deactivate, in case it is not used as an object pool */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Object Pooling", meta = (AllowPrivateAccess = "true"))
+		bool DestroyOnDeactivate;
 
 	AWeapon* WeaponParent;
 
@@ -113,6 +122,9 @@ private:
 	void RetrieveSurfaceImpactSet();
 
 	void Movement();
+
+	void FollowEyePoint();
+
 	void DetectHit();
 
 	void Explode(FVector ImpactPoint);

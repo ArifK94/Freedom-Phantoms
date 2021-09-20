@@ -1,8 +1,8 @@
 #include "Weapons/WeaponBullet.h"
-#include "FreedomFighters/FreedomFighters.h"
+#include "Weapons/Weapon.h"
 #include "CustomComponents/HealthComponent.h"
 #include "Characters/CombatCharacter.h"
-
+#include "FreedomFighters/FreedomFighters.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -43,6 +43,10 @@ AWeaponBullet::AWeaponBullet()
 	Gravity = FVector(0.f, 0.f, -980.f);
 
 	RowName = "Bullet";
+
+	UseCustomProjectileMovement = true;
+	HomingFollowWeaponEyePoint = false;
+	DestroyOnDeactivate = false;
 }
 
 void AWeaponBullet::BeginPlay()
@@ -60,7 +64,27 @@ void AWeaponBullet::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	CurrentDeltaTime = DeltaTime;
 
-	Movement();
+	if (UseCustomProjectileMovement)
+	{
+		Movement();
+
+		//if (HomingFollowWeaponEyePoint)
+		//{
+		//	if (DestroyOnDeactivate) // if not using this projectile in the object pool
+		//	{
+		//		FollowEyePoint();
+		//	}
+		//	else // if it is object pooled
+		//	{
+		//		if (IsActive()) // if activated
+		//		{
+		//			FollowEyePoint();
+		//		}
+		//	}
+		//}
+	}
+
+
 }
 
 void AWeaponBullet::Movement()
@@ -89,6 +113,27 @@ void AWeaponBullet::Movement()
 	DetectHit();
 }
 
+void AWeaponBullet::FollowEyePoint()
+{
+	if (WeaponParent == nullptr) {
+		return;
+	}
+
+	auto EyeLocation = WeaponParent->GetEyeViewPointComponent()->GetComponentLocation();
+	auto EyeRotation = WeaponParent->GetEyeViewPointComponent()->GetComponentRotation();
+
+	float TraceLength = 10000.0f;
+	FVector TraceEnd = EyeLocation + (UKismetMathLibrary::GetForwardVector(EyeRotation) * TraceLength);
+
+	FVector TargetLocation = UKismetMathLibrary::VLerp(GetActorLocation(), TraceEnd, CurrentDeltaTime * HomingFollowFactor);
+	auto target = TargetLocation;
+
+	//SetActorLocation(target);
+
+	//DrawDebugLine(GetWorld(), EyeLocation, target, FColor::Green, false, 1, 0, 1);
+
+}
+
 void AWeaponBullet::Activate()
 {
 	KillCount = 0;
@@ -110,6 +155,12 @@ void AWeaponBullet::Activate()
 
 void AWeaponBullet::Deactivate()
 {
+	if (DestroyOnDeactivate)
+	{
+		Destroy();
+		return;
+	}
+
 	KillCount = 0;
 
 	Super::Deactivate();
