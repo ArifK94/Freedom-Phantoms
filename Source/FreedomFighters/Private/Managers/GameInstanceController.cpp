@@ -1,4 +1,5 @@
 #include "Managers/GameInstanceController.h"
+#include "Managers/CustomSaveGame.h"
 #include "Weapons/Weapon.h"
 #include "Props/SupportPackage.h"
 
@@ -90,6 +91,11 @@ void UGameInstanceController::Init()
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UGameInstanceController::EndLoadingScreen);
 }
 
+void UGameInstanceController::DelayedInit()
+{
+	LoadAudioSettings();
+}
+
 void UGameInstanceController::BeginLoadingScreen(const FString& InMapName)
 {
 	if (IsRunningDedicatedServer()) {
@@ -133,4 +139,42 @@ void UGameInstanceController::ToggleBlood()
 void UGameInstanceController::ToggleCrosshairs() 
 {
 	IsCrosshairEnabled = !IsCrosshairEnabled;
+}
+
+void UGameInstanceController::LoadAudioSettings()
+{
+	if (SoundMixModifier == nullptr) {
+		return;
+	}
+	
+	UGameplayStatics::SetBaseSoundMix(GetWorld(), SoundMixModifier);
+
+	bool DoesSaveExist = UGameplayStatics::DoesSaveGameExist(AudioSettingsSaveSlotName, 0);
+
+	if (!DoesSaveExist) {
+		return;
+	}
+
+	UCustomSaveGame* CustomSaveGame = Cast<UCustomSaveGame>(UGameplayStatics::LoadGameFromSlot(AudioSettingsSaveSlotName, 0));
+
+	if (CustomSaveGame == nullptr) {
+		return;
+	}
+
+	if (MasterSoundClass) {
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMixModifier, MasterSoundClass, CustomSaveGame->GetMasterVolume());
+	}
+
+	if (SFXSoundClass) {
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMixModifier, SFXSoundClass, CustomSaveGame->GetSFXVolume());
+	}
+
+	if (VoiceSoundClass) {
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMixModifier, VoiceSoundClass, CustomSaveGame->GetVoiceVolume());
+	}
+
+	if (MusicSoundClass) {
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMixModifier, MusicSoundClass, CustomSaveGame->GetMusicVolume());
+	}
+
 }

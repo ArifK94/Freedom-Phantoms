@@ -7,76 +7,109 @@
 class AWeapon;
 class ACombatCharacter;
 class ASupportPackage;
+class USoundClass;
+class USoundMix;
+
 UCLASS()
 class FREEDOMFIGHTERS_API UGameInstanceController : public UGameInstance
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 private:
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-        TSubclassOf<UUserWidget> LoadingScreenWidgetClass;
-    UUserWidget* LoadingScreenWidget;
 
-    TSubclassOf<AWeapon> PrimaryWeaponClass;
-    TSubclassOf<AWeapon> SecondaryWeaponClass;
+	///** Some functionalities such as loading and setting audio settings do not take effect until a few seconds the game starts */
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//	float InitDelay;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> LoadingScreenWidgetClass;
+	UUserWidget* LoadingScreenWidget;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-        TArray<TSubclassOf<ASupportPackage>> SupportPackageClasses;
-
-    TSubclassOf<ACombatCharacter> CombatCharacterClass;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-        bool IsBloodEnabled = true;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-        bool IsCrosshairEnabled = true;
-
-    /** For UMG main menu to allow other widgets to be translated downwards to accomodate the navbar height and display their UI elements below it */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-        FVector2D MenuNavbarSize;
+	TSubclassOf<AWeapon> PrimaryWeaponClass;
+	TSubclassOf<AWeapon> SecondaryWeaponClass;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<TSubclassOf<ASupportPackage>> SupportPackageClasses;
+
+	TSubclassOf<ACombatCharacter> CombatCharacterClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsBloodEnabled = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsCrosshairEnabled = true;
+
+	/** For UMG main menu to allow other widgets to be translated downwards to accomodate the navbar height and display their UI elements below it */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector2D MenuNavbarSize;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		FString AudioSettingsSaveSlotName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundMix* SoundMixModifier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundClass* MasterSoundClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundClass* SFXSoundClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundClass* VoiceSoundClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundClass* MusicSoundClass;
 
 public:
-    virtual void Init() override;
-    UFUNCTION()
-        virtual void BeginLoadingScreen(const FString& MapName);
-    UFUNCTION()
-        virtual void EndLoadingScreen(UWorld* InLoadedWorld);
+	virtual void Init() override;
 
-    UFUNCTION(BlueprintCallable)
-        void SetPrimaryWeaponClass(TSubclassOf<AWeapon> WeaponClass);
+	/** Any functions which need time to load up goes here */
+	UFUNCTION(BlueprintCallable)
+		void DelayedInit();
 
-    UFUNCTION(BlueprintCallable)
-        void SetSecondaryWeaponClass(TSubclassOf<AWeapon> WeaponClass);
+	UFUNCTION()
+		virtual void BeginLoadingScreen(const FString& MapName);
+	UFUNCTION()
+		virtual void EndLoadingScreen(UWorld* InLoadedWorld);
 
-    UFUNCTION(BlueprintCallable)
-        void SetCombatCharacterClass(TSubclassOf<ACombatCharacter> CharacterClass);
+	UFUNCTION(BlueprintCallable)
+		void SetPrimaryWeaponClass(TSubclassOf<AWeapon> WeaponClass);
 
-    UFUNCTION(BlueprintCallable)
-        void ToggleBlood();
+	UFUNCTION(BlueprintCallable)
+		void SetSecondaryWeaponClass(TSubclassOf<AWeapon> WeaponClass);
 
-    UFUNCTION(BlueprintCallable)
-        void ToggleCrosshairs();
+	UFUNCTION(BlueprintCallable)
+		void SetCombatCharacterClass(TSubclassOf<ACombatCharacter> CharacterClass);
 
+	UFUNCTION(BlueprintCallable)
+		void ToggleBlood();
 
-    AWeapon* SpawnPrimaryWeapon(AActor* Owner);
-
-    AWeapon* SpawnSecondaryWeapon(AActor* Owner);
-
-    ACombatCharacter* SpawnCombatCharacter();
-
-    TArray<ASupportPackage*> GetSupportPackage();
+	UFUNCTION(BlueprintCallable)
+		void ToggleCrosshairs();
 
 
+	AWeapon* SpawnPrimaryWeapon(AActor* Owner);
 
-    bool GetIsBloodEnabled() {
-        return IsBloodEnabled;
-    }
+	AWeapon* SpawnSecondaryWeapon(AActor* Owner);
 
-    bool GetIsCrosshairEnabled() {
-        return IsCrosshairEnabled;
-    }
+	ACombatCharacter* SpawnCombatCharacter();
+
+	TArray<ASupportPackage*> GetSupportPackage();
+
+private:
+	void LoadAudioSettings();
+
+public:
+
+	bool GetIsBloodEnabled() {
+		return IsBloodEnabled;
+	}
+
+	bool GetIsCrosshairEnabled() {
+		return IsCrosshairEnabled;
+	}
 
 };
