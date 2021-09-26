@@ -428,28 +428,29 @@ void ACombatCharacter::StopCover()
 
 void ACombatCharacter::UpdateCombatMode()
 {
-	if (currentWeaponObj && hasEquippedWeapon && !isReloading && !isRepellingDown)
-	{
-		if (isAiming || isFiring)
-		{
-			if (!isSprinting && !IsInAircraft && !isTakingCover) {
-				bUseControllerRotationYaw = true;
-			}
-
-			//GetCharacterMovement()->bOrientRotationToMovement = false;
-			isInCombatMode = true;
-			SetHandGaurdIK(1.0f);
-		}
-		else
-		{
-			//GetCharacterMovement()->bOrientRotationToMovement = true;
-			SetHandGaurdIK(0.0f);
-			isInCombatMode = false;
-			bUseControllerRotationYaw = false;
-		}
-
-		OnCombatUpdated.Broadcast(this);
+	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isRepellingDown) {
+		return;
 	}
+
+	if (isAiming || isFiring)
+	{
+		if (!isSprinting && !IsInAircraft && !isTakingCover) {
+			bUseControllerRotationYaw = true;
+			GetCharacterMovement()->bOrientRotationToMovement = false;
+		}
+
+		isInCombatMode = true;
+		SetHandGaurdIK(1.0f);
+	}
+	else
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		SetHandGaurdIK(0.0f);
+		isInCombatMode = false;
+		bUseControllerRotationYaw = false;
+	}
+
+	OnCombatUpdated.Broadcast(this);
 }
 
 void ACombatCharacter::BeginWeaponSwap()
@@ -974,6 +975,9 @@ void ACombatCharacter::UseMountedGun()
 		return;
 	}
 
+	// Ignore the mounted gun, so that it does push away the character from the MG when using it
+	GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, true);
+
 	EndFire();
 	EndAim();
 
@@ -986,6 +990,7 @@ void ACombatCharacter::UseMountedGun()
 	RegisterKillEvent(MountedGun, true);
 
 	RetrieveWeaponAnimDataSet();
+
 
 	if (MountedGun->GetAdjustBehindMG())
 	{
@@ -1020,14 +1025,18 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 		return;
 	}
 
+	EndFire();
+	EndAim();
+
+	// Unregister the kill event for the MG
 	RegisterKillEvent(MountedGun, false);
 
 	isUsingMountedWeapon = false;
 
 	MountedGun->DropWeapon();
 
-	EndFire();
-	EndAim();
+	// Reassign to collide with the MG again
+	GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, false);
 
 	if (ClearMG) {
 		MountedGun->SetOwner(nullptr);

@@ -688,8 +688,9 @@ void ACombatAIController::ReloadWeapon()
 void ACombatAIController::FindMountedGun()
 {
 	// if already using an MG
-	if (OwningCombatCharacter->IsUsingMountedWeapon()) {
-
+	if (OwningCombatCharacter->IsUsingMountedWeapon())
+	{
+		// if using an aircraft MG for instance, which should not be exited 
 		if (!OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
 		{
 			return;
@@ -698,20 +699,24 @@ void ACombatAIController::FindMountedGun()
 		// is enemy beind the mounted gun? then drop the MG
 		if (IsEnemyBehindMG() || CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
 		{
-			OwningCombatCharacter->DropMountedGun(false);
+			OwningCombatCharacter->DropMountedGun();
 		}
 
-		if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
+		// a player can use the MG at the last second which results in more than one actor using the MG
+		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter ||
+			OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
 		{
-			OwningCombatCharacter->DropMountedGun(false);
+			OwningCombatCharacter->SetMountedGun(nullptr);
+			CanFindCover = true;
 		}
+
 
 		return;
 	}
 
 	// If an MG has been assigned
-	if (OwningCombatCharacter->GetMountedGun()) {
-
+	if (OwningCombatCharacter->GetMountedGun())
+	{
 		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal && !IsEnemyBehindMG() && !OwningCombatCharacter->IsReloading())
 		{
 			OwningCombatCharacter->UseMountedGun();
@@ -719,12 +724,13 @@ void ACombatAIController::FindMountedGun()
 		}
 
 		// in case player or another NPC has reached the MG before AI
-		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter || OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
+		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter ||
+			OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
 		{
-			OwningCombatCharacter->DropMountedGun(true);
+			OwningCombatCharacter->SetMountedGun(nullptr);
 			CanFindCover = true;
 		}
-		else
+		else // if MG is free, keep moving towards it
 		{
 			MoveToTarget(0.0f, false);
 			CanFindCover = false;
@@ -735,6 +741,7 @@ void ACombatAIController::FindMountedGun()
 	AMountedGun* SelectedMG = nullptr;
 	float TargetSightDistance = MountedGunSightRadius;
 
+	// give priority to stronghold MG for defensive positions
 	if (CurrentStronghold)
 	{
 		TArray<AActor*> ChildActors;
@@ -764,7 +771,7 @@ void ACombatAIController::FindMountedGun()
 			}
 		}
 	}
-	else
+	else // if not guarding a stronghold and freely out in the open
 	{
 		// create a collision sphere
 		FCollisionShape MyColSphere = FCollisionShape::MakeSphere(MountedGunSightRadius);
@@ -805,8 +812,6 @@ void ACombatAIController::FindMountedGun()
 							}
 						}
 					}
-
-
 				}
 
 			}
@@ -819,8 +824,10 @@ void ACombatAIController::FindMountedGun()
 	if (OwningCombatCharacter->GetMountedGun())
 	{
 		OwningCombatCharacter->GetMountedGun()->SetPotentialOwner(OwningCombatCharacter);
-		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
 		CanFindCover = false;
+
+		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
+		MoveToTarget(0.0f, false);
 	}
 
 }
@@ -1120,6 +1127,7 @@ void ACombatAIController::CheckCommanderOrder()
 	// Assign Order Event
 	if (!HasAssignedOrderEvent) {
 		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
+		OwningCombatCharacter->DropMountedGun();
 		HasAssignedOrderEvent = true;
 	}
 
@@ -1152,10 +1160,7 @@ void ACombatAIController::CheckCommanderOrder()
 		else
 		{
 			// exit from MG if currently using or if an MG has been assigned
-			if (OwningCombatCharacter->GetMountedGun())
-			{
-				OwningCombatCharacter->DropMountedGun(true);
-			}
+			OwningCombatCharacter->DropMountedGun();
 		}
 	}
 
