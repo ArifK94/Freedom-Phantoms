@@ -2,7 +2,7 @@
 
 
 #include "Controllers/UnarmedPlayerController.h"
-
+#include "Characters/CombatCharacter.h"
 
 void AUnarmedPlayerController::InitInputComponent()
 {
@@ -22,5 +22,11 @@ void AUnarmedPlayerController::InitInputComponent()
 	InputComponent->BindAction("Sprint", IE_Released, this, &ACustomPlayerController::EndSprint);
 
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::BeginCrouch);
+}
 
+void AUnarmedPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	OwningCombatCharacter->HolsterWeapon();
 }
