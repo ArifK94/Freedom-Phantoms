@@ -128,7 +128,7 @@ void ACombatCharacter::BeginPlay()
 	SpawnLoadout();
 
 
-	if (Loadout)
+	if (Loadout && WeaponsDataSet)
 	{
 		// get random weapon if not selected from main menu, this is should be null for AI characters
 		if (primaryWeaponObj == nullptr)
