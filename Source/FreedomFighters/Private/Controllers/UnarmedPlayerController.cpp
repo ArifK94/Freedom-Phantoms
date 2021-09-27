@@ -22,6 +22,8 @@ void AUnarmedPlayerController::InitInputComponent()
 	InputComponent->BindAction("Sprint", IE_Released, this, &ACustomPlayerController::EndSprint);
 
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::BeginCrouch);
+
+	InputComponent->BindAction("UseInteractable", IE_Pressed, this, &ACustomPlayerController::UseInteractableActor);
 }
 
 void AUnarmedPlayerController::OnPossess(APawn* InPawn)
@@ -29,4 +31,6 @@ void AUnarmedPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	OwningCombatCharacter->HolsterWeapon();
+
+	GetWorldTimerManager().SetTimer(THandler_CheckInteractable, this, &ACustomPlayerController::CheckInteractable, 0.2f, true);
 }

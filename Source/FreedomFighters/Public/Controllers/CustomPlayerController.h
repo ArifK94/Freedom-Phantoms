@@ -15,7 +15,7 @@ class ABaseObjective;
 class UHealthComponent;
 class AMapCamera;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractiveFoundSignature, FName, ActionMessage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractiveFoundSignature, FName, ActionMessage, FString, KeyDisplay);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, ASupportPackage*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
 
 UCLASS()
@@ -26,6 +26,7 @@ class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
 protected:
 	ACombatCharacter* OwningCombatCharacter;
 
+	FTimerHandle THandler_CheckInteractable;
 private:
 	UPROPERTY(BlueprintAssignable)
 		FOnInteractiveFoundSignature OnInteractionFound;
@@ -41,7 +42,6 @@ private:
 	AMountedGun* MG;
 	TeamFaction PlayerFaction;
 
-	FTimerHandle THandler_CheckInteractable;
 	FTimerHandle THandler_PostDeath;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -93,7 +93,7 @@ private:
 	UUserWidget* EndGameWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FText InteractKeyDisplayName;
+		FString InteractKeyDisplayName;
 
 	/** the interactable actor that is being line traced if found */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -103,6 +103,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<ASupportPackage*> SupportPackages;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UObject* FocusedInteractableActor;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		int32 CurrentSupportPackageIndex;

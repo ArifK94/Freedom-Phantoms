@@ -12,6 +12,7 @@
 #include "Props/SupportPackage.h"
 #include "Props/MapCamera.h"
 #include "Objectives/BaseObjective.h"
+#include "Interfaces/Interactable.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetInputLibrary.h"
@@ -132,7 +133,7 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 		Settings->GetActionMappingByName("Pickup", OutMappings);
 		if (OutMappings.Num() > 0)
 		{
-			InteractKeyDisplayName = UKismetInputLibrary::Key_GetDisplayName(OutMappings[0].Key);
+			InteractKeyDisplayName = UKismetInputLibrary::Key_GetDisplayName(OutMappings[0].Key).ToString();
 		}
 	}
 }
@@ -215,7 +216,7 @@ void ACustomPlayerController::BeginPlay()
 
 	BeginCheckInteractable();
 
-	OnInteractionFound.Broadcast("");
+	OnInteractionFound.Broadcast("", "");
 }
 
 void ACustomPlayerController::PauseGame()
@@ -863,7 +864,9 @@ void ACustomPlayerController::CheckInteractable()
 		return;
 	}
 
+	FocusedInteractableActor = nullptr;
 	FName ActionMessage;
+	FString KeyInputDisplayName = InteractKeyDisplayName;
 
 	FHitResult OutHit;
 	FVector Start = OwningCombatCharacter->FollowCamera->GetComponentLocation();
@@ -906,6 +909,12 @@ void ACustomPlayerController::CheckInteractable()
 					ActionMessage = MG->GetPickupMessage();
 				}
 			}
+			else if (TargetActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
+			{
+				FocusedInteractableActor = TargetActor;
+				KeyInputDisplayName = IInteractable::Execute_GetKeyDisplayName(TargetActor);
+				ActionMessage = IInteractable::Execute_OnInteractionFound(TargetActor);
+			}
 			else
 			{
 				ActionMessage = "";
@@ -913,7 +922,7 @@ void ACustomPlayerController::CheckInteractable()
 		}
 	}
 
-	OnInteractionFound.Broadcast(ActionMessage);
+	OnInteractionFound.Broadcast(ActionMessage, KeyInputDisplayName);
 }
 
 void ACustomPlayerController::PickupInteractable()
@@ -965,8 +974,17 @@ void ACustomPlayerController::PickupInteractable()
 	}
 }
 
+/// <summary>
+/// TODO: Function needs to be cleaned up, support packages should implement interactable interface
+/// </summary>
 void ACustomPlayerController::UseInteractableActor()
 {
+	if (FocusedInteractableActor)
+	{
+		IInteractable::Execute_OnUseInteraction(FocusedInteractableActor);
+		return;
+	}
+
 	if (CurrentInteractable == nullptr || OwningCombatCharacter->IsRepellingDown()) {
 		return;
 	}
@@ -1057,7 +1075,7 @@ void ACustomPlayerController::UseMountedGun()
 	if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
 	{
 		// Display "Stop" message if using the mounted gun
-		OnInteractionFound.Broadcast(OwningCombatCharacter->GetMountedGun()->GetStopUsingMessage());
+		OnInteractionFound.Broadcast(OwningCombatCharacter->GetMountedGun()->GetStopUsingMessage(), InteractKeyDisplayName);
 	}
 
 }
