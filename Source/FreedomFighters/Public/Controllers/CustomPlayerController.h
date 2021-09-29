@@ -28,7 +28,7 @@ protected:
 
 	FTimerHandle THandler_CheckInteractable;
 private:
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnInteractiveFoundSignature OnInteractionFound;
 
 	UPROPERTY(BlueprintAssignable)
