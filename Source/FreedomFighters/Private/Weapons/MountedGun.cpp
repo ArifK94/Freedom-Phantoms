@@ -91,13 +91,11 @@ void AMountedGun::SetRotatioInput(FRotator Rotation)
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character)
 {
 	OurPlayerController->SetViewTargetWithBlend(this, .2f);
-	Character->GetCapsuleComponent()->IgnoreActorWhenMoving(Character, true);
 	PotentialOwner = nullptr;
 }
 
 void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, ACharacter* Character)
 {
-	Character->GetCapsuleComponent()->IgnoreActorWhenMoving(Character, false);
 	OurPlayerController->SetViewTargetWithBlend(Character, 0.0f);
 	DropWeapon(true);
 	PotentialOwner = nullptr;
