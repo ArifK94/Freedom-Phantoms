@@ -82,20 +82,12 @@ void ALandVehicle::OnHealthChanged(UHealthComponent* OwningHealthComp, float Hea
 
 
 		// Apply health damage
-		ApplyExplosionDamage(GetActorLocation(), WeaponCauser, Bullet);
+		ApplyExplosionDamage(GetActorLocation(), InstigatedBy, DamageCauser, WeaponCauser, Bullet);
 	}
 }
 
-void ALandVehicle::ApplyExplosionDamage(FVector ImpactPoint, AWeapon* WeaponCauser, AWeaponBullet* Bullet)
+void ALandVehicle::ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet)
 {
-	UWorld* World = GetWorld();
-
-	if (!World) {
-		return;
-	}
-
-	AActor* MyOwner = GetOwner();
-
 	// create a collision sphere
 	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(RadialForceComp->Radius);
 
@@ -118,7 +110,7 @@ void ALandVehicle::ApplyExplosionDamage(FVector ImpactPoint, AWeapon* WeaponCaus
 
 				if (HealthComponent && HealthComponent->IsAlive())
 				{
-					HealthComponent->OnDamage(DamagedActor, ExplosionDamage, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponCauser, Bullet, Hit);
+					HealthComponent->OnDamage(DamagedActor, ExplosionDamage, NULL, InstigatedBy, DamageCauser, WeaponCauser, Bullet, Hit);
 
 					AddKill(HealthComponent);
 				}

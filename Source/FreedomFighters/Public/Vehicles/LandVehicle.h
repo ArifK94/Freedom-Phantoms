@@ -69,6 +69,6 @@ protected:
 	virtual void BeginPlay() override;
 
 private:	
-	void ApplyExplosionDamage(FVector ImpactPoint, AWeapon* WeaponCauser, AWeaponBullet* Bullet);
+	void ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet);
 	void AddKill(UHealthComponent* DamagedActorHealth);
 };
