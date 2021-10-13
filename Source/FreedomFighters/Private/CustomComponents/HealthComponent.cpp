@@ -27,6 +27,7 @@ UHealthComponent::UHealthComponent()
 	HasUnlimitedHealth = false;
 	HasTakenDamage = false;
 	IgnoreFriendlyFire = true;
+	AcceptOnlyExplosions = false;
 
 	RegenerationDelayAmount = 5.0f;
 }
@@ -70,6 +71,14 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 			if (IsFriendly(DamagedActor, DamageCauser)) {
 				return;
 			}
+		}
+	}
+
+	if (AcceptOnlyExplosions)
+	{
+		if (!Bullet->IsExplosive())
+		{
+			return;
 		}
 	}
 

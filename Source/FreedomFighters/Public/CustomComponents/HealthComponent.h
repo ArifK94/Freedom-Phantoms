@@ -50,6 +50,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IgnoreFriendlyFire;
 
+	/** Take damage only from explosions, can apply to vehicles  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool AcceptOnlyExplosions;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		DeathType deathType;
 
