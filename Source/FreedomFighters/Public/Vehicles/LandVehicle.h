@@ -58,6 +58,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsDestroyed;
+
+	int KillCount;
 	
 public:	
 	ALandVehicle();
@@ -70,5 +72,5 @@ protected:
 
 private:	
 	void ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet);
-	void AddKill(UHealthComponent* DamagedActorHealth);
+	//void AddKill(UHealthComponent* DamagedActorHealth, UHealthComponent* OwnerHealth);
 };

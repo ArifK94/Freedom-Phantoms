@@ -111,28 +111,26 @@ void ALandVehicle::ApplyExplosionDamage(FVector ImpactPoint, AController* Instig
 				if (HealthComponent && HealthComponent->IsAlive())
 				{
 					HealthComponent->OnDamage(DamagedActor, ExplosionDamage, NULL, InstigatedBy, DamageCauser, WeaponCauser, Bullet, Hit);
-
-					AddKill(HealthComponent);
 				}
 			}
 		}
 	}
 }
 
-void ALandVehicle::AddKill(UHealthComponent* DamagedActorHealth)
-{
-	// confirm kill if
-	// damaged actor is not the owner
-	// damaged actor is dead &
-	// damaged actor is not on the same faction side as the owner of this bullet &
-	// damaged is not neutral
-	
-
-	//if (!DamagedActorHealth->IsAlive()
-	//	&& DamagedActorHealth->GetSelectedFaction() != OwnerHealth->GetSelectedFaction()
-	//	&& DamagedActorHealth->GetSelectedFaction() != TeamFaction::Neutral)
-	//{
-	//	KillCount++;
-	//}
-}
+//void ALandVehicle::AddKill(UHealthComponent* DamagedActorHealth, UHealthComponent* OwnerHealth)
+//{
+//	// confirm kill if
+//	// damaged actor is not the owner
+//	// damaged actor is dead &
+//	// damaged actor is not on the same faction side as the owner of this bullet &
+//	// damaged is not neutral
+//	
+//
+//	if (!DamagedActorHealth->IsAlive()
+//		&& DamagedActorHealth->GetSelectedFaction() != OwnerHealth->GetSelectedFaction()
+//		&& DamagedActorHealth->GetSelectedFaction() != TeamFaction::Neutral)
+//	{
+//		KillCount++;
+//	}
+//}
 
