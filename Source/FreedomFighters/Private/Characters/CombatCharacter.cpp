@@ -170,6 +170,8 @@ void ACombatCharacter::BeginPlay()
 
 void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
+	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
+
 	if (isDead)
 	{
 		if (GetVoiceClipsSet()->DeathSound != NULL)
@@ -178,9 +180,10 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 			VoiceAudioComponent->Play();
 		}
 
-		if (currentWeaponObj) {
+		// check if not using mounted gun as the weapon will be dropped and simulating physics
+		if (currentWeaponObj && currentWeaponObj != MountedGun) {
 			EndFire();
-			currentWeaponObj->DropWeapon();
+			currentWeaponObj->DropWeapon(true, true);
 		}
 
 		DropMountedGun();
@@ -191,8 +194,6 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 		RegisterWeaponEvents(secondaryWeaponObj, false);
 
 	}
-
-	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
 }
 
 void ACombatCharacter::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)

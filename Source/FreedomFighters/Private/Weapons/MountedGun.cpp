@@ -101,7 +101,7 @@ void AMountedGun::RemovePlayerControl(APlayerController* OurPlayerController, AC
 	PotentialOwner = nullptr;
 }
 
-void AMountedGun::DropWeapon(bool RemoveOwner)
+void AMountedGun::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 {
 	AActor* MyOwner = GetOwner();
 

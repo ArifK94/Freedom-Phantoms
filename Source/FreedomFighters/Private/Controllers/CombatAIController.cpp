@@ -107,7 +107,7 @@ void ACombatAIController::Init()
 		if (TargetSightSphere)
 		{
 			TargetSightSphere->RegisterComponent();
-			TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+			TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
 		}

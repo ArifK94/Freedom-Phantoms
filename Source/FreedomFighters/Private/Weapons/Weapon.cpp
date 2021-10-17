@@ -113,6 +113,7 @@ void AWeapon::OnPickup_Implementation()
 {
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetGenerateOverlapEvents(false);
 
 	if (PickupSound)
 	{
@@ -765,18 +766,29 @@ void AWeapon::AutoReloadEnd()
 }
 
 
-bool AWeapon::ReplenishAmmo()
+bool AWeapon::ReplenishAmmo(int Amount)
 {
-	if (CurrentMaxAmmo < MaxAmmoCapacity)
+	if (Amount < 0)
 	{
-		CurrentMaxAmmo = MaxAmmoCapacity;
-		return true;
+		if (CurrentMaxAmmo < MaxAmmoCapacity)
+		{
+			CurrentMaxAmmo = MaxAmmoCapacity;
+			return true;
+		}
+	}
+	else
+	{
+		if (CurrentMaxAmmo < MaxAmmoCapacity)
+		{
+			CurrentMaxAmmo = FMath::Clamp(CurrentMaxAmmo + Amount, 0, MaxAmmoCapacity);
+			return true;
+		}
 	}
 
 	return false;
 }
 
-void AWeapon::DropWeapon(bool RemoveOwner)
+void AWeapon::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 {
 	if (RemoveOwner)
 	{
@@ -785,6 +797,7 @@ void AWeapon::DropWeapon(bool RemoveOwner)
 
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	MeshComp->SetCollisionProfileName(TEXT("Weapon"));
-	//MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetGenerateOverlapEvents(true);
+	MeshComp->SetSimulatePhysics(SimulatePhysics);
 
 }

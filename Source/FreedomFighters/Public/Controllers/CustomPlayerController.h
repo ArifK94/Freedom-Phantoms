@@ -123,6 +123,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		ABaseObjective* CurrentMissionObjective;
 
+	/** To help overlap interactables such as weapons */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float OverlapSpehereRadius;
 
 	bool HasGameEnded;
 	
@@ -152,6 +155,10 @@ public:
 
 	UFUNCTION()
 		void OnCharacterHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 
 	UFUNCTION(BlueprintCallable)
 		void OnAircraftDestroy(AAircraft* CurrentControlledAircraft);

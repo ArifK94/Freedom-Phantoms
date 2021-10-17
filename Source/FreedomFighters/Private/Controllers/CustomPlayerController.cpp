@@ -20,8 +20,11 @@
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/InputSettings.h"
+
+
 
 ACustomPlayerController::ACustomPlayerController()
 {
@@ -30,6 +33,7 @@ ACustomPlayerController::ACustomPlayerController()
 	DesiredInputHoldTime = .5f;
 
 	InteractionLength = 500.0f;
+	OverlapSpehereRadius = 100.0f;
 
 	AutoReceiveInput = EAutoReceiveInput::Player0;
 
@@ -216,6 +220,20 @@ void ACustomPlayerController::BeginPlay()
 	AddUIWidgets();
 
 	BeginCheckInteractable();
+
+
+	USphereComponent* OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+	if (OverlapSphere)
+	{
+		OverlapSphere->RegisterComponent();
+		OverlapSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+		OverlapSphere->SetSphereRadius(OverlapSpehereRadius);
+		OverlapSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
+	}
+
+	//OwningCombatCharacter->GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
+
 
 	OnInteractionFound.Broadcast("", "");
 }
@@ -417,6 +435,38 @@ void ACustomPlayerController::OnCharacterHit(UPrimitiveComponent* HitComp, AActo
 		else
 		{
 			AmmoCrate->PlayFailed();
+		}
+	}
+}
+
+void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor == nullptr) {
+		return;
+	}
+
+	AWeapon* Weapon = Cast<AWeapon>(OtherActor);
+
+	// if weapon has no owner
+	// & not scavenged
+	if (Weapon && Weapon->GetOwner() == nullptr && !Weapon->GetIsScavenged())
+	{
+		float Amount = Weapon->getCurrentAmmo();
+		// replenish ammo if same weapon based on weapon name
+		if (OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponName() == Weapon->GetWeaponName())
+		{
+			// if replenished then updated the scavenged flag
+			if (OwningCombatCharacter->GetPrimaryWeapon()->ReplenishAmmo(Amount))
+			{
+				Weapon->SetIsScavenged(true);
+			}
+		} // for secondary weapon
+		else if (OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponName() == Weapon->GetWeaponName())
+		{
+			if (OwningCombatCharacter->GetSecondaryWeaponObj()->ReplenishAmmo(Amount))
+			{
+				Weapon->SetIsScavenged(true);
+			}
 		}
 	}
 }

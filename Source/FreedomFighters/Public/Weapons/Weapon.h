@@ -172,6 +172,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		bool HasNoReload;
 
+	/** Prevent the player from scavenging this weapon for ammo again */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
+		bool IsScavenged;
+
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float ZoomFOV;
 
@@ -264,8 +269,6 @@ protected:
 		float ShotLineDuration;
 
 
-
-
 private:
 	float CurrentVerticleRecoil;
 
@@ -316,12 +319,12 @@ public:
 	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
 
 	/** Return bool so it can be used to play sounds if true */
-	bool ReplenishAmmo();
+	bool ReplenishAmmo(int Amount = -1);
 
 	virtual void SetIsAiming(bool isAiming);
 
 	/** Called when owning character has died or picking up another weapon */
-	virtual void DropWeapon(bool RemoveOwner = true);
+	virtual void DropWeapon(bool RemoveOwner = true, bool SimulatePhysics = false);
 
 private:
 	void ConvertWeaponName();
@@ -380,48 +383,29 @@ public:
 	FName getLaserSocket() { return LaserSocket; }
 	FName getTorchlightSocket() { return TorchlightSocket; }
 
-	FName GetPickupMessage() {
-		return PickupMessage;
-	}
+	FName GetPickupMessage() { return PickupMessage; }
 
 	bool getIsReloading() { return isReloading; }
 	bool getIsFiring() { return isFiring; }
 
-	bool GetHasUnlimitedAmmo() {
-		return HasUnlimitedAmmo;
-	}
+	bool GetHasUnlimitedAmmo() { return HasUnlimitedAmmo; }
+	void SetUnlimitedAmmo(bool IsUnlimited) { HasUnlimitedAmmo = IsUnlimited; }
+
+	USceneComponent* GetEyeViewPointComponent() { return EyeViewPointComponent; }
+	void SetComponentEyeViewPoint(USceneComponent* Comp) { EyeViewPointComponent = Comp; }
 
 
-	void SetUnlimitedAmmo(bool IsUnlimited) {
-		HasUnlimitedAmmo = IsUnlimited;
-	}
+	float GetZoomFOV() { return ZoomFOV; }
 
-	USceneComponent* GetEyeViewPointComponent() {
-		return EyeViewPointComponent;
-	}
+	UObjectPoolComponent* GetObjectPoolComponent() { return ObjectPoolComponent; }
 
-	void SetComponentEyeViewPoint(USceneComponent* Comp) {
-		EyeViewPointComponent = Comp;
-	}
+	UAudioComponent* GetShotAudioComponent() { return ShotAudioComponent; }
 
+	UAudioComponent* GetClipAudioComponent() { return ClipAudioComponent; }
 
-	float GetZoomFOV() {
-		return ZoomFOV;
-	}
+	WeaponType GetWeaponType() { return weaponType; }
 
-	UObjectPoolComponent* GetObjectPoolComponent() {
-		return ObjectPoolComponent;
-	}
+	bool GetIsScavenged() { return IsScavenged; }
+	void SetIsScavenged(bool Scavenged) { IsScavenged = Scavenged; }
 
-	UAudioComponent* GetShotAudioComponent() {
-		return ShotAudioComponent;
-	}
-
-	UAudioComponent* GetClipAudioComponent() {
-		return ClipAudioComponent;
-	}
-
-	WeaponType GetWeaponType() {
-		return weaponType;
-	}
 };
