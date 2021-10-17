@@ -16,6 +16,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetInputLibrary.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CapsuleComponent.h"
@@ -865,7 +866,7 @@ void ACustomPlayerController::CheckInteractable()
 	}
 
 	FocusedInteractableActor = nullptr;
-	FName ActionMessage;
+	FString ActionMessage = "";
 	FString KeyInputDisplayName = InteractKeyDisplayName;
 
 	FHitResult OutHit;
@@ -897,7 +898,7 @@ void ACustomPlayerController::CheckInteractable()
 
 			if (SupportPackage)
 			{
-				ActionMessage = SupportPackage->GetActionMessage();
+				ActionMessage = SupportPackage->GetActionMessage().ToString();
 			}
 			else if (MG && MG->GetCanTraceInteraction())
 			{
@@ -906,7 +907,7 @@ void ACustomPlayerController::CheckInteractable()
 				// also check if not already in use
 				if (OwningCombatCharacter->GetCurrentWeapon() != MG && MG->GetOwner() == nullptr)
 				{
-					ActionMessage = MG->GetPickupMessage();
+					ActionMessage = MG->GetPickupMessage().ToString();
 				}
 			}
 			else if (TargetActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
@@ -915,11 +916,11 @@ void ACustomPlayerController::CheckInteractable()
 				KeyInputDisplayName = IInteractable::Execute_GetKeyDisplayName(TargetActor);
 				ActionMessage = IInteractable::Execute_OnInteractionFound(TargetActor);
 			}
-			else
-			{
-				ActionMessage = "";
-			}
 		}
+	}
+
+	if (UKismetStringLibrary::IsEmpty(KeyInputDisplayName)) {
+		KeyInputDisplayName = InteractKeyDisplayName;
 	}
 
 	OnInteractionFound.Broadcast(ActionMessage, KeyInputDisplayName);
@@ -927,7 +928,12 @@ void ACustomPlayerController::CheckInteractable()
 
 void ACustomPlayerController::PickupInteractable()
 {
-	if (FocusedInteractable)
+	if (FocusedInteractableActor && Cast<AWeapon>(FocusedInteractableActor))
+	{
+		OwningCombatCharacter->PickupWeapon(Cast<AWeapon>(FocusedInteractableActor));
+		IInteractable::Execute_OnPickup(FocusedInteractableActor);
+	}
+	else if (FocusedInteractable)
 	{
 		// only add the support package if there isn't one assigned, this way the player can have the first one always secleted rather than the latest one
 		CurrentInteractable = FocusedInteractable;
@@ -1075,7 +1081,7 @@ void ACustomPlayerController::UseMountedGun()
 	if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
 	{
 		// Display "Stop" message if using the mounted gun
-		OnInteractionFound.Broadcast(OwningCombatCharacter->GetMountedGun()->GetStopUsingMessage(), InteractKeyDisplayName);
+		OnInteractionFound.Broadcast(OwningCombatCharacter->GetMountedGun()->GetStopUsingMessage().ToString(), InteractKeyDisplayName);
 	}
 
 }

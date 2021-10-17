@@ -15,7 +15,7 @@ class ABaseObjective;
 class UHealthComponent;
 class AMapCamera;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractiveFoundSignature, FName, ActionMessage, FString, KeyDisplay);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractiveFoundSignature, FString, ActionMessage, FString, KeyDisplay);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, ASupportPackage*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
 
 UCLASS()

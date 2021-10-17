@@ -161,13 +161,15 @@ public:
 
 	UFUNCTION()
 		void OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill);
-	void RegisterKillEvent(AWeapon* Weapon, bool BindEvent);
+	void RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent);
 
 	void BeginEquipWeapon();
 	void GrabWeapon();
 	void EndEquipWeapon();
 
 	void swapWeapon();
+
+	void PickupWeapon(AWeapon* Weapon);
 
 	void HolsterWeapon();
 

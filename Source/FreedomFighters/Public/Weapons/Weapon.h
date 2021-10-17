@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "EnumCollection.h"
 #include "StructCollection.h"
+#include "Interfaces/Interactable.h"
 #include "Weapon.generated.h"
 
 class USkeletalMeshComponent;
@@ -20,7 +21,7 @@ class UTexture;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEmptyAmmoClipSignature, AWeapon*, Weapon);
 
 UCLASS()
-class FREEDOMFIGHTERS_API AWeapon : public AActor
+class FREEDOMFIGHTERS_API AWeapon : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -204,6 +205,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds")
 		USoundBase* ReloadEndSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds")
+		USoundBase* PickupSound;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
 		USoundAttenuation* FireAttenuation;
 
@@ -274,6 +278,12 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnEmptyAmmoClipSignature OnEmptyAmmoClip;
 
+
+	virtual FString GetKeyDisplayName_Implementation() override;
+	virtual FString OnInteractionFound_Implementation() override;
+	virtual void OnPickup_Implementation() override;
+	virtual void OnUseInteraction_Implementation() override;
+
 	void StartFire();
 
 	void StopFire();
@@ -309,6 +319,9 @@ public:
 	bool ReplenishAmmo();
 
 	virtual void SetIsAiming(bool isAiming);
+
+	/** Called when owning character has died or picking up another weapon */
+	virtual void DropWeapon(bool RemoveOwner = true);
 
 private:
 	void ConvertWeaponName();

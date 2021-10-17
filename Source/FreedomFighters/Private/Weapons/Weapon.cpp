@@ -47,8 +47,13 @@ AWeapon::AWeapon()
 	UseObjectPool = true;
 
 	ShotAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotAudioComponent"));
+	ShotAudioComponent->SetupAttachment(MeshComp);
+
 	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));
+	ClipAudioComponent->SetupAttachment(MeshComp);
+
 	ChargingAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ChargingAudioComponent"));
+	ChargingAudioComponent->SetupAttachment(MeshComp);
 
 
 	MuzzleSocket = "Muzzle";
@@ -90,6 +95,34 @@ AWeapon::AWeapon()
 
 	DrawShotLine = false;
 	ShotLineDuration = 5.0f;
+}
+
+FString AWeapon::GetKeyDisplayName_Implementation()
+{
+	return FString();
+}
+
+FString AWeapon::OnInteractionFound_Implementation()
+{
+	FString Message = "Pickup ";
+	Message.Append(WeaponName.ToString());
+	return Message;
+}
+
+void AWeapon::OnPickup_Implementation()
+{
+	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
+	MeshComp->SetSimulatePhysics(false);
+
+	if (PickupSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation(), 1.f, 1.f, 0.f, FireAttenuation);
+	}
+}
+
+void AWeapon::OnUseInteraction_Implementation()
+{
+
 }
 
 void AWeapon::OnDestroyWeapon(AActor* Actor)
@@ -428,7 +461,6 @@ void AWeapon::BurstDelay()
 	}
 }
 
-
 void AWeapon::StartFire()
 {
 	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
@@ -675,8 +707,6 @@ void AWeapon::SetClipSocket(USkeletalMeshComponent* meshComponent)
 	}
 }
 
-
-
 void AWeapon::setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket)
 {
 	MeshComp->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, socket);
@@ -744,4 +774,17 @@ bool AWeapon::ReplenishAmmo()
 	}
 
 	return false;
+}
+
+void AWeapon::DropWeapon(bool RemoveOwner)
+{
+	if (RemoveOwner)
+	{
+		SetOwner(nullptr);
+	}
+
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	MeshComp->SetCollisionProfileName(TEXT("Weapon"));
+	//MeshComp->SetSimulatePhysics(true);
+
 }

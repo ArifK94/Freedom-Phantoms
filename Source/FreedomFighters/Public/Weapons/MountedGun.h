@@ -79,7 +79,7 @@ public:
 	void SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character);
 	void RemovePlayerControl(APlayerController* OurPlayerController, ACharacter* Character);
 
-	void DropWeapon(bool RemoveOwner = true);
+	virtual void DropWeapon(bool RemoveOwner = true) override;
 
 	void ResetCamera();
 

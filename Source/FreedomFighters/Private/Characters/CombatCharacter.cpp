@@ -146,21 +146,13 @@ void ACombatCharacter::BeginPlay()
 	{
 		currentWeaponObj = primaryWeaponObj;
 
-		if (CanAutoReloadWeapon) {
-			primaryWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
-		}
-
-		RegisterKillEvent(primaryWeaponObj, true);
+		RegisterWeaponEvents(primaryWeaponObj, true);
 	}
 	else if (secondaryWeaponObj)
 	{
 		currentWeaponObj = secondaryWeaponObj;
 
-		if (CanAutoReloadWeapon) {
-			secondaryWeaponObj->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
-		}
-
-		RegisterKillEvent(secondaryWeaponObj, true);
+		RegisterWeaponEvents(secondaryWeaponObj, true);
 	}
 
 
@@ -188,20 +180,15 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 		if (currentWeaponObj) {
 			EndFire();
-			currentWeaponObj->getMeshComp()->SetCollisionProfileName(TEXT("Weapon"));
-			currentWeaponObj->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			currentWeaponObj->getMeshComp()->SetSimulatePhysics(true);
-
-			// Incase using a mounted gun or special weapon other than primary and secondary, currentWeaponObj can be used for all types of weapons
-			currentWeaponObj->SetOwner(nullptr);
-			primaryWeaponObj->SetOwner(nullptr);
-			secondaryWeaponObj->SetOwner(nullptr);
+			currentWeaponObj->DropWeapon();
 		}
 
-		if (MountedGun) {
-			MountedGun->SetPotentialOwner(nullptr);
-		}
 		DropMountedGun();
+
+		// Unregister the weapon events
+		RegisterWeaponEvents(currentWeaponObj, false);
+		RegisterWeaponEvents(primaryWeaponObj, false);
+		RegisterWeaponEvents(secondaryWeaponObj, false);
 
 	}
 
@@ -211,11 +198,14 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 void ACombatCharacter::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
 {
 	OnKillConfirm.Broadcast(KillCount);
-	//KillCounter += KillCount;
 }
 
-void ACombatCharacter::RegisterKillEvent(AWeapon* Weapon, bool BindEvent)
+void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 {
+	if (Weapon == nullptr) {
+		return;
+	}
+
 	for (int i = 0; i < Weapon->GetObjectPoolComponent()->GetActorsInObjectPool().Num(); i++)
 	{
 		FObjectPoolParameters* ObjectPool = Weapon->GetObjectPoolComponent()->GetActorsInObjectPool()[i];
@@ -232,6 +222,17 @@ void ACombatCharacter::RegisterKillEvent(AWeapon* Weapon, bool BindEvent)
 				Bullet->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
 			}
 		}
+	}
+
+	if (BindEvent)
+	{
+		if (CanAutoReloadWeapon) {
+			Weapon->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
+		}
+	}
+	else
+	{
+		Weapon->OnEmptyAmmoClip.RemoveDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 	}
 }
 
@@ -558,6 +559,47 @@ void ACombatCharacter::swapWeapon()
 
 	RetrieveWeaponAnimDataSet();
 	BeginEquipWeapon();
+}
+
+/// <summary>
+/// Replace primary & secondary weapons based on weapon type
+/// End result will always be one primary as assault or LMG etc. and secondary will be pistol or other handgun types
+/// </summary>
+/// <param name="Weapon"></param>
+void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
+{
+	// Required for the weapon events
+	Weapon->SetOwner(this);
+
+	// register new weapon events
+	RegisterWeaponEvents(Weapon, true);
+
+	// update the primary or secondary weapon
+	// based on the current weapon being used
+	// unregister the weapon events
+	if (currentWeaponObj == primaryWeaponObj)
+	{
+		RegisterWeaponEvents(primaryWeaponObj, false);
+		primaryWeaponObj = Weapon;
+	}
+	else
+	{
+		RegisterWeaponEvents(secondaryWeaponObj, false);
+		secondaryWeaponObj = Weapon;
+	}
+
+
+	// drop the current weapon
+	currentWeaponObj->DropWeapon();
+
+	// set the actor location of current to where the pickup weapon is
+	currentWeaponObj->SetActorLocationAndRotation(Weapon->GetActorLocation(), Weapon->GetActorRotation());
+
+	// assign new weapon to current weapon
+	currentWeaponObj = Weapon;
+	currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+
+	RetrieveWeaponAnimDataSet();
 }
 
 void ACombatCharacter::HolsterWeapon()
@@ -987,7 +1029,7 @@ void ACombatCharacter::UseMountedGun()
 	MountedGun->SetPotentialOwner(this);
 	currentWeaponObj = MountedGun;
 
-	RegisterKillEvent(MountedGun, true);
+	RegisterWeaponEvents(MountedGun, true);
 
 	RetrieveWeaponAnimDataSet();
 
@@ -1029,7 +1071,7 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 	EndAim();
 
 	// Unregister the kill event for the MG
-	RegisterKillEvent(MountedGun, false);
+	RegisterWeaponEvents(MountedGun, false);
 
 	isUsingMountedWeapon = false;
 

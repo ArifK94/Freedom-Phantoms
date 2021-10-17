@@ -105,6 +105,7 @@ void AMountedGun::DropWeapon(bool RemoveOwner)
 {
 	AActor* MyOwner = GetOwner();
 
+
 	// Get owner to step back behind the mounted gun
 	if (MyOwner)
 	{
@@ -117,6 +118,7 @@ void AMountedGun::DropWeapon(bool RemoveOwner)
 	{
 		SetOwner(nullptr);
 	}
+	PotentialOwner = nullptr;
 
 	SetIsAiming(false);
 	StopFire();

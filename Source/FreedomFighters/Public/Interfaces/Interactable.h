@@ -22,13 +22,16 @@ class FREEDOMFIGHTERS_API IInteractable
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent) // For blueprint implementation
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent) // For blueprint implementation
 		FString GetKeyDisplayName();
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-		FName OnInteractionFound();
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		FString OnInteractionFound();
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		void OnPickup();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void OnUseInteraction();
 
 };
