@@ -42,7 +42,20 @@ void APumpActionWeapon::BeginPlay()
 
 void APumpActionWeapon::Fire()
 {
-	if (CurrentAmmo <= 0 || !HasLoadedShell) return;
+	if (CurrentAmmo <= 0) {
+		isFiring = false;
+
+		OnEmptyAmmoClip.Broadcast(this);
+
+		if (!HasNoReload)
+		{
+			return;
+		}
+	}
+
+	if (!HasLoadedShell) {
+		return;
+	}
 
 	EndLoadShell();
 

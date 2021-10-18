@@ -111,9 +111,9 @@ FString AWeapon::OnInteractionFound_Implementation()
 
 void AWeapon::OnPickup_Implementation()
 {
-	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->SetSimulatePhysics(false);
 	MeshComp->SetGenerateOverlapEvents(false);
+	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 
 	if (PickupSound)
 	{
@@ -794,6 +794,14 @@ void AWeapon::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 	{
 		SetOwner(nullptr);
 	}
+
+	HasUnlimitedAmmo = false;
+	EndReload();
+	IsAiming = false;
+
+	// character can be reloading when the weapon is dropped,
+	// the clip will need to be set back in the weapon socket
+	SetMagazineSocket();
 
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	MeshComp->SetCollisionProfileName(TEXT("Weapon"));

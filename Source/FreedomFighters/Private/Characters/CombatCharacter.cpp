@@ -145,15 +145,14 @@ void ACombatCharacter::BeginPlay()
 	if (primaryWeaponObj)
 	{
 		currentWeaponObj = primaryWeaponObj;
-
-		RegisterWeaponEvents(primaryWeaponObj, true);
 	}
 	else if (secondaryWeaponObj)
 	{
 		currentWeaponObj = secondaryWeaponObj;
-
-		RegisterWeaponEvents(secondaryWeaponObj, true);
 	}
+
+	RegisterWeaponEvents(primaryWeaponObj, true);
+	RegisterWeaponEvents(secondaryWeaponObj, true);
 
 
 	if (currentWeaponObj)
@@ -199,6 +198,13 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 void ACombatCharacter::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
 {
 	OnKillConfirm.Broadcast(KillCount);
+}
+
+// Begin Auto Reload
+void ACombatCharacter::OnWeaponAmmoEmpty(AWeapon* Weapon)
+{
+	BeginReload();
+	HandGuardAlpha = 0.0f;
 }
 
 void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
@@ -537,9 +543,9 @@ void ACombatCharacter::swapWeapon()
 		return;
 	}
 
-	if (!isSwappingWeapon) {
-		return;
-	}
+	//if (!isSwappingWeapon) {
+	//	return;
+	//}
 
 	if (isReloading) {
 		EndReload();
@@ -589,6 +595,11 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 		secondaryWeaponObj = Weapon;
 	}
 
+	isReloading = false;
+	isSwappingWeapon = false;
+	EndFire();
+	EndAim();
+	UpdateCombatMode();
 
 	// drop the current weapon
 	currentWeaponObj->DropWeapon();
@@ -615,7 +626,7 @@ void ACombatCharacter::HolsterWeapon()
 
 void ACombatCharacter::BeginFire()
 {
-	if (currentWeaponObj == nullptr || !hasEquippedWeapon) {
+	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isSwappingWeapon) {
 		return;
 	}
 
@@ -663,13 +674,6 @@ void ACombatCharacter::EndFire()
 			StopAnimMontage(WeaponAnimDataSet->Shooting);
 		}
 	}
-}
-
-// Begin Auto Reload
-void ACombatCharacter::OnWeaponAmmoEmpty(AWeapon* Weapon)
-{
-	BeginReload();
-	HandGuardAlpha = 0.0f;
 }
 
 
@@ -772,16 +776,18 @@ void ACombatCharacter::BeginReload()
 
 void ACombatCharacter::EndReload()
 {
-	if (currentWeaponObj)
-	{
-		currentWeaponObj->EndReload();
-		isReloading = currentWeaponObj->getIsReloading();
-		UpdateCombatMode();
-
-		if (WeaponAnimDataSet) {
-			StopAnimMontage(WeaponAnimDataSet->Reloading);
-		}
+	if (currentWeaponObj == nullptr) {
+		return;
 	}
+
+	currentWeaponObj->EndReload();
+	isReloading = currentWeaponObj->getIsReloading();
+	UpdateCombatMode();
+
+	if (WeaponAnimDataSet) {
+		StopAnimMontage(WeaponAnimDataSet->Reloading);
+	}
+
 }
 
 void ACombatCharacter::ToggleUnderBarrelWeapon()

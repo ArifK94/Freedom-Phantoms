@@ -980,8 +980,8 @@ void ACustomPlayerController::PickupInteractable()
 {
 	if (FocusedInteractableActor && Cast<AWeapon>(FocusedInteractableActor))
 	{
-		OwningCombatCharacter->PickupWeapon(Cast<AWeapon>(FocusedInteractableActor));
 		IInteractable::Execute_OnPickup(FocusedInteractableActor);
+		OwningCombatCharacter->PickupWeapon(Cast<AWeapon>(FocusedInteractableActor));
 	}
 	else if (FocusedInteractable)
 	{
