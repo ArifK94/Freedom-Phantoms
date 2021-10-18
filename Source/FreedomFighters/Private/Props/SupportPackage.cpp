@@ -4,6 +4,7 @@
 #include "Props/SupportPackage.h"
 #include "Vehicles/Aircraft.h"
 #include "Characters/BaseCharacter.h"
+#include "CustomComponents/HealthComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -12,27 +13,62 @@ ASupportPackage::ASupportPackage()
 	PrimaryActorTick.bCanEverTick = false;
 }
 
-void ASupportPackage::BeginPlay()
+FString ASupportPackage::GetKeyDisplayName_Implementation()
 {
-	Super::BeginPlay();
+	return FString();
 }
 
-void ASupportPackage::BeginInteraction(ABaseCharacter* Character, APlayerController* PlayerController)
+FString ASupportPackage::OnInteractionFound_Implementation()
 {
-	SpawnAircraft(Character, PlayerController);
+	return ActionMessage.ToString();
 }
 
-void ASupportPackage::SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController)
+void ASupportPackage::OnPickup_Implementation()
+{
+	SetActorHiddenInGame(true);
+	SetHidden(true);
+	SetActorEnableCollision(false);
+	SetActorTickEnabled(false);
+
+	PlayPickupSound();
+
+	if (GetOwner())
+	{
+		UHealthComponent* OwnerHealth = Cast<UHealthComponent>(GetOwner()->GetComponentByClass(UHealthComponent::StaticClass()));
+
+		if (OwnerHealth)
+		{
+			PlayVoiceOverSound(OwnerHealth->GetSelectedFaction());
+		}
+	}
+
+}
+
+void ASupportPackage::OnUseInteraction_Implementation()
+{
+	PlayInteractSound();
+}
+
+bool ASupportPackage::CanInteract_Implementation()
+{
+	if (GetOwner() == nullptr) {
+		return true;
+	}
+
+	return false;
+}
+
+AAircraft* ASupportPackage::SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController)
 {
 	if (AircraftClass == nullptr) {
-		return;
+		return nullptr;
 	}
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = Character;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	Aircraft = GetWorld()->SpawnActor<AAircraft>(AircraftClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	AAircraft* Aircraft = GetWorld()->SpawnActor<AAircraft>(AircraftClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (Aircraft)
 	{
@@ -42,6 +78,8 @@ void ASupportPackage::SpawnAircraft(ABaseCharacter* Character, APlayerController
 			//Aircraft->SetPlayerControl(PlayerController);
 		}
 	}
+
+	return Aircraft;
 }
 
 void ASupportPackage::PlayPickupSound()

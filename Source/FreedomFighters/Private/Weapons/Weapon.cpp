@@ -126,6 +126,15 @@ void AWeapon::OnUseInteraction_Implementation()
 
 }
 
+bool AWeapon::CanInteract_Implementation()
+{
+	if (GetOwner() == nullptr) {
+		return true;
+	}
+
+	return false;
+}
+
 void AWeapon::OnDestroyWeapon(AActor* Actor)
 {
 	TArray<AActor*> AttachedActors;

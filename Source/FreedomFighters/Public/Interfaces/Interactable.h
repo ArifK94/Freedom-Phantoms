@@ -34,4 +34,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void OnUseInteraction();
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		bool CanInteract();
+
 };

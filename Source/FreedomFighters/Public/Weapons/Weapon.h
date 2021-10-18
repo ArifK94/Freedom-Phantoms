@@ -281,11 +281,12 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnEmptyAmmoClipSignature OnEmptyAmmoClip;
 
-
+	// Interactable interface methods
 	virtual FString GetKeyDisplayName_Implementation() override;
 	virtual FString OnInteractionFound_Implementation() override;
 	virtual void OnPickup_Implementation() override;
 	virtual void OnUseInteraction_Implementation() override;
+	virtual bool CanInteract_Implementation() override;
 
 	void StartFire();
 

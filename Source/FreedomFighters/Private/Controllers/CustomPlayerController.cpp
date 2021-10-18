@@ -201,14 +201,14 @@ void ACustomPlayerController::BeginPlay()
 		if (SupportPackages.Num() > 0)
 		{
 			CurrentSupportPackageIndex = SupportPackages.Num() - 1;
-			CurrentInteractable = SupportPackages[CurrentSupportPackageIndex];
+			CurrentSupportPackage = SupportPackages[CurrentSupportPackageIndex];
 
-			CurrentInteractable->PlayVoiceOverSound(PlayerFaction);
-			CurrentInteractable->PlayInteractSound();
+			CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
+			CurrentSupportPackage->PlayInteractSound();
 		}
 		else
 		{
-			CurrentInteractable = nullptr;
+			CurrentSupportPackage = nullptr;
 			CurrentSupportPackageIndex = -1;
 		}
 	}
@@ -231,9 +231,6 @@ void ACustomPlayerController::BeginPlay()
 		OverlapSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
 	}
-
-	//OwningCombatCharacter->GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
-
 
 	OnInteractionFound.Broadcast("", "");
 }
@@ -931,44 +928,45 @@ void ACustomPlayerController::CheckInteractable()
 		if (OutHit.bBlockingHit)
 		{
 			AActor* TargetActor = OutHit.GetActor();
-
-
-			// Interactable object?
-			ASupportPackage* SupportPackage = nullptr;
-
-			// check if can add more interactables
-			if (SupportPackages.Num() < MaxSupportPackages)
+			
+			if (TargetActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
 			{
-				SupportPackage = Cast<ASupportPackage>(TargetActor);
-				FocusedInteractable = SupportPackage;
-			}
+				bool IsInteractableUsable = false;
 
-			// Mounted Gun?
-			MG = Cast<AMountedGun>(TargetActor);
-
-			if (SupportPackage)
-			{
-				ActionMessage = SupportPackage->GetActionMessage().ToString();
-			}
-			else if (MG && MG->GetCanTraceInteraction())
-			{
-				// As we would need another UI message to display message to stop using the gun, 
-				// we check if the current weapon is not the mounted gun, meaning the player is not using it
-				// also check if not already in use
-				if (OwningCombatCharacter->GetCurrentWeapon() != MG && MG->GetOwner() == nullptr)
+				if (IInteractable::Execute_CanInteract(TargetActor))
 				{
-					ActionMessage = MG->GetPickupMessage().ToString();
+					ASupportPackage* SupportPackage = Cast<ASupportPackage>(TargetActor);
+
+					// check if interactable is a support package
+					// doing this prevents displaying the interact UI if currently reached max support packages
+					if (SupportPackage)
+					{
+						// if not reached max support packages
+						if (SupportPackages.Num() < MaxSupportPackages)
+						{
+							IsInteractableUsable = true;
+						}
+					}
+					else // Not a support package
+					{
+						IsInteractableUsable = true;
+					}
 				}
-			}
-			else if (TargetActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
-			{
-				FocusedInteractableActor = TargetActor;
-				KeyInputDisplayName = IInteractable::Execute_GetKeyDisplayName(TargetActor);
-				ActionMessage = IInteractable::Execute_OnInteractionFound(TargetActor);
+
+
+				if (IsInteractableUsable)
+				{
+					FocusedInteractableActor = TargetActor;
+					KeyInputDisplayName = IInteractable::Execute_GetKeyDisplayName(TargetActor);
+					ActionMessage = IInteractable::Execute_OnInteractionFound(TargetActor);
+				}
+
+
 			}
 		}
 	}
 
+	// assign default interaction key if none assigned from the interface methods
 	if (UKismetStringLibrary::IsEmpty(KeyInputDisplayName)) {
 		KeyInputDisplayName = InteractKeyDisplayName;
 	}
@@ -978,33 +976,37 @@ void ACustomPlayerController::CheckInteractable()
 
 void ACustomPlayerController::PickupInteractable()
 {
-	if (FocusedInteractableActor && Cast<AWeapon>(FocusedInteractableActor))
-	{
-		IInteractable::Execute_OnPickup(FocusedInteractableActor);
-		OwningCombatCharacter->PickupWeapon(Cast<AWeapon>(FocusedInteractableActor));
+	if (FocusedInteractableActor == nullptr) {
+		return;
 	}
-	else if (FocusedInteractable)
+
+	// Setting the owner will help the pickup menthods to call the owning character and it's components
+	FocusedInteractableActor->SetOwner(OwningCombatCharacter);
+
+	CollectedInteractableActor = FocusedInteractableActor;
+
+	// Invoke the interface pickup method
+	IInteractable::Execute_OnPickup(CollectedInteractableActor);
+
+	// cannot pickup mounted gun but can pickup other weapon types
+	if (Cast<AWeapon>(CollectedInteractableActor) && !Cast<AMountedGun>(CollectedInteractableActor))
+	{
+		OwningCombatCharacter->PickupWeapon(Cast<AWeapon>(CollectedInteractableActor));
+	}
+	else if (Cast<ASupportPackage>(CollectedInteractableActor)) // is a support package?
 	{
 		// only add the support package if there isn't one assigned, this way the player can have the first one always secleted rather than the latest one
-		CurrentInteractable = FocusedInteractable;
-
-		FocusedInteractable->SetActorHiddenInGame(true);
-		FocusedInteractable->SetHidden(true);
-
-		FocusedInteractable->SetActorEnableCollision(false);
-		FocusedInteractable->SetActorTickEnabled(false);
-		FocusedInteractable->PlayPickupSound();
-
-		FocusedInteractable->PlayVoiceOverSound(PlayerFaction);
+		CurrentSupportPackage = Cast<ASupportPackage>(CollectedInteractableActor);
 
 		// update support package event for UI
-		SupportPackages.Add(FocusedInteractable);
-		CurrentSupportPackageIndex = SupportPackages.Find(FocusedInteractable);
-		OnSupportPackageUpdate.Broadcast(FocusedInteractable, SupportPackages.Find(FocusedInteractable), true);
-
+		SupportPackages.Add(CurrentSupportPackage);
+		CurrentSupportPackageIndex = SupportPackages.Find(CurrentSupportPackage);
+		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, SupportPackages.Find(CurrentSupportPackage), true);
 	}
-	else if (MG) 		// Use Mounted Gun
+	else if (Cast<AMountedGun>(CollectedInteractableActor)) 		// Use Mounted Gun
 	{
+		MountedGun = Cast<AMountedGun>(CollectedInteractableActor);
+
 		// Stop using the mounted gun if currently using it
 		if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetMountedGun())
 		{
@@ -1013,7 +1015,7 @@ void ACustomPlayerController::PickupInteractable()
 				OwningCombatCharacter->GetMountedGun()->RemovePlayerControl(this, OwningCombatCharacter);
 
 				OwningCombatCharacter->DropMountedGun();
-				MG = nullptr;
+				MountedGun = nullptr;
 
 				BeginCheckInteractable();
 
@@ -1023,59 +1025,49 @@ void ACustomPlayerController::PickupInteractable()
 		}
 		else
 		{
-			OwningCombatCharacter->SetMountedGun(MG);
+			OwningCombatCharacter->SetMountedGun(MountedGun);
 			OwningCombatCharacter->UseMountedGun();
 			UseMountedGun();
 		}
 	}
 }
 
-/// <summary>
-/// TODO: Function needs to be cleaned up, support packages should implement interactable interface
-/// </summary>
 void ACustomPlayerController::UseInteractableActor()
 {
-	if (FocusedInteractableActor)
-	{
-		IInteractable::Execute_OnUseInteraction(FocusedInteractableActor);
-		return;
-	}
-
-	if (CurrentInteractable == nullptr || OwningCombatCharacter->IsRepellingDown()) {
-		return;
-	}
-
 	// only control one aircraft at a time
-	if (ControlledAircraft != nullptr) {
+	if (CollectedInteractableActor == nullptr || OwningCombatCharacter->IsRepellingDown() || ControlledAircraft != nullptr) {
 		return;
 	}
 
+	// Use the interactable
+	IInteractable::Execute_OnUseInteraction(CollectedInteractableActor);
+
+	// drop the MG if using it so that the use of the interactable can be played with an animation
 	OwningCombatCharacter->DropMountedGun();
 
-	CurrentInteractable->BeginInteraction(OwningCombatCharacter, this);
-
-	CurrentInteractable->PlayInteractSound();
-
-	if (CurrentInteractable->GetAircraft())
+	if (CurrentSupportPackage)
 	{
-		if (CurrentInteractable->GetIsControllable())
+		ControlledAircraft = CurrentSupportPackage->SpawnAircraft(OwningCombatCharacter, this);
+
+		if (ControlledAircraft)
 		{
-			ControlledAircraft = CurrentInteractable->GetAircraft();
-			OwningCombatCharacter->DisableInput(this);
-			AutoReceiveInput = EAutoReceiveInput::Disabled;
-			ControlledAircraft->SetPlayerControl(this);
-			ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
+			if (CurrentSupportPackage->GetIsControllable())
+			{
+				OwningCombatCharacter->DisableInput(this);
+				AutoReceiveInput = EAutoReceiveInput::Disabled;
+				ControlledAircraft->SetPlayerControl(this);
+				ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
 
-			// if controlling aircraft then do not check for interactions
-			GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
+				// if controlling aircraft then do not check for interactions
+				GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
+			}
 		}
+
+		// update support package event for UI
+		SupportPackages.RemoveAt(SupportPackages.Find(CurrentSupportPackage));
+		SortSupportPackages();
+		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, CurrentSupportPackageIndex, false);
 	}
-
-	// update support package event for UI
-	SupportPackages.RemoveAt(SupportPackages.Find(CurrentInteractable));
-	SortSupportPackages();
-	OnSupportPackageUpdate.Broadcast(CurrentInteractable, CurrentSupportPackageIndex, false);
-
 }
 
 /// <summary>
@@ -1105,11 +1097,11 @@ void ACustomPlayerController::SortSupportPackages()
 	if (SupportPackages.Num() > 0)
 	{
 		CurrentSupportPackageIndex = CurrentSupportPackageIndex - 1;
-		CurrentInteractable = SupportPackages[CurrentSupportPackageIndex];
+		CurrentSupportPackage = SupportPackages[CurrentSupportPackageIndex];
 	}
 	else
 	{
-		CurrentInteractable = nullptr;
+		CurrentSupportPackage = nullptr;
 		CurrentSupportPackageIndex = -1;
 	}
 }

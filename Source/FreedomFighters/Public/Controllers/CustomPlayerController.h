@@ -39,7 +39,7 @@ private:
 	ACommanderCharacter* OwningCommander;
 	UGameInstanceController* GameInstanceController;
 	AGameStateBaseCustom* GameStateBaseCustom;
-	AMountedGun* MG;
+	AMountedGun* MountedGun;
 	TeamFaction PlayerFaction;
 
 	FTimerHandle THandler_PostDeath;
@@ -95,17 +95,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FString InteractKeyDisplayName;
 
-	/** the interactable actor that is being line traced if found */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		ASupportPackage* FocusedInteractable;
-
-	ASupportPackage* CurrentInteractable;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<ASupportPackage*> SupportPackages;
+	ASupportPackage* CurrentSupportPackage;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UObject* FocusedInteractableActor;
+		AActor* FocusedInteractableActor;
+	// Store the interactable after picking it up as player may used the interactable afterwardss
+	AActor* CollectedInteractableActor;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		int32 CurrentSupportPackageIndex;

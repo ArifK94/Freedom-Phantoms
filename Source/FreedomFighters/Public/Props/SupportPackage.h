@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interfaces/Interactable.h"
 #include "SupportPackage.generated.h"
 
 class AAircraft;
@@ -12,14 +13,13 @@ class APlayerController;
 class UTexture;
 class USoundBase;
 UCLASS()
-class FREEDOMFIGHTERS_API ASupportPackage : public AActor
+class FREEDOMFIGHTERS_API ASupportPackage : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 	
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AAircraft> AircraftClass;
-	AAircraft* Aircraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName DisplayName;
@@ -55,9 +55,14 @@ private:
 public:
 	ASupportPackage();
 
-	void BeginInteraction(ABaseCharacter* Character, APlayerController* PlayerController);
+	// Interactable interface methods
+	virtual FString GetKeyDisplayName_Implementation() override;
+	virtual FString OnInteractionFound_Implementation() override;
+	virtual void OnPickup_Implementation() override;
+	virtual void OnUseInteraction_Implementation() override;
+	virtual bool CanInteract_Implementation() override;
 
-	void SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController);
+	AAircraft* SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController);
 
 	UFUNCTION(BlueprintCallable)
 		void PlayPickupSound();
@@ -66,15 +71,7 @@ public:
 
 	void PlayVoiceOverSound(TeamFaction Faction);
 
-
-protected:
-	virtual void BeginPlay() override;
-
 public:
-	AAircraft* GetAircraft() {
-		return Aircraft;
-	}
-
 	FName GetActionMessage() {
 		return ActionMessage;
 	}

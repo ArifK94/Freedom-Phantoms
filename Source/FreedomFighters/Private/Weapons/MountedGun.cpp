@@ -64,6 +64,30 @@ void AMountedGun::BeginPlay()
 	ResetCamera();
 }
 
+FString AMountedGun::OnInteractionFound_Implementation()
+{
+	return PickupMessage.ToString();
+}
+
+void AMountedGun::OnPickup_Implementation()
+{
+
+}
+
+void AMountedGun::OnUseInteraction_Implementation()
+{
+
+}
+
+bool AMountedGun::CanInteract_Implementation()
+{
+	if (CanTraceInteraction && GetOwner() == nullptr) {
+		return true;
+	}
+
+	return false;
+}
+
 
 void AMountedGun::AddControllerPitchInput(float Val)
 {
