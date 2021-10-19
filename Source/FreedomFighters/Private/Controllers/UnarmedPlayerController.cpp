@@ -31,5 +31,5 @@ void AUnarmedPlayerController::OnPossess(APawn* InPawn)
 
 	OwningCombatCharacter->HolsterWeapon();
 
-	GetWorldTimerManager().SetTimer(THandler_CheckInteractable, this, &ACustomPlayerController::CheckInteractable, 0.2f, true);
+	BeginCheckInteractable();
 }

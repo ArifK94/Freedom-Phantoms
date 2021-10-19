@@ -14,6 +14,7 @@ class AMountedGun;
 class ABaseObjective;
 class UHealthComponent;
 class AMapCamera;
+class USphereComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractiveFoundSignature, FString, ActionMessage, FString, KeyDisplay);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, ASupportPackage*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
@@ -41,6 +42,8 @@ private:
 	AGameStateBaseCustom* GameStateBaseCustom;
 	AMountedGun* MountedGun;
 	TeamFaction PlayerFaction;
+
+	USphereComponent* OverlapSphere;
 
 	FTimerHandle THandler_PostDeath;
 
@@ -101,8 +104,13 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AActor* FocusedInteractableActor;
-	// Store the interactable after picking it up as player may used the interactable afterwardss
+
+	// actor assigned on overlap begin & end 
+	AActor* OverlappedInteractable;
+
+	// Store the interactable after picking it up as player may used the interactable afterwards
 	AActor* CollectedInteractableActor;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		int32 CurrentSupportPackageIndex;
@@ -125,7 +133,7 @@ private:
 		float OverlapSpehereRadius;
 
 	bool HasGameEnded;
-	
+
 private:
 	void PostDeath();
 
@@ -156,6 +164,8 @@ public:
 	UFUNCTION()
 		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION()
+		void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION(BlueprintCallable)
 		void OnAircraftDestroy(AAircraft* CurrentControlledAircraft);
@@ -206,9 +216,11 @@ public:
 	void PickupInteractable();
 
 	void BeginCheckInteractable();
-	void CheckInteractable();
+	void DetectInteractableByTrace();
 
 	void UseInteractableActor();
+	void DetectInteractable(AActor* Actor);
+	AActor* DetectInteractableByOverlap();
 
 	void SortSupportPackages();
 

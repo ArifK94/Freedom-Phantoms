@@ -32,7 +32,7 @@ ACustomPlayerController::ACustomPlayerController()
 
 	DesiredInputHoldTime = .5f;
 
-	InteractionLength = 500.0f;
+	InteractionLength = 300.0f;
 	OverlapSpehereRadius = 100.0f;
 
 	AutoReceiveInput = EAutoReceiveInput::Player0;
@@ -221,7 +221,7 @@ void ACustomPlayerController::BeginPlay()
 	BeginCheckInteractable();
 
 
-	USphereComponent* OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+	OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
 	if (OverlapSphere)
 	{
 		OverlapSphere->RegisterComponent();
@@ -441,7 +441,9 @@ void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 		return;
 	}
 
-	AWeapon* Weapon = Cast<AWeapon>(OtherActor);
+	OverlappedInteractable = OtherActor;
+
+	AWeapon* Weapon = Cast<AWeapon>(OverlappedInteractable);
 
 	// if weapon has no owner
 	// & not scavenged
@@ -455,6 +457,8 @@ void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 			if (OwningCombatCharacter->GetPrimaryWeapon()->ReplenishAmmo(Amount))
 			{
 				Weapon->SetIsScavenged(true);
+				Weapon->OnPickup_Implementation();
+				Weapon->Destroy(); // destroy the same weapon
 			}
 		} // for secondary weapon
 		else if (OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponName() == Weapon->GetWeaponName())
@@ -462,11 +466,21 @@ void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 			if (OwningCombatCharacter->GetSecondaryWeaponObj()->ReplenishAmmo(Amount))
 			{
 				Weapon->SetIsScavenged(true);
+				Weapon->OnPickup_Implementation();
+				Weapon->Destroy();
 			}
 		}
 	}
+
 }
 
+void ACustomPlayerController::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	// remove the UI interactable if the same actor
+	if (OverlappedInteractable == OtherActor) {
+		DetectInteractable(nullptr);
+	}
+}
 
 void ACustomPlayerController::OnAircraftDestroy(AAircraft* CurrentControlledAircraft)
 {
@@ -749,12 +763,12 @@ void ACustomPlayerController::Zoom(float Value)
 	// If input is positive then zoom in
 	if (Value > 0.0f)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Zoom IN!"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Zoom IN!"));
 
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ZOOM OUT!"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ZOOM OUT!"));
 	}
 }
 
@@ -896,68 +910,43 @@ void ACustomPlayerController::ToggleThermalVision()
 
 void ACustomPlayerController::BeginCheckInteractable()
 {
-	if (InteractWidget) {
-		GetWorldTimerManager().SetTimer(THandler_CheckInteractable, this, &ACustomPlayerController::CheckInteractable, 0.2f, true);
-	}
+	GetWorldTimerManager().SetTimer(THandler_CheckInteractable, this, &ACustomPlayerController::DetectInteractableByTrace, 0.2f, true);
 }
 
-void ACustomPlayerController::CheckInteractable()
+void ACustomPlayerController::DetectInteractable(AActor* Actor)
 {
-	if (OwningCombatCharacter == nullptr) {
-		return;
-	}
-
-	FocusedInteractableActor = nullptr;
+	FocusedInteractableActor = Actor;
 	FString ActionMessage = "";
 	FString KeyInputDisplayName = InteractKeyDisplayName;
 
-	FHitResult OutHit;
-	FVector Start = OwningCombatCharacter->FollowCamera->GetComponentLocation();
-
-	FVector ForwardVector = OwningCombatCharacter->FollowCamera->GetForwardVector();
-	FVector End = ((ForwardVector * InteractionLength) + Start);
-
-	FCollisionQueryParams CollisionParams;
-	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams))
+	if (Actor && Actor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
 	{
-		if (OutHit.bBlockingHit)
+		bool IsInteractableUsable = false;
+
+		if (IInteractable::Execute_CanInteract(Actor))
 		{
-			AActor* TargetActor = OutHit.GetActor();
-			
-			if (TargetActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
+			ASupportPackage* SupportPackage = Cast<ASupportPackage>(Actor);
+
+			// check if interactable is a support package
+			// doing this prevents displaying the interact UI if currently reached max support packages
+			if (SupportPackage)
 			{
-				bool IsInteractableUsable = false;
-
-				if (IInteractable::Execute_CanInteract(TargetActor))
+				// if not reached max support packages
+				if (SupportPackages.Num() < MaxSupportPackages)
 				{
-					ASupportPackage* SupportPackage = Cast<ASupportPackage>(TargetActor);
-
-					// check if interactable is a support package
-					// doing this prevents displaying the interact UI if currently reached max support packages
-					if (SupportPackage)
-					{
-						// if not reached max support packages
-						if (SupportPackages.Num() < MaxSupportPackages)
-						{
-							IsInteractableUsable = true;
-						}
-					}
-					else // Not a support package
-					{
-						IsInteractableUsable = true;
-					}
+					IsInteractableUsable = true;
 				}
-
-
-				if (IsInteractableUsable)
-				{
-					FocusedInteractableActor = TargetActor;
-					KeyInputDisplayName = IInteractable::Execute_GetKeyDisplayName(TargetActor);
-					ActionMessage = IInteractable::Execute_OnInteractionFound(TargetActor);
-				}
-
-
 			}
+			else // Not a support package
+			{
+				IsInteractableUsable = true;
+			}
+		}
+
+		if (IsInteractableUsable)
+		{
+			KeyInputDisplayName = IInteractable::Execute_GetKeyDisplayName(Actor);
+			ActionMessage = IInteractable::Execute_OnInteractionFound(Actor);
 		}
 	}
 
@@ -969,11 +958,66 @@ void ACustomPlayerController::CheckInteractable()
 	OnInteractionFound.Broadcast(ActionMessage, KeyInputDisplayName);
 }
 
+void ACustomPlayerController::DetectInteractableByTrace()
+{
+	if (OwningCombatCharacter == nullptr) {
+		return;
+	}
+
+	AActor* HitActor = nullptr;
+	FHitResult OutHit;
+	FVector Start = OwningCombatCharacter->FollowCamera->GetComponentLocation();
+
+	FVector ForwardVector = OwningCombatCharacter->FollowCamera->GetForwardVector();
+	FVector End = ((ForwardVector * InteractionLength) + Start);
+
+	FCollisionQueryParams CollisionParams;
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams))
+	{
+		if (OutHit.bBlockingHit)
+		{
+			HitActor = OutHit.GetActor();
+		}
+	}
+
+	// if no line trace hit then check for overlapped actors
+	if (HitActor == nullptr)
+	{
+		HitActor = DetectInteractableByOverlap();
+	}
+
+	DetectInteractable(HitActor);
+
+}
+
+AActor* ACustomPlayerController::DetectInteractableByOverlap()
+{
+	AActor* ChosenActor = nullptr;
+	TArray<AActor*> OverlappedActors;
+	float TargetSightDistance = OverlapSpehereRadius;
+
+	OverlapSphere->GetOverlappingActors(OverlappedActors, UInteractable::StaticClass());
+
+	for (int i = 0; i < OverlappedActors.Num(); i++)
+	{
+		AActor* OverlappedActor = OverlappedActors[i];
+
+		if (OverlappedActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
+		{
+			ChosenActor = OverlappedActor;
+		}
+	}
+
+	return ChosenActor;
+}
+
 void ACustomPlayerController::PickupInteractable()
 {
 	if (FocusedInteractableActor == nullptr) {
 		return;
 	}
+
+	OverlappedInteractable = nullptr;
 
 	// Setting the owner will help the pickup menthods to call the owning character and it's components
 	FocusedInteractableActor->SetOwner(OwningCombatCharacter);
