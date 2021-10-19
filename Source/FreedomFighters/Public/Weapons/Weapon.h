@@ -185,13 +185,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil", meta = (AllowPrivateAccess = "true"))
 		bool hasRecoil;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f, ClampMax = 1.0f))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float BulletSpreadMin;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f, ClampMax = 1.0f))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
 		float BulletSpreadMax;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.1f))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.1f))
 		float BulletSpreadReduceRate;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Recoil")
+
+	/** More better results for shotguns */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil", meta = (AllowPrivateAccess = "true", ClampMin = 0.1f))
+		bool UseRadialSpread;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Recoil")
 		float BulletSpreadCurrent;
 
 
@@ -335,9 +339,11 @@ private:
 	void AutoReloadBegin();
 	void AutoReloadEnd();
 
+	FVector BulletSpread(FVector Spread);
+
 	void ReduceBulletSpread();
 
-	FVector RandomPointInCircle(float Radius);
+	FVector BulletSpreadRadial(float Radius);
 
 protected:
 	virtual void BeginPlay() override;

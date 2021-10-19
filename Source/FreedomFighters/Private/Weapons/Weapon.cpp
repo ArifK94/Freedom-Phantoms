@@ -71,9 +71,10 @@ AWeapon::AWeapon()
 	RateOfFire = 600.0f;
 	CooldownReload = 0.0f;
 
-	BulletSpreadMin = 2.0f;
-	BulletSpreadMax = 5.0f;
+	BulletSpreadMin = 2.f;
+	BulletSpreadMax = 5.f;
 	BulletSpreadReduceRate = .1f;
+	UseRadialSpread = false;
 
 	ZoomFOV = 90.0f;
 	BulletsPerFire = 1;
@@ -297,8 +298,14 @@ void AWeapon::Fire()
 				BulletSpreadCurrent += MyOwner->GetVelocity().Size();
 			}
 
-
-			BulletSpreadCurrent += 1.0f;
+			if (IsAiming)
+			{
+				BulletSpreadCurrent += .5f;
+			}
+			else
+			{
+				BulletSpreadCurrent += 1.f;
+			}
 		}
 		else
 		{
@@ -355,8 +362,15 @@ void AWeapon::CreateBullet()
 
 		if (hasRecoil)
 		{
-			FVector RandomRadius = RandomPointInCircle(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
-			TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
+			if (UseRadialSpread)
+			{
+				FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
+				TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
+			}
+			else
+			{
+				TraceEnd = BulletSpread(TraceEnd);
+			}
 		}
 
 
@@ -432,7 +446,7 @@ void AWeapon::PlayShotEffect(FVector EyeLocation)
 }
 
 // Bullet spread random point
-FVector AWeapon::RandomPointInCircle(float Radius)
+FVector AWeapon::BulletSpreadRadial(float Radius)
 {
 	FVector Target;
 	float Angle = UKismetMathLibrary::RandomFloatInRange(0.0f, 360.0f);
@@ -444,9 +458,24 @@ FVector AWeapon::RandomPointInCircle(float Radius)
 	return Target;
 }
 
+FVector AWeapon::BulletSpread(FVector Spread)
+{
+	float Range = UKismetMathLibrary::MapRangeClamped(BulletSpreadCurrent, .0f, 1.f, 10.f, 20.f);
+	float SpreadMin = BulletSpreadMin * Range;
+	float SpreadMax = BulletSpreadMax * Range;
+	float RandomRange = UKismetMathLibrary::RandomFloatInRange(SpreadMin, SpreadMax);
+
+	FVector TargetSpread;
+	TargetSpread.X = Spread.X + RandomRange;
+	TargetSpread.Y = Spread.Y + RandomRange;
+	TargetSpread.Z = Spread.Z + RandomRange;
+
+	return TargetSpread;
+}
+
 void AWeapon::ReduceBulletSpread()
 {
-	BulletSpreadCurrent = FMath::Clamp(BulletSpreadCurrent -= 1.0f, BulletSpreadMin, BulletSpreadMax);
+	BulletSpreadCurrent = FMath::Clamp(BulletSpreadCurrent - 1.f, BulletSpreadMin, BulletSpreadMax);
 
 	if (BulletSpreadCurrent <= BulletSpreadMin)
 	{
@@ -773,6 +802,8 @@ void AWeapon::AutoReloadEnd()
 	isReloading = false;
 	GetWorldTimerManager().ClearTimer(THandler_AutoReloadEnd);
 }
+
+
 
 
 bool AWeapon::ReplenishAmmo(int Amount)
