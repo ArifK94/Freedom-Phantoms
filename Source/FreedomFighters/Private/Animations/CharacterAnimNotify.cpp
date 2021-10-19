@@ -19,7 +19,7 @@ void UCharacterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenc
 			if (ShouldCrouch)
 			{
 				if (!Character->GetCharacterMovement()->IsCrouching())
-					Character->BeginCrouch();
+					Character->ToggleCrouch();
 			}
 
 			if (AlignHandguardIK)

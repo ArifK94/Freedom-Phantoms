@@ -1031,7 +1031,7 @@ void ACombatAIController::TakeCover()
 	if (CoverLocationPoints.Num() <= 0)
 	{
 		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->BeginCrouch();
+			OwningCombatCharacter->ToggleCrouch();
 		return;
 	}
 
@@ -1067,7 +1067,7 @@ void ACombatAIController::TakeCover()
 			if (ChosenCoverPointComponent->IsCrouchPreferred())
 			{
 				if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching()) {
-					OwningCombatCharacter->BeginCrouch();
+					OwningCombatCharacter->ToggleCrouch();
 				}
 			}
 

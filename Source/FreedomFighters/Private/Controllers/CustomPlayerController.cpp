@@ -84,10 +84,9 @@ void ACustomPlayerController::InitInputComponent()
 	InputComponent->BindAction("Aim", IE_Pressed, this, &ACustomPlayerController::BeginAim);
 	InputComponent->BindAction("Aim", IE_Released, this, &ACustomPlayerController::EndAim);
 
-	InputComponent->BindAction("Sprint", IE_Pressed, this, &ACustomPlayerController::BeginSprint);
-	InputComponent->BindAction("Sprint", IE_Released, this, &ACustomPlayerController::EndSprint);
+	InputComponent->BindAction("Sprint", IE_Pressed, this, &ACustomPlayerController::ToggleSprint);
 
-	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::BeginCrouch);
+	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::ToggleCrouch);
 
 	InputComponent->BindAction("TakeCover", IE_Pressed, this, &ACustomPlayerController::TakeCover);
 
@@ -776,9 +775,9 @@ void ACustomPlayerController::ZoomOut()
 	}
 }
 
-void ACustomPlayerController::BeginCrouch()
+void ACustomPlayerController::ToggleCrouch()
 {
-	OwningCombatCharacter->BeginCrouch();
+	OwningCombatCharacter->ToggleCrouch();
 }
 
 void ACustomPlayerController::BeginJump()
@@ -791,13 +790,9 @@ void ACustomPlayerController::EndJump()
 	OwningCombatCharacter->StopJumping();
 }
 
-void ACustomPlayerController::BeginSprint()
+void ACustomPlayerController::ToggleSprint()
 {
-	OwningCombatCharacter->BeginSprint();
-}
-void ACustomPlayerController::EndSprint()
-{
-	OwningCombatCharacter->EndSprint();
+	OwningCombatCharacter->ToggleSprint();
 }
 
 void ACustomPlayerController::BeginAim()

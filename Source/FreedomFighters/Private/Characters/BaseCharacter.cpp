@@ -144,7 +144,7 @@ ABaseCharacter::ABaseCharacter()
 	AimCameraZoomSpeed = 20.0f;
 	CoverDistance = 150.0f;
 
-
+	IsSprintDefault = true;
 	isSprinting = false;
 	isDead = false;
 	ReceeivedInitialDirection = false;
@@ -171,7 +171,7 @@ void ABaseCharacter::BeginPlay()
 	RetrieveAccessoryDataSet();
 	RetrieveDeathAnimDataSet();
 
-	defaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	DefaultAIController = Cast<AAIController>(GetController());
 
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
@@ -264,43 +264,6 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 	}
 }
 
-void ABaseCharacter::AddControllerPitchInput(float Val)
-{
-	if (isTakingCover && isAtCoverCorner)
-	{
-		if (isFacingCoverRHS)
-		{
-			RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, CoverRotationRightPitch.X, CoverRotationRightPitch.Y);
-		}
-		else
-		{
-			RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, CoverRotationLeftPitch.X, CoverRotationLeftPitch.Y);
-		}
-
-		RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
-	}
-	FollowCamera->SetRelativeRotation(RotationInput);
-}
-
-void ABaseCharacter::AddControllerYawInput(float Val)
-{
-	if (isTakingCover && isAtCoverCorner)
-	{
-		if (isFacingCoverRHS)
-		{
-			RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, CoverRotationRightYaw.X, CoverRotationRightYaw.Y);
-		}
-		else
-		{
-			RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, CoverRotationLeftYaw.X, CoverRotationLeftYaw.Y);
-		}
-
-		RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
-	}
-	FollowCamera->SetRelativeRotation(RotationInput);
-	FollowCamera->SetRelativeLocation(FollowCamera->GetComponentRotation().Vector());
-}
-
 void ABaseCharacter::RetrieveVoiceDataSet()
 {
 	if (VoiceClipsDatatable == nullptr || VoiceSetRows.Num() <= 0) {
@@ -373,33 +336,39 @@ void ABaseCharacter::UpdateCameraView()
 	FollowCamera->SetFieldOfView(ZoomInterp);
 }
 
+void ABaseCharacter::ToggleSprint()
+{
+	IsSprintDefault = !IsSprintDefault;
+}
+
 void ABaseCharacter::BeginSprint()
 {
 	if (!isSprinting)
 	{
-		if (CharacterSpeed > 0.1f)
+		if (isTakingCover)
 		{
-			if (isTakingCover)
-			{
-				isTakingCover = false;
-			}
-
-			isSprinting = true;
-
-			if (GetCharacterMovement()->IsCrouching())
-			{
-				UnCrouch();
-			}
+			isTakingCover = false;
 		}
+
+		if (GetCharacterMovement()->IsCrouching())
+		{
+			UnCrouch();
+		}
+
+		GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed * 2.0f;
+
+		isSprinting = true;
 	}
 }
 
 void ABaseCharacter::EndSprint()
 {
+	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
+
 	isSprinting = false;
 }
 
-void ABaseCharacter::BeginCrouch()
+void ABaseCharacter::ToggleCrouch()
 {
 	if (GetCharacterMovement()->IsCrouching())
 	{
@@ -463,17 +432,15 @@ void ABaseCharacter::UpdateSpeed()
 	}
 	else
 	{
-		FVector Velocity = GetVelocity();
+		TargetSpeed = GetVelocity().Size();
 
-		TargetSpeed = Velocity.Size();
-
-		if (isSprinting)
+		if (CharacterSpeed > 0.1f && IsSprintDefault)
 		{
-			GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed * 2.0f;
+			BeginSprint();
 		}
 		else
 		{
-			GetCharacterMovement()->MaxWalkSpeed = defaultMaxWalkSpeed;
+			EndSprint();
 		}
 	}
 	CharacterSpeed = TargetSpeed;
@@ -851,7 +818,7 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 			DeathAnimationAsset = DeathAnimation->ShotgunHitsLegs[rand() % DeathAnimation->ShotgunHitsLegs.Num()];
 			return;
 		}
-		else if (HasHitFront) 
+		else if (HasHitFront)
 		{
 			DeathAnimationAsset = DeathAnimation->ShotgunHitsFront[rand() % DeathAnimation->ShotgunHitsFront.Num()];
 			return;

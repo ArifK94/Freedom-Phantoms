@@ -18,10 +18,9 @@ void AUnarmedPlayerController::InitInputComponent()
 	InputComponent->BindAxis("MoveForward", this, &ACustomPlayerController::MoveForward);
 	InputComponent->BindAxis("MoveRight", this, &ACustomPlayerController::MoveRight);
 
-	InputComponent->BindAction("Sprint", IE_Pressed, this, &ACustomPlayerController::BeginSprint);
-	InputComponent->BindAction("Sprint", IE_Released, this, &ACustomPlayerController::EndSprint);
+	InputComponent->BindAction("Sprint", IE_Pressed, this, &ACustomPlayerController::ToggleSprint);
 
-	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::BeginCrouch);
+	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::ToggleCrouch);
 
 	InputComponent->BindAction("UseInteractable", IE_Pressed, this, &ACustomPlayerController::UseInteractableActor);
 }

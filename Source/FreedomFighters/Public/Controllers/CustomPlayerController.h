@@ -185,10 +185,9 @@ public:
 	void ZoomIn();
 	void ZoomOut();
 
-	void BeginCrouch();
+	void ToggleCrouch();
 
-	void BeginSprint();
-	void EndSprint();
+	void ToggleSprint();
 
 	void BeginJump();
 	void EndJump();

@@ -109,6 +109,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isSprinting;
 
+	/** Toggling for sprint */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool IsSprintDefault;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float aimYaw;
 
@@ -193,7 +197,7 @@ protected:
 
 protected:
 
-	float defaultMaxWalkSpeed;
+	float DefaultMaxWalkSpeed;
 
 	float CurrentDeltaTime;
 
@@ -247,13 +251,11 @@ private:
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
 
-	void AddControllerPitchInput(float Val);
-	void AddControllerYawInput(float Val);
-
 	virtual void ShowCharacterOutline(bool CanShow);
 
-	void BeginCrouch();
+	void ToggleCrouch();
 
+	void ToggleSprint();
 	virtual void BeginSprint();
 	virtual void EndSprint();
 
