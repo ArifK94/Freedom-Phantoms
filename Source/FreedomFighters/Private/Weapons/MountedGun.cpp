@@ -69,15 +69,6 @@ FString AMountedGun::OnInteractionFound_Implementation()
 	return PickupMessage.ToString();
 }
 
-void AMountedGun::OnPickup_Implementation()
-{
-
-}
-
-void AMountedGun::OnUseInteraction_Implementation()
-{
-
-}
 
 bool AMountedGun::CanInteract_Implementation()
 {

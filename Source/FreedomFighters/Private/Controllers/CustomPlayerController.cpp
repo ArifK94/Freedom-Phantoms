@@ -32,7 +32,7 @@ ACustomPlayerController::ACustomPlayerController()
 
 	DesiredInputHoldTime = .5f;
 
-	InteractionLength = 300.0f;
+	InteractionLength = 350.0f;
 	OverlapSpehereRadius = 100.0f;
 
 	AutoReceiveInput = EAutoReceiveInput::Player0;
@@ -1079,7 +1079,9 @@ void ACustomPlayerController::UseInteractableActor()
 	}
 
 	// Use the interactable
-	IInteractable::Execute_OnUseInteraction(CollectedInteractableActor);
+	if (!IInteractable::Execute_OnUseInteraction(CollectedInteractableActor)) {
+		return;
+	}
 
 	// drop the MG if using it so that the use of the interactable can be played with an animation
 	OwningCombatCharacter->DropMountedGun();

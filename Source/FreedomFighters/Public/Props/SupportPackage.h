@@ -59,7 +59,7 @@ public:
 	virtual FString GetKeyDisplayName_Implementation() override;
 	virtual FString OnInteractionFound_Implementation() override;
 	virtual void OnPickup_Implementation() override;
-	virtual void OnUseInteraction_Implementation() override;
+	virtual bool OnUseInteraction_Implementation() override;
 	virtual bool CanInteract_Implementation() override;
 
 	AAircraft* SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController);

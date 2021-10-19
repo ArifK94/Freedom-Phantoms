@@ -122,9 +122,9 @@ void AWeapon::OnPickup_Implementation()
 	}
 }
 
-void AWeapon::OnUseInteraction_Implementation()
+bool AWeapon::OnUseInteraction_Implementation()
 {
-
+	return false;
 }
 
 bool AWeapon::CanInteract_Implementation()

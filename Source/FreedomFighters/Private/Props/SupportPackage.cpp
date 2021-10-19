@@ -44,9 +44,11 @@ void ASupportPackage::OnPickup_Implementation()
 
 }
 
-void ASupportPackage::OnUseInteraction_Implementation()
+bool ASupportPackage::OnUseInteraction_Implementation()
 {
 	PlayInteractSound();
+
+	return true;
 }
 
 bool ASupportPackage::CanInteract_Implementation()

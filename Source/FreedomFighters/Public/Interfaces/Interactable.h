@@ -32,7 +32,7 @@ public:
 		void OnPickup();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		void OnUseInteraction();
+		bool OnUseInteraction();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		bool CanInteract();
