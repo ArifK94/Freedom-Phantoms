@@ -17,7 +17,9 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Niagara/Public/NiagaraFunctionLibrary.h"
 #include "CustomComponents/ObjectPoolComponent.h"
 
 
@@ -55,6 +57,12 @@ AWeapon::AWeapon()
 	ChargingAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ChargingAudioComponent"));
 	ChargingAudioComponent->SetupAttachment(MeshComp);
 
+	MuzzleLightComponent = CreateDefaultSubobject<UPointLightComponent>(TEXT("MuzzleLightComponent"));
+	MuzzleLightComponent->SetupAttachment(MeshComp);
+	MuzzleLightComponent->Intensity = 2000.f;
+	MuzzleLightComponent->AttenuationRadius = 500.0f;
+	MuzzleLightComponent->SetCastShadows(false);
+	MuzzleLightComponent->SetVisibility(false);
 
 	MuzzleSocket = "Muzzle";
 	ClipSocket = "Clip";
@@ -230,8 +238,9 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
+	MuzzleLightComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
 	SpawnMagazine();
 	ConfigSetup();
@@ -422,11 +431,17 @@ void AWeapon::CreateBullet()
 
 void AWeapon::PlayShotEffect(FVector EyeLocation)
 {
+	MuzzleLightComponent->SetVisibility(true);
+
 	if (MuzzleEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleEffect, getMuzzleLocation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleEffect, getMuzzleLocation(), MeshComp->GetSocketRotation(MuzzleSocket));
 	}
 
+	if (MuzzleFlashNiagara)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MuzzleFlashNiagara, getMuzzleLocation(), MeshComp->GetSocketRotation(MuzzleSocket));
+	}
 
 	LastFireTime = GetWorld()->TimeSeconds;
 
@@ -443,6 +458,9 @@ void AWeapon::PlayShotEffect(FVector EyeLocation)
 			ShotAudioComponent->Play(0.0f);
 		}
 	}
+
+	// to get a blinking muzzle flash, delay rate needs to be very low
+	GetWorldTimerManager().SetTimer(THandler_MuzzleLight, this, &AWeapon::DisableMuzzleLight, .01f, false);
 }
 
 // Bullet spread random point
@@ -577,7 +595,6 @@ void AWeapon::ChargeDown()
 	}
 
 	GetWorldTimerManager().SetTimer(THandler_ChargeDown, this, &AWeapon::DecreaseCharge, .1f, true);
-
 }
 
 void AWeapon::IncreaseCharge()
@@ -613,6 +630,12 @@ void AWeapon::DecreaseCharge()
 
 		GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
 	}
+}
+
+void AWeapon::DisableMuzzleLight()
+{
+	MuzzleLightComponent->SetVisibility(false);
+	GetWorldTimerManager().ClearTimer(THandler_MuzzleLight);
 }
 
 void AWeapon::OnReload()

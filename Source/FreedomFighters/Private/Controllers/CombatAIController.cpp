@@ -838,27 +838,27 @@ void ACombatAIController::FindCover()
 		return;
 	}
 
-	if (!HasChosenCover)
-	{
-		if (EnemyActor)
-		{
-			GenerateCoverPoints(EnemyActor);
-		}
-		else
-		{
-			if (CurrentStronghold)
-			{
-				ChosenCoverPointComponent = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
+	//if (!HasChosenCover)
+	//{
+	//	if (EnemyActor)
+	//	{
+	//		GenerateCoverPoints(EnemyActor);
+	//	}
+	//	else
+	//	{
+	//		if (CurrentStronghold)
+	//		{
+	//			ChosenCoverPointComponent = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
 
-				if (ChosenCoverPointComponent)
-				{
-					TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
-					CoverLocationPoints.Add(TargetDestination);
-					HasChosenCover = true;
-				}
-			}
-		}
-	}
+	//			if (ChosenCoverPointComponent)
+	//			{
+	//				TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
+	//				CoverLocationPoints.Add(TargetDestination);
+	//				HasChosenCover = true;
+	//			}
+	//		}
+	//	}
+	//}
 
 
 	// check if current cover has been taken,

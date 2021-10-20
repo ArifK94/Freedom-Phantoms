@@ -10,6 +10,7 @@
 class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
+class UNiagaraSystem;
 class USoundBase;
 class USoundCue;
 class UAudioComponent;
@@ -17,6 +18,7 @@ class AWeaponClip;
 class AWeaponBullet;
 class UObjectPoolComponent;
 class UTexture;
+class UPointLightComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEmptyAmmoClipSignature, AWeapon*, Weapon);
 
@@ -45,7 +47,7 @@ protected:
 
 protected:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* MeshComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -53,6 +55,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UObjectPoolComponent* ObjectPoolComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UPointLightComponent* MuzzleLightComponent;
+	FTimerHandle THandler_MuzzleLight;
+
+
+
 
 	/** Not all weapons may need to have bullet object pooled */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -230,11 +239,14 @@ protected:
 		UAudioComponent* ClipAudioComponent;
 
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Particle Effects", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* ShellEjectEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Particle Effects", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particle Effects", meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* MuzzleEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particle Effects", meta = (AllowPrivateAccess = "true"))
+		UNiagaraSystem* MuzzleFlashNiagara;
 
 	/** Message to be displayed on the UI */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
@@ -344,6 +356,8 @@ private:
 	void ReduceBulletSpread();
 
 	FVector BulletSpreadRadial(float Radius);
+
+	void DisableMuzzleLight();
 
 protected:
 	virtual void BeginPlay() override;
