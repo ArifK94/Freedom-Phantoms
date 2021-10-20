@@ -346,8 +346,6 @@ public:
 private:
 	void ConvertWeaponName();
 
-	void BurstDelay();
-
 	void AutoReloadBegin();
 	void AutoReloadEnd();
 
