@@ -144,6 +144,8 @@ ABaseCharacter::ABaseCharacter()
 	AimCameraZoomSpeed = 20.0f;
 	CoverDistance = 150.0f;
 
+	DestroyDelayTime = 10.f;
+
 	IsSprintDefault = true;
 	isSprinting = false;
 	isDead = false;
@@ -245,7 +247,7 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 
 		PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
 
-		GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, 5.f, false);
+		GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, DestroyDelayTime, false);
 	}
 }
 
