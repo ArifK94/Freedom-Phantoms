@@ -218,6 +218,9 @@ private:
 	FTimerHandle THandler_CharacterMovement;
 	FTimerHandle THandler_CharacterDirection;
 
+	// delay used to destroy character after death since we need to destory attached children but not all children such as weapons, these will be detached after some time
+	FTimerHandle THandler_Destroyer;
+
 	AAIController* DefaultAIController;
 
 protected:
@@ -247,6 +250,9 @@ private:
 	void ResetInitialDirectionBool();
 
 	void StartCover(FHitResult OutHit);
+
+	void StartDestroy();
+	void DetroyChildActor(TArray<AActor*> ParentActor);
 
 public:
 	FOnRappelUpdateignature OnRappelUpdate;

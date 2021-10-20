@@ -244,6 +244,8 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 		GetCharacterMovement()->StopMovementImmediately();
 
 		PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
+
+		GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, 5.f, false);
 	}
 }
 
@@ -873,4 +875,30 @@ void ABaseCharacter::PostDeath()
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void ABaseCharacter::StartDestroy()
+{
+	TArray<AActor*> AttachedActors;
+	GetAttachedActors(AttachedActors);
+	DetroyChildActor(AttachedActors);
+	Destroy();
+}
+
+void ABaseCharacter::DetroyChildActor(TArray<AActor*> ParentActor)
+{
+	if (ParentActor.Num() <= 0) {
+		return;
+	}
+
+	for (int i = 0; i < ParentActor.Num(); i++)
+	{
+		AActor* ChildActor = ParentActor[i];
+
+		TArray<AActor*> ChildAttachedActors;
+		ChildActor->GetAttachedActors(ChildAttachedActors);
+		DetroyChildActor(ChildAttachedActors);
+
+		ChildActor->Destroy();
+	}
 }
