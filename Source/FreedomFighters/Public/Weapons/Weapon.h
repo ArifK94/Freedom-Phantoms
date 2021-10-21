@@ -29,14 +29,14 @@ class FREEDOMFIGHTERS_API AWeapon : public AActor, public IInteractable
 
 private:
 	FTimerHandle THandler_BulletSpread;
+	FTimerHandle THandler_BurstFire;
+	int BurstAmmountCount;
 
 	/** Destroy the actor */
 	UFUNCTION()
 		void OnDestroyWeapon(AActor* Actor);
 
 protected:
-	int BurstAmmountCount;
-
 	USkeletalMeshComponent* CharacterReference;
 
 

@@ -270,6 +270,8 @@ void AWeapon::Fire()
 		if (BurstAmmountCount >= 3)
 		{
 			StopFire();
+			GetWorldTimerManager().ClearTimer(THandler_BurstFire);
+			BurstAmmountCount = 0;
 			return;
 		}
 	}
@@ -286,8 +288,6 @@ void AWeapon::Fire()
 	}
 
 	CreateBullet();
-
-	BurstAmmountCount++;
 
 	if (hasRecoil) {
 
@@ -328,6 +328,8 @@ void AWeapon::Fire()
 	if (hasRecoil) {
 		GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
 	}
+
+	BurstAmmountCount++;
 }
 
 void AWeapon::CreateBullet()
@@ -504,6 +506,8 @@ void AWeapon::BeginShellEffect()
 
 void AWeapon::StartFire()
 {
+	selectiveFireMode = SelectiveFire::Burst;
+
 	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
 
 	switch (selectiveFireMode)
@@ -515,10 +519,7 @@ void AWeapon::StartFire()
 		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
 		break;
 	case SelectiveFire::Burst:
-		for (int i = 0; i <= 3; i++)
-		{
-			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
-		}
+		GetWorldTimerManager().SetTimer(THandler_BurstFire, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
 		break;
 	default:
 		Fire();
@@ -535,7 +536,6 @@ void AWeapon::StopFire()
 	isFiring = false;
 
 	CurrentVerticleRecoil = 0.0f;
-	BurstAmmountCount = 0;
 
 	ChargeDown();
 
