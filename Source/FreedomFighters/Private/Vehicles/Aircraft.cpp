@@ -162,6 +162,16 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 			if (CurrentSplinePoint.PointIndex != -1)
 			{
 				CurrentAircraftMovement = CurrentSplinePoint.MovementType;
+
+				if (CurrentSplinePoint.AffectSpeedType == AircraftSpeedType::Specified)
+				{
+					// adjust speed
+					CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.AircraftDuration);
+				}
+				else
+				{
+					CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+				}
 			}
 		}
 	}
@@ -384,7 +394,10 @@ void AAircraft::UpdateWeaponView()
 	{
 		FAircraftSeating HeliSeat = OccupiedSeats[CurrentWeaponIndex - 1];
 		HeliSeat.CharacterObj->AutoPossessPlayer = EAutoReceiveInput::Disabled;
-		HeliSeat.CharacterObj->GetDefaultAIController()->Possess(HeliSeat.CharacterObj);
+		if (HeliSeat.CharacterObj->GetDefaultAIController())
+		{
+			HeliSeat.CharacterObj->GetDefaultAIController()->Possess(HeliSeat.CharacterObj);
+		}
 		HeliSeat.CharacterObj->SetAircraftSeat(HeliSeat); // so AI does not fall to the ground when repossessed
 	}
 

@@ -68,6 +68,13 @@ enum class EAircraftMovement : uint8
 	MovingForward	UMETA(DisplayName = "MovingForward")
 };
 
+UENUM(BlueprintType)
+enum class AircraftSpeedType : uint8
+{
+	Normal		UMETA(DisplayName = "Normal"),
+	Specified	UMETA(DisplayName = "Specified")
+};
+
 
 UENUM(BlueprintType)
 enum class EAircraftRole : uint8

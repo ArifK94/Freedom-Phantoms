@@ -303,6 +303,15 @@ public:
 		FVector PointLocation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		AircraftSpeedType AffectSpeedType;
+
+	/** Aircraft path durations to be affected if AffectSpeedType is set to specified,
+	* the higher the duration, the slower the aircraft speed (in seconds)
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float AircraftDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EAircraftMovement MovementType;
 };
 
