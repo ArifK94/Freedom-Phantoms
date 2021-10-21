@@ -329,7 +329,10 @@ void AWeapon::Fire()
 		GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
 	}
 
-	BurstAmmountCount++;
+	if (selectiveFireMode == SelectiveFire::Burst)
+	{
+		BurstAmmountCount++;
+	}
 }
 
 void AWeapon::CreateBullet()
@@ -506,8 +509,6 @@ void AWeapon::BeginShellEffect()
 
 void AWeapon::StartFire()
 {
-	selectiveFireMode = SelectiveFire::Burst;
-
 	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
 
 	switch (selectiveFireMode)
