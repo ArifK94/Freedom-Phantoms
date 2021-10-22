@@ -234,16 +234,24 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 {
 	if (Health <= 0.0f && !isDead)
 	{
+		isDead = true;
+
+		VoiceAudioComponent->Stop();
+
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 
 		PrimaryActorTick.bCanEverTick = false;
 		ClearTimeHandlers();
 
-		isDead = true;
-
 		ShowCharacterOutline(false);
 
 		GetCharacterMovement()->StopMovementImmediately();
+
+		if (VoiceClipsSet->DeathSound != nullptr)
+		{
+			VoiceAudioComponent->Sound = VoiceClipsSet->DeathSound;
+			VoiceAudioComponent->Play();
+		}
 
 		PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
 
@@ -744,6 +752,16 @@ void ABaseCharacter::EndAim()
 void ABaseCharacter::UpdateAimCamera()
 {
 	FollowCamera->SetWorldLocation(GetMesh()->GetSocketLocation(ShoulderRightSocket));
+}
+
+void ABaseCharacter::PlayVoiceSound(USoundBase* Sound)
+{
+	if (!HealthComp->IsAlive() || Sound == nullptr) {
+		return;
+	}
+
+	VoiceAudioComponent->Sound = Sound;
+	VoiceAudioComponent->Play();
 }
 
 void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)

@@ -166,7 +166,7 @@ private:
 
 	void IncrementCurrentRecruit();
 
-	void PlayVoiceSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit);
+	void PlayCommunicationSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit);
 
 	void PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit);
 

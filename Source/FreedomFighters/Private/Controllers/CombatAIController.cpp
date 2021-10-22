@@ -497,7 +497,7 @@ void ACombatAIController::FindEnemy()
 
 
 	if (EnemyActor) {
-		OwningCombatCharacter->TargetFound();
+		TargetFound();
 	}
 	else
 	{
@@ -1235,4 +1235,13 @@ bool ACombatAIController::IsEnemyBehindMG(AActor* Enemy)
 		}
 	}
 	return false;
+}
+
+void ACombatAIController::TargetFound()
+{
+	if (!HasPlayedTargetFoundSound)
+	{
+		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->TargetFoundSound);
+		HasPlayedTargetFoundSound = true;
+	}
 }

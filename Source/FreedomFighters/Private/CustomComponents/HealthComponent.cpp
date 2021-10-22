@@ -97,48 +97,6 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 	if (Health <= 0.0f)
 	{
 		isAlive = false;
-
-
-		// set death type
-		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
-
-		//switch (SurfaceType)
-		//{
-		//case SURFACE_HEAD:
-		//	deathType = DeathType::Head;
-		//	break;
-		//case SURFACE_FLESHVULNERABLE:
-		//case SURFACE_GROIN:
-		//	deathType = DeathType::FleshVulnerable;
-		//	break;
-		//default:
-		//	deathType = DeathType::FleshDefault;
-		//	break;
-		//}
-
-
-		if (DamageCauser->IsA(ACombatCharacter::StaticClass()))
-		{
-			ACombatCharacter* opposingChar = Cast<ACombatCharacter>(DamageCauser);
-
-			if (opposingChar)
-			{
-				opposingChar->EnemyKilled();
-			}
-
-			ACombatCharacter* currentActor = Cast<ACombatCharacter>(DamagedActor);
-
-			if (currentActor)
-			{
-				auto nearestFriendly = currentActor->FindNearestFriendly();
-
-				if (nearestFriendly)
-				{
-					nearestFriendly->FriendlyKilled();
-				}
-			}
-
-		}
 	}
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);

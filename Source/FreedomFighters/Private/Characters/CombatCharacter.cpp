@@ -86,7 +86,6 @@ ACombatCharacter::ACombatCharacter()
 	CanAutoReloadWeapon = false;
 	isInCombatMode = false;
 	IsInAimOffSetRotation = false;
-	HasPlayedTargetFoundSound = false;
 	isUsingMountedWeapon = false;
 
 	MaxAimYawSprint = 180.0f;
@@ -173,12 +172,6 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 	if (isDead)
 	{
-		if (GetVoiceClipsSet()->DeathSound != NULL)
-		{
-			VoiceAudioComponent->Sound = GetVoiceClipsSet()->DeathSound;
-			VoiceAudioComponent->Play();
-		}
-
 		// check if not using mounted gun as the weapon will be dropped and simulating physics
 		if (currentWeaponObj && currentWeaponObj != MountedGun) {
 			EndFire();
@@ -192,11 +185,13 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 		RegisterWeaponEvents(primaryWeaponObj, false);
 		RegisterWeaponEvents(secondaryWeaponObj, false);
 
+		FriendlyKilled();
 	}
 }
 
 void ACombatCharacter::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
 {
+	EnemyKilled();
 	OnKillConfirm.Broadcast(KillCount);
 }
 
@@ -767,11 +762,7 @@ void ACombatCharacter::BeginReload()
 		PlayAnimMontage(WeaponAnimDataSet->Reloading);
 	}
 
-	if (GetVoiceClipsSet()->ReloadingSound != NULL)
-	{
-		VoiceAudioComponent->Sound = GetVoiceClipsSet()->ReloadingSound;
-		VoiceAudioComponent->Play();
-	}
+	PlayVoiceSound(GetVoiceClipsSet()->ReloadingSound);
 }
 
 void ACombatCharacter::EndReload()
@@ -846,125 +837,23 @@ void ACombatCharacter::ToggleLight()
 	}
 }
 
-void ACombatCharacter::TargetFound()
-{
-	if (!HasPlayedTargetFoundSound && !isDead)
-	{
-		if (GetVoiceClipsSet()->TargetFoundSound != NULL)
-		{
-			VoiceAudioComponent->Sound = GetVoiceClipsSet()->TargetFoundSound;
-			VoiceAudioComponent->Play();
-			HasPlayedTargetFoundSound = true;
-		}
-	}
-}
-
-ACombatCharacter* ACombatCharacter::FindNearestFriendly()
-{
-	TArray<AActor*> allCombatChars;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACombatCharacter::StaticClass(), allCombatChars);
-	AActor* ClosestAlly = nullptr;
-
-	for (auto CurrentCombatant : allCombatChars)
-	{
-		if (CurrentCombatant != this)
-		{
-			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentCombatant->GetComponentByClass(UHealthComponent::StaticClass()));
-
-			bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
-			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentCombatant);
-
-			if (isFriendly && CurrentHealth->IsAlive())
-			{
-				ClosestAlly = CurrentCombatant;
-
-				if (CurrentCombatant->GetDistanceTo(this) < ClosestAlly->GetDistanceTo(this))
-				{
-					ClosestAlly = CurrentCombatant;
-				}
-			}
-
-		}
-	}
-
-	if (ClosestAlly != nullptr)
-	{
-		return	Cast<ACombatCharacter>(ClosestAlly);
-	}
-
-	return nullptr;
-}
-
-ACombatCharacter* ACombatCharacter::FindNearestEnemy(float TargetRange)
-{
-	TArray<AActor*> allCombatChars;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACombatCharacter::StaticClass(), allCombatChars);
-	AActor* ClosestEnemy = nullptr;
-
-	for (auto CurrentCombatant : allCombatChars)
-	{
-		if (CurrentCombatant != this)
-		{
-			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentCombatant->GetComponentByClass(UHealthComponent::StaticClass()));
-
-			bool IsAlive = CurrentHealth->getCurrentHealth() > 0.0f;
-			bool isFriendly = UHealthComponent::IsFriendly(this, CurrentCombatant);
-
-			if (!isFriendly && IsAlive && CurrentHealth->GetSelectedFaction() != TeamFaction::Neutral)
-			{
-				ClosestEnemy = CurrentCombatant;
-
-				auto DistanceDiff = (CurrentCombatant->GetActorLocation() - this->GetActorLocation()).Size();
-
-				if (DistanceDiff < TargetRange)
-				{
-					ClosestEnemy = CurrentCombatant;
-				}
-			}
-
-		}
-	}
-
-	if (ClosestEnemy != nullptr)
-	{
-		return	Cast<ACombatCharacter>(ClosestEnemy);
-	}
-
-	return nullptr;
-}
-
 void ACombatCharacter::FriendlyKilled()
 {
-	if (isDead) {
-		return;
-	}
-
-	if (GetVoiceClipsSet()->FriendlyDownSound != NULL)
-	{
-		VoiceAudioComponent->Sound = GetVoiceClipsSet()->FriendlyDownSound;
-		VoiceAudioComponent->Play();
-	}
-
+	PlayVoiceSound(GetVoiceClipsSet()->FriendlyDownSound);
 }
 
 void ACombatCharacter::EnemyKilled()
 {
-	if (!isDead) {
+	// don't need to constantly repeat the voice clip after each kill
+	if (HasPlayedEnemyKilledSound) {
 		return;
 	}
 
-	if (!HasPlayedEnemyKilledSound && !isDead)
-	{
-		if (GetVoiceClipsSet()->EnemyDownSound != NULL)
-		{
-			VoiceAudioComponent->Sound = GetVoiceClipsSet()->EnemyDownSound;
-			VoiceAudioComponent->Play();
-			HasPlayedEnemyKilledSound = true;
+	PlayVoiceSound(GetVoiceClipsSet()->EnemyDownSound);
 
-			GetWorldTimerManager().SetTimer(THandler_VoiceSoundReset, this, &ACombatCharacter::ResetVoiceSound, 5.0f, true, 0.0f);
-		}
-	}
+	HasPlayedEnemyKilledSound = true;
 
+	GetWorldTimerManager().SetTimer(THandler_VoiceSoundReset, this, &ACombatCharacter::ResetVoiceSound, 5.0f, false);
 }
 
 void ACombatCharacter::ResetVoiceSound()

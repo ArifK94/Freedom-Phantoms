@@ -135,6 +135,8 @@ private:
 	FTimerHandle THandler_LastSeenEnemy;
 
 
+	bool HasPlayedTargetFoundSound;
+
 public:
 	ACombatAIController();
 
@@ -149,7 +151,7 @@ private:
 		void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
 
 	UFUNCTION()
-	void OnOrderReceived(UCommanderRecruit* RecruitInfo);
+		void OnOrderReceived(UCommanderRecruit* RecruitInfo);
 	bool HasAssignedOrderEvent;
 
 	void MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
@@ -178,7 +180,9 @@ private:
 	void CheckCommanderOrder();
 
 	void FindCover();
-	
+
+	void TargetFound();
+
 	void GenerateCoverPoints(AActor* TargetActor);
 
 	FVector GetClosestCoverPoint(AActor* TargetActor);

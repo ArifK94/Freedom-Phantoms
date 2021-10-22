@@ -161,7 +161,7 @@ void ACommanderCharacter::Recruit()
 		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
 	}
 
-	PlayVoiceSound(GetVoiceClipsSet()->RecruitSound, follower);
+	PlayCommunicationSound(GetVoiceClipsSet()->RecruitSound, follower);
 
 	ResetTargetActor();
 }
@@ -222,7 +222,7 @@ void ACommanderCharacter::Attack(bool CommandAll)
 		}
 	}
 
-	PlayVoiceSound(GetVoiceClipsSet()->AttackSound, CurrentRecruit);
+	PlayCommunicationSound(GetVoiceClipsSet()->AttackSound, CurrentRecruit);
 
 }
 
@@ -274,7 +274,7 @@ void ACommanderCharacter::DefendArea(bool CommandAll)
 	}
 
 
-	PlayVoiceSound(GetVoiceClipsSet()->DefendSound, CurrentRecruit);
+	PlayCommunicationSound(GetVoiceClipsSet()->DefendSound, CurrentRecruit);
 }
 
 void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
@@ -319,7 +319,7 @@ void ACommanderCharacter::FollowCommander(bool CommandAll)
 		IncrementCurrentRecruit();
 	}
 
-	PlayVoiceSound(GetVoiceClipsSet()->FollowSound, CurrentRecruit);
+	PlayCommunicationSound(GetVoiceClipsSet()->FollowSound, CurrentRecruit);
 }
 
 
@@ -538,14 +538,11 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 
 }
 
-void ACommanderCharacter::PlayVoiceSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit)
+void ACommanderCharacter::PlayCommunicationSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit)
 {
 	// Play acknowledged sound after commander's voice sound has finished playing the order
-	if (SoundBase != nullptr)
-	{
-		VoiceAudioComponent->Sound = SoundBase;
-		VoiceAudioComponent->Play();
-	}
+	PlayVoiceSound(SoundBase);
+
 
 	GetWorldTimerManager().ClearTimer(TargetRecruit->THandler_ResponseSound);
 	FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(this, &ACommanderCharacter::PlayAcknowledgeSound, TargetRecruit);
@@ -558,8 +555,7 @@ void ACommanderCharacter::PlayAcknowledgeSound(UCommanderRecruit* TargetRecruit)
 		return;
 	}
 
-	TargetRecruit->Recruit->getVoiceAudioComponent()->Sound = TargetRecruit->Recruit->GetVoiceClipsSet()->AcknowledgeCommandSound;
-	TargetRecruit->Recruit->getVoiceAudioComponent()->Play();
+	TargetRecruit->Recruit->PlayVoiceSound(TargetRecruit->Recruit->GetVoiceClipsSet()->AcknowledgeCommandSound);
 }
 
 void ACommanderCharacter::ResetTargetActor()

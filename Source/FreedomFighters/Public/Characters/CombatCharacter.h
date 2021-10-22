@@ -119,7 +119,6 @@ private:
 
 	bool IsInAimOffSetRotation;
 
-	bool HasPlayedTargetFoundSound;
 	bool HasPlayedEnemyKilledSound;
 
 	FTimerHandle THandler_VoiceSoundReset;
@@ -185,16 +184,6 @@ public:
 
 	void ToggleLight();
 
-	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
-		void TargetFound();
-
-	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
-		ACombatCharacter* FindNearestFriendly();
-
-	UFUNCTION(BlueprintCallable, Category = "Combat Actions")
-		ACombatCharacter* FindNearestEnemy(float TargetRange);
-
-
 	void FriendlyKilled();
 
 	void EnemyKilled();
@@ -210,7 +199,6 @@ public:
 	void DropMountedGun(bool ClearMG = true);
 
 	virtual void SetIsRepellingDown(bool IsRappelling) override;
-
 
 private:
 

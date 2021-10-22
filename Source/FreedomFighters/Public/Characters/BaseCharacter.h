@@ -75,6 +75,10 @@ private:
 
 #pragma endregion
 
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* VoiceAudioComponent;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName HeadSocket;
@@ -188,9 +192,6 @@ protected:
 		UPostProcessComponent* CharacterOutlinePPComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UAudioComponent* VoiceAudioComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FAircraftSeating CurrentAircraftSeat;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -280,6 +281,8 @@ public:
 	virtual void SetIsRepellingDown(bool IsRappelling);
 
 	void UpdateAimCamera();
+
+	void PlayVoiceSound(USoundBase* Sound);
 
 	void PostDeath();
 
@@ -385,10 +388,6 @@ public:
 
 	UPostProcessComponent* getCharacterOutlinePPComp() {
 		return  CharacterOutlinePPComp;
-	}
-
-	UAudioComponent* getVoiceAudioComponent() {
-		return VoiceAudioComponent;
 	}
 
 	void SetCharacterDirection(float Value) {
