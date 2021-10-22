@@ -915,7 +915,7 @@ void ACustomPlayerController::BeginCheckInteractable()
 
 void ACustomPlayerController::DetectInteractable(AActor* Actor)
 {
-	FocusedInteractableActor = Actor;
+	FocusedInteractableActor = nullptr;
 	FString ActionMessage = "";
 	FString KeyInputDisplayName = InteractKeyDisplayName;
 
@@ -945,6 +945,7 @@ void ACustomPlayerController::DetectInteractable(AActor* Actor)
 
 		if (IsInteractableUsable)
 		{
+			FocusedInteractableActor = Actor;
 			KeyInputDisplayName = IInteractable::Execute_GetKeyDisplayName(Actor);
 			ActionMessage = IInteractable::Execute_OnInteractionFound(Actor);
 		}
