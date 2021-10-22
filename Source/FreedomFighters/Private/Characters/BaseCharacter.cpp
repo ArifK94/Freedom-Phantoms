@@ -247,11 +247,19 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 
 		GetCharacterMovement()->StopMovementImmediately();
 
-		if (VoiceClipsSet->DeathSound != nullptr)
+		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
+
+		// Play death sound if not recieved a headshot
+		if (SurfaceType != SURFACE_HEAD)
 		{
-			VoiceAudioComponent->Sound = VoiceClipsSet->DeathSound;
-			VoiceAudioComponent->Play();
+			if (VoiceClipsSet->DeathSound != nullptr)
+			{
+				VoiceAudioComponent->Sound = VoiceClipsSet->DeathSound;
+				VoiceAudioComponent->Play();
+			}
 		}
+
+
 
 		PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
 
