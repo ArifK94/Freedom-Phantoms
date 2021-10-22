@@ -211,6 +211,8 @@ void ACombatAIController::BeginPlay()
 	StayCombatAlert = false;
 
 	LastSeenTimeCurrent = LastSeenDuration;
+
+	Init();
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -220,7 +222,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	// get owning character
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
 
-	Init();
 
 	CanFindCover = true;
 
