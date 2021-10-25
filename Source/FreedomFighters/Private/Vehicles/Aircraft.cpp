@@ -25,6 +25,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AIController.h"
+#include "NavigationSystem.h"
 
 AAircraft::AAircraft()
 {
@@ -72,14 +73,19 @@ AAircraft::AAircraft()
 	TotalLaps = 0;
 	CurrentWeaponIndex = 0;
 	CameraSwitchDelay = .5f;
+	RandomNavPointRadius = 1000.f;
 
 	UseFollowCamNavigation = false;
 	HighlightCharacters = false;
+	FollowTargetLocation = false;
 
 	KillConfirmedParamName = "KillConfirmed";
 	SingleKillIndex = 0;
 	DoubleKillIndex = 1;
 	MultiKillIndex = 2;
+
+	SpawnLocationMin = FVector(-10.f, -10.f, 10.f);
+	SpawnLocationMax = FVector(10.f, 10.f, 10.f);
 }
 
 void AAircraft::AddUIWidget()
@@ -119,6 +125,8 @@ void AAircraft::BeginPlay()
 {
 	Super::BeginPlay();
 
+	EngineAudio->Play();
+
 	ThermalVisionPPComp->bEnabled = false;
 	CreateThermalMatInstances();
 
@@ -129,9 +137,10 @@ void AAircraft::BeginPlay()
 
 	SpawnWeapon();
 
-	EngineAudio->Play();
-
 	SpawnPassenger();
+
+	// Call after spawning passengers, otherwise character movement component will force characters to be on the ground
+	SpawnRandomLocation();
 }
 
 void AAircraft::Tick(float DeltaTime)
@@ -155,45 +164,90 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 		FVector CollisionLocation = GetActorLocation();
 		AAircraftSplinePath* CollidedPath = Cast<AAircraftSplinePath>(OtherActor);
 
-		if (CollidedPath)
-		{
-			FVehicleSplinePoint CurrentSplinePoint = CollidedPath->GetVehicleSplinePoint(CollisionLocation);
-
-			if (CurrentSplinePoint.PointIndex != -1)
-			{
-				CurrentAircraftMovement = CurrentSplinePoint.MovementType;
-
-				if (CurrentSplinePoint.AffectSpeedType == AircraftSpeedType::Specified)
-				{
-					// adjust speed
-					CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.AircraftDuration);
-				}
-				else
-				{
-					CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
-				}
-			}
+		// if collided with another aircraft path then ignore then do not proceed
+		if (CollidedPath != AircraftPath) {
+			return;
 		}
+
+		// find current spline point
+		FVehicleSplinePoint CurrentSplinePoint = CollidedPath->GetVehicleSplinePoint(CollisionLocation);
+
+		// if current spline point not found 
+		if (CurrentSplinePoint.PointIndex == -1) {
+			return;
+		}
+
+		// update the aircraft movement type
+		CurrentAircraftMovement = CurrentSplinePoint.MovementType;
+
+		// adjust path duration to change speed if specified
+		if (CurrentSplinePoint.AffectSpeedType == AircraftSpeedType::Specified)
+		{
+			
+			CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.AircraftDuration);
+		}
+		else
+		{
+			CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+		}
+
+
 	}
 }
 
 void AAircraft::FindPath()
 {
-	// if already assigned a path then return
-	if (AircraftPath != nullptr)
+	if (FollowTargetLocation)
 	{
-		return;
+		FOnTimelineFloat TimelineProgress;
+		TimelineProgress.BindUFunction(this, FName("MoveToLocation"));
+		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+		CurveTimeline.SetLooping(false);
+		CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+		CurveTimeline.PlayFromStart();
 	}
-
-	TArray<AActor*> TargetActor;
-	UGameplayStatics::GetAllActorsWithTag(GetWorld(), AircraftPathTagName, TargetActor);
-
-	for (AActor* Actor : TargetActor)
+	else
 	{
-		AircraftPath = Cast<AAircraftSplinePath>(Actor);
-
+		// if already assigned a path then return
 		if (AircraftPath != nullptr)
 		{
+			return;
+		}
+
+		AAircraftSplinePath* ClosestPath = nullptr;
+		float ClosestDistance = 0.0f;
+		TArray<AActor*> TargetActor;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), AircraftPathTagName, TargetActor);
+
+		for (AActor* Actor : TargetActor)
+		{
+			auto Path = Cast<AAircraftSplinePath>(Actor);
+
+			if (Path)
+			{
+				float Distance = UKismetMathLibrary::Vector_Distance(TargetDestination, Path->GetActorLocation());
+
+				if (ClosestPath == nullptr)
+				{
+					ClosestPath = Path;
+					ClosestDistance = Distance;
+				}
+				else
+				{
+					if (Distance < ClosestDistance)
+					{
+						ClosestPath = Path;
+						ClosestDistance = Distance;
+					}
+				}
+			}
+
+		}
+
+		if (ClosestPath)
+		{
+			AircraftPath = ClosestPath;
+
 			// setup time line for following the path
 			if (CurveFloat)
 			{
@@ -203,7 +257,6 @@ void AAircraft::FindPath()
 				CurveTimeline.SetLooping(false);
 				CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
 				CurveTimeline.PlayFromStart();
-				break;
 			}
 		}
 	}
@@ -232,6 +285,19 @@ void AAircraft::FollowSplinePath(float Value)
 		{
 			OnDestroy();
 		}
+	}
+}
+
+void AAircraft::MoveToLocation(float Value)
+{
+	float TargetX = UKismetMathLibrary::Lerp(GetActorLocation().X, TargetDestination.X, Value);
+	float TargetY = UKismetMathLibrary::Lerp(GetActorLocation().Y, TargetDestination.Y, Value);
+
+	SetActorLocation(FVector(TargetX, TargetY, GetActorLocation().Z));
+
+	if (Value >= 1.f)
+	{
+		CurrentAircraftMovement = TargetLocReachedAircraftMovementType;
 	}
 }
 
@@ -303,6 +369,39 @@ void AAircraft::SpawnPassenger()
 				OccupiedSeats.Add(HeliSeat);
 			}
 		}
+	}
+}
+
+void AAircraft::SpawnRandomLocation()
+{
+	FindNearestNav();
+
+	// Set for random spawn location from target location
+	if (FollowTargetLocation)
+	{
+		float X = UKismetMathLibrary::RandomFloatInRange(SpawnLocationMin.X * TargetDestination.X, SpawnLocationMax.X * TargetDestination.X);
+		float Y = UKismetMathLibrary::RandomFloatInRange(SpawnLocationMin.Y * TargetDestination.Y, SpawnLocationMax.Y * TargetDestination.Y);
+		float Z = UKismetMathLibrary::RandomFloatInRange(SpawnLocationMin.Z * TargetDestination.Z, SpawnLocationMax.Z * TargetDestination.Z);
+
+		SetActorLocation(FVector(X, Y, Z));
+
+		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetDestination);
+
+		// Look towards target location
+		SetActorRotation(TargetRot);
+	}
+}
+
+void AAircraft::FindNearestNav()
+{
+	FVector TargetDest = TargetDestination;
+	FNavLocation NavLocation;
+	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+	bool navResult = NavigationArea->GetRandomReachablePointInRadius(TargetDest, RandomNavPointRadius, NavLocation);
+
+	if (navResult)
+	{
+		TargetDestination = NavLocation.Location;
 	}
 }
 
@@ -829,35 +928,43 @@ void AAircraft::WaitForRapelling()
 			if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
 			{
 				FAircraftSeating Passenger = OccupiedSeats[i];
+				auto Character = Passenger.CharacterObj;
 
-				if (!Passenger.CharacterObj->GetIsInAircraft()) {
-					OccupiedSeats.RemoveAt(i);
-				}
-				else
+				if (Character)
 				{
-					if (!Passenger.CharacterObj->IsRepellingDown())
+					
+					if (!Character->GetIsInAircraft())
 					{
-						if (Passenger.isRopeLeftSide)
+						OccupiedSeats.RemoveAt(i);
+					}
+					else
+					{
+						if (!Character->IsRepellingDown())
 						{
-							if (!isLeftRappelOccupied)
+							if (Passenger.isRopeLeftSide)
 							{
-								Passenger.CharacterObj->SetActorLocationAndRotation(Mesh->GetSocketLocation(LeftRopeSocket), FRotator::ZeroRotator);
-								Passenger.CharacterObj->SetIsRepellingDown(true);
-								isLeftRappelOccupied = true;
+								if (!isLeftRappelOccupied)
+								{
+									Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(LeftRopeSocket), FRotator::ZeroRotator);
+									Character->SetIsRepellingDown(true);
+									isLeftRappelOccupied = true;
+								}
 							}
-						}
-						else
-						{
-							if (!isRightRappelOccupied)
+							else
 							{
-								Passenger.CharacterObj->SetActorLocationAndRotation(Mesh->GetSocketLocation(RightRopeSocket), FRotator::ZeroRotator);
-								Passenger.CharacterObj->SetIsRepellingDown(true);
-								isRightRappelOccupied = true;
+								if (!isRightRappelOccupied)
+								{
+									Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(RightRopeSocket), FRotator::ZeroRotator);
+									Character->SetIsRepellingDown(true);
+									isRightRappelOccupied = true;
+								}
 							}
 						}
 					}
 
 				}
+
+
 			}
 		}
 	}
@@ -886,11 +993,10 @@ void AAircraft::UpdateOccupiedSeats()
 		if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
 		{
 			FAircraftSeating Passenger = OccupiedSeats[i];
-			if (Passenger.CharacterObj) {
-
-				UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Passenger.CharacterObj->GetComponentByClass(UHealthComponent::StaticClass()));
-
-				if (!CurrentHealth->IsAlive())
+			auto Character = Passenger.CharacterObj;
+			if (Character)
+			{
+				if (Character->GetHealthComp() && !Character->GetHealthComp()->IsAlive())
 				{
 					OccupiedSeats.RemoveAt(i);
 				}

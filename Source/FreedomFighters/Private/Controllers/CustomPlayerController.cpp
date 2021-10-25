@@ -1089,12 +1089,14 @@ void ACustomPlayerController::UseInteractableActor()
 
 	if (CurrentSupportPackage)
 	{
-		ControlledAircraft = CurrentSupportPackage->SpawnAircraft(OwningCombatCharacter, this);
+		AAircraft* Aircraft = CurrentSupportPackage->SpawnAircraft(OwningCombatCharacter, this);
 
-		if (ControlledAircraft)
+		if (Aircraft)
 		{
 			if (CurrentSupportPackage->GetIsControllable())
 			{
+				ControlledAircraft = Aircraft;
+
 				OwningCombatCharacter->DisableInput(this);
 				AutoReceiveInput = EAutoReceiveInput::Disabled;
 				ControlledAircraft->SetPlayerControl(this);
@@ -1103,12 +1105,13 @@ void ACustomPlayerController::UseInteractableActor()
 				// if controlling aircraft then do not check for interactions
 				GetWorldTimerManager().ClearTimer(THandler_CheckInteractable);
 			}
+
+			// update support package event for UI
+			SupportPackages.RemoveAt(SupportPackages.Find(CurrentSupportPackage));
+			SortSupportPackages();
+			OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, CurrentSupportPackageIndex, false);
 		}
 
-		// update support package event for UI
-		SupportPackages.RemoveAt(SupportPackages.Find(CurrentSupportPackage));
-		SortSupportPackages();
-		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, CurrentSupportPackageIndex, false);
 	}
 }
 

@@ -119,6 +119,28 @@ private:
 		int MultiKillIndex;
 
 
+	/** Move to a target location if set true */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Location", meta = (AllowPrivateAccess = "true"))
+		bool FollowTargetLocation;
+
+	/** If follow target location, then it needs to randomly spawn from target location, MIN coords */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Location", meta = (AllowPrivateAccess = "true"))
+		FVector SpawnLocationMin;
+
+	/** If follow target location, then it needs to randomly spawn from target location, MAX coords */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Location", meta = (AllowPrivateAccess = "true"))
+		FVector SpawnLocationMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Location", meta = (AllowPrivateAccess = "true"))
+		FVector TargetDestination;
+
+	/** The radius for random point on the navmesh when setting the target destination */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Location", meta = (AllowPrivateAccess = "true"))
+		float RandomNavPointRadius;
+
+	/** Set the movement once is reaches the target, eg. hover over target location */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Location", meta = (AllowPrivateAccess = "true"))
+		EAircraftMovement TargetLocReachedAircraftMovementType;
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -238,14 +260,25 @@ private:
 	UFUNCTION()
 		void FollowSplinePath(float Value);
 
+	/** Fly to random location, useful for transport aircrafts which would allow characters to rappel down */
+	UFUNCTION()
+		void MoveToLocation(float Value);
+
 	UFUNCTION()
 		void OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill);
 
 	void SpawnPassenger();
 
+	UFUNCTION(BlueprintCallable)
+		void SpawnRandomLocation();
+
 	void SpawnWeapon();
 
 	void UpdateWeaponView();
+
+	/** When target destination is given, the nearest navmesh should be found which allow AI to rappel for instance */
+	UFUNCTION(BlueprintCallable)
+		void FindNearestNav();
 
 	void ShowOutlines(bool CanShow);
 
@@ -263,6 +296,8 @@ private:
 	/** Called when taking control of aircraft */
 	void InitialContolSetup();
 
+
+	/** Play aircraft crew random conversations at intervals */
 	void PlayRandomPilotSound();
 
 	void OnDestroy();

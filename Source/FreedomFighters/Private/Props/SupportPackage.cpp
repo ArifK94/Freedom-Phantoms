@@ -41,7 +41,6 @@ void ASupportPackage::OnPickup_Implementation()
 			PlayVoiceOverSound(OwnerHealth->GetSelectedFaction());
 		}
 	}
-
 }
 
 bool ASupportPackage::OnUseInteraction_Implementation()
