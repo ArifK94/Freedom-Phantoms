@@ -183,7 +183,7 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 		// adjust path duration to change speed if specified
 		if (CurrentSplinePoint.AffectSpeedType == AircraftSpeedType::Specified)
 		{
-			
+
 			CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.AircraftDuration);
 		}
 		else
@@ -223,7 +223,8 @@ void AAircraft::FindPath()
 		{
 			auto Path = Cast<AAircraftSplinePath>(Actor);
 
-			if (Path)
+			// check if path is not occupied
+			if (Path && !Path->GetIsPathOccupied())
 			{
 				float Distance = UKismetMathLibrary::Vector_Distance(TargetDestination, Path->GetActorLocation());
 
@@ -247,6 +248,7 @@ void AAircraft::FindPath()
 		if (ClosestPath)
 		{
 			AircraftPath = ClosestPath;
+			AircraftPath->SetIsPathOccupied(true);
 
 			// setup time line for following the path
 			if (CurveFloat)
@@ -894,82 +896,87 @@ void AAircraft::PlayRandomPilotSound()
 
 void AAircraft::WaitForRapelling()
 {
-	if (CurrentAircraftMovement == EAircraftMovement::Rappel && OccupiedSeats.Num() > 0)
+	if (CurrentAircraftMovement != EAircraftMovement::Rappel || OccupiedSeats.Num() <= 0) {
+		return;
+	}
+
+	// to check if all have rapelled
+	bool DoesSideGunnerRemain = false;
+
+	CurveTimeline.Stop();
+
+	// Create Rope objects
+	if (RopeClass)
 	{
-		CurveTimeline.Stop();
-
-		if (RopeClass != nullptr)
+		if (RopeLeft == nullptr)
 		{
-			if (RopeLeft == nullptr)
-			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.Owner = this;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				RopeLeft = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-				RopeLeft->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
-			}
-
-			if (RopeRight == nullptr)
-			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.Owner = this;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-				RopeRight = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-				RopeRight->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
-			}
-
+			RopeLeft = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			RopeLeft->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
 		}
 
-
-		for (int i = 0; i < OccupiedSeats.Num(); i++)
+		if (RopeRight == nullptr)
 		{
-			if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
-			{
-				FAircraftSeating Passenger = OccupiedSeats[i];
-				auto Character = Passenger.CharacterObj;
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				if (Character)
+			RopeRight = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			RopeRight->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
+		}
+
+	}
+
+
+	for (int i = 0; i < OccupiedSeats.Num(); i++)
+	{
+		if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
+		{
+			FAircraftSeating Passenger = OccupiedSeats[i];
+			auto Character = Passenger.CharacterObj;
+
+			if (Character)
+			{
+				DoesSideGunnerRemain = true;
+				if (!Character->GetIsInAircraft())
 				{
-					
-					if (!Character->GetIsInAircraft())
+					OccupiedSeats.RemoveAt(i);
+					DoesSideGunnerRemain = false;
+				}
+				else
+				{
+					if (!Character->IsRepellingDown())
 					{
-						OccupiedSeats.RemoveAt(i);
-					}
-					else
-					{
-						if (!Character->IsRepellingDown())
+						if (Passenger.isRopeLeftSide)
 						{
-							if (Passenger.isRopeLeftSide)
+							if (!isLeftRappelOccupied)
 							{
-								if (!isLeftRappelOccupied)
-								{
-									Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(LeftRopeSocket), FRotator::ZeroRotator);
-									Character->SetIsRepellingDown(true);
-									isLeftRappelOccupied = true;
-								}
+								Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(LeftRopeSocket), FRotator::ZeroRotator);
+								Character->SetIsRepellingDown(true);
+								isLeftRappelOccupied = true;
 							}
-							else
+						}
+						else
+						{
+							if (!isRightRappelOccupied)
 							{
-								if (!isRightRappelOccupied)
-								{
-									Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(RightRopeSocket), FRotator::ZeroRotator);
-									Character->SetIsRepellingDown(true);
-									isRightRappelOccupied = true;
-								}
+								Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(RightRopeSocket), FRotator::ZeroRotator);
+								Character->SetIsRepellingDown(true);
+								isRightRappelOccupied = true;
 							}
 						}
 					}
-
 				}
-
 
 			}
 		}
 	}
 
-	if (OccupiedSeats.Num() <= 0)
+
+	if (!DoesSideGunnerRemain)
 	{
 		if (RopeLeft) {
 			RopeLeft->DropRope();
@@ -979,9 +986,10 @@ void AAircraft::WaitForRapelling()
 			RopeRight->DropRope();
 		}
 
+		CurrentAircraftMovement = EAircraftMovement::MovingForward;
+
 		CurveTimeline.Play();
 
-		CurrentAircraftMovement = EAircraftMovement::MovingForward;
 	}
 }
 
@@ -1033,6 +1041,12 @@ void AAircraft::OnDestroy()
 		{
 			node->Marker->Destroy();
 		}
+	}
+
+	// Free up the path for another aircraft to use
+	if (AircraftPath)
+	{
+		AircraftPath->SetIsPathOccupied(false);
 	}
 
 

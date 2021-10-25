@@ -1139,7 +1139,7 @@ void ACustomPlayerController::SortSupportPackages()
 		}
 	}
 
-	if (SupportPackages.Num() > 0)
+	if (SupportPackages.Num() > 0 && CurrentSupportPackageIndex - 1 > 0)
 	{
 		CurrentSupportPackageIndex = CurrentSupportPackageIndex - 1;
 		CurrentSupportPackage = SupportPackages[CurrentSupportPackageIndex];
