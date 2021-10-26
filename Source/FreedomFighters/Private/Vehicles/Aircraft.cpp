@@ -944,7 +944,6 @@ void AAircraft::WaitForRapelling()
 				if (!Character->GetIsInAircraft())
 				{
 					OccupiedSeats.RemoveAt(i);
-					DoesSideGunnerRemain = false;
 				}
 				else
 				{
@@ -957,6 +956,7 @@ void AAircraft::WaitForRapelling()
 								Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(LeftRopeSocket), FRotator::ZeroRotator);
 								Character->SetIsRepellingDown(true);
 								isLeftRappelOccupied = true;
+								DoesSideGunnerRemain = true;
 							}
 						}
 						else
@@ -966,6 +966,7 @@ void AAircraft::WaitForRapelling()
 								Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(RightRopeSocket), FRotator::ZeroRotator);
 								Character->SetIsRepellingDown(true);
 								isRightRappelOccupied = true;
+								DoesSideGunnerRemain = true;
 							}
 						}
 					}
