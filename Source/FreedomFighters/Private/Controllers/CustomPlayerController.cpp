@@ -19,6 +19,7 @@
 #include "Kismet/KismetStringLibrary.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "Camera/CameraComponent.h"
@@ -258,9 +259,9 @@ void ACustomPlayerController::PauseGame()
 		return;
 	}
 
+	// resume game
 	if (UGameplayStatics::IsGamePaused(World))
 	{
-		// resume game
 		if (PauseMenuWidget != nullptr && PauseMenuWidget->IsInViewport())
 		{
 			PauseMenuWidget->RemoveFromParent();
@@ -268,10 +269,22 @@ void ACustomPlayerController::PauseGame()
 
 		SetShowMouseCursor(false);
 
+		for (int i = 0; i < OnViewWidgets.Num(); i++)
+		{
+			OnViewWidgets[i]->SetVisibility(ESlateVisibility::Visible);
+		}
+
 		UGameplayStatics::SetGamePaused(World, false);
 	}
-	else
-	{	// pause game
+	else // pause game
+	{	
+		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), OnViewWidgets, UUserWidget::StaticClass(), false);
+
+		for (int i = 0; i < OnViewWidgets.Num(); i++)
+		{
+			OnViewWidgets[i]->SetVisibility(ESlateVisibility::Collapsed);
+		}
+
 		if (PauseMenuWidgetClass)
 		{
 			PauseMenuWidget = CreateWidget<UUserWidget>(World, PauseMenuWidgetClass);

@@ -47,6 +47,10 @@ private:
 
 	FTimerHandle THandler_PostDeath;
 
+	// Stores the existing viewport widgets, used to toggle visibility of widgets on pause
+	TArray<UUserWidget*> OnViewWidgets;
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AMapCamera* MapCamera;
 

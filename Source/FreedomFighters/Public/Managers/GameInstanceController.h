@@ -17,10 +17,6 @@ class FREEDOMFIGHTERS_API UGameInstanceController : public UGameInstance
 
 private:
 
-	///** Some functionalities such as loading and setting audio settings do not take effect until a few seconds the game starts */
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	//	float InitDelay;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> LoadingScreenWidgetClass;
 	UUserWidget* LoadingScreenWidget;
