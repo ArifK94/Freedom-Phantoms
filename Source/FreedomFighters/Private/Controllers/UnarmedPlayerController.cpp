@@ -25,6 +25,8 @@ void AUnarmedPlayerController::InitInputComponent()
 	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
 }
 
+void AUnarmedPlayerController::InitBeginPlayUncommon() {}
+
 void AUnarmedPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);

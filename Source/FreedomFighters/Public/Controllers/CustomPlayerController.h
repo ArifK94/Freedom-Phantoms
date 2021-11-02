@@ -150,7 +150,17 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual void BeginPlay() override;
+
+	// Rather than copying entire amount of code to be inherited by subclasses, common functionality should be passed here
+	void InitBeginPlayCommon();
+
+	/** This exists to help unarmed controller class not inherit all combat begin play functions */
+	virtual void InitBeginPlayUncommon();
+
+
 	virtual void Tick(float DeltaTime) override;
+
+
 
 	void AddUIWidgets();
 

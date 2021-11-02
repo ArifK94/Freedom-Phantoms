@@ -17,6 +17,9 @@ class FREEDOMFIGHTERS_API AUnarmedPlayerController : public ACustomPlayerControl
 private:
 	virtual void InitInputComponent() override;
 
+	virtual void InitBeginPlayUncommon() override;
+
+
 	virtual void OnPossess(APawn* InPawn) override;
 
 };

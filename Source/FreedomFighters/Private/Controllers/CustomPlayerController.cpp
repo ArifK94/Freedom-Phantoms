@@ -146,6 +146,11 @@ void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitBeginPlayCommon();
+}
+
+void ACustomPlayerController::InitBeginPlayCommon()
+{
 	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
 
 	if (GameStateBaseCustom)
@@ -190,27 +195,9 @@ void ACustomPlayerController::BeginPlay()
 		HealthComp->SetRegenerateHealth(true);
 		PlayerFaction = HealthComp->GetSelectedFaction();
 		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthChanged);
-
-
-		for (ASupportPackage* SP : GameInstanceController->GetSupportPackage())
-		{
-			SupportPackages.Add(SP);
-		}
-
-		if (SupportPackages.Num() > 0)
-		{
-			CurrentSupportPackageIndex = SupportPackages.Num() - 1;
-			CurrentSupportPackage = SupportPackages[CurrentSupportPackageIndex];
-
-			CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
-			CurrentSupportPackage->PlayInteractSound();
-		}
-		else
-		{
-			CurrentSupportPackage = nullptr;
-			CurrentSupportPackageIndex = -1;
-		}
 	}
+
+	InitBeginPlayUncommon();
 
 	// Get Map camera
 	AActor* MapActor = UGameplayStatics::GetActorOfClass(GetWorld(), AMapCamera::StaticClass());
@@ -232,6 +219,31 @@ void ACustomPlayerController::BeginPlay()
 	}
 
 	OnInteractionFound.Broadcast("", "");
+}
+
+void ACustomPlayerController::InitBeginPlayUncommon()
+{
+	if (GameInstanceController)
+	{
+		for (ASupportPackage* SP : GameInstanceController->GetSupportPackage())
+		{
+			SupportPackages.Add(SP);
+		}
+
+		if (SupportPackages.Num() > 0)
+		{
+			CurrentSupportPackageIndex = SupportPackages.Num() - 1;
+			CurrentSupportPackage = SupportPackages[CurrentSupportPackageIndex];
+
+			CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
+			CurrentSupportPackage->PlayInteractSound();
+		}
+		else
+		{
+			CurrentSupportPackage = nullptr;
+			CurrentSupportPackageIndex = -1;
+		}
+	}
 }
 
 void ACustomPlayerController::PauseGame()
