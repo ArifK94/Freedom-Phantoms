@@ -1075,18 +1075,19 @@ void ACustomPlayerController::PickupInteractable()
 void ACustomPlayerController::UseInteractableActor()
 {
 	// only control one aircraft at a time
-	if (CollectedInteractableActor == nullptr || OwningCombatCharacter->IsRepellingDown() || ControlledAircraft != nullptr) {
+	if (OwningCombatCharacter->IsRepellingDown() || ControlledAircraft != nullptr) {
 		return;
 	}
 
-	// Use the interactable
-	if (!IInteractable::Execute_OnUseInteraction(CollectedInteractableActor)) {
+	// Can use the interactable?
+	if (CollectedInteractableActor  && !IInteractable::Execute_OnUseInteraction(CollectedInteractableActor)) {
 		return;
 	}
 
 	// drop the MG if using it so that the use of the interactable can be played with an animation
 	OwningCombatCharacter->DropMountedGun();
 
+	// Use the support package if player has one
 	if (CurrentSupportPackage)
 	{
 		AAircraft* Aircraft = CurrentSupportPackage->SpawnAircraft(OwningCombatCharacter, this);

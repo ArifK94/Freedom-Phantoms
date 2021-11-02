@@ -22,7 +22,7 @@ void AUnarmedPlayerController::InitInputComponent()
 
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::ToggleCrouch);
 
-	InputComponent->BindAction("UseInteractable", IE_Pressed, this, &ACustomPlayerController::UseInteractableActor);
+	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
 }
 
 void AUnarmedPlayerController::OnPossess(APawn* InPawn)
