@@ -12,6 +12,8 @@ ACommanderCharacter::ACommanderCharacter()
 {
 	CurrentRecruitIndex = 0;
 	MaxRecruits = 12;
+
+	CanRecruit = true;
 }
 
 void ACommanderCharacter::AddUIWidget()
@@ -35,9 +37,10 @@ void ACommanderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ActiveRecruits.Num() <= MaxRecruits) {
+	if (CanRecruit && ActiveRecruits.Num() <= MaxRecruits) {
 		CheckRecruit();
 	}
+
 	UpdateActiveRecruits();
 }
 

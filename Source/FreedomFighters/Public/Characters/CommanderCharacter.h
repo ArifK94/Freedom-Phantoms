@@ -74,6 +74,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		ACombatCharacter* PotentialRecruit;
 
+	/** Used to prevent recruiting while in HQ or other places */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		bool CanRecruit;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		uint8 CurrentRecruitIndex;
 
@@ -172,4 +176,7 @@ private:
 
 protected:
 	virtual void Tick(float DeltaTime) override;
+
+public:
+	void SetCanRecruit(bool Value) { CanRecruit = Value; }
 };

@@ -26,6 +26,7 @@ class FREEDOMFIGHTERS_API ACustomPlayerController : public APlayerController
 
 protected:
 	ACombatCharacter* OwningCombatCharacter;
+	ACommanderCharacter* OwningCommander;
 
 	FTimerHandle THandler_CheckInteractable;
 private:
@@ -37,7 +38,6 @@ private:
 
 
 	APawn* OwningPawn;
-	ACommanderCharacter* OwningCommander;
 	UGameInstanceController* GameInstanceController;
 	AGameStateBaseCustom* GameStateBaseCustom;
 	AMountedGun* MountedGun;

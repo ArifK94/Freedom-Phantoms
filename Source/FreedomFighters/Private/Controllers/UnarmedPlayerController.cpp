@@ -1,8 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Controllers/UnarmedPlayerController.h"
 #include "Characters/CombatCharacter.h"
+#include "Characters/CommanderCharacter.h"
 
 void AUnarmedPlayerController::InitInputComponent()
 {
@@ -32,6 +30,11 @@ void AUnarmedPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	OwningCombatCharacter->HolsterWeapon();
+
+	if (OwningCommander)
+	{
+		OwningCommander->SetCanRecruit(false);
+	}
 
 	BeginCheckInteractable();
 }
