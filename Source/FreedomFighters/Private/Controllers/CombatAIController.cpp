@@ -29,6 +29,11 @@
 
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 {
+	// ensure the owning character received the order
+	if (RecruitInfo->Recruit != OwningCombatCharacter) {
+		return;
+	}
+
 	if (OwningCombatCharacter->IsTakingCover())
 	{
 		OwningCombatCharacter->StopCover();
@@ -42,11 +47,10 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	CurrentCommand = RecruitInfo->CurrentCommand;
 	TargetDestination = RecruitInfo->TargetLocation;
 
-	switch (CurrentCommand)
+	// Defending point should be right where it was ordered to go to
+	if (CurrentCommand == CommanderOrders::Defend)
 	{
-	case CommanderOrders::Defend:
 		TargetRadius = 0.0f;
-		break;
 	}
 
 	CanFindCover = true;
