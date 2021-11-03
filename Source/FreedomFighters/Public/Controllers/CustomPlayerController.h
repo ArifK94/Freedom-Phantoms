@@ -224,6 +224,8 @@ public:
 	virtual void BeginFire();
 	void EndFire();
 
+	void BeginReload();
+
 	void SwitchWeapon();
 	void ToggleThermalVision();
 

@@ -91,21 +91,6 @@ ACombatCharacter::ACombatCharacter()
 	WeaponHandSocket = "weapon_hand";
 }
 
-
-
-//////////////////////////////////////////////////////////////////////////
-// Input
-void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACombatCharacter::BeginReload);
-
-	//PlayerInputComponent->BindAction("EquipWeapon", IE_Pressed, this, &ACombatCharacter::BeginEquipWeapon);
-
-	PlayerInputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACombatCharacter::BeginWeaponSwap);
-}
-
 void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -523,10 +508,6 @@ void ACombatCharacter::swapWeapon()
 		return;
 	}
 
-	//if (!isSwappingWeapon) {
-	//	return;
-	//}
-
 	if (isReloading) {
 		EndReload();
 	}
@@ -787,6 +768,7 @@ void ACombatCharacter::ToggleNightVision()
 		}
 	}
 }
+
 
 void ACombatCharacter::FriendlyKilled()
 {

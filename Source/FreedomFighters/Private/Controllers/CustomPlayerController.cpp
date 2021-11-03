@@ -94,6 +94,8 @@ void ACustomPlayerController::InitInputComponent()
 	InputComponent->BindAction("Fire", IE_Pressed, this, &ACustomPlayerController::BeginFire);
 	InputComponent->BindAction("Fire", IE_Released, this, &ACustomPlayerController::EndFire);
 
+	InputComponent->BindAction("Reload", IE_Pressed, this, &ACustomPlayerController::BeginReload);
+
 	// number keys
 	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
 	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
@@ -900,6 +902,14 @@ void ACustomPlayerController::EndFire()
 	else
 	{
 		OwningCombatCharacter->EndFire();
+	}
+}
+
+void ACustomPlayerController::BeginReload()
+{
+	if (OwningCombatCharacter) 
+	{
+		OwningCombatCharacter->BeginReload();
 	}
 }
 

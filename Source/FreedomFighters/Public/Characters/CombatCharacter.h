@@ -193,15 +193,12 @@ public:
 	virtual void SetIsRepellingDown(bool IsRappelling) override;
 
 private:
-
 	void SpawnHelmet();
 	void SpawnLoadout();
 
 	void UpdateCombatMode();
 
 protected:
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	virtual void BeginPlay() override;
 
 	virtual void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo) override;
