@@ -4,7 +4,6 @@
 #include "Accessories/Loadout.h"
 #include "StructCollection.h"
 #include "Weapons/Weapon.h"
-#include "Weapons/WeaponAttachmentManager.h"
 
 #include "UObject/UObjectGlobals.h"
 

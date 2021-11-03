@@ -120,6 +120,10 @@ private:
 	float LastSeenTimeCurrent;
 	FVector LastSeenPosition;
 
+	/** The sphere radius for recruits to move around a order position so that multiple recruits do not stick together in one place */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		float DestinationRadius;
+
 
 	FTimerHandle THandler_Sprint;
 	FTimerHandle THandler_BeginFire;
@@ -136,6 +140,9 @@ private:
 
 
 	bool HasPlayedTargetFoundSound;
+
+	// To prevent the NPC from constantly finding a new position to target destination
+	bool HasChosenNearTargetDest;
 
 public:
 	ACombatAIController();
@@ -188,6 +195,8 @@ private:
 	FVector GetClosestCoverPoint(AActor* TargetActor);
 
 	void TakeCover();
+
+	FVector FindRandomDestinationPoint();
 
 	/** If AI is stuck, then reset location appropiately */
 	void ResetLocation();

@@ -80,11 +80,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		SelectiveFire selectiveFireMode;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attachment", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class UWeaponAttachmentManager> WeaponAttachmentClass;
-	UWeaponAttachmentManager* WeaponAttachmentObj;
-
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ammo")
 		bool canShowClip;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -331,8 +326,6 @@ public:
 
 	void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket);
 
-	void SpawnWeaponAttachments();
-
 	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
 
 	/** Return bool so it can be used to play sounds if true */
@@ -383,9 +376,6 @@ public:
 	USkeletalMeshComponent* getCharacter() { return CharacterReference; }
 
 	USkeletalMeshComponent* getMeshComp() { return MeshComp; }
-
-	UWeaponAttachmentManager* getWeaponAttachmentObj() { return WeaponAttachmentObj; }
-
 
 	int32 getCurrentAmmo() { return CurrentAmmo; }
 	int32 getCurrentMaxAmmo() { return CurrentMaxAmmo; }

@@ -54,7 +54,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	}
 
 	CanFindCover = true;
-
+	HasChosenNearTargetDest = false;
 
 	MoveToTarget(TargetRadius);
 }
@@ -79,6 +79,8 @@ ACombatAIController::ACombatAIController()
 	ResetMovementCountdown = 5.0f;
 
 	LastSeenDuration = 5.0f;
+
+	DestinationRadius = 300.0f;
 }
 
 void ACombatAIController::Init()
@@ -267,22 +269,14 @@ void ACombatAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (OwningCombatCharacter)
+	if (!HasChosenNearTargetDest && CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal)
 	{
-		if (PerceptionComp != nullptr)
-		{
-			SetVisionAngle();
-		}
-	}
-	else
-	{
-		ClearTimers();
+		auto NearDestination = FindRandomDestinationPoint();
 
-		AActor* OwningCharacter = GetOwner();
-
-		if (OwningCharacter)
+		if (!NearDestination.IsZero())
 		{
-			OwningCharacter->Destroy();
+			MoveToTarget(0.0f);
+			HasChosenNearTargetDest = true;
 		}
 	}
 }
@@ -1121,6 +1115,63 @@ void ACombatAIController::TakeCover()
 
 }
 
+FVector ACombatAIController::FindRandomDestinationPoint()
+{
+	// Assign default target by the destination set
+	FVector TargetDest = TargetDestination;
+
+	FNavLocation NavLocation;
+	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+	bool navResult = NavigationArea->GetRandomReachablePointInRadius(TargetDestination, DestinationRadius, NavLocation);
+
+	if (navResult)
+	{
+
+		//// create a collision sphere
+		//FCollisionShape MyColSphere = FCollisionShape::MakeSphere(DestinationRadius);
+
+		//// create tarray for hit results
+		//TArray<FHitResult> OutHits;
+
+		//// check if something got hit in the sweep
+		//bool isHit = GetWorld()->SweepMultiByChannel(OutHits, TargetDest, NavLocation.Location, FQuat::Identity, ECC_Visibility, MyColSphere);
+
+
+		//if (isHit)
+		//{
+		//	// Is there already a character in that target dest?
+		//	bool DoesCharacterExist = false;
+		//	for (auto& Hit : OutHits)
+		//	{
+		//		AActor* DamagedActor = Hit.GetActor();
+		//		if (DamagedActor)
+		//		{
+		//			UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+		//			if (HealthComponent && HealthComponent->IsAlive())
+		//			{
+		//				DoesCharacterExist = true;
+		//			}
+		//		}
+		//	}
+
+		//	if (!DoesCharacterExist)
+		//	{
+		//		TargetDest = NavLocation.Location;
+		//	}
+		//}
+		//else
+		//{
+		//	TargetDest = NavLocation.Location;
+		//}
+
+		TargetDest = NavLocation.Location;
+
+	}
+
+	return TargetDest;
+}
+
 void ACombatAIController::CheckCommanderOrder()
 {
 	Commander = OwningCombatCharacter->getCommander();
@@ -1168,8 +1219,6 @@ void ACombatAIController::CheckCommanderOrder()
 			OwningCombatCharacter->DropMountedGun();
 		}
 	}
-
-
 }
 
 void ACombatAIController::ResetLocation()

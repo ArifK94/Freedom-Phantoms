@@ -438,13 +438,8 @@ void ACustomPlayerController::OnCharacterHit(UPrimitiveComponent* HitComp, AActo
 
 		bool HasSecondaryReplenished = OwningCombatCharacter->GetSecondaryWeaponObj()->ReplenishAmmo();
 
-		bool HasUnderBarrelReplenished = false;
-		if (OwningCombatCharacter->GetUnderBarrelWeapon()) {
-			OwningCombatCharacter->GetUnderBarrelWeapon()->ReplenishAmmo();
-		}
-
 		bool SuccessfulReplenish = false;
-		if (HasPrimaryReplenished || HasSecondaryReplenished || HasUnderBarrelReplenished)
+		if (HasPrimaryReplenished || HasSecondaryReplenished)
 		{
 			SuccessfulReplenish = true;
 		}

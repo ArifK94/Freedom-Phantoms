@@ -101,8 +101,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AWeapon* secondaryWeaponObj;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		AWeapon* underBarrelWeaponObj;
 	AMountedGun* MountedGun;
 
 
@@ -176,13 +174,7 @@ public:
 
 	void DisableSprint();
 
-	void ToggleUnderBarrelWeapon();
-
 	void SetHandGaurdIK(float Alpha);
-
-	void ToggleLaser();
-
-	void ToggleLight();
 
 	void FriendlyKilled();
 
@@ -238,10 +230,6 @@ public:
 
 	AWeapon* GetPrimaryWeapon() {
 		return primaryWeaponObj;
-	}
-
-	AWeapon* GetUnderBarrelWeapon() {
-		return underBarrelWeaponObj;
 	}
 
 	AWeapon* GetSecondaryWeaponObj(){

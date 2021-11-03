@@ -1,7 +1,6 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponClip.h"
 #include "Weapons/WeaponBullet.h"
-#include "Weapons/WeaponAttachmentManager.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -244,7 +243,6 @@ void AWeapon::BeginPlay()
 
 	SpawnMagazine();
 	ConfigSetup();
-	SpawnWeaponAttachments();
 }
 
 void AWeapon::Fire()
@@ -760,26 +758,6 @@ void AWeapon::SetClipSocket(USkeletalMeshComponent* meshComponent)
 void AWeapon::setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket)
 {
 	MeshComp->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, socket);
-}
-
-void AWeapon::SpawnWeaponAttachments()
-{
-	UWorld* World = GetWorld();
-
-	if (World && WeaponAttachmentClass != NULL)
-	{
-		WeaponAttachmentObj = NewObject<UWeaponAttachmentManager>((UObject*)GetTransientPackage(), WeaponAttachmentClass);
-		WeaponAttachmentObj->SpawnAttachments(MeshComp, this, World);
-
-		if (WeaponAttachmentObj)
-		{
-			if (WeaponAttachmentObj->getUnderBarrelWeaponObj())
-			{
-				HandguardMesh = WeaponAttachmentObj->getUnderBarrelWeaponObj()->getMeshComp();
-			}
-		}
-
-	}
 }
 
 void AWeapon::SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket)

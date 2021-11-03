@@ -3,9 +3,6 @@
 #include "Accessories/Loadout.h"
 #include "Accessories/NightVisionGoggle.h"
 #include "Weapons/Weapon.h"
-#include "Weapons/WeaponAttachmentManager.h"
-#include "Weapons/WeaponTorchlight.h"
-#include "Weapons/WeaponLaser.h"
 #include "Weapons/Pistol.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
@@ -107,13 +104,6 @@ void ACombatCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	//PlayerInputComponent->BindAction("EquipWeapon", IE_Pressed, this, &ACombatCharacter::BeginEquipWeapon);
 
 	PlayerInputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACombatCharacter::BeginWeaponSwap);
-
-	PlayerInputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACombatCharacter::ToggleNightVision);
-
-	PlayerInputComponent->BindAction("ToggleUnderBarrel", IE_Pressed, this, &ACombatCharacter::ToggleUnderBarrelWeapon);
-
-	PlayerInputComponent->BindAction("ToggleLaser", IE_Pressed, this, &ACombatCharacter::ToggleLaser);
-	PlayerInputComponent->BindAction("ToggleLight", IE_Pressed, this, &ACombatCharacter::ToggleLight);
 }
 
 void ACombatCharacter::BeginPlay()
@@ -158,11 +148,6 @@ void ACombatCharacter::BeginPlay()
 	{
 		RetrieveWeaponAnimDataSet();
 		BeginEquipWeapon();
-
-		if (currentWeaponObj->getWeaponAttachmentObj() != NULL)
-		{
-			underBarrelWeaponObj = currentWeaponObj->getWeaponAttachmentObj()->getUnderBarrelWeaponObj();
-		}
 	}
 }
 
@@ -781,24 +766,6 @@ void ACombatCharacter::EndReload()
 
 }
 
-void ACombatCharacter::ToggleUnderBarrelWeapon()
-{
-	if (currentWeaponObj && !isReloading)
-	{
-		if (currentWeaponObj == underBarrelWeaponObj)
-		{
-			currentWeaponObj = primaryWeaponObj;
-		}
-		else
-		{
-			if (underBarrelWeaponObj != NULL)
-			{
-				currentWeaponObj = underBarrelWeaponObj;
-			}
-		}
-	}
-}
-
 void ACombatCharacter::SetHandGaurdIK(float Alpha)
 {
 	// if mounted gun, then do not update hand IK
@@ -818,22 +785,6 @@ void ACombatCharacter::ToggleNightVision()
 		{
 			Headgear->getNightVision()->ToggleVision();
 		}
-	}
-}
-
-void ACombatCharacter::ToggleLaser()
-{
-	if (currentWeaponObj && currentWeaponObj->getWeaponAttachmentObj() != nullptr && currentWeaponObj->getWeaponAttachmentObj()->getLaserObj() != nullptr)
-	{
-		currentWeaponObj->getWeaponAttachmentObj()->getLaserObj()->ToggleBeam();
-	}
-}
-
-void ACombatCharacter::ToggleLight()
-{
-	if (currentWeaponObj && currentWeaponObj->getWeaponAttachmentObj() && currentWeaponObj->getWeaponAttachmentObj()->getTorchLight())
-	{
-		currentWeaponObj->getWeaponAttachmentObj()->getTorchLight()->ToggleBeam();
 	}
 }
 
