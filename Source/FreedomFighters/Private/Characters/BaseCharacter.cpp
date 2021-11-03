@@ -284,6 +284,20 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 	}
 }
 
+void ABaseCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	auto Velocity = UKismetMathLibrary::Abs(GetVelocity().Size());
+
+	auto NormalizedVelo = UKismetMathLibrary::NormalizeToRange(Velocity, 1000.f, 1500.f);
+
+	auto ClampVelo = UKismetMathLibrary::ClampAngle(NormalizedVelo, .0f, 1.f);
+
+	HealthComp->OnDamage(this, ClampVelo * 100.f, NULL, GetInstigatorController(), this, nullptr, nullptr, Hit);
+
+}
+
 void ABaseCharacter::RetrieveVoiceDataSet()
 {
 	if (VoiceClipsDatatable == nullptr || VoiceSetRows.Num() <= 0) {
@@ -802,7 +816,7 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 		// DotProduct < 0.0f Opposite direction
 
 
-	if (Bullet->IsExplosive())
+	if (Bullet && Bullet->IsExplosive())
 	{
 		if (isSprinting)
 		{
@@ -841,7 +855,7 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 		return;
 	}
 
-	if (WeaponCauser->GetWeaponType() == WeaponType::Shotgun)
+	if (WeaponCauser && WeaponCauser->GetWeaponType() == WeaponType::Shotgun)
 	{
 		if (SurfaceType == SURFACE_LEGS)
 		{
