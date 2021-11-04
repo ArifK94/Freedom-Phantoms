@@ -40,7 +40,6 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	}
 
 	OwningCombatCharacter->DropMountedGun();
-	StayCombatAlert = true;
 
 	float TargetRadius = AcceptanceRadius;
 
@@ -55,6 +54,10 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	CanFindCover = true;
 	HasChosenNearTargetDest = false;
+
+	GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
+
+	
 
 	MoveToTarget(TargetRadius);
 }
@@ -124,7 +127,6 @@ void ACombatAIController::Init()
 	// if assigned an MG at the beginning
 	if (OwningCombatCharacter->GetMountedGun())
 	{
-		CurrentMovement = EPathFollowingRequestResult::AlreadyAtGoal;
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 	}
 
@@ -170,13 +172,13 @@ void ACombatAIController::SetVisionAngle()
 
 }
 
-void ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
+EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
-	if (OwningCombatCharacter->GetIsInAircraft()) {
-		return;
+	if (OwningCombatCharacter->GetIsInAircraft() || TargetDestination.IsZero()) {
+		return EPathFollowingRequestResult::Failed;
 	}
 
-	CurrentMovement = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
+	auto CurrentMovement = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
 
 	// Walk when close to desination
 	if (WalkNearTarget)
@@ -205,6 +207,8 @@ void ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 			OwningCombatCharacter->EndSprint();
 		}
 	}
+
+	return CurrentMovement;
 }
 
 void ACombatAIController::BeginPlay()
@@ -213,8 +217,6 @@ void ACombatAIController::BeginPlay()
 	CurrentResetMovementCountdown = ResetMovementCountdown;
 
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
-
-	StayCombatAlert = false;
 
 	LastSeenTimeCurrent = LastSeenDuration;
 
@@ -242,7 +244,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_Sprint, this, &ACombatAIController::UpdateSprint, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CombatAlert, this, &ACombatAIController::UpdatCombatAlert, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::FindCover, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
@@ -268,17 +269,6 @@ void ACombatAIController::OnUnPossess()
 void ACombatAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (!HasChosenNearTargetDest && CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal)
-	{
-		auto NearDestination = FindRandomDestinationPoint();
-
-		if (!NearDestination.IsZero())
-		{
-			MoveToTarget(0.0f);
-			HasChosenNearTargetDest = true;
-		}
-	}
 }
 
 void ACombatAIController::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
@@ -299,39 +289,12 @@ void ACombatAIController::ClearTimers()
 	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
 	GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
-	GetWorldTimerManager().ClearTimer(THandler_Sprint);
 	GetWorldTimerManager().ClearTimer(THandler_CombatAlert);
 	GetWorldTimerManager().ClearTimer(THandler_FindCover);
 }
 
-
-void ACombatAIController::UpdateSprint()
-{
-	//FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
-
-	//float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
-
-	//if (CurrentTargetDistance > AcceptanceRadius)
-	//{
-	//	OwningCombatCharacter->BeginSprint();
-	//}
-	//else
-	//{
-	//	OwningCombatCharacter->EndSprint();
-	//}
-}
-
 void ACombatAIController::UpdatCombatAlert()
 {
-	if (OwningCombatCharacter->IsFiring() || LastSeenEnemyActor || EnemyActor)
-	{
-		StayCombatAlert = true;
-	}
-	else
-	{
-		StayCombatAlert = false;
-	}
-
 	if (StayCombatAlert)
 	{
 		OwningCombatCharacter->BeginAim();
@@ -696,7 +659,7 @@ void ACombatAIController::FindMountedGun()
 		}
 
 		// is enemy beind the mounted gun? then drop the MG
-		if (IsEnemyBehindMG() || CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
+		if (IsEnemyBehindMG())
 		{
 			OwningCombatCharacter->DropMountedGun();
 		}
@@ -716,7 +679,7 @@ void ACombatAIController::FindMountedGun()
 	// If an MG has been assigned
 	if (OwningCombatCharacter->GetMountedGun())
 	{
-		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal && !IsEnemyBehindMG() && !OwningCombatCharacter->IsReloading())
+		if (!IsEnemyBehindMG() && !OwningCombatCharacter->IsReloading())
 		{
 			OwningCombatCharacter->UseMountedGun();
 			return;
@@ -1038,136 +1001,184 @@ void ACombatAIController::TakeCover()
 		OwningCombatCharacter->GetCharacterMovement()->UnCrouch();
 
 
-	switch (CurrentMovement)
-	{
-	case EPathFollowingRequestResult::Failed:
-		HasChosenCover = false;
-		break;
-	case EPathFollowingRequestResult::AlreadyAtGoal:
+	//switch (CurrentMovement)
+	//{
+	//case EPathFollowingRequestResult::Failed:
+	//	HasChosenCover = false;
+	//	break;
+	//case EPathFollowingRequestResult::AlreadyAtGoal:
 
-		if (ChosenCoverPointComponent)
-		{
-			FLatentActionInfo LatentInfo;
-			LatentInfo.CallbackTarget = this;
+	//	if (ChosenCoverPointComponent)
+	//	{
+	//		FLatentActionInfo LatentInfo;
+	//		LatentInfo.CallbackTarget = this;
 
-			UKismetSystemLibrary::MoveComponentTo(
-				OwningCombatCharacter->GetCapsuleComponent(),
-				ChosenCoverPointComponent->GetComponentLocation(),
-				UKismetMathLibrary::MakeRotFromXZ(FVector(0.0f, ChosenCoverPointComponent->GetRelativeLocation().Z, 0.0f), OwningCombatCharacter->GetCapsuleComponent()->GetUpVector()),
-				false,
-				false,
-				.2f,
-				false,
-				EMoveComponentAction::Type::Move,
-				LatentInfo
-			);
-
-
-			if (ChosenCoverPointComponent->IsCrouchPreferred())
-			{
-				if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching()) {
-					OwningCombatCharacter->ToggleCrouch();
-				}
-			}
-
-			if (ChosenCoverPointComponent->IsACornerLeft() && ChosenCoverPointComponent->IsACornerRight())
-			{
-				// choose a random corner direction
-				int RandomNumber = FMath::RandRange(0, 1);
-
-				if (RandomNumber == 0)
-				{
-					OwningCombatCharacter->IsTakingCover(true);
-					OwningCombatCharacter->IsAtCoverCorner(true);
-					OwningCombatCharacter->IsFacingCoverRHS(false);
-				}
-				else
-				{
-					OwningCombatCharacter->IsTakingCover(true);
-					OwningCombatCharacter->IsAtCoverCorner(true);
-					OwningCombatCharacter->IsFacingCoverRHS(true);
-				}
-			}
-
-			if (ChosenCoverPointComponent->IsACornerLeft())
-			{
-				OwningCombatCharacter->IsTakingCover(true);
-				OwningCombatCharacter->IsAtCoverCorner(true);
-				OwningCombatCharacter->IsFacingCoverRHS(false);
-			}
-			else if (ChosenCoverPointComponent->IsACornerRight())
-			{
-				OwningCombatCharacter->IsTakingCover(true);
-				OwningCombatCharacter->IsAtCoverCorner(true);
-				OwningCombatCharacter->IsFacingCoverRHS(true);
-			}
-		}
-		GetWorldTimerManager().ClearTimer(THandler_FindCover);
+	//		UKismetSystemLibrary::MoveComponentTo(
+	//			OwningCombatCharacter->GetCapsuleComponent(),
+	//			ChosenCoverPointComponent->GetComponentLocation(),
+	//			UKismetMathLibrary::MakeRotFromXZ(FVector(0.0f, ChosenCoverPointComponent->GetRelativeLocation().Z, 0.0f), OwningCombatCharacter->GetCapsuleComponent()->GetUpVector()),
+	//			false,
+	//			false,
+	//			.2f,
+	//			false,
+	//			EMoveComponentAction::Type::Move,
+	//			LatentInfo
+	//		);
 
 
-		break;
-	case EPathFollowingRequestResult::RequestSuccessful:
-		HasChosenCover = true;
-		break;
-	default:
-		break;
-	}
+	//		if (ChosenCoverPointComponent->IsCrouchPreferred())
+	//		{
+	//			if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching()) {
+	//				OwningCombatCharacter->ToggleCrouch();
+	//			}
+	//		}
+
+	//		if (ChosenCoverPointComponent->IsACornerLeft() && ChosenCoverPointComponent->IsACornerRight())
+	//		{
+	//			// choose a random corner direction
+	//			int RandomNumber = FMath::RandRange(0, 1);
+
+	//			if (RandomNumber == 0)
+	//			{
+	//				OwningCombatCharacter->IsTakingCover(true);
+	//				OwningCombatCharacter->IsAtCoverCorner(true);
+	//				OwningCombatCharacter->IsFacingCoverRHS(false);
+	//			}
+	//			else
+	//			{
+	//				OwningCombatCharacter->IsTakingCover(true);
+	//				OwningCombatCharacter->IsAtCoverCorner(true);
+	//				OwningCombatCharacter->IsFacingCoverRHS(true);
+	//			}
+	//		}
+
+	//		if (ChosenCoverPointComponent->IsACornerLeft())
+	//		{
+	//			OwningCombatCharacter->IsTakingCover(true);
+	//			OwningCombatCharacter->IsAtCoverCorner(true);
+	//			OwningCombatCharacter->IsFacingCoverRHS(false);
+	//		}
+	//		else if (ChosenCoverPointComponent->IsACornerRight())
+	//		{
+	//			OwningCombatCharacter->IsTakingCover(true);
+	//			OwningCombatCharacter->IsAtCoverCorner(true);
+	//			OwningCombatCharacter->IsFacingCoverRHS(true);
+	//		}
+	//	}
+	//	GetWorldTimerManager().ClearTimer(THandler_FindCover);
+
+
+	//	break;
+	//case EPathFollowingRequestResult::RequestSuccessful:
+	//	HasChosenCover = true;
+	//	break;
+	//default:
+	//	break;
+	//}
 
 }
 
-FVector ACombatAIController::FindRandomDestinationPoint()
+void ACombatAIController::MoveToRandomPoint()
+{
+	if (Commander && CurrentCommand == CommanderOrders::Follow) {
+		return;
+	}
+
+	auto Movement = MoveToTarget(0.0f);
+
+	// Find a random point around destination if has arrived at the original target destination
+	if (!HasChosenNearTargetDest && Movement == EPathFollowingRequestResult::AlreadyAtGoal)
+	{
+		auto NearDestination = FindNearbyDestinationPoint();
+
+		if (!NearDestination.IsZero())
+		{
+			TargetDestination = NearDestination; // upate the target destination
+			Movement = MoveToTarget(0.0f); // Move to new destination
+			HasChosenNearTargetDest = true;
+		}
+	}
+
+
+	// Has chosen a nearby destination
+	// & arrvied at the nearby destination
+	if (HasChosenNearTargetDest && Movement == EPathFollowingRequestResult::AlreadyAtGoal)
+	{
+		// Toggle crouch based on random possibility
+		int RandonNum = FMath::RandRange(0, 1);
+
+		if (RandonNum == 0)
+		{
+			OwningCombatCharacter->ToggleCrouch();
+		}
+
+		StayCombatAlert = true;
+
+		GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
+	}
+}
+
+FVector ACombatAIController::FindNearbyDestinationPoint()
 {
 	// Assign default target by the destination set
 	FVector TargetDest = TargetDestination;
 
-	FNavLocation NavLocation;
-	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-	bool navResult = NavigationArea->GetRandomReachablePointInRadius(TargetDestination, DestinationRadius, NavLocation);
+	// create a collision sphere
+	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(DestinationRadius);
 
-	if (navResult)
+	// create tarray for hit results
+	TArray<FHitResult> OutHits;
+
+	// check if something got hit in the sweep
+	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, TargetDest, TargetDest, FQuat::Identity, ECC_Visibility, MyColSphere);
+
+
+	if (isHit)
 	{
+		// Is there already a character in that target dest?
+		bool IsPointTaken = false;
+		for (auto& Hit : OutHits)
+		{
+			AActor* DamagedActor = Hit.GetActor();
+			if (DamagedActor)
+			{
+				auto HitCharacter = Cast<ABaseCharacter>(DamagedActor);
+				if (HitCharacter && HitCharacter->GetHealthComp()->IsAlive())
+				{
+					// if the character hit is the commander then this hit point location should be available
+					if (Commander)
+					{
+						if (HitCharacter != Commander)
+						{
+							IsPointTaken = true;
+						}
+					}
+					else
+					{
+						IsPointTaken = true;
+					}
 
-		//// create a collision sphere
-		//FCollisionShape MyColSphere = FCollisionShape::MakeSphere(DestinationRadius);
-
-		//// create tarray for hit results
-		//TArray<FHitResult> OutHits;
-
-		//// check if something got hit in the sweep
-		//bool isHit = GetWorld()->SweepMultiByChannel(OutHits, TargetDest, NavLocation.Location, FQuat::Identity, ECC_Visibility, MyColSphere);
+				}
 
 
-		//if (isHit)
-		//{
-		//	// Is there already a character in that target dest?
-		//	bool DoesCharacterExist = false;
-		//	for (auto& Hit : OutHits)
-		//	{
-		//		AActor* DamagedActor = Hit.GetActor();
-		//		if (DamagedActor)
-		//		{
-		//			UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+			}
+		}
 
-		//			if (HealthComponent && HealthComponent->IsAlive())
-		//			{
-		//				DoesCharacterExist = true;
-		//			}
-		//		}
-		//	}
+		if (IsPointTaken)
+		{
+			FNavLocation NavLocation;
+			UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+			bool navResult = NavigationArea->GetRandomReachablePointInRadius(TargetDestination, DestinationRadius, NavLocation);
 
-		//	if (!DoesCharacterExist)
-		//	{
-		//		TargetDest = NavLocation.Location;
-		//	}
-		//}
-		//else
-		//{
-		//	TargetDest = NavLocation.Location;
-		//}
+			if (navResult)
+			{
+				TargetDest = NavLocation.Location;
+			}
 
-		TargetDest = NavLocation.Location;
-
+		}
 	}
+
+
 
 	return TargetDest;
 }
@@ -1188,11 +1199,10 @@ void ACombatAIController::CheckCommanderOrder()
 	}
 
 
-	StayCombatAlert = true;
-
 	if (CurrentCommand == CommanderOrders::Follow)
 	{
 		TargetDestination = Commander->GetActorLocation();
+		HasChosenNearTargetDest = true;
 		CanFindCover = false;
 
 		// Crouch if the commander is crouched
@@ -1207,7 +1217,7 @@ void ACombatAIController::CheckCommanderOrder()
 				OwningCombatCharacter->UnCrouch();
 		}
 
-		MoveToTarget(AcceptanceRadius);
+		auto CurrentMovement = MoveToTarget(AcceptanceRadius);
 
 		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal)
 		{
@@ -1224,10 +1234,6 @@ void ACombatAIController::CheckCommanderOrder()
 void ACombatAIController::ResetLocation()
 {
 	if (OwningCombatCharacter->GetIsInAircraft()) {
-		return;
-	}
-
-	if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal) {
 		return;
 	}
 
@@ -1254,7 +1260,7 @@ void ACombatAIController::ResetLocation()
 				// reset countdown timer
 				CurrentResetMovementCountdown = ResetMovementCountdown;
 
-				DrawDebugSphere(GetWorld(), NavLocation.Location, 10.0f, 20, FColor::Purple, false, 100.0f, 0, 2);
+				DrawDebugSphere(GetWorld(), NavLocation.Location, 10.0f, 20, FColor::Purple, false, 10.0f, 0, 2);
 
 			}
 		}

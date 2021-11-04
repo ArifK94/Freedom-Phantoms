@@ -88,7 +88,7 @@ private:
 	bool StayCombatAlert;
 	bool HasChosenCover;
 	bool CanFindCover;
-	EPathFollowingRequestResult::Type CurrentMovement;
+	//EPathFollowingRequestResult::Type CurrentMovement;
 
 	FVector ChosenCoverPoint;
 
@@ -124,8 +124,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		float DestinationRadius;
 
-
-	FTimerHandle THandler_Sprint;
 	FTimerHandle THandler_BeginFire;
 	FTimerHandle THandler_EndFire;
 	FTimerHandle THandler_FindEnemy;
@@ -137,6 +135,7 @@ private:
 	FTimerHandle THandler_EndPeakCover;
 	FTimerHandle THandler_ResetMovement;
 	FTimerHandle THandler_LastSeenEnemy;
+	FTimerHandle THandler_MoveToNearbyDestination;
 
 
 	bool HasPlayedTargetFoundSound;
@@ -161,7 +160,7 @@ private:
 		void OnOrderReceived(UCommanderRecruit* RecruitInfo);
 	bool HasAssignedOrderEvent;
 
-	void MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
+	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
 
 	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
 
@@ -171,8 +170,6 @@ private:
 
 	void BeginCoverPeak();
 	void EndCoverPeak();
-
-	void UpdateSprint();
 
 	void UpdateLastSeen();
 
@@ -196,7 +193,9 @@ private:
 
 	void TakeCover();
 
-	FVector FindRandomDestinationPoint();
+	void MoveToRandomPoint();
+
+	FVector FindNearbyDestinationPoint();
 
 	/** If AI is stuck, then reset location appropiately */
 	void ResetLocation();
