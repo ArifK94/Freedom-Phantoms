@@ -55,9 +55,11 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	CanFindCover = true;
 	HasChosenNearTargetDest = false;
 
-	GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
 
-	
+	StayCombatAlert = false;
+	UpdatCombatAlert();
+
+	GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
 
 	MoveToTarget(TargetRadius);
 }
@@ -78,10 +80,6 @@ ACombatAIController::ACombatAIController()
 
 	TimeBetweenShotsMin = 2.0f;
 	TimeBetweenShotsMax = 3.0f;
-
-	ResetMovementCountdown = 5.0f;
-
-	LastSeenDuration = 5.0f;
 
 	DestinationRadius = 300.0f;
 }
@@ -214,11 +212,8 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 void ACombatAIController::BeginPlay()
 {
 	Super::BeginPlay();
-	CurrentResetMovementCountdown = ResetMovementCountdown;
 
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
-
-	LastSeenTimeCurrent = LastSeenDuration;
 
 	Init();
 }
@@ -239,15 +234,11 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		OwningCombatCharacter->FollowCamera->AttachToComponent(OwningCombatCharacter->GetMesh(), FAttachmentTransformRules::KeepWorldTransform, OwningCombatCharacter->GetHeadSocket());
 
 		GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_BeginFire, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_CombatAlert, this, &ACombatAIController::UpdatCombatAlert, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::FindCover, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
-		//GetWorldTimerManager().SetTimer(THandler_ResetMovement, this, &ACombatAIController::ResetLocation, 2.0f, true);
 
 		PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetPrimaryWeapon());
 	}
@@ -284,12 +275,11 @@ void ACombatAIController::OnHealthChanged(UHealthComponent* OwningHealthComp, fl
 
 void ACombatAIController::ClearTimers()
 {
-	GetWorldTimerManager().ClearTimer(THandler_BeginFire);
+	GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
 	GetWorldTimerManager().ClearTimer(THandler_EndFire);
 	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
 	GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
-	GetWorldTimerManager().ClearTimer(THandler_CombatAlert);
 	GetWorldTimerManager().ClearTimer(THandler_FindCover);
 }
 
@@ -442,47 +432,57 @@ void ACombatAIController::FindEnemy()
 
 	if (ChosenTarget) // if found an enemy
 	{
+		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 		EnemyActor = ChosenTarget;
 		SetFocus(EnemyActor); // face in the direction of the enemy
+
+		// Being firing at enemy
+		if (!THandler_ShootEnemy.IsValid()) {
+			GetWorldTimerManager().SetTimer(THandler_ShootEnemy, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
+		}
 	}
 	else // not found an enemy
 	{
 		if (EnemyActor) // if previous enemy still exists, look at the last location it was seen
 		{
-			LastSeenTimeCurrent = LastSeenDuration; // update the duration countdown
 			LastSeenEnemyActor = EnemyActor;
 			LastSeenPosition = LastSeenEnemyActor->GetActorLocation();
 			EnemyActor = nullptr;
 		}
 	}
-
-
-	if (EnemyActor) {
-		TargetFound();
-	}
-	else
-	{
-		ClearFocus(EAIFocusPriority::Gameplay);
-	}
-
 }
 
 void ACombatAIController::UpdateLastSeen()
 {
-	if (LastSeenEnemyActor == nullptr || LastSeenTimeCurrent <= 0.0f) {
-		return;
-	}
-
 	SetFocalPoint(LastSeenPosition);
 
-	// Countdown to forget
-	LastSeenTimeCurrent--;
-
-	if (LastSeenTimeCurrent <= 0.0f)
+	// look straight ahead with the MG direction
+	if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetAdjustBehindMG())
 	{
-		LastSeenEnemyActor = nullptr;
+		OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(OwningCombatCharacter->GetMountedGun()->GetCharacterStandRot());
 	}
 
+	if (CurrentWeapon->getCurrentAmmo() <= 0 || CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // reload clip if finished completely or  reload if not on full clip
+	{
+		OwningCombatCharacter->BeginReload();
+	}
+	else
+	{
+		// switch back to primary
+		if (CurrentWeapon == OwningCombatCharacter->GetSecondaryWeaponObj())
+		{
+			OwningCombatCharacter->BeginWeaponSwap();
+		}
+	}
+
+	// Stop aiming if not combat alert
+	if (!StayCombatAlert)
+	{
+		OwningCombatCharacter->EndAim();
+	}
+
+	LastSeenEnemyActor = nullptr;
+	GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 }
 
 void ACombatAIController::ShootAtEnemy()
@@ -573,24 +573,12 @@ void ACombatAIController::ShootAtEnemy()
 	{
 		OwningCombatCharacter->EndFire();
 
-		// look straight ahead with the MG direction
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetAdjustBehindMG())
-		{
-			OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(OwningCombatCharacter->GetMountedGun()->GetCharacterStandRot());
+		if (!THandler_LastSeenEnemy.IsValid()) {
+			OwningCombatCharacter->BeginAim();
+			GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, false, FMath::RandRange(2.f, 5.f));
 		}
 
-		if (CurrentWeapon->getCurrentAmmo() <= 0 || CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // reload clip if finished completely or  reload if not on full clip
-		{
-			OwningCombatCharacter->BeginReload();
-		}
-		else
-		{
-			// switch back to primary
-			if (CurrentWeapon == OwningCombatCharacter->GetSecondaryWeaponObj())
-			{
-				OwningCombatCharacter->BeginWeaponSwap();
-			}
-		}
+		GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
 	}
 
 }
@@ -1113,6 +1101,7 @@ void ACombatAIController::MoveToRandomPoint()
 		}
 
 		StayCombatAlert = true;
+		UpdatCombatAlert();
 
 		GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
 	}
@@ -1228,46 +1217,6 @@ void ACombatAIController::CheckCommanderOrder()
 			// exit from MG if currently using or if an MG has been assigned
 			OwningCombatCharacter->DropMountedGun();
 		}
-	}
-}
-
-void ACombatAIController::ResetLocation()
-{
-	if (OwningCombatCharacter->GetIsInAircraft()) {
-		return;
-	}
-
-	// Using character speed to check if stuck or not
-	if (OwningCombatCharacter->GetCharacterSpeed() <= .2f)
-	{
-		// if reset is more than 0 then perform countdown
-		if (CurrentResetMovementCountdown > 0.0f)
-		{
-			CurrentResetMovementCountdown--;
-		}
-		else
-		{
-			// reset movement
-			// find closest location point on navmesh to current character location
-			FNavLocation NavLocation;
-			UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-			bool navResult = NavigationArea->ProjectPointToNavigation(OwningCombatCharacter->GetActorLocation(), NavLocation);
-
-			if (navResult)
-			{
-				OwningCombatCharacter->SetActorLocation(NavLocation.Location);
-
-				// reset countdown timer
-				CurrentResetMovementCountdown = ResetMovementCountdown;
-
-				DrawDebugSphere(GetWorld(), NavLocation.Location, 10.0f, 20, FColor::Purple, false, 10.0f, 0, 2);
-
-			}
-		}
-	}
-	else
-	{
-		CurrentResetMovementCountdown = ResetMovementCountdown;
 	}
 }
 

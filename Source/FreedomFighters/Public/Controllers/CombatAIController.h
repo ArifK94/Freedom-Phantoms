@@ -88,7 +88,6 @@ private:
 	bool StayCombatAlert;
 	bool HasChosenCover;
 	bool CanFindCover;
-	//EPathFollowingRequestResult::Type CurrentMovement;
 
 	FVector ChosenCoverPoint;
 
@@ -108,32 +107,22 @@ private:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float ResetMovementCountdown;
-	float CurrentResetMovementCountdown;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MountedGunSightRadius;
 
-	/** Duration in seconds to forget the last seen enemy */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float LastSeenDuration;
-	float LastSeenTimeCurrent;
 	FVector LastSeenPosition;
 
 	/** The sphere radius for recruits to move around a order position so that multiple recruits do not stick together in one place */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		float DestinationRadius;
 
-	FTimerHandle THandler_BeginFire;
+	FTimerHandle THandler_ShootEnemy;
 	FTimerHandle THandler_EndFire;
 	FTimerHandle THandler_FindEnemy;
 	FTimerHandle THandler_CommanderOrders;
-	FTimerHandle THandler_CombatAlert;
 	FTimerHandle THandler_MountedGun;
 	FTimerHandle THandler_FindCover;
 	FTimerHandle THandler_BeginPeakCover;
 	FTimerHandle THandler_EndPeakCover;
-	FTimerHandle THandler_ResetMovement;
 	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
 
@@ -196,9 +185,6 @@ private:
 	void MoveToRandomPoint();
 
 	FVector FindNearbyDestinationPoint();
-
-	/** If AI is stuck, then reset location appropiately */
-	void ResetLocation();
 
 	bool IsEnemyBehindMG(AActor* Enemy = nullptr);
 
