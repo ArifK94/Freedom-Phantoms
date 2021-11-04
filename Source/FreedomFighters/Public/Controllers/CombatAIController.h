@@ -194,10 +194,6 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
-private:
-	virtual void Tick(float DeltaTime) override;
-
-
 
 public:
 	AActor* GetEnemyActor() {
