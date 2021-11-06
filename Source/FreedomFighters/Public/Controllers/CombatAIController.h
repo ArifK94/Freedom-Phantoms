@@ -7,9 +7,10 @@
 #include "Characters/CommanderCharacter.h"
 #include "CombatAIController.generated.h"
 
-class AGameModeManager;
 class ACombatCharacter;
 class ACommanderCharacter;
+class UCoverFinderComponent;
+
 class UAISenseConfig;
 class UAISenseConfig_Sight;
 class UAISense;
@@ -26,9 +27,9 @@ class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 	GENERATED_BODY()
 
 private:
-
-	AGameModeManager* GameModeManager;
 	ACombatCharacter* OwningCombatCharacter;
+	UCoverFinderComponent* CoverFinderComponent;
+
 	USphereComponent* TargetSightSphere;
 	UAISenseConfig_Sight* AISightConfig;
 	AWeapon* CurrentWeapon;
@@ -90,15 +91,6 @@ private:
 	bool CanFindCover;
 
 	FVector ChosenCoverPoint;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TArray<FVector> CoverLocationPoints;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float CoverRadius;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		int NumberOfCoverTraces;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		float MovementDebugSphereRadius;
@@ -172,15 +164,9 @@ private:
 
 	void CheckCommanderOrder();
 
-	void FindCover();
+	void MoveToCover();
 
 	void TargetFound();
-
-	void GenerateCoverPoints(AActor* TargetActor);
-
-	FVector GetClosestCoverPoint(AActor* TargetActor);
-
-	void TakeCover();
 
 	void MoveToRandomPoint();
 

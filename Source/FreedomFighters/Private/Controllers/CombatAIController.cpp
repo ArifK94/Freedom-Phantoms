@@ -1,12 +1,12 @@
 #include "Controllers/CombatAIController.h"
 
-#include "Managers/GameModeManager.h"
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
 #include "Props/Stronghold.h"
+#include "CustomComponents/CoverFinderComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -66,12 +66,10 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 ACombatAIController::ACombatAIController()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	AcceptanceRadius = 300.0f;
 	DistanceDiffSprint = 200.0f;
-	CoverRadius = 1000.0f;
-	NumberOfCoverTraces = 35.0f;
 	TargetSightRadius = 7000.0f;
 	MountedGunSightRadius = 500.0f;
 
@@ -119,6 +117,9 @@ void ACombatAIController::Init()
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
 		}
 	}
+
+	CoverFinderComponent = NewObject<UCoverFinderComponent>(OwningCombatCharacter);
+	CoverFinderComponent->RegisterComponent();
 
 	HasAssignedOrderEvent = false;
 
@@ -213,8 +214,6 @@ void ACombatAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
-
 	Init();
 }
 
@@ -224,7 +223,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 	// get owning character
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
-
 
 	CanFindCover = true;
 
@@ -239,7 +237,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::FindCover, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
 
 	}
@@ -320,6 +317,9 @@ void ACombatAIController::EndCoverPeak()
 	OwningCombatCharacter->SetRightInputValue(.0f);
 }
 
+/// <summary>
+/// TODO: Add limit to the number of characters to be processed so we do not have like 20 enemies to choose from
+/// </summary>
 void ACombatAIController::FindEnemy()
 {
 	AActor* ChosenTarget = nullptr;
@@ -436,6 +436,11 @@ void ACombatAIController::FindEnemy()
 		if (!THandler_ShootEnemy.IsValid()) {
 			GetWorldTimerManager().SetTimer(THandler_ShootEnemy, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
 		}
+
+		//if (!THandler_FindCover.IsValid()) {
+		//	GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::MoveToCover, FMath::RandRange(2.f, 5.f), true);
+		//}
+
 	}
 	else // not found an enemy
 	{
@@ -778,53 +783,66 @@ void ACombatAIController::FindMountedGun()
 
 }
 
-void ACombatAIController::FindCover()
+void ACombatAIController::MoveToCover()
 {
 	if (!CanFindCover) {
 		return;
 	}
 
-	//if (!HasChosenCover)
-	//{
-	//	if (EnemyActor)
-	//	{
-	//		GenerateCoverPoints(EnemyActor);
-	//	}
-	//	else
-	//	{
-	//		if (CurrentStronghold)
-	//		{
-	//			ChosenCoverPointComponent = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
-
-	//			if (ChosenCoverPointComponent)
-	//			{
-	//				TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
-	//				CoverLocationPoints.Add(TargetDestination);
-	//				HasChosenCover = true;
-	//			}
-	//		}
-	//	}
-	//}
-
-
-	// check if current cover has been taken,
-	// if so, then find another cover point
-	//FWorldCoverPoint CoverLocation = FWorldCoverPoint();
-	//CoverLocation.Location = TargetDestination;
-	//CoverLocation.Owner = OwningCombatCharacter;
-
-	//if (GameModeManager->IsCoverPointTaken(CoverLocation))
-	//{
-	//	HasChosenCover = false;
-	//}
-
-	// Update nav movement
-	if (HasChosenCover)
+	if (!HasChosenCover)
 	{
-		MoveToTarget(0.0f);
+		if (EnemyActor)
+		{
+			auto CoverLocation = CoverFinderComponent->FindCover(EnemyActor->GetActorLocation());
 
-		TakeCover();
+			TargetDestination = CoverLocation;
+			HasChosenCover = true;
+		}
+		else
+		{
+			if (CurrentStronghold)
+			{
+				ChosenCoverPointComponent = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
+
+				if (ChosenCoverPointComponent)
+				{
+					TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
+				}
+			}
+		}
 	}
+
+
+	auto CurrentMovement = MoveToTarget(0.0f);
+
+	switch (CurrentMovement)
+	{
+	case EPathFollowingRequestResult::Failed:
+		HasChosenCover = false;
+		break;
+	case EPathFollowingRequestResult::AlreadyAtGoal:
+
+		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+			OwningCombatCharacter->ToggleCrouch();
+
+		GetWorldTimerManager().ClearTimer(THandler_FindCover);
+
+		break;
+	case EPathFollowingRequestResult::RequestSuccessful:
+		HasChosenCover = true;
+		break;
+	default:
+		break;
+	}
+
+
+	// Choose another cover point if this has already been taken by another
+	if (CoverFinderComponent->IsCoverPointTaken(TargetDestination))
+	{
+		HasChosenCover = false;
+	}
+
+
 
 	if (OwningCombatCharacter->IsTakingCover())
 	{
@@ -833,233 +851,6 @@ void ACombatAIController::FindCover()
 			OwningCombatCharacter->StopCover();
 		}
 	}
-}
-
-void ACombatAIController::GenerateCoverPoints(AActor* TargetActor)
-{
-	if (TargetActor == nullptr)
-	{
-		return;
-	}
-
-	CoverLocationPoints.Empty();
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	QueryParams.bTraceComplex = true;
-
-	FCollisionObjectQueryParams ObjectParams;
-	ObjectParams.AllObjects;
-
-	float factor = 360.0f / NumberOfCoverTraces;
-
-	// 360 degrees line trace around character
-	for (int i = 0; i < NumberOfCoverTraces; i++)
-	{
-
-		FNavLocation NavLocation;
-		bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(TargetActor->GetActorLocation(), NavLocation);
-
-		if (bOnNavMesh)
-		{
-			const FQuat CharacterTopRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, i * factor).Quaternion();
-			FVector Foward = UKismetMathLibrary::Quat_RotateVector(CharacterTopRotation, FVector(1.0f, 0.0f, 0.0f));
-
-			FVector Start = (Foward * CoverRadius) + NavLocation.Location;
-
-			FHitResult HitResult;
-			bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, NavLocation.Location, ECC_Visibility);
-
-
-			DrawDebugLine(GetWorld(), Start, NavLocation.Location, FColor::Emerald, true, 5.0f, 0, 1.0f);
-
-			// get all hit results which hit an obstacle
-			if (bHit)
-			{
-				//FVector LocationPoint = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
-				FVector LocationPoint = HitResult.ImpactPoint;
-
-				DrawDebugLine(GetWorld(), Start, LocationPoint, FColor::Magenta, true, 5.0f, 0, 1.0f);
-
-				FWorldCoverPoint CoverLocation = FWorldCoverPoint();
-				CoverLocation.Location = LocationPoint;
-				CoverLocation.Owner = OwningCombatCharacter;
-
-				if (!GameModeManager->IsCoverPointTaken(CoverLocation))
-				{
-					if (TargetActor == OwningCombatCharacter)
-					{
-						CoverLocationPoints.Add(LocationPoint);
-					}
-					else
-					{
-						bool CanSeeTarget = false;
-						float directionValue = FVector::DotProduct(LocationPoint, TargetActor->GetActorLocation());
-
-						float Offset = 50.0f;
-						FHitResult HitTargetResult2, HitTargetResult3;
-						bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationPoint + FVector(0.0f, Offset, 0.0f), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
-						bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationPoint + FVector(0.0f, 0.0f, Offset), TargetActor->GetActorLocation(), ObjectParams, QueryParams);
-
-						if (bTargetHit2)
-						{
-							if (Cast<ACombatCharacter>(HitTargetResult2.GetActor()))
-							{
-								CanSeeTarget = true;
-							}
-						}
-
-						if (bTargetHit3)
-						{
-							if (Cast<ACombatCharacter>(HitTargetResult3.GetActor()))
-							{
-								CanSeeTarget = true;
-							}
-						}
-
-						if (CanSeeTarget)
-						{
-							CoverLocationPoints.Add(LocationPoint);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if (CoverLocationPoints.Num() > 0)
-	{
-		TargetDestination = GetClosestCoverPoint(TargetActor);
-		DrawDebugSphere(GetWorld(), TargetDestination, MovementDebugSphereRadius, 20, FColor::Purple, false, MovementDebugLifetTime, 0, 2);
-
-		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->GetCharacterMovement()->UnCrouch();
-	}
-}
-
-FVector ACombatAIController::GetClosestCoverPoint(AActor* TargetActor)
-{
-	FVector ClosestPoint;
-	float minDist = CoverRadius;
-
-	for (int i = 0; i < CoverLocationPoints.Num(); i++)
-	{
-		FVector Point = CoverLocationPoints[i];
-
-		float Distance = FVector::Dist(OwningCombatCharacter->GetActorLocation(), Point);
-
-		if (Distance < minDist)
-		{
-			ClosestPoint = Point;
-			minDist = Distance;
-		}
-	}
-
-	// update current cover point, 
-	FWorldCoverPoint CoverLocation = FWorldCoverPoint();
-	CoverLocation.Owner = OwningCombatCharacter;
-
-	// remove previous cover point from the list
-	CoverLocation.Location = ChosenCoverPoint;
-	GameModeManager->RemoveCoverPoint(CoverLocation);
-
-	// add the new cover point
-	CoverLocation.Location = ClosestPoint;
-	GameModeManager->AddCoverPoint(CoverLocation);
-
-	ChosenCoverPoint = ClosestPoint;
-
-	return ClosestPoint;
-}
-
-void ACombatAIController::TakeCover()
-{
-	if (CoverLocationPoints.Num() <= 0)
-	{
-		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->ToggleCrouch();
-		return;
-	}
-
-	if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-		OwningCombatCharacter->GetCharacterMovement()->UnCrouch();
-
-
-	//switch (CurrentMovement)
-	//{
-	//case EPathFollowingRequestResult::Failed:
-	//	HasChosenCover = false;
-	//	break;
-	//case EPathFollowingRequestResult::AlreadyAtGoal:
-
-	//	if (ChosenCoverPointComponent)
-	//	{
-	//		FLatentActionInfo LatentInfo;
-	//		LatentInfo.CallbackTarget = this;
-
-	//		UKismetSystemLibrary::MoveComponentTo(
-	//			OwningCombatCharacter->GetCapsuleComponent(),
-	//			ChosenCoverPointComponent->GetComponentLocation(),
-	//			UKismetMathLibrary::MakeRotFromXZ(FVector(0.0f, ChosenCoverPointComponent->GetRelativeLocation().Z, 0.0f), OwningCombatCharacter->GetCapsuleComponent()->GetUpVector()),
-	//			false,
-	//			false,
-	//			.2f,
-	//			false,
-	//			EMoveComponentAction::Type::Move,
-	//			LatentInfo
-	//		);
-
-
-	//		if (ChosenCoverPointComponent->IsCrouchPreferred())
-	//		{
-	//			if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching()) {
-	//				OwningCombatCharacter->ToggleCrouch();
-	//			}
-	//		}
-
-	//		if (ChosenCoverPointComponent->IsACornerLeft() && ChosenCoverPointComponent->IsACornerRight())
-	//		{
-	//			// choose a random corner direction
-	//			int RandomNumber = FMath::RandRange(0, 1);
-
-	//			if (RandomNumber == 0)
-	//			{
-	//				OwningCombatCharacter->IsTakingCover(true);
-	//				OwningCombatCharacter->IsAtCoverCorner(true);
-	//				OwningCombatCharacter->IsFacingCoverRHS(false);
-	//			}
-	//			else
-	//			{
-	//				OwningCombatCharacter->IsTakingCover(true);
-	//				OwningCombatCharacter->IsAtCoverCorner(true);
-	//				OwningCombatCharacter->IsFacingCoverRHS(true);
-	//			}
-	//		}
-
-	//		if (ChosenCoverPointComponent->IsACornerLeft())
-	//		{
-	//			OwningCombatCharacter->IsTakingCover(true);
-	//			OwningCombatCharacter->IsAtCoverCorner(true);
-	//			OwningCombatCharacter->IsFacingCoverRHS(false);
-	//		}
-	//		else if (ChosenCoverPointComponent->IsACornerRight())
-	//		{
-	//			OwningCombatCharacter->IsTakingCover(true);
-	//			OwningCombatCharacter->IsAtCoverCorner(true);
-	//			OwningCombatCharacter->IsFacingCoverRHS(true);
-	//		}
-	//	}
-	//	GetWorldTimerManager().ClearTimer(THandler_FindCover);
-
-
-	//	break;
-	//case EPathFollowingRequestResult::RequestSuccessful:
-	//	HasChosenCover = true;
-	//	break;
-	//default:
-	//	break;
-	//}
-
 }
 
 void ACombatAIController::MoveToRandomPoint()
@@ -1080,6 +871,13 @@ void ACombatAIController::MoveToRandomPoint()
 			TargetDestination = NearDestination; // upate the target destination
 			Movement = MoveToTarget(0.0f); // Move to new destination
 			HasChosenNearTargetDest = true;
+		}
+
+		auto CoverLocation = CoverFinderComponent->FindCover(NearDestination);
+
+		if (!CoverLocation.IsZero())
+		{
+			TargetDestination = CoverLocation;
 		}
 	}
 
@@ -1144,8 +942,6 @@ FVector ACombatAIController::FindNearbyDestinationPoint()
 					}
 
 				}
-
-
 			}
 		}
 
