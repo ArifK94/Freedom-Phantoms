@@ -35,7 +35,6 @@ private:
 	AWeapon* CurrentWeapon;
 	UAIPerceptionComponent* PerceptionComp;
 	APumpActionWeapon* PumpActionWeapon;
-	AActor* EnemyActor;
 	AActor* LastSeenEnemyActor;
 	CommanderOrders CurrentCommand;
 
@@ -106,6 +105,10 @@ private:
 	/** The sphere radius for recruits to move around a order position so that multiple recruits do not stick together in one place */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		float DestinationRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		AActor* EnemyActor;
+
 
 	FTimerHandle THandler_ShootEnemy;
 	FTimerHandle THandler_EndFire;

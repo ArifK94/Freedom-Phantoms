@@ -25,7 +25,6 @@
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISense_Sight.h"
 #include "..\..\Public\Controllers\CombatAIController.h"
-#include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
@@ -369,6 +368,13 @@ void ACombatAIController::FindEnemy()
 		//	GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::MoveToCover, FMath::RandRange(2.f, 5.f), true);
 		//}
 
+		if (!THandler_MoveToNearbyDestination.IsValid() && CurrentCommand != CommanderOrders::Defend) {
+			HasChosenNearTargetDest = false;
+			TargetDestination = OwningCombatCharacter->GetActorLocation();
+			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, FMath::RandRange(.5f, 2.f), true);
+		}
+
+
 	}
 	else  // not found an enemy
 	{
@@ -455,6 +461,8 @@ void ACombatAIController::ShootAtEnemy()
 
 	if (EnemyActor)
 	{
+		OwningCombatCharacter->BeginAim();
+
 		// if using a mounted gun
 		if (OwningCombatCharacter->GetMountedGun())
 		{
@@ -791,12 +799,12 @@ void ACombatAIController::MoveToRandomPoint()
 			HasChosenNearTargetDest = true;
 		}
 
-		auto CoverLocation = CoverFinderComponent->FindCover(NearDestination);
+		//auto CoverLocation = CoverFinderComponent->FindCover(NearDestination);
 
-		if (!CoverLocation.IsZero())
-		{
-			TargetDestination = CoverLocation;
-		}
+		//if (!CoverLocation.IsZero())
+		//{
+		//	TargetDestination = CoverLocation;
+		//}
 	}
 
 
