@@ -8,12 +8,13 @@
 #include "Props/Stronghold.h"
 #include "CustomComponents/CoverFinderComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
+#include "CustomComponents/TargetFinderComponent.h"
+#include "CustomComponents/HealthComponent.h"
+
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Camera/CameraComponent.h"
-#include "CustomComponents/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/EngineTypes.h"
 #include "NavigationSystem.h"
@@ -66,7 +67,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 ACombatAIController::ACombatAIController()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	AcceptanceRadius = 300.0f;
 	DistanceDiffSprint = 200.0f;
@@ -104,22 +105,11 @@ void ACombatAIController::Init()
 		UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
 	}
 
-
-	// Alternative to AI Sight Perception in case 360 sight is wanted
-	if (TargetSightSphere == nullptr)
-	{
-		TargetSightSphere = NewObject<USphereComponent>(OwningCombatCharacter);
-		if (TargetSightSphere)
-		{
-			TargetSightSphere->RegisterComponent();
-			TargetSightSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-			TargetSightSphere->SetSphereRadius(TargetSightRadius);
-			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
-		}
-	}
-
 	CoverFinderComponent = NewObject<UCoverFinderComponent>(OwningCombatCharacter);
 	CoverFinderComponent->RegisterComponent();
+
+	TargetFinderComponent = NewObject<UTargetFinderComponent>(OwningCombatCharacter);
+	TargetFinderComponent->RegisterComponent();
 
 	HasAssignedOrderEvent = false;
 
@@ -322,78 +312,26 @@ void ACombatAIController::EndCoverPeak()
 /// </summary>
 void ACombatAIController::FindEnemy()
 {
-	AActor* ChosenTarget = nullptr;
-	TArray<AActor*> ActorsInSight;
-	float TargetSightDistance = TargetSightRadius;
-
-	if (TargetSightSphere)
-	{
-		TargetSightSphere->GetOverlappingActors(ActorsInSight, ABaseCharacter::StaticClass());
-	}
-	//else if (OwningCombatCharacter->GetIsInAircraft())
-	//{
-	//	PerceptionComp->GetKnownPerceivedActors(TSubclassOf<UAISense_Sight>(), ActorsInSight);
-	//}
-	else
-	{
+	if (TargetFinderComponent == nullptr) {
 		return;
 	}
 
-	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
 
-	for (int index = 0; index < ActorsInSight.Num(); index++)
+	AActor* ChosenTarget = TargetFinderComponent->FindTarget();
+
+
+	if (ChosenTarget) // found an enemy?
 	{
-		AActor* PotentialEnemy = ActorsInSight[index];
 
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(PotentialEnemy->GetComponentByClass(UHealthComponent::StaticClass()));
-
-		if (CurrentHealth && CurrentHealth->IsAlive() && CurrentHealth->GetSelectedFaction() != TeamFaction::Neutral)
+		if (OwningCombatCharacter->IsTakingCover())
 		{
-			bool IsEnemy = !UHealthComponent::IsFriendly(OwningCombatCharacter, PotentialEnemy);
-
-			// is target alive & an enemy
-			if (IsEnemy)
+			if (TargetFinderComponent->IsTargetBehind(ChosenTarget))
 			{
-				FVector EnemyLocation = PotentialEnemy->GetActorLocation();
-
-
-				// check if can see the target
-				FHitResult HitTargetResult;
-
-				FCollisionQueryParams QueryParams;
-				QueryParams.AddIgnoredActor(OwningCombatCharacter);
-				QueryParams.bTraceComplex = false;
-
-				FCollisionObjectQueryParams ObjectParams;
-				ObjectParams.AllObjects;
-
-				bool bTargetHit = GetWorld()->LineTraceSingleByObjectType(
-					HitTargetResult,
-					OwningCombatCharacter->FollowCamera->GetComponentLocation(),
-					EnemyLocation,
-					ObjectParams,
-					QueryParams);
-
-				if (bTargetHit)
-				{
-					if (HitTargetResult.GetActor() == PotentialEnemy)
-					{
-						// get closest enemy
-						float DistanceDiff = FVector::Dist(OwnerLocation, EnemyLocation);
-
-						if (DistanceDiff < TargetSightDistance)
-						{
-							TargetSightDistance = DistanceDiff;
-							ChosenTarget = PotentialEnemy;
-						}
-					}
-				}
+				OwningCombatCharacter->StopCover();
 			}
 		}
-	}
 
-	if (ChosenTarget)
-	{
+
 		if (OwningCombatCharacter->IsUsingMountedWeapon())
 		{
 			FVector Start = ChosenTarget->GetActorLocation() - OwningCombatCharacter->GetActorLocation();
@@ -403,8 +341,8 @@ void ACombatAIController::FindEnemy()
 			bool YawRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Yaw, OwningCombatCharacter->GetMountedGun()->GetYawMin(), OwningCombatCharacter->GetMountedGun()->GetYawMax(), false, false);
 			bool PitchRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Pitch, OwningCombatCharacter->GetMountedGun()->GetPitchMin(), OwningCombatCharacter->GetMountedGun()->GetPitchMax(), false, false);
 
-			// check if enemy position is NOT within turret's pitch and yaw boundaries and is not behind the MG
-			if (!YawRange || !PitchRange || IsEnemyBehindMG(ChosenTarget))
+			// check if enemy position is NOT within turret's pitch and yaw boundaries or is not behind the MG
+			if (!YawRange || !PitchRange || TargetFinderComponent->IsTargetBehind(ChosenTarget))
 			{
 				// for normal turrets on the ground
 				if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
@@ -417,20 +355,10 @@ void ACombatAIController::FindEnemy()
 				}
 			}
 		}
-	}
-	else
-	{
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			OwningCombatCharacter->GetMountedGun()->ResetCamera();
-		}
-	}
 
-	if (ChosenTarget) // if found an enemy
-	{
 		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 		EnemyActor = ChosenTarget;
-		SetFocus(EnemyActor); // face in the direction of the enemy
+		SetFocus(ChosenTarget); // face in the direction of the enemy
 
 		// Being firing at enemy
 		if (!THandler_ShootEnemy.IsValid()) {
@@ -442,8 +370,13 @@ void ACombatAIController::FindEnemy()
 		//}
 
 	}
-	else // not found an enemy
+	else  // not found an enemy
 	{
+		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			OwningCombatCharacter->GetMountedGun()->ResetCamera();
+		}
+
 		if (EnemyActor) // if previous enemy still exists, look at the last location it was seen
 		{
 			LastSeenEnemyActor = EnemyActor;
@@ -574,6 +507,7 @@ void ACombatAIController::ShootAtEnemy()
 	{
 		OwningCombatCharacter->EndFire();
 
+		// Focus on the last seen enemy
 		if (!THandler_LastSeenEnemy.IsValid()) {
 			OwningCombatCharacter->BeginAim();
 			GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, false, FMath::RandRange(2.f, 5.f));
@@ -647,12 +581,6 @@ void ACombatAIController::FindMountedGun()
 			return;
 		}
 
-		// is enemy beind the mounted gun? then drop the MG
-		if (IsEnemyBehindMG())
-		{
-			OwningCombatCharacter->DropMountedGun();
-		}
-
 		// a player can use the MG at the last second which results in more than one actor using the MG
 		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter ||
 			OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
@@ -668,7 +596,7 @@ void ACombatAIController::FindMountedGun()
 	// If an MG has been assigned
 	if (OwningCombatCharacter->GetMountedGun())
 	{
-		if (!IsEnemyBehindMG() && !OwningCombatCharacter->IsReloading())
+		if (!OwningCombatCharacter->IsReloading())
 		{
 			OwningCombatCharacter->UseMountedGun();
 			return;
@@ -841,16 +769,6 @@ void ACombatAIController::MoveToCover()
 	{
 		HasChosenCover = false;
 	}
-
-
-
-	if (OwningCombatCharacter->IsTakingCover())
-	{
-		if (IsEnemyBehindMG(EnemyActor))
-		{
-			OwningCombatCharacter->StopCover();
-		}
-	}
 }
 
 void ACombatAIController::MoveToRandomPoint()
@@ -1012,30 +930,6 @@ void ACombatAIController::CheckCommanderOrder()
 	}
 }
 
-bool ACombatAIController::IsEnemyBehindMG(AActor* Enemy)
-{
-	if (OwningCombatCharacter->GetMountedGun() == nullptr) {
-		return false;
-	}
-
-	if (Enemy == nullptr) {
-		Enemy = EnemyActor;
-	}
-
-	if (Enemy)
-	{
-		FVector MGForwardPos = UKismetMathLibrary::GetForwardVector(OwningCombatCharacter->GetMountedGun()->GetActorRotation());
-		FVector Normalised = Enemy->GetActorLocation() - OwningCombatCharacter->GetMountedGun()->GetActorLocation();
-		UKismetMathLibrary::Vector_Normalize(Normalised);
-		float Angle = UKismetMathLibrary::Dot_VectorVector(MGForwardPos, Normalised);
-
-		if (Angle < -0.7f)
-		{
-			return true;
-		}
-	}
-	return false;
-}
 
 void ACombatAIController::TargetFound()
 {

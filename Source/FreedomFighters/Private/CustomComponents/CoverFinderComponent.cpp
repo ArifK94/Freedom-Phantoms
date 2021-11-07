@@ -33,11 +33,6 @@ void UCoverFinderComponent::BeginPlay()
 }
 
 
-void UCoverFinderComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-
 FVector UCoverFinderComponent::FindCover(FVector StartLocation)
 {
 	auto ChosenCoverPoint = FVector();

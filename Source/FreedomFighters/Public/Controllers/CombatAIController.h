@@ -10,6 +10,7 @@
 class ACombatCharacter;
 class ACommanderCharacter;
 class UCoverFinderComponent;
+class UTargetFinderComponent;
 
 class UAISenseConfig;
 class UAISenseConfig_Sight;
@@ -17,7 +18,6 @@ class UAISense;
 class UAIPerceptionComponent;
 class AWeapon;
 class APumpActionWeapon;
-class USphereComponent;
 class AStronghold;
 class UCommanderRecruit;
 
@@ -29,8 +29,8 @@ class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 private:
 	ACombatCharacter* OwningCombatCharacter;
 	UCoverFinderComponent* CoverFinderComponent;
+	UTargetFinderComponent* TargetFinderComponent;
 
-	USphereComponent* TargetSightSphere;
 	UAISenseConfig_Sight* AISightConfig;
 	AWeapon* CurrentWeapon;
 	UAIPerceptionComponent* PerceptionComp;
@@ -171,8 +171,6 @@ private:
 	void MoveToRandomPoint();
 
 	FVector FindNearbyDestinationPoint();
-
-	bool IsEnemyBehindMG(AActor* Enemy = nullptr);
 
 protected:
 	virtual void BeginPlay() override;
