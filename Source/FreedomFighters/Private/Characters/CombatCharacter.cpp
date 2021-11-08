@@ -429,6 +429,10 @@ void ACombatCharacter::UpdateCombatMode()
 		bUseControllerRotationYaw = false;
 	}
 
+	if (!isAiming) {
+		UpdateSprint();
+	}
+
 	OnCombatUpdated.Broadcast(this);
 }
 

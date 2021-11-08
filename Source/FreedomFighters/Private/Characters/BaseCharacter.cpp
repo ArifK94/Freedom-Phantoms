@@ -174,6 +174,9 @@ void ABaseCharacter::BeginPlay()
 	RetrieveDeathAnimDataSet();
 
 	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	SprintSpeed = DefaultMaxWalkSpeed * 2.0f;
+	UpdateSprint();
+
 	DefaultAIController = Cast<AAIController>(GetController());
 
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
@@ -373,6 +376,8 @@ void ABaseCharacter::UpdateCameraView()
 void ABaseCharacter::ToggleSprint()
 {
 	IsSprintDefault = !IsSprintDefault;
+
+	UpdateSprint();
 }
 
 void ABaseCharacter::BeginSprint()
@@ -389,7 +394,7 @@ void ABaseCharacter::BeginSprint()
 			UnCrouch();
 		}
 
-		GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed * 2.0f;
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 
 		isSprinting = true;
 	}
@@ -400,6 +405,18 @@ void ABaseCharacter::EndSprint()
 	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
 
 	isSprinting = false;
+}
+
+void ABaseCharacter::UpdateSprint()
+{
+	if (IsSprintDefault)
+	{
+		BeginSprint();
+	}
+	else
+	{
+		EndSprint();
+	}
 }
 
 void ABaseCharacter::ToggleCrouch()
@@ -467,15 +484,6 @@ void ABaseCharacter::UpdateSpeed()
 	else
 	{
 		TargetSpeed = GetVelocity().Size();
-
-		if (CharacterSpeed > 0.1f && IsSprintDefault)
-		{
-			BeginSprint();
-		}
-		else
-		{
-			EndSprint();
-		}
 	}
 	CharacterSpeed = TargetSpeed;
 }

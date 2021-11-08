@@ -201,7 +201,6 @@ protected:
 		UAnimSequence* DeathAnimationAsset;
 
 protected:
-
 	float DefaultMaxWalkSpeed;
 
 	float CurrentDeltaTime;
@@ -218,6 +217,8 @@ private:
 	float LastRightInput;
 
 	float DefaultCameraFOV;
+
+	float SprintSpeed;
 
 	FTimerHandle THandler_ResetInitialDirectionBool;
 	FTimerHandle THandler_CharacterMovement;
@@ -271,6 +272,7 @@ public:
 	void ToggleSprint();
 	virtual void BeginSprint();
 	virtual void EndSprint();
+	void UpdateSprint();
 
 	virtual void BeginAim();
 	virtual void EndAim();
