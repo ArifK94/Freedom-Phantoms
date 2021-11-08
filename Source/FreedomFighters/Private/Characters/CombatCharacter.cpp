@@ -155,7 +155,13 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 		RegisterWeaponEvents(primaryWeaponObj, false);
 		RegisterWeaponEvents(secondaryWeaponObj, false);
 
-		FriendlyKilled();
+		// Inform nearest ally of death
+		auto nearestFriendly = FindNearestFriendly();
+
+		if (nearestFriendly)
+		{
+			nearestFriendly->FriendlyKilled();
+		}
 	}
 }
 
@@ -769,6 +775,43 @@ void ACombatCharacter::ToggleNightVision()
 	}
 }
 
+ACombatCharacter* ACombatCharacter::FindNearestFriendly()
+{
+	TArray<AActor*> allCombatChars;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACombatCharacter::StaticClass(), allCombatChars);
+	ACombatCharacter* ClosestAlly = nullptr;
+
+	for (int i = 0; i < allCombatChars.Num(); i++)
+	{
+		auto CurrentActor = allCombatChars[i];
+
+		if (CurrentActor == this) {
+			continue;
+		}
+
+		auto CurrentCombatant = Cast<ACombatCharacter>(CurrentActor);
+		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentCombatant);
+
+		if (isFriendly && CurrentCombatant->GetHealthComp()->IsAlive())
+		{
+			if (ClosestAlly == nullptr) 
+			{
+				ClosestAlly = CurrentCombatant;
+			}
+			else
+			{
+				if (CurrentCombatant->GetDistanceTo(this) < ClosestAlly->GetDistanceTo(this))
+				{
+					ClosestAlly = CurrentCombatant;
+				}
+			}
+
+
+		}
+	}
+
+	return ClosestAlly;
+}
 
 void ACombatCharacter::FriendlyKilled()
 {
