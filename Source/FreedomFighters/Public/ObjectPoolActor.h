@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "ObjectPoolActor.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPoolActorToggleSignature, AObjectPoolActor*, ObjectPoolActor, bool, IsActive);
 UCLASS()
 class FREEDOMFIGHTERS_API AObjectPoolActor : public AActor
 {
@@ -18,6 +19,10 @@ private:
 	
 public:	
 	AObjectPoolActor();
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnPoolActorToggleSignature OnPoolActorToggle;
+
 
 	void SetActive(bool InpActive);
 	bool IsActive();

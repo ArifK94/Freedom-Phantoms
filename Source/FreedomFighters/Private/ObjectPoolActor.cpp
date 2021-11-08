@@ -30,6 +30,8 @@ void AObjectPoolActor::SetActive(bool InpActive)
 	SetHidden(!InpActive);
 	SetActorEnableCollision(InpActive);
 	SetActorTickEnabled(InpActive);
+
+	OnPoolActorToggle.Broadcast(this, InpActive);
 }
 
 void AObjectPoolActor::Activate()

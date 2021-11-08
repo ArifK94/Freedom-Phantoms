@@ -136,6 +136,8 @@ void AWeaponBullet::FollowEyePoint()
 
 void AWeaponBullet::Activate()
 {
+	Super::Activate();
+
 	KillCount = 0;
 
 	if (TravelSound != NULL)
@@ -149,8 +151,6 @@ void AWeaponBullet::Activate()
 		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
 		OwnerHealth = OwningCombatCharacter->GetHealthComp();
 	}
-
-	Super::Activate();
 }
 
 void AWeaponBullet::Deactivate()
