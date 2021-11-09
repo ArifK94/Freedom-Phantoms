@@ -48,9 +48,6 @@ protected:
 public:	
 	ABaseObjective();
 
-private:
-	void AddToPlayer();
-
 protected:
 	virtual void BeginPlay() override;
 

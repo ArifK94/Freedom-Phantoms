@@ -47,6 +47,10 @@ private:
 
 	FTimerHandle THandler_PostDeath;
 
+	/** The actor tag of the player start position on the map */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName PlayerStartTagName;
+
 	// Stores the existing viewport widgets, used to toggle visibility of widgets on pause
 	TArray<UUserWidget*> OnViewWidgets;
 
@@ -195,6 +199,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
 		void AddMissionObjective(ABaseObjective* Objective);
+
+	void SpawnPlayer();
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);

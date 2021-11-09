@@ -26,30 +26,8 @@ ABaseObjective::ABaseObjective()
 void ABaseObjective::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AddToPlayer();
 }
 
-void ABaseObjective::AddToPlayer()
-{
-	TArray<AActor*> PlayerActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APawn::StaticClass(), PlayerActors);
-
-	for (int i = 0; i < PlayerActors.Num(); i++)
-	{
-		APawn* Pawn = Cast<APawn>(PlayerActors[i]);
-
-		if (Pawn->IsPlayerControlled())
-		{
-			ACustomPlayerController* CustomPlayerController = Cast<ACustomPlayerController>(Pawn->GetController());
-
-			if (CustomPlayerController)
-			{
-				CustomPlayerController->AddMissionObjective(this);
-			}
-		}
-	}
-}
 
 void ABaseObjective::ObjectiveComplete()
 {

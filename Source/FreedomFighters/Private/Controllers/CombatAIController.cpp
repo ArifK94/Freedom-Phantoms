@@ -331,7 +331,7 @@ void ACombatAIController::FindEnemy()
 		}
 
 
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
 		{
 			FVector Start = ChosenTarget->GetActorLocation() - OwningCombatCharacter->GetActorLocation();
 			Start = UKismetMathLibrary::InverseTransformDirection(OwningCombatCharacter->FollowCamera->GetComponentTransform(), Start);
@@ -629,37 +629,37 @@ void ACombatAIController::FindMountedGun()
 	float TargetSightDistance = MountedGunSightRadius;
 
 	// give priority to stronghold MG for defensive positions
-	if (CurrentStronghold)
-	{
-		TArray<AActor*> ChildActors;
-		CurrentStronghold->GetAllChildActors(ChildActors);
+	//if (CurrentStronghold)
+	//{
+	//	TArray<AActor*> ChildActors;
+	//	CurrentStronghold->GetAllChildActors(ChildActors);
 
-		for (int i = 0; i < ChildActors.Num(); i++)
-		{
-			AMountedGun* PotentialMG = Cast<AMountedGun>(ChildActors[i]);
+	//	for (int i = 0; i < ChildActors.Num(); i++)
+	//	{
+	//		AMountedGun* PotentialMG = Cast<AMountedGun>(ChildActors[i]);
 
-			if (PotentialMG)
-			{
-				bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
-				bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() != nullptr && PotentialMG->GetPotentialOwner() == OwningCombatCharacter;
+	//		if (PotentialMG)
+	//		{
+	//			bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
+	//			bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() != nullptr && PotentialMG->GetPotentialOwner() == OwningCombatCharacter;
 
-				if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
-				{
-					FVector MGLocation = PotentialMG->GetActorLocation();
+	//			if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
+	//			{
+	//				FVector MGLocation = PotentialMG->GetActorLocation();
 
-					float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), MGLocation);
+	//				float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), MGLocation);
 
-					if (DistanceDiff < TargetSightDistance)
-					{
-						TargetSightDistance = DistanceDiff;
-						SelectedMG = PotentialMG;
-					}
-				}
-			}
-		}
-	}
-	else // if not guarding a stronghold and freely out in the open
-	{
+	//				if (DistanceDiff < TargetSightDistance)
+	//				{
+	//					TargetSightDistance = DistanceDiff;
+	//					SelectedMG = PotentialMG;
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//else // if not guarding a stronghold and freely out in the open
+	//{
 		// create a collision sphere
 		FCollisionShape MyColSphere = FCollisionShape::MakeSphere(MountedGunSightRadius);
 
@@ -704,7 +704,7 @@ void ACombatAIController::FindMountedGun()
 			}
 		}
 
-	}
+	//}
 
 	OwningCombatCharacter->SetMountedGun(SelectedMG);
 

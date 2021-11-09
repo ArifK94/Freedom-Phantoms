@@ -31,6 +31,8 @@ ACustomPlayerController::ACustomPlayerController()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	PlayerStartTagName = "PlayerStart";
+
 	DesiredInputHoldTime = .5f;
 
 	InteractionLength = 350.0f;
@@ -163,20 +165,7 @@ void ACustomPlayerController::InitBeginPlayCommon()
 
 	GameInstanceController = Cast<UGameInstanceController>(UGameplayStatics::GetGameInstance(GetWorld()));
 
-	if (GameInstanceController)
-	{
-		ACombatCharacter* CombatCharacter = GameInstanceController->SpawnCombatCharacter();
-
-		if (CombatCharacter)
-		{
-			CombatCharacter->SetPrimaryWeapon(GameInstanceController->SpawnPrimaryWeapon(CombatCharacter));
-			CombatCharacter->SetSecondaryWeapon(GameInstanceController->SpawnSecondaryWeapon(CombatCharacter));
-			CombatCharacter->AutoPossessAI = EAutoPossessAI::Disabled;
-			CombatCharacter->SetUseAimCameraSpring(true);
-			OwningCombatCharacter = CombatCharacter;
-			Possess(OwningCombatCharacter);
-		}
-	}
+	SpawnPlayer();
 
 	if (OwningCombatCharacter)
 	{
@@ -247,6 +236,51 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 			CurrentSupportPackageIndex = -1;
 		}
 	}
+
+
+	// Find & Add the objectives
+	TArray<AActor*> ObjectiveActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseObjective::StaticClass(), ObjectiveActors);
+
+	for (int i = 0; i < ObjectiveActors.Num(); i++)
+	{
+		auto Objective = Cast<ABaseObjective>(ObjectiveActors[i]);
+
+		if (Objective)
+		{
+			AddMissionObjective(Objective);
+		}
+	}
+
+
+}
+
+void ACustomPlayerController::SpawnPlayer()
+{
+	if (GameInstanceController == nullptr) {
+		return;
+	}
+
+	TArray<AActor*> TargetActor;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), PlayerStartTagName, TargetActor);
+
+	if (TargetActor.Num() <= 0) {
+		return;
+	}
+
+	auto CombatCharacter = GameInstanceController->SpawnCombatCharacter();
+
+	if (CombatCharacter)
+	{
+		CombatCharacter->SetActorLocationAndRotation(TargetActor[0]->GetActorLocation(), TargetActor[0]->GetActorRotation());
+		CombatCharacter->SetPrimaryWeapon(GameInstanceController->SpawnPrimaryWeapon(CombatCharacter));
+		CombatCharacter->SetSecondaryWeapon(GameInstanceController->SpawnSecondaryWeapon(CombatCharacter));
+		CombatCharacter->AutoPossessAI = EAutoPossessAI::Disabled;
+		CombatCharacter->SetUseAimCameraSpring(true);
+		OwningCombatCharacter = CombatCharacter;
+		Possess(OwningCombatCharacter);
+	}
+
 }
 
 void ACustomPlayerController::PauseGame()
@@ -279,7 +313,7 @@ void ACustomPlayerController::PauseGame()
 		UGameplayStatics::SetGamePaused(World, false);
 	}
 	else // pause game
-	{	
+	{
 		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), OnViewWidgets, UUserWidget::StaticClass(), false);
 
 		for (int i = 0; i < OnViewWidgets.Num(); i++)
@@ -907,7 +941,7 @@ void ACustomPlayerController::EndFire()
 
 void ACustomPlayerController::BeginReload()
 {
-	if (OwningCombatCharacter) 
+	if (OwningCombatCharacter)
 	{
 		OwningCombatCharacter->BeginReload();
 	}
@@ -1110,7 +1144,7 @@ void ACustomPlayerController::UseInteractableActor()
 	}
 
 	// Can use the interactable?
-	if (CollectedInteractableActor  && !IInteractable::Execute_OnUseInteraction(CollectedInteractableActor)) {
+	if (CollectedInteractableActor && !IInteractable::Execute_OnUseInteraction(CollectedInteractableActor)) {
 		return;
 	}
 
