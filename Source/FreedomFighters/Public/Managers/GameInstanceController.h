@@ -21,14 +21,18 @@ private:
 		TSubclassOf<UUserWidget> LoadingScreenWidgetClass;
 	UUserWidget* LoadingScreenWidget;
 
-	TSubclassOf<AWeapon> PrimaryWeaponClass;
-	TSubclassOf<AWeapon> SecondaryWeaponClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AWeapon> PrimaryWeaponClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AWeapon> SecondaryWeaponClass;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<TSubclassOf<ASupportPackage>> SupportPackageClasses;
 
-	TSubclassOf<ACombatCharacter> CombatCharacterClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ACombatCharacter> CombatCharacterClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsBloodEnabled = true;
@@ -91,7 +95,7 @@ public:
 
 	AWeapon* SpawnSecondaryWeapon(AActor* Owner);
 
-	ACombatCharacter* SpawnCombatCharacter();
+	ACombatCharacter* SpawnCombatCharacter(FVector TargetLocation, FRotator TargetRotation);
 
 	TArray<ASupportPackage*> GetSupportPackage();
 

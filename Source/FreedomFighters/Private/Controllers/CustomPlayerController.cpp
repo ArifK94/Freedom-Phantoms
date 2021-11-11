@@ -268,11 +268,10 @@ void ACustomPlayerController::SpawnPlayer()
 		return;
 	}
 
-	auto CombatCharacter = GameInstanceController->SpawnCombatCharacter();
+	auto CombatCharacter = GameInstanceController->SpawnCombatCharacter(TargetActor[0]->GetActorLocation(), TargetActor[0]->GetActorRotation());
 
 	if (CombatCharacter)
 	{
-		CombatCharacter->SetActorLocationAndRotation(TargetActor[0]->GetActorLocation(), TargetActor[0]->GetActorRotation());
 		CombatCharacter->SetPrimaryWeapon(GameInstanceController->SpawnPrimaryWeapon(CombatCharacter));
 		CombatCharacter->SetSecondaryWeapon(GameInstanceController->SpawnSecondaryWeapon(CombatCharacter));
 		CombatCharacter->AutoPossessAI = EAutoPossessAI::Disabled;

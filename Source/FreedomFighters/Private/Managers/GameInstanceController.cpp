@@ -24,19 +24,8 @@ void UGameInstanceController::SetCombatCharacterClass(TSubclassOf<ACombatCharact
 	CombatCharacterClass = CharacterClass;
 }
 
-ACombatCharacter* UGameInstanceController::SpawnCombatCharacter()
+ACombatCharacter* UGameInstanceController::SpawnCombatCharacter(FVector TargetLocation, FRotator TargetRotation)
 {
-	FVector TargetLocation = FVector::ZeroVector;
-	FRotator TargetRotation = FRotator::ZeroRotator;
-
-
-	AActor* PlayerStartActor = UGameplayStatics::GetActorOfClass(GetWorld(), APlayerStart::StaticClass());
-	if (PlayerStartActor)
-	{
-		TargetLocation = PlayerStartActor->GetActorLocation();
-		TargetRotation = PlayerStartActor->GetActorRotation();
-	}
-
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	return GetWorld()->SpawnActor<ACombatCharacter>(CombatCharacterClass, TargetLocation, TargetRotation, SpawnParams);
