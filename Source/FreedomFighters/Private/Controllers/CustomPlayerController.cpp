@@ -610,6 +610,11 @@ void ACustomPlayerController::AddMissionObjective(ABaseObjective* Objective)
 
 void ACustomPlayerController::DisplayEndGameUMG()
 {
+	// In case character dies after mission success or failed
+	if (HasGameEnded) {
+		return;
+	}
+
 	HasGameEnded = true;
 	EndFire();
 	SetViewTargetWithBlend(OwningCombatCharacter);

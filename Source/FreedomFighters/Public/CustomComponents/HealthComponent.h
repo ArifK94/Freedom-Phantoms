@@ -41,6 +41,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float RegenPerSecond;
 
+	/** Lower the damage received  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float DamageReduceFactor;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool HasUnlimitedHealth;
 
@@ -98,4 +102,7 @@ public:
 	TeamFaction GetSelectedFaction() {
 		return SelectedFaction;
 	}
+
+
+	void SetDamageReduceFactor(float Value) { DamageReduceFactor = Value; }
 };

@@ -1,13 +1,10 @@
 #include "CustomComponents/HealthComponent.h"
-
 #include "FreedomFighters/FreedomFighters.h"
-
 #include "Characters/CombatCharacter.h"
+#include "Weapons/WeaponBullet.h"
 
 #include "Kismet/KismetMathLibrary.h"
-
 #include "PhysicalMaterials/PhysicalMaterial.h"
-
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 
@@ -83,8 +80,10 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 	}
 
 
+	auto DamageReduction = Damage - DamageReduceFactor;
+
 	// Update health clamp
-	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
+	Health = FMath::Clamp(Health - DamageReduction, 0.0f, MaxHealth);
 
 
 	// update the regeneration if taken damage as well as the delay time to wait again for another x seconds
