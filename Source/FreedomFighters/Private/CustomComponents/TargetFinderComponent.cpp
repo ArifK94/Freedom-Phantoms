@@ -13,7 +13,7 @@ UTargetFinderComponent::UTargetFinderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	TargetSightRadius = 7000.0f;
-	FinderLimit = 5.f;
+	FinderLimit = 5;
 }
 
 

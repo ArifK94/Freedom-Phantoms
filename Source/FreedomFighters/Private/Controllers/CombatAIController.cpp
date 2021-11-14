@@ -9,6 +9,7 @@
 #include "CustomComponents/CoverFinderComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
+#include "CustomComponents/MountedGunFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
@@ -109,6 +110,9 @@ void ACombatAIController::Init()
 
 	TargetFinderComponent = NewObject<UTargetFinderComponent>(OwningCombatCharacter);
 	TargetFinderComponent->RegisterComponent();
+
+	MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(OwningCombatCharacter);
+	MountedGunFinderComponent->RegisterComponent();
 
 	HasAssignedOrderEvent = false;
 
@@ -581,7 +585,7 @@ void ACombatAIController::ReloadWeapon()
 void ACombatAIController::FindMountedGun()
 {
 	// if already using an MG
-	if (OwningCombatCharacter->IsUsingMountedWeapon())
+	if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
 	{
 		// if using an aircraft MG for instance, which should not be exited 
 		if (!OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
@@ -596,7 +600,6 @@ void ACombatAIController::FindMountedGun()
 			OwningCombatCharacter->SetMountedGun(nullptr);
 			CanFindCover = true;
 		}
-
 
 		return;
 	}
@@ -625,86 +628,7 @@ void ACombatAIController::FindMountedGun()
 		}
 	}
 
-	AMountedGun* SelectedMG = nullptr;
-	float TargetSightDistance = MountedGunSightRadius;
-
-	// give priority to stronghold MG for defensive positions
-	//if (CurrentStronghold)
-	//{
-	//	TArray<AActor*> ChildActors;
-	//	CurrentStronghold->GetAllChildActors(ChildActors);
-
-	//	for (int i = 0; i < ChildActors.Num(); i++)
-	//	{
-	//		AMountedGun* PotentialMG = Cast<AMountedGun>(ChildActors[i]);
-
-	//		if (PotentialMG)
-	//		{
-	//			bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
-	//			bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() != nullptr && PotentialMG->GetPotentialOwner() == OwningCombatCharacter;
-
-	//			if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
-	//			{
-	//				FVector MGLocation = PotentialMG->GetActorLocation();
-
-	//				float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), MGLocation);
-
-	//				if (DistanceDiff < TargetSightDistance)
-	//				{
-	//					TargetSightDistance = DistanceDiff;
-	//					SelectedMG = PotentialMG;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	//else // if not guarding a stronghold and freely out in the open
-	//{
-		// create a collision sphere
-		FCollisionShape MyColSphere = FCollisionShape::MakeSphere(MountedGunSightRadius);
-
-		// create tarray for hit results
-		TArray<FHitResult> OutHits;
-
-		// check if something got hit in the sweep
-		bool isHit = GetWorld()->SweepMultiByChannel(OutHits, OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetActorLocation(), FQuat::Identity, ECC_Visibility, MyColSphere);
-
-		if (isHit)
-		{
-			// loop through TArray
-			for (auto& Hit : OutHits)
-			{
-				AActor* HitActor = Hit.GetActor();
-
-				if (HitActor)
-				{
-					AMountedGun* PotentialMG = Cast<AMountedGun>(HitActor);
-
-					if (PotentialMG)
-					{
-						// check if mounted gun is present in the stronghold and has no owner as well as no potential owner in case another AI wishes to use it
-						bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
-						bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() != nullptr && PotentialMG->GetPotentialOwner() == OwningCombatCharacter;
-
-						if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
-						{
-							FVector MGLocation = PotentialMG->GetActorLocation();
-
-							float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), MGLocation);
-
-							if (DistanceDiff < TargetSightDistance)
-							{
-								TargetSightDistance = DistanceDiff;
-								SelectedMG = PotentialMG;
-							}
-						}
-					}
-				}
-
-			}
-		}
-
-	//}
+	auto SelectedMG = MountedGunFinderComponent->FindMG();
 
 	OwningCombatCharacter->SetMountedGun(SelectedMG);
 

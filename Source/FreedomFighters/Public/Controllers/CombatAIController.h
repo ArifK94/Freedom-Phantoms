@@ -11,6 +11,7 @@ class ACombatCharacter;
 class ACommanderCharacter;
 class UCoverFinderComponent;
 class UTargetFinderComponent;
+class UMountedGunFinderComponent;
 
 class UAISenseConfig;
 class UAISenseConfig_Sight;
@@ -30,6 +31,7 @@ private:
 	ACombatCharacter* OwningCombatCharacter;
 	UCoverFinderComponent* CoverFinderComponent;
 	UTargetFinderComponent* TargetFinderComponent;
+	UMountedGunFinderComponent* MountedGunFinderComponent;
 
 	UAISenseConfig_Sight* AISightConfig;
 	AWeapon* CurrentWeapon;
