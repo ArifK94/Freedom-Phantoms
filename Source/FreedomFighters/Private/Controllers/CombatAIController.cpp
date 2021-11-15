@@ -166,7 +166,7 @@ void ACombatAIController::SetVisionAngle()
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
-	if (OwningCombatCharacter->GetIsInAircraft() || TargetDestination.IsZero()) {
+	if (TargetDestination.IsZero() || OwningCombatCharacter->GetIsInAircraft() || OwningCombatCharacter->IsUsingMountedWeapon()) {
 		return EPathFollowingRequestResult::Failed;
 	}
 
@@ -328,7 +328,7 @@ void ACombatAIController::FindEnemy()
 
 		if (OwningCombatCharacter->IsTakingCover())
 		{
-			if (TargetFinderComponent->IsTargetBehind(ChosenTarget))
+			if (TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, ChosenTarget))
 			{
 				OwningCombatCharacter->StopCover();
 			}
@@ -345,7 +345,7 @@ void ACombatAIController::FindEnemy()
 			bool PitchRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Pitch, OwningCombatCharacter->GetMountedGun()->GetPitchMin(), OwningCombatCharacter->GetMountedGun()->GetPitchMax(), false, false);
 
 			// check if enemy position is NOT within turret's pitch and yaw boundaries or is not behind the MG
-			if (!YawRange || !PitchRange || TargetFinderComponent->IsTargetBehind(ChosenTarget))
+			if (!YawRange || !PitchRange || TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, ChosenTarget))
 			{
 				// for normal turrets on the ground
 				if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
@@ -372,7 +372,9 @@ void ACombatAIController::FindEnemy()
 		//	GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::MoveToCover, FMath::RandRange(2.f, 5.f), true);
 		//}
 
-		if (!THandler_MoveToNearbyDestination.IsValid() && CurrentCommand != CommanderOrders::Defend) {
+		// Do find a random point if current command is defend
+		// & is set to use the mounted gun
+		if (!THandler_MoveToNearbyDestination.IsValid() && CurrentCommand != CommanderOrders::Defend && !OwningCombatCharacter->GetMountedGun()) {
 			HasChosenNearTargetDest = false;
 			TargetDestination = OwningCombatCharacter->GetActorLocation();
 			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, FMath::RandRange(.5f, 2.f), true);
@@ -585,39 +587,31 @@ void ACombatAIController::ReloadWeapon()
 void ACombatAIController::FindMountedGun()
 {
 	// if already using an MG
-	if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
+	if (OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
 	{
-		// if using an aircraft MG for instance, which should not be exited 
-		if (!OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
-		{
-			return;
-		}
-
-		// a player can use the MG at the last second which results in more than one actor using the MG
-		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter ||
-			OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
-		{
-			OwningCombatCharacter->SetMountedGun(nullptr);
-			CanFindCover = true;
-		}
-
+		// if using an aircraft MG for instance, which should not be exited
+		GetWorldTimerManager().ClearTimer(THandler_MountedGun);
 		return;
 	}
 
 	// If an MG has been assigned
 	if (OwningCombatCharacter->GetMountedGun())
 	{
-		if (!OwningCombatCharacter->IsReloading())
+		if (!OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsUsingMountedWeapon())
 		{
 			OwningCombatCharacter->UseMountedGun();
 			return;
 		}
 
 		// in case player or another NPC has reached the MG before AI
-		if (OwningCombatCharacter->GetMountedGun()->GetPotentialOwner() != OwningCombatCharacter ||
-			OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
+		if (OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
 		{
-			OwningCombatCharacter->SetMountedGun(nullptr);
+			OwningCombatCharacter->DropMountedGun();
+			CanFindCover = true;
+		}
+		else if (TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, EnemyActor))
+		{
+			OwningCombatCharacter->DropMountedGun(false);
 			CanFindCover = true;
 		}
 		else // if MG is free, keep moving towards it
@@ -630,11 +624,12 @@ void ACombatAIController::FindMountedGun()
 
 	auto SelectedMG = MountedGunFinderComponent->FindMG();
 
-	OwningCombatCharacter->SetMountedGun(SelectedMG);
-
-	if (OwningCombatCharacter->GetMountedGun())
+	// if found an MG 
+	// & enemy is not behind the MG
+	if (SelectedMG && !TargetFinderComponent->IsTargetBehind(SelectedMG, EnemyActor))
 	{
-		OwningCombatCharacter->GetMountedGun()->SetPotentialOwner(OwningCombatCharacter);
+		SelectedMG->SetPotentialOwner(OwningCombatCharacter);
+		OwningCombatCharacter->SetMountedGun(SelectedMG);
 		CanFindCover = false;
 
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();

@@ -29,7 +29,7 @@ public:
 
 	AActor* FindTarget();
 
-	bool IsTargetBehind(AActor* TargetActor);
+	bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
 
 protected:
 	virtual void BeginPlay() override;	

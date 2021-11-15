@@ -117,14 +117,14 @@ AActor* UTargetFinderComponent::FindTarget()
 }
 
 
-bool UTargetFinderComponent::IsTargetBehind(AActor* TargetActor)
+bool UTargetFinderComponent::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
 {
-	if (TargetActor == nullptr) {
+	if (ActorA == nullptr || TargetActor == nullptr) {
 		return false;
 	}
 
-	FVector MGForwardPos = UKismetMathLibrary::GetForwardVector(GetOwner()->GetActorRotation());
-	FVector Normalised = TargetActor->GetActorLocation() - GetOwner()->GetActorLocation();
+	FVector MGForwardPos = UKismetMathLibrary::GetForwardVector(ActorA->GetActorRotation());
+	FVector Normalised = TargetActor->GetActorLocation() - ActorA->GetActorLocation();
 	UKismetMathLibrary::Vector_Normalize(Normalised);
 	float Angle = UKismetMathLibrary::Dot_VectorVector(MGForwardPos, Normalised);
 

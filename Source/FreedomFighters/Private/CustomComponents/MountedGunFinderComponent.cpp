@@ -12,12 +12,25 @@ UMountedGunFinderComponent::UMountedGunFinderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	SearchRadius = 500.0f;
+	SearchLimit = 3;
 }
 
 
 void UMountedGunFinderComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (SearchSphere == nullptr)
+	{
+		SearchSphere = NewObject<USphereComponent>(GetOwner());
+		if (SearchSphere)
+		{
+			SearchSphere->RegisterComponent();
+			SearchSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+			SearchSphere->SetSphereRadius(SearchRadius);
+			SearchSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+		}
+	}
 }
 
 AMountedGun* UMountedGunFinderComponent::FindMG()
@@ -25,94 +38,76 @@ AMountedGun* UMountedGunFinderComponent::FindMG()
 	AMountedGun* SelectedMG = nullptr;
 	float TargetSightDistance = SearchRadius;
 
-	// create a collision sphere
-	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(SearchRadius);
+	TArray<AActor*> ActorsInSight;
+	SearchSphere->GetOverlappingActors(ActorsInSight, AMountedGun::StaticClass());
 
-	//create tarray for hit results
-	TArray<FHitResult> OutHits;
+	// The current limit of targets to process
+	int CurrentSearchCount = 0;
 
-	//check if something got hit in the sweep
-	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation(), FQuat::Identity, ECC_Visibility, MyColSphere);
-
-	if (isHit)
+	for (int index = 0; index < ActorsInSight.Num(); index++)
 	{
-		//loop through TArray
-		for (auto& Hit : OutHits)
+		if (CurrentSearchCount > SearchLimit) {
+			break;
+		}
+
+		AMountedGun* PotentialMG = Cast<AMountedGun>(ActorsInSight[index]);
+
+		if (PotentialMG)
 		{
-			AActor* HitActor = Hit.GetActor();
+			//check if mounted gun is present in the stronghold and has no owner as well as no potential owner in case another AI wishes to use it
+			bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
 
-			if (HitActor)
+			if (HasNoOwner && PotentialMG->GetCanTraceInteraction())
 			{
-				AMountedGun* PotentialMG = Cast<AMountedGun>(HitActor);
+				float DistanceDiff = FVector::Dist(GetOwner()->GetActorLocation(), PotentialMG->GetActorLocation());
 
-				if (PotentialMG)
+				if (DistanceDiff < TargetSightDistance)
 				{
-					//check if mounted gun is present in the strongholdand has no owner as well as no potential owner in case another AI wishes to use it
-					bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
-					bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() != nullptr && PotentialMG->GetPotentialOwner() == GetOwner();
-
-					if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
-					{
-						FVector MGLocation = PotentialMG->GetActorLocation();
-
-						float DistanceDiff = FVector::Dist(GetOwner()->GetActorLocation(), MGLocation);
-
-						if (DistanceDiff < TargetSightDistance)
-						{
-							TargetSightDistance = DistanceDiff;
-							SelectedMG = PotentialMG;
-						}
-					}
+					TargetSightDistance = DistanceDiff;
+					SelectedMG = PotentialMG;
 				}
-			}
 
+				CurrentSearchCount++;
+			}
 		}
 	}
-
-
-
-
-
-
-
 
 	return SelectedMG;
 }
 
 
-// ALTERNATIVE
 // create a collision sphere
-//FCollisionShape MyColSphere = FCollisionShape::MakeSphere(MountedGunSightRadius);
-//
-// create tarray for hit results
+//FCollisionShape MyColSphere = FCollisionShape::MakeSphere(SearchRadius);
+
+////create tarray for hit results
 //TArray<FHitResult> OutHits;
-//
-// check if something got hit in the sweep
-//bool isHit = GetWorld()->SweepMultiByChannel(OutHits, OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetActorLocation(), FQuat::Identity, ECC_Visibility, MyColSphere);
-//
+
+////check if something got hit in the sweep
+//bool isHit = GetWorld()->SweepMultiByChannel(OutHits, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation(), FQuat::Identity, ECC_Visibility, MyColSphere);
+
 //if (isHit)
 //{
-//	 loop through TArray
+//	//loop through TArray
 //	for (auto& Hit : OutHits)
 //	{
 //		AActor* HitActor = Hit.GetActor();
-//
+
 //		if (HitActor)
 //		{
 //			AMountedGun* PotentialMG = Cast<AMountedGun>(HitActor);
-//
+
 //			if (PotentialMG)
 //			{
-//				 check if mounted gun is present in the stronghold and has no owner as well as no potential owner in case another AI wishes to use it
+//				//check if mounted gun is present in the stronghold and has no owner as well as no potential owner in case another AI wishes to use it
 //				bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
-//				bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() != nullptr && PotentialMG->GetPotentialOwner() == OwningCombatCharacter;
-//
+//				bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() == GetOwner();
+
 //				if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
 //				{
 //					FVector MGLocation = PotentialMG->GetActorLocation();
-//
-//					float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), MGLocation);
-//
+
+//					float DistanceDiff = FVector::Dist(GetOwner()->GetActorLocation(), MGLocation);
+
 //					if (DistanceDiff < TargetSightDistance)
 //					{
 //						TargetSightDistance = DistanceDiff;
@@ -121,6 +116,6 @@ AMountedGun* UMountedGunFinderComponent::FindMG()
 //				}
 //			}
 //		}
-//
+
 //	}
 //}

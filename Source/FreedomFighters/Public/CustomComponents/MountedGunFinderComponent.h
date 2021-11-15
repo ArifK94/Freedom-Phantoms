@@ -8,6 +8,7 @@
 
 
 class AMountedGun;
+class USphereComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UMountedGunFinderComponent : public UActorComponent
@@ -15,8 +16,13 @@ class FREEDOMFIGHTERS_API UMountedGunFinderComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
+	USphereComponent* SearchSphere;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float SearchRadius;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int SearchLimit;
 
 public:	
 	UMountedGunFinderComponent();
