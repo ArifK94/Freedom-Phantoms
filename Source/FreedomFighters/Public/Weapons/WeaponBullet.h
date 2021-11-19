@@ -84,19 +84,19 @@ private:
 		float HomingFollowFactor;
 
 	// Custom Projectile Movement
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
 		bool UseCustomProjectileMovement;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
 		float InitialSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
 		float Mass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
 		float Drag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
 		FVector Gravity;
 	FVector Velocity;
 	FVector Acceleration;
