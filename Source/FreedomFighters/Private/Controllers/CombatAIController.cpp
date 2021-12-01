@@ -121,7 +121,6 @@ void ACombatAIController::Init()
 	{
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 	}
-
 }
 
 UAISenseConfig* ACombatAIController::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
@@ -204,6 +203,8 @@ void ACombatAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	DefaultDestinationRadius = DestinationRadius;
+
 	Init();
 }
 
@@ -280,8 +281,13 @@ void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 
 		if (bOnNavMesh)
 		{
+			DestinationRadius = 1000.f;
 			TargetDestination = NavLocation.Location;
 			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, 1.f, true);
+		}
+		else
+		{
+			DestinationRadius = DefaultDestinationRadius;
 		}
 	}
 

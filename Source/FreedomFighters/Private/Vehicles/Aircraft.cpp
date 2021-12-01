@@ -735,8 +735,8 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 
 		auto Character = TargetNode->Character;
 
-		if (Character == nullptr) {
-			//TargetSystemNodes.RemoveAt(i);
+		if (Character == nullptr || Character->GetName() == "None") {
+			TargetSystemNodes.RemoveAt(i);
 			continue;
 		}
 

@@ -107,6 +107,8 @@ private:
 	/** The sphere radius for recruits to move around a order position so that multiple recruits do not stick together in one place */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		float DestinationRadius;
+	float DefaultDestinationRadius;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AActor* EnemyActor;
