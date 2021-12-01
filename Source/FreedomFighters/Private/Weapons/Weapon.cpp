@@ -403,9 +403,10 @@ void AWeapon::CreateBullet()
 			else
 			{
 				FActorSpawnParameters SpawnParams;
+				SpawnParams.Owner = MyOwner;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				AWeaponBullet* Bullet = GetWorld()->SpawnActor<AWeaponBullet>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+				AWeaponBullet* Bullet = GetWorld()->SpawnActor<AWeaponBullet>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
 
 				if (Bullet)
 				{

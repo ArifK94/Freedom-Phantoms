@@ -733,8 +733,15 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 	{
 		FTargetSystemNode* TargetNode = TargetSystemNodes[i];
 
+		auto Character = TargetNode->Character;
+
+		if (Character == nullptr) {
+			//TargetSystemNodes.RemoveAt(i);
+			continue;
+		}
+
 		// remove dead characters from the targetting system
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(TargetNode->Character->GetComponentByClass(UHealthComponent::StaticClass()));
+		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
 
 		if (CurrentHealth)
 		{
@@ -745,12 +752,12 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 
 				if (TargetNode->Marker == nullptr)
 				{
-					TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, TargetNode->Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
+					TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
 
 				}
 				else
 				{
-					TargetNode->Marker->SetActorLocation(TargetNode->Character->GetActorLocation());
+					TargetNode->Marker->SetActorLocation(Character->GetActorLocation());
 				}
 			}
 			else
@@ -1054,12 +1061,14 @@ void AAircraft::OnDestroy()
 	// destroy all attached actors to this aircraft
 	TArray<AActor*> AttachedActors;
 	GetAttachedActors(AttachedActors);
-	DetroyChildActor(AttachedActors);
+	DestroyChildActor(AttachedActors);
+
+	// destroy the aircraft
 	Destroy();
 }
 
 // Recursively destroy children actors
-void AAircraft::DetroyChildActor(TArray<AActor*> ParentActor)
+void AAircraft::DestroyChildActor(TArray<AActor*> ParentActor)
 {
 	if (ParentActor.Num() <= 0) {
 		return;
@@ -1069,11 +1078,14 @@ void AAircraft::DetroyChildActor(TArray<AActor*> ParentActor)
 	{
 		AActor* ChildActor = ParentActor[i];
 
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You are hitting: %s"), *ChildActor->GetName()));
+		// ignore the aircraft actor
+		if (ChildActor == this) {
+			continue;
+		}
 
-		//TArray<AActor*> ChildAttachedActors;
-		//ChildActor->GetAttachedActors(ChildAttachedActors);
-		//DetroyChildActor(ChildAttachedActors);
+		TArray<AActor*> ChildAttachedActors;
+		ChildActor->GetAttachedActors(ChildAttachedActors);
+		DestroyChildActor(ChildAttachedActors);
 
 		ChildActor->Destroy();
 	}

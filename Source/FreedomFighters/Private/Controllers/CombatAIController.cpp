@@ -122,9 +122,6 @@ void ACombatAIController::Init()
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 	}
 
-	UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
-	HealthComp->SetRegenerateHealth(true);
-	HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthChanged);
 }
 
 UAISenseConfig* ACombatAIController::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
@@ -232,6 +229,11 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
 
+		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACombatAIController::OnRappelUpdated);
+
+		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
+		HealthComp->SetRegenerateHealth(true);
+		HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthChanged);
 	}
 
 	// run behavior tree if specified
@@ -244,6 +246,15 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 void ACombatAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
+
+	if (OwningCombatCharacter)
+	{
+		OwningCombatCharacter->OnRappelUpdate.RemoveDynamic(this, &ACombatAIController::OnRappelUpdated);
+
+		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
+		HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthChanged);
+	}
+
 
 	ClearTimers();
 }
@@ -258,6 +269,23 @@ void ACombatAIController::OnHealthChanged(UHealthComponent* OwningHealthComp, fl
 	}
 }
 
+void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
+{
+	// Find a random point when landed after rappellinh so upcoming characters rapelling down do not stand in the same spot
+	if (!OwningCombatCharacter->IsRepellingDown())
+	{
+		FNavLocation NavLocation;
+		UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+		bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(OwningCombatCharacter->GetActorLocation(), NavLocation);
+
+		if (bOnNavMesh)
+		{
+			TargetDestination = NavLocation.Location;
+			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, 1.f, true);
+		}
+	}
+
+}
 
 void ACombatAIController::ClearTimers()
 {
@@ -622,19 +650,24 @@ void ACombatAIController::FindMountedGun()
 		}
 	}
 
-	auto SelectedMG = MountedGunFinderComponent->FindMG();
-
-	// if found an MG 
-	// & enemy is not behind the MG
-	if (SelectedMG && !TargetFinderComponent->IsTargetBehind(SelectedMG, EnemyActor))
+	if (MountedGunFinderComponent)
 	{
-		SelectedMG->SetPotentialOwner(OwningCombatCharacter);
-		OwningCombatCharacter->SetMountedGun(SelectedMG);
-		CanFindCover = false;
+		auto SelectedMG = MountedGunFinderComponent->FindMG();
 
-		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
-		MoveToTarget(0.0f, false);
+		// if found an MG 
+		// & enemy is not behind the MG
+		if (SelectedMG && !TargetFinderComponent->IsTargetBehind(SelectedMG, EnemyActor))
+		{
+			SelectedMG->SetPotentialOwner(OwningCombatCharacter);
+			OwningCombatCharacter->SetMountedGun(SelectedMG);
+			CanFindCover = false;
+
+			TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
+			MoveToTarget(0.0f, false);
+		}
 	}
+
+
 
 }
 
@@ -717,13 +750,6 @@ void ACombatAIController::MoveToRandomPoint()
 			Movement = MoveToTarget(0.0f); // Move to new destination
 			HasChosenNearTargetDest = true;
 		}
-
-		//auto CoverLocation = CoverFinderComponent->FindCover(NearDestination);
-
-		//if (!CoverLocation.IsZero())
-		//{
-		//	TargetDestination = CoverLocation;
-		//}
 	}
 
 

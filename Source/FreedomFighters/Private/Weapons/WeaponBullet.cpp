@@ -53,6 +53,12 @@ void AWeaponBullet::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (GetOwner())
+	{
+		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
+		OwnerHealth = OwningCombatCharacter->GetHealthComp();
+	}
+
 	BulletMovementAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 	BulletMovementAudio->SetRelativeLocation(FVector::ZeroVector);
 

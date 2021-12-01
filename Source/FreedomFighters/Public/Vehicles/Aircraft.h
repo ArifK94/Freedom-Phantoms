@@ -302,7 +302,7 @@ private:
 
 	void OnDestroy();
 
-	void DetroyChildActor(TArray<AActor*> ParentActor);
+	void DestroyChildActor(TArray<AActor*> ParentActor);
 
 protected:
 	virtual void BeginPlay() override;
