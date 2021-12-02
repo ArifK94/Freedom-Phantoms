@@ -25,7 +25,7 @@ private:
 		TArray<FVehicleSplinePoint> VehicleSplinePoints;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline", meta = (AllowPrivateAccess = "true"))
-		bool IsPathOccupied;
+		AActor* OccupiedVehicle;
 
 public:	
 	AAircraftSplinePath();
@@ -53,7 +53,7 @@ public:
 		return SplinePathComp;
 	}
 
-	bool GetIsPathOccupied() { return IsPathOccupied; }
+	AActor* GetOccupiedVehicle() { return OccupiedVehicle; }
 
-	void SetIsPathOccupied(bool Occupied) { IsPathOccupied = Occupied; }
+	void SetOccupantVehicle(AActor* Occupant) { OccupiedVehicle = Occupant; }
 };

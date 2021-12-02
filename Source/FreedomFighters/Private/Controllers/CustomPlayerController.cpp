@@ -1108,8 +1108,7 @@ void ACustomPlayerController::PickupInteractable()
 
 		// update support package event for UI
 		SupportPackages.Add(CurrentSupportPackage);
-		CurrentSupportPackageIndex = SupportPackages.Find(CurrentSupportPackage);
-		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, SupportPackages.Find(CurrentSupportPackage), true);
+		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, SupportPackages.Num() - 1, true);
 	}
 	else if (Cast<AMountedGun>(CollectedInteractableActor)) 		// Use Mounted Gun
 	{
@@ -1190,25 +1189,7 @@ void ACustomPlayerController::UseInteractableActor()
 /// </summary>
 void ACustomPlayerController::SortSupportPackages()
 {
-	for (int i = 0; i < SupportPackages.Num(); i++)
-	{
-		ASupportPackage* Current = SupportPackages[i];
-
-		// if current index is empty
-		if (Current == nullptr)
-		{
-			ASupportPackage* Next = nullptr;
-
-			if (i + 1 < SupportPackages.Num())
-			{
-				Next = SupportPackages[i + 1];
-				Current = Next;
-				SupportPackages[i + 1] = nullptr;
-			}
-		}
-	}
-
-	if (SupportPackages.Num() > 0 && CurrentSupportPackageIndex - 1 > 0)
+	if (SupportPackages.Num() > 0)
 	{
 		CurrentSupportPackageIndex = CurrentSupportPackageIndex - 1;
 		CurrentSupportPackage = SupportPackages[CurrentSupportPackageIndex];

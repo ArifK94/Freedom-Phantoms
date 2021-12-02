@@ -313,6 +313,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EAircraftMovement MovementType;
+	
+	/** Allow additional aircrafts to use the same spline path if current aircraft has finished its task rather than waiting for the current aircraft to reach its endpoint of the path  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool IsPathFreeToUse;
 };
 
 

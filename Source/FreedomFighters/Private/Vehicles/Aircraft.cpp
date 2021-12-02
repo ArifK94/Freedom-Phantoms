@@ -191,6 +191,10 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 			CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
 		}
 
+		if (CurrentSplinePoint.IsPathFreeToUse)
+		{
+			AircraftPath->SetOccupantVehicle(nullptr);
+		}
 
 	}
 }
@@ -224,7 +228,7 @@ void AAircraft::FindPath()
 			auto Path = Cast<AAircraftSplinePath>(Actor);
 
 			// check if path is not occupied
-			if (Path && !Path->GetIsPathOccupied())
+			if (Path && !Path->GetOccupiedVehicle())
 			{
 				float Distance = UKismetMathLibrary::Vector_Distance(TargetDestination, Path->GetActorLocation());
 
@@ -248,7 +252,7 @@ void AAircraft::FindPath()
 		if (ClosestPath)
 		{
 			AircraftPath = ClosestPath;
-			AircraftPath->SetIsPathOccupied(true);
+			AircraftPath->SetOccupantVehicle(this);
 
 			// setup time line for following the path
 			if (CurveFloat)
@@ -1006,16 +1010,17 @@ void AAircraft::UpdateOccupiedSeats()
 	// check if passengers still alive
 	for (int i = 0; i < OccupiedSeats.Num(); i++)
 	{
-		if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
+		auto Character = OccupiedSeats[i].CharacterObj;
+
+		if (Character == nullptr || Character->GetName() == "None")
 		{
-			FAircraftSeating Passenger = OccupiedSeats[i];
-			auto Character = Passenger.CharacterObj;
-			if (Character)
+			OccupiedSeats.RemoveAt(i);
+		}
+		else if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
+		{
+			if (Character->GetHealthComp() && !Character->GetHealthComp()->IsAlive())
 			{
-				if (Character->GetHealthComp() && !Character->GetHealthComp()->IsAlive())
-				{
-					OccupiedSeats.RemoveAt(i);
-				}
+				OccupiedSeats.RemoveAt(i);
 			}
 		}
 	}
@@ -1052,9 +1057,9 @@ void AAircraft::OnDestroy()
 	}
 
 	// Free up the path for another aircraft to use
-	if (AircraftPath)
+	if (AircraftPath && AircraftPath->GetOccupiedVehicle() == this)
 	{
-		AircraftPath->SetIsPathOccupied(false);
+		AircraftPath->SetOccupantVehicle(nullptr);
 	}
 
 
