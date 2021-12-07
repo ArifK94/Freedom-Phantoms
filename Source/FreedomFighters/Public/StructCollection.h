@@ -27,9 +27,39 @@ class UAnimMontage;
 class UAnimSequence;
 class UAimOffsetBlendSpace;
 class UTexture;
+class UTexture2D;
 class ASupportPackage;
 class UParticleSystem;
 class UNiagaraSystem;
+
+USTRUCT(BlueprintType)
+struct FREEDOMFIGHTERS_API FMapDetail : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	/** The exact name of the map asset */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FName MapName;
+
+	/** To be displayed on the loading screen or anywhere else */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FName DisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FName Description;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<UUserWidget> SatelliteWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UMaterial* RenderTargetMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UTexture2D* PreviewImage;
+
+
+};
 
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FObjectPoolParameters

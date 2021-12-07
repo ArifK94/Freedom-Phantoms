@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "StructCollection.h"
 #include "GameInstanceController.generated.h"
 
 class AWeapon;
@@ -16,6 +17,9 @@ class FREEDOMFIGHTERS_API UGameInstanceController : public UGameInstance
 	GENERATED_BODY()
 
 private:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FMapDetail SelectedLevel;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> LoadingScreenWidgetClass;
