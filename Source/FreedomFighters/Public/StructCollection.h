@@ -40,7 +40,7 @@ struct FREEDOMFIGHTERS_API FMapDetail : public FTableRowBase
 public:
 	/** The exact name of the map asset */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FName MapName;
+		FName LevelName;
 
 	/** To be displayed on the loading screen or anywhere else */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -56,8 +56,11 @@ public:
 		UMaterial* RenderTargetMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UTexture2D* PreviewImage;
+		UTexture2D* SatelliteImage;
 
+	/** Used for loading screen */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UTexture2D* Thumbnail;
 
 };
 
