@@ -10,6 +10,7 @@ class USoundBase;
 class UDamageType;
 class AWeapon;
 class UHealthComponent;
+class UTeamFactionComponent;
 class UAudioComponent;
 class UArrowComponent;
 class USphereComponent;
@@ -113,6 +114,7 @@ private:
 
 	ACombatCharacter* OwningCombatCharacter;
 	UHealthComponent* OwnerHealth;
+	UTeamFactionComponent* OwnerFaction;
 
 private:
 	virtual void Activate() override;
@@ -131,7 +133,7 @@ private:
 
 	FSurfaceImpactSet CheckSurface(EPhysicalSurface SurfaceType);
 
-	void AddKill(UHealthComponent* DamagedActorHealth);
+	void AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction);
 
 
 protected:

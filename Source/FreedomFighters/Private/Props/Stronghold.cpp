@@ -1,9 +1,9 @@
 #include "Props/Stronghold.h"
-
 #include "Characters/CombatCharacter.h"
 #include "Controllers/CombatAIController.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 
 #include "TimerManager.h"
 #include "Math/UnrealMathUtility.h"
@@ -203,23 +203,32 @@ void AStronghold::UpdateTotalOccupants()
 	for (int i = 0; i < TotalOccupyingCombatants.Num(); i++)
 	{
 		ACombatCharacter* Character = TotalOccupyingCombatants[i];
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
 
-		if (Character && CurrentHealth && CurrentHealth->IsAlive())
+		if (Character)
 		{
-			FOccupiedFaction* OccupiedFaction = DoesFactionExist(CurrentHealth->GetSelectedFaction());
-			if (OccupiedFaction != nullptr)
+			auto TeamFactionComp = Cast<UTeamFactionComponent>(Character->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+
+			if (TeamFactionComp)
 			{
-				OccupiedFaction->FactionCount++;
+				FOccupiedFaction* OccupiedFaction = DoesFactionExist(TeamFactionComp->GetSelectedFaction());
+				if (OccupiedFaction != nullptr)
+				{
+					OccupiedFaction->FactionCount++;
+				}
+				else
+				{
+					AddFaction(Character, TeamFactionComp->GetSelectedFaction());
+				}
 			}
 			else
 			{
-				AddFaction(Character, CurrentHealth->GetSelectedFaction());
+				TotalOccupyingCombatants.RemoveAt(i);
 			}
+
+
 		}
 		else
 		{
-			// else dead
 			TotalOccupyingCombatants.RemoveAt(i);
 		}
 	}

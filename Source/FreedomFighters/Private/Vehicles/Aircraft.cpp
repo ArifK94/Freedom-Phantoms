@@ -8,6 +8,7 @@
 #include "Weapons/MountedGun.h"
 #include "Weapons/WeaponBullet.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 #include "CustomComponents/ObjectPoolComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
@@ -689,11 +690,12 @@ void AAircraft::SetTargetSystem()
 
 			if (CurrentHealth)
 			{
-				bool isFriendly = UHealthComponent::IsFriendly(MyOwner, Character);
+				bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
+				bool isFriendly = UTeamFactionComponent::IsFriendly(MyOwner, Character);
 
 				if (CurrentHealth->IsAlive())
 				{
-					if (isFriendly)
+					if (IsFactionCompActive && isFriendly)
 					{
 						if (!DoesFriendlyNodeExists(Character))
 						{

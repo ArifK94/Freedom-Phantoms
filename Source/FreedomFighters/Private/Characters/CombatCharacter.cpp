@@ -8,6 +8,7 @@
 #include "Weapons/MountedGun.h"
 #include "Weapons/WeaponBullet.h"
 #include "CustomComponents/ObjectPoolComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -65,11 +66,25 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 
 void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 {
+	if (Weapon == nullptr)
+	{
+		secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
+	}
+	else
+	{
+		if (secondaryWeaponObj)
+		{
+			secondaryWeaponObj->Destroy();
+		}
 
+		secondaryWeaponObj = Weapon;
+	}
 }
 
 ACombatCharacter::ACombatCharacter()
 {
+	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
+
 	currentWeaponObj = nullptr;
 	primaryWeaponObj = nullptr;
 	secondaryWeaponObj = nullptr;
@@ -142,6 +157,8 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 
 	if (isDead)
 	{
+		TeamFactionComponent->SetCompActive(false);
+
 		// check if not using mounted gun as the weapon will be dropped and simulating physics
 		if (currentWeaponObj && currentWeaponObj != MountedGun) {
 			EndFire();
@@ -794,9 +811,9 @@ ACombatCharacter* ACombatCharacter::FindNearestFriendly()
 		}
 
 		auto CurrentCombatant = Cast<ACombatCharacter>(CurrentActor);
-		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentCombatant);
+		bool isFriendly = UTeamFactionComponent::IsFriendly(this, CurrentCombatant);
 
-		if (isFriendly && CurrentCombatant->GetHealthComp()->IsAlive())
+		if (isFriendly)
 		{
 			if (ClosestAlly == nullptr) 
 			{
@@ -809,8 +826,6 @@ ACombatCharacter* ACombatCharacter::FindNearestFriendly()
 					ClosestAlly = CurrentCombatant;
 				}
 			}
-
-
 		}
 	}
 

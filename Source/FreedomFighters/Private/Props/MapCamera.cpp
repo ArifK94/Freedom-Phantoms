@@ -10,13 +10,10 @@ AMapCamera::AMapCamera()
 
 	SetTickableWhenPaused(true);
 
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	RootComponent = Camera;
-
 	SceneCaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent2D"));
+	RootComponent = SceneCaptureComponent2D;
 	SceneCaptureComponent2D->SetTickableWhenPaused(true);
-
-	PostProcessor = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcessor"));
+	SceneCaptureComponent2D->bCaptureEveryFrame = false;
 
 	PanningSpeedMultiplier = 150.0f;
 	ZoomSpeedMultiplier = 150.0f;
@@ -39,25 +36,61 @@ void AMapCamera::BeginPlay()
 	DefaultLocation = GetActorLocation();
 	LocationInput = DefaultLocation;
 
-	//TArray<FEngineShowFlagsSetting> Test;
+	Deactivate();
+}
 
-	//FEngineShowFlagsSetting EngineShowFlagsSetting = FEngineShowFlagsSetting();
-	//EngineShowFlagsSetting.ShowFlagName = "SkeletalMeshes";
-	//EngineShowFlagsSetting.Enabled = false;
-	//Test.Add(EngineShowFlagsSetting);
+void AMapCamera::Tick(float DelatTime)
+{
+	Super::Tick(DelatTime);
+
+	if (StartPostTimer)
+	{
+		if (CurrentPostActivateTimer > 0)
+		{
+			CurrentPostActivateTimer--;
+		}
+		else
+		{
+			StartPostTimer = false;
+			CurrentPostActivateTimer = 0.f;
+
+			PostActivate();
+		}
+	}
+}
 
 
-	//FEngineShowFlagsSetting EngineShowFlagsSetting2 = FEngineShowFlagsSetting();
-	//EngineShowFlagsSetting2.ShowFlagName = "Landscape";
-	//EngineShowFlagsSetting2.Enabled = false;
-	//Test.Add(EngineShowFlagsSetting2);
+void AMapCamera::Activate()
+{
+	StartPostTimer = true;
+	CurrentPostActivateTimer = 2.f;
 
-	//SceneCaptureComponent2D->ShowFlagSettings = Test;
+	SceneCaptureComponent2D->bCaptureEveryFrame = true;
+	SetActorHiddenInGame(false);
+}
+
+void AMapCamera::Deactivate()
+{
+	StartPostTimer = false;
+	CurrentPostActivateTimer = 0.f;
+
+	SceneCaptureComponent2D->bCaptureEveryFrame = false;
+	SetActorHiddenInGame(true);
+}
+
+void AMapCamera::PostActivate()
+{
+	// setting to true lowers the FPS and since this scene capture is displayed on the pause menu, this should be false
+	SceneCaptureComponent2D->bCaptureEveryFrame = false;
 }
 
 void AMapCamera::MoveToPlayerLocation()
 {
 	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+	if (Player == nullptr) {
+		return;
+	}
 
 	FVector TargetLocation = FVector(Player->GetActorLocation().X, Player->GetActorLocation().Y, GetActorLocation().Z);
 	SetActorLocation(TargetLocation);

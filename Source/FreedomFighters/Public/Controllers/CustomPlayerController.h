@@ -211,7 +211,6 @@ public:
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 
-	void Zoom(float Value);
 	void ZoomIn();
 	void ZoomOut();
 

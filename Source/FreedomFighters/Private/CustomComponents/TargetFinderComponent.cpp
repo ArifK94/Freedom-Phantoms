@@ -3,6 +3,7 @@
 
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 #include "Characters/BaseCharacter.h"
 
 #include "Components/SphereComponent.h"
@@ -41,7 +42,7 @@ AActor* UTargetFinderComponent::FindTarget()
 	TArray<AActor*> ActorsInSight;
 	float TargetSightDistance = TargetSightRadius;
 
-	TargetSightSphere->GetOverlappingActors(ActorsInSight, ABaseCharacter::StaticClass());
+	TargetSightSphere->GetOverlappingActors(ActorsInSight, UTeamFactionComponent::StaticClass());
 
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
 
@@ -62,14 +63,15 @@ AActor* UTargetFinderComponent::FindTarget()
 
 		AActor* PotentialEnemy = ActorsInSight[index];
 
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(PotentialEnemy->GetComponentByClass(UHealthComponent::StaticClass()));
+		auto TeamFaction = Cast<UTeamFactionComponent>(PotentialEnemy->GetComponentByClass(UTeamFactionComponent::StaticClass()));
 
-		if (CurrentHealth && CurrentHealth->IsAlive() && CurrentHealth->GetSelectedFaction() != TeamFaction::Neutral)
+		if (TeamFaction && TeamFaction->GetSelectedFaction() != TeamFaction::Neutral)
 		{
-			bool IsEnemy = !UHealthComponent::IsFriendly(GetOwner(), PotentialEnemy);
+			bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(PotentialEnemy);
+			bool IsEnemy = !UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
 
 			// is target alive & an enemy
-			if (IsEnemy)
+			if (IsFactionCompActive && IsEnemy)
 			{
 				FVector EnemyLocation = PotentialEnemy->GetActorLocation();
 

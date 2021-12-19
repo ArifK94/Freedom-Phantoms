@@ -3,7 +3,6 @@
 #include "Managers/GameStateBaseCustom.h"
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
-#include "CustomComponents/HealthComponent.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponBullet.h"
 #include "Weapons/AmmoCrate.h"
@@ -13,6 +12,8 @@
 #include "Props/MapCamera.h"
 #include "Objectives/BaseObjective.h"
 #include "Interfaces/Interactable.h"
+#include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetInputLibrary.h"
@@ -68,11 +69,6 @@ void ACustomPlayerController::InitInputComponent()
 	MoveForwardInput.bExecuteWhenPaused = true;
 	FInputAxisBinding& MoveRightInput = InputComponent->BindAxis("MoveRight", this, &ACustomPlayerController::MoveRight);
 	MoveRightInput.bExecuteWhenPaused = true;
-
-	InputComponent->BindAxis("Zoom", this, &ACustomPlayerController::Zoom);
-
-	FInputAxisBinding& ZoomInput = InputComponent->BindAxis("Zoom", this, &ACustomPlayerController::Zoom);
-	ZoomInput.bExecuteWhenPaused = true;
 
 	FInputActionBinding& ZoomInInput = InputComponent->BindAction("ZoomIn", IE_Pressed, this, &ACustomPlayerController::ZoomIn);
 	ZoomInInput.bExecuteWhenPaused = true;
@@ -185,8 +181,10 @@ void ACustomPlayerController::InitBeginPlayCommon()
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 		HealthComp->SetRegenerateHealth(true);
-		PlayerFaction = HealthComp->GetSelectedFaction();
 		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthChanged);
+
+
+		PlayerFaction = OwningCombatCharacter->GetTeamFactionComponent()->GetSelectedFaction();
 	}
 
 	InitBeginPlayUncommon();
@@ -297,6 +295,11 @@ void ACustomPlayerController::PauseGame()
 	// resume game
 	if (UGameplayStatics::IsGamePaused(World))
 	{
+		if (MapCamera)
+		{
+			MapCamera->Deactivate();
+		}
+
 		if (PauseMenuWidget != nullptr && PauseMenuWidget->IsInViewport())
 		{
 			PauseMenuWidget->RemoveFromParent();
@@ -309,10 +312,19 @@ void ACustomPlayerController::PauseGame()
 			OnViewWidgets[i]->SetVisibility(ESlateVisibility::Visible);
 		}
 
+		// clear out the list, otherwise some widgets like aircraft widgets would be destroyed & this would cause an error 
+		OnViewWidgets.Empty();
+
 		UGameplayStatics::SetGamePaused(World, false);
 	}
 	else // pause game
 	{
+		if (MapCamera)
+		{
+			MapCamera->Activate();
+		}
+
+
 		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), OnViewWidgets, UUserWidget::StaticClass(), false);
 
 		for (int i = 0; i < OnViewWidgets.Num(); i++)
@@ -814,24 +826,6 @@ void ACustomPlayerController::MoveRight(float Value)
 	}
 }
 
-void ACustomPlayerController::Zoom(float Value)
-{
-	if (Value == 0.0f) {
-		return;
-	}
-
-	// If input is positive then zoom in
-	if (Value > 0.0f)
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Zoom IN!"));
-
-	}
-	else
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ZOOM OUT!"));
-	}
-}
-
 
 void ACustomPlayerController::ZoomIn()
 {
@@ -1108,7 +1102,7 @@ void ACustomPlayerController::PickupInteractable()
 
 		// update support package event for UI
 		SupportPackages.Add(CurrentSupportPackage);
-		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, SupportPackages.Num() - 1, true);
+		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, SupportPackages.Num(), true);
 	}
 	else if (Cast<AMountedGun>(CollectedInteractableActor)) 		// Use Mounted Gun
 	{

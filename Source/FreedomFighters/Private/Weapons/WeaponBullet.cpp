@@ -1,6 +1,8 @@
 #include "Weapons/WeaponBullet.h"
+#include "ObjectPoolActor.h"
 #include "Weapons/Weapon.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 #include "Characters/CombatCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -156,6 +158,7 @@ void AWeaponBullet::Activate()
 	{
 		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
 		OwnerHealth = OwningCombatCharacter->GetHealthComp();
+		OwnerFaction = OwningCombatCharacter->GetTeamFactionComponent();
 	}
 }
 
@@ -266,7 +269,8 @@ void AWeaponBullet::DetectHit()
 			{
 				HealthComponent->OnDamage(OtherActor, ActualDamage, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, OutHit);
 
-				AddKill(HealthComponent);
+				auto FactionComp = Cast<UTeamFactionComponent>(OtherActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+				AddKill(HealthComponent, FactionComp);
 			}
 		}
 	}
@@ -354,7 +358,8 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 				{
 					HealthComponent->OnDamage(DamagedActor, DamageAmount, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, Hit);
 
-					AddKill(HealthComponent);
+					auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+					AddKill(HealthComponent, FactionComp);
 				}
 			}
 
@@ -404,17 +409,23 @@ FSurfaceImpactSet AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 	return SurfaceImpactSet;
 }
 
-void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth)
+void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction)
 {
 	// confirm kill if
 	// damaged actor is not the owner
 	// damaged actor is dead &
 	// damaged actor is not on the same faction side as the owner of this bullet &
 	// damaged is not neutral
+
+	if (!DamagedActorHealth || !OwnerFaction || !DamagedActorFaction) {
+		return;
+	}
+
+
 	if (!DamagedActorHealth->IsAlive()
 		&& DamagedActorHealth != OwnerHealth
-		&& DamagedActorHealth->GetSelectedFaction() != OwnerHealth->GetSelectedFaction()
-		&& DamagedActorHealth->GetSelectedFaction() != TeamFaction::Neutral)
+		&& OwnerFaction->GetSelectedFaction() != DamagedActorFaction->GetSelectedFaction()
+		&& DamagedActorFaction->GetSelectedFaction()!= TeamFaction::Neutral)
 	{
 		KillCount++;
 	}

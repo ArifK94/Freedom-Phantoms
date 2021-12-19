@@ -4,7 +4,7 @@
 #include "Props/SupportPackage.h"
 #include "Vehicles/Aircraft.h"
 #include "Characters/BaseCharacter.h"
-#include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -34,11 +34,11 @@ void ASupportPackage::OnPickup_Implementation()
 
 	if (GetOwner())
 	{
-		UHealthComponent* OwnerHealth = Cast<UHealthComponent>(GetOwner()->GetComponentByClass(UHealthComponent::StaticClass()));
+		auto FactionComp = Cast<UTeamFactionComponent>(GetOwner()->GetComponentByClass(UTeamFactionComponent::StaticClass()));
 
-		if (OwnerHealth)
+		if (FactionComp)
 		{
-			PlayVoiceOverSound(OwnerHealth->GetSelectedFaction());
+			PlayVoiceOverSound(FactionComp->GetSelectedFaction());
 		}
 	}
 }

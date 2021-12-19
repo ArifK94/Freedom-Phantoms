@@ -15,14 +15,8 @@ class FREEDOMFIGHTERS_API AMapCamera : public AActor
 	GENERATED_BODY()
 	
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class UCameraComponent* Camera;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class USceneCaptureComponent2D* SceneCaptureComponent2D;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UPostProcessComponent* PostProcessor;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ATargetSystemMarker> FriendlyMarkerClass;
@@ -64,10 +58,17 @@ private:
 		bool LockInput;
 
 	FVector LocationInput;
-
+	bool StartPostTimer;
+	float CurrentPostActivateTimer;
 
 public:	
 	AMapCamera();
+
+	void Activate();
+
+	void Deactivate();
+
+	void PostActivate();
 
 	UFUNCTION(BlueprintCallable)
 		void MoveToPlayerLocation();
@@ -83,5 +84,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DelatTime) override;
 
 };

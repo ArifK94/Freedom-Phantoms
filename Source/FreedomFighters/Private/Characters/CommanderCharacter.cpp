@@ -1,6 +1,7 @@
 #include "Characters/CommanderCharacter.h"
 #include "GUI/OrderIcon.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 
 #include "Containers/Array.h"
 #include "Engine.h"
@@ -89,9 +90,9 @@ void ACommanderCharacter::CheckRecruit()
 
 		AActor* CurrentTargetActor = HitResult.GetActor();
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
-		bool isFriendly = UHealthComponent::IsFriendly(this, CurrentTargetActor);
+		bool isFriendly = UTeamFactionComponent::IsFriendly(this, CurrentTargetActor);
 
-		if (CurrentHealth && CurrentHealth->IsAlive() && isFriendly && !IfAlreadyRecruited(CurrentTargetActor))
+		if (CurrentHealth && CurrentHealth->IsAlive() && UTeamFactionComponent::IsComponentActive(CurrentTargetActor) && isFriendly && !IfAlreadyRecruited(CurrentTargetActor))
 		{
 			auto Character = Cast<ACombatCharacter>(CurrentTargetActor);
 
@@ -209,18 +210,19 @@ void ACommanderCharacter::Attack(bool CommandAll)
 
 		ABaseCharacter* EnemyCharacter = Cast<ABaseCharacter>(TargetActor);
 		UHealthComponent* TargetHealth = Cast<UHealthComponent>(TargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
-		bool isFriendly = UHealthComponent::IsFriendly(this, TargetActor);
+		bool IsTargetFactionCompActive = UTeamFactionComponent::IsComponentActive(TargetActor);
+		bool isFriendly = UTeamFactionComponent::IsFriendly(this, TargetActor);
 
 		if (CommandAll)
 		{
 			for (int i = 0; i < ActiveRecruits.Num(); i++)
 			{
-				AttackSingle(ActiveRecruits[i], EnemyCharacter, TargetHealth, isFriendly, HitResult);
+				AttackSingle(ActiveRecruits[i], EnemyCharacter, TargetHealth, IsTargetFactionCompActive, isFriendly, HitResult);
 			}
 		}
 		else
 		{
-			AttackSingle(CurrentRecruit, EnemyCharacter, TargetHealth, isFriendly, HitResult);
+			AttackSingle(CurrentRecruit, EnemyCharacter, TargetHealth, IsTargetFactionCompActive, isFriendly, HitResult);
 			IncrementCurrentRecruit();
 		}
 	}
@@ -229,8 +231,12 @@ void ACommanderCharacter::Attack(bool CommandAll)
 
 }
 
-void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, UHealthComponent* TargetHealth, bool isFriendly, FHitResult HitResult)
+void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, UHealthComponent* TargetHealth, bool IsFactionCompActive, bool isFriendly, FHitResult HitResult)
 {
+	if (!IsFactionCompActive) {
+		return;
+	}
+
 	Recruit->CurrentCommand = CommanderOrders::Attack;
 	DisplayOverheadIcon(Recruit->AttackOverheadIcon, Recruit->OverheadIconArray);
 

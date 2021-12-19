@@ -9,6 +9,7 @@
 class AWeapon;
 class AMountedGun;
 class ACommanderCharacter;
+class UTeamFactionComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCharacter*, CombatCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
@@ -51,7 +52,8 @@ private:
 
 #pragma endregion
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTeamFactionComponent* TeamFactionComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isFiring;
@@ -207,6 +209,8 @@ protected:
 	virtual void PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo) override;
 
 public:
+	UTeamFactionComponent* GetTeamFactionComponent() { return TeamFactionComponent; }
+
 	bool IsFiring() {
 		return isFiring;
 	}
@@ -262,7 +266,6 @@ public:
 
 
 	void SetPrimaryWeapon(AWeapon* Weapon);
-
 	void SetSecondaryWeapon(AWeapon* Weapon);
 
 	void SetKillCount(int Amount) {

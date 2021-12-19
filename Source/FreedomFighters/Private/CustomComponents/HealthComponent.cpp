@@ -1,4 +1,5 @@
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
 #include "FreedomFighters/FreedomFighters.h"
 #include "Characters/CombatCharacter.h"
 #include "Weapons/WeaponBullet.h"
@@ -11,8 +12,6 @@
 UHealthComponent::UHealthComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
-	SelectedFaction = TeamFaction::Neutral;
 
 	MaxHealth = 100;
 
@@ -65,7 +64,7 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 	{
 		if (DamageCauser != DamagedActor)
 		{
-			if (IsFriendly(DamagedActor, DamageCauser)) {
+			if (UTeamFactionComponent::IsFriendly(DamagedActor, DamageCauser)) {
 				return;
 			}
 		}
@@ -127,27 +126,4 @@ void UHealthComponent::RegenerateHealth()
 		}
 	}
 }
-
-
-bool UHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
-{
-	if (ActorA == nullptr || ActorB == nullptr)
-	{
-		// Assume Friendly
-		return true;
-	}
-
-	UHealthComponent* HealthCompA = Cast<UHealthComponent>(ActorA->GetComponentByClass(UHealthComponent::StaticClass()));
-	UHealthComponent* HealthCompB = Cast<UHealthComponent>(ActorB->GetComponentByClass(UHealthComponent::StaticClass()));
-
-
-	if (HealthCompA == nullptr || HealthCompB == nullptr)
-	{
-		// Assume Friendly
-		return true;
-	}
-
-	return HealthCompA->SelectedFaction == HealthCompB->SelectedFaction;
-}
-
 

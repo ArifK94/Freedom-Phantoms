@@ -26,9 +26,6 @@ private:
 private:
 	float mDeltaTime;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TeamFaction SelectedFaction;
-
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float Health;
 
@@ -75,11 +72,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Health Component")
 		FOnHealthChangedSignature OnHealthChanged;
 
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Health Component")
-		static bool IsFriendly(AActor* AActorA, AActor* ActorB);
-
-
 	void OnDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
 
 	float getCurrentHealth() {
@@ -97,10 +89,6 @@ public:
 
 	void SetRegenerateHealth(bool Value) {
 		CanRegenerateHealth = Value;
-	}
-
-	TeamFaction GetSelectedFaction() {
-		return SelectedFaction;
 	}
 
 
