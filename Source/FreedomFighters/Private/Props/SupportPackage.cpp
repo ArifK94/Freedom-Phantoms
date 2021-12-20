@@ -99,11 +99,15 @@ void ASupportPackage::PlayInteractSound()
 
 void ASupportPackage::PlayVoiceOverSound(TeamFaction Faction)
 {
+	if (SupportSoundsSet.Num() <= 0) {
+		return;
+	}
+
 	for (int i = 0; i < SupportSoundsSet.Num(); i++)
 	{
 		FSupportPackageVoiceOverSet SupportPackageVoiceOverSet = SupportSoundsSet[i];
 
-		if (SupportPackageVoiceOverSet.Faction == Faction && SupportPackageVoiceOverSet.ReadyToUseSound != nullptr)
+		if (SupportPackageVoiceOverSet.Faction == Faction && SupportPackageVoiceOverSet.ReadyToUseSound)
 		{
 			UGameplayStatics::PlaySound2D(GetWorld(), SupportPackageVoiceOverSet.ReadyToUseSound);
 			return;

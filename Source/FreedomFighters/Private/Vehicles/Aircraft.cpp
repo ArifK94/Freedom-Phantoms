@@ -684,40 +684,38 @@ void AAircraft::SetTargetSystem()
 	{
 		ABaseCharacter* Character = Cast<ABaseCharacter>(Actor);
 
-		if (Character != nullptr)
+		if (!Character) {
+			continue;
+		}
+
+		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
+		bool isFriendly = UTeamFactionComponent::IsFriendly(MyOwner, Character);
+
+		if (IsFactionCompActive)
 		{
-			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
-
-			if (CurrentHealth)
+			if (isFriendly)
 			{
-				bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
-				bool isFriendly = UTeamFactionComponent::IsFriendly(MyOwner, Character);
-
-				if (CurrentHealth->IsAlive())
+				if (!DoesFriendlyNodeExists(Character))
 				{
-					if (IsFactionCompActive && isFriendly)
-					{
-						if (!DoesFriendlyNodeExists(Character))
-						{
-							FTargetSystemNode* TargetNode = new FTargetSystemNode;
-							TargetNode->Character = Character;
-							TargetNode->Marker = nullptr;
-							FriendlyMarkerNodes.Add(TargetNode);
-						}
-					}
-					else
-					{
-						if (!DoesEnemyNodeExists(Character))
-						{
-							FTargetSystemNode* TargetNode = new FTargetSystemNode;
-							TargetNode->Character = Character;
-							TargetNode->Marker = nullptr;
-							EnemySystemNodes.Add(TargetNode);
-						}
-					}
+					FTargetSystemNode* TargetNode = new FTargetSystemNode;
+					TargetNode->Character = Character;
+					TargetNode->Marker = nullptr;
+					FriendlyMarkerNodes.Add(TargetNode);
+				}
+			}
+			else
+			{
+				if (!DoesEnemyNodeExists(Character))
+				{
+					FTargetSystemNode* TargetNode = new FTargetSystemNode;
+					TargetNode->Character = Character;
+					TargetNode->Marker = nullptr;
+					EnemySystemNodes.Add(TargetNode);
 				}
 			}
 		}
+
+
 	}
 
 	UpdateMarker(FriendlyMarkerNodes, FriendlyMarkerClass);
@@ -727,7 +725,7 @@ void AAircraft::SetTargetSystem()
 // add or update the marker UI
 void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubclassOf<ATargetSystemMarker> MarkerClass)
 {
-	if (MarkerClass == nullptr) {
+	if (!MarkerClass) {
 		return;
 	}
 
@@ -741,37 +739,27 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 
 		auto Character = TargetNode->Character;
 
-		if (Character == nullptr || Character->GetName() == "None") {
+		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
+
+		if (!IsFactionCompActive) {
+
+			// Destroy target marker
+			if (TargetNode->Marker)
+			{
+				TargetNode->Marker->Destroy();
+			}
+
 			TargetSystemNodes.RemoveAt(i);
 			continue;
 		}
 
-		// remove dead characters from the targetting system
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
-
-		if (CurrentHealth)
+		if (TargetNode->Marker) // marker to follow the actor location
 		{
-			if (CurrentHealth->IsAlive())
-			{
-				// add or update target marker based on character location
-				FActorSpawnParameters SpawnParams;
-
-				if (TargetNode->Marker == nullptr)
-				{
-					TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, Character->GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
-
-				}
-				else
-				{
-					TargetNode->Marker->SetActorLocation(Character->GetActorLocation());
-				}
-			}
-			else
-			{
-				if (TargetNode->Marker) {
-					TargetNode->Marker->GetMarkerComponent()->SetHiddenInGame(true);
-				}
-			}
+			TargetNode->Marker->SetActorLocation(Character->GetActorLocation());
+		}
+		else // otherwise create a marker if does not exist 
+		{
+			TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, Character->GetActorLocation(), FRotator::ZeroRotator);
 		}
 	}
 

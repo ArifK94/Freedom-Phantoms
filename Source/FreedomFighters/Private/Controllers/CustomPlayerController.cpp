@@ -41,7 +41,7 @@ ACustomPlayerController::ACustomPlayerController()
 
 	AutoReceiveInput = EAutoReceiveInput::Player0;
 
-	CurrentSupportPackageIndex = 0;
+	CurrentSupportPackageIndex = -1;
 	MaxSupportPackages = 4;
 
 	HasGameEnded = false;
@@ -219,20 +219,14 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 		{
 			SupportPackages.Add(SP);
 		}
+	}
 
-		if (SupportPackages.Num() > 0)
-		{
-			CurrentSupportPackageIndex = SupportPackages.Num() - 1;
-			CurrentSupportPackage = SupportPackages[CurrentSupportPackageIndex];
+	SortSupportPackages();
 
-			CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
-			CurrentSupportPackage->PlayInteractSound();
-		}
-		else
-		{
-			CurrentSupportPackage = nullptr;
-			CurrentSupportPackageIndex = -1;
-		}
+	if (SupportPackages.Num() > 0)
+	{
+		CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
+		CurrentSupportPackage->PlayInteractSound();
 	}
 
 
@@ -309,7 +303,13 @@ void ACustomPlayerController::PauseGame()
 
 		for (int i = 0; i < OnViewWidgets.Num(); i++)
 		{
-			OnViewWidgets[i]->SetVisibility(ESlateVisibility::Visible);
+			auto Widget = OnViewWidgets[i];
+
+			if (Widget)
+			{
+				OnViewWidgets[i]->SetVisibility(ESlateVisibility::Visible);
+			}
+
 		}
 
 		// clear out the list, otherwise some widgets like aircraft widgets would be destroyed & this would cause an error 
@@ -324,6 +324,8 @@ void ACustomPlayerController::PauseGame()
 			MapCamera->Activate();
 		}
 
+		// clear out the list, otherwise some widgets like aircraft widgets would be destroyed & this would cause an error 
+		OnViewWidgets.Empty();
 
 		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), OnViewWidgets, UUserWidget::StaticClass(), false);
 
@@ -1102,7 +1104,8 @@ void ACustomPlayerController::PickupInteractable()
 
 		// update support package event for UI
 		SupportPackages.Add(CurrentSupportPackage);
-		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, SupportPackages.Num(), true);
+		CurrentSupportPackageIndex++;
+		OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, CurrentSupportPackageIndex, true);
 	}
 	else if (Cast<AMountedGun>(CollectedInteractableActor)) 		// Use Mounted Gun
 	{
@@ -1169,7 +1172,7 @@ void ACustomPlayerController::UseInteractableActor()
 			}
 
 			// update support package event for UI
-			SupportPackages.RemoveAt(SupportPackages.Find(CurrentSupportPackage));
+			SupportPackages.RemoveAt(CurrentSupportPackageIndex);
 			SortSupportPackages();
 			OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, CurrentSupportPackageIndex, false);
 		}
@@ -1178,14 +1181,13 @@ void ACustomPlayerController::UseInteractableActor()
 }
 
 /// <summary>
-/// Fill the gap between empty indices
 /// Update the current support package index
 /// </summary>
 void ACustomPlayerController::SortSupportPackages()
 {
 	if (SupportPackages.Num() > 0)
 	{
-		CurrentSupportPackageIndex = CurrentSupportPackageIndex - 1;
+		CurrentSupportPackageIndex = SupportPackages.Num() - 1;
 		CurrentSupportPackage = SupportPackages[CurrentSupportPackageIndex];
 	}
 	else
