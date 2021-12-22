@@ -66,19 +66,12 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 
 void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 {
-	if (Weapon == nullptr)
-	{
-		secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
-	}
-	else
-	{
-		if (secondaryWeaponObj)
-		{
-			secondaryWeaponObj->Destroy();
-		}
+	//if (secondaryWeaponObj)
+	//{
+	//	secondaryWeaponObj->Destroy();
+	//}
 
-		secondaryWeaponObj = Weapon;
-	}
+	//secondaryWeaponObj = Weapon;
 }
 
 ACombatCharacter::ACombatCharacter()
@@ -815,7 +808,7 @@ ACombatCharacter* ACombatCharacter::FindNearestFriendly()
 
 		if (isFriendly)
 		{
-			if (ClosestAlly == nullptr) 
+			if (ClosestAlly == nullptr)
 			{
 				ClosestAlly = CurrentCombatant;
 			}
