@@ -46,22 +46,20 @@ void ACombatCharacter::SetMountedGun(AWeapon* Mount)
 
 void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 {
-	if (Weapon == nullptr)
-	{
-		primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
+	if (!Weapon) {
+		return;
 	}
-	else
-	{
-		if (primaryWeaponObj)
-		{
-			primaryWeaponObj->Destroy();
-		}
 
-		primaryWeaponObj = Weapon;
-		currentWeaponObj = primaryWeaponObj;
+	if (primaryWeaponObj)
+	{
+		primaryWeaponObj->Destroy();
 	}
+
+	primaryWeaponObj = Weapon;
+	currentWeaponObj = primaryWeaponObj;
+
+
 	RetrieveWeaponAnimDataSet();
-
 }
 
 void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
