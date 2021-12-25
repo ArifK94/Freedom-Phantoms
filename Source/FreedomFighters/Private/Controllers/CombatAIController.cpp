@@ -6,6 +6,7 @@
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
 #include "Props/Stronghold.h"
+#include "CustomComponents/AIMovementComponent.h"
 #include "CustomComponents/CoverFinderComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
@@ -65,7 +66,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	MoveToTarget(TargetRadius);
 }
 
-ACombatAIController::ACombatAIController()
+ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -81,6 +82,14 @@ ACombatAIController::ACombatAIController()
 	TimeBetweenShotsMax = 3.0f;
 
 	DestinationRadius = 300.0f;
+
+	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
+
+	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
+
+	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
+
+	MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
 }
 
 void ACombatAIController::Init()
@@ -95,24 +104,15 @@ void ACombatAIController::Init()
 	PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
 
 	// Get AI Sight Config
-	UAISenseConfig* SightConfig = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
-	if (SightConfig)
-	{
-		AISightConfig = Cast<UAISenseConfig_Sight>(SightConfig);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
-	}
-
-	CoverFinderComponent = NewObject<UCoverFinderComponent>(OwningCombatCharacter);
-	CoverFinderComponent->RegisterComponent();
-
-	TargetFinderComponent = NewObject<UTargetFinderComponent>(OwningCombatCharacter);
-	TargetFinderComponent->RegisterComponent();
-
-	MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(OwningCombatCharacter);
-	MountedGunFinderComponent->RegisterComponent();
+	//UAISenseConfig* SightConfig = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
+	//if (SightConfig)
+	//{
+	//	AISightConfig = Cast<UAISenseConfig_Sight>(SightConfig);
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
+	//}
 
 	HasAssignedOrderEvent = false;
 

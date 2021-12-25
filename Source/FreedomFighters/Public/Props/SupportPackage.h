@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/Interactable.h"
+#include "StructCollection.h"
+#include "EnumCollection.h"
 #include "SupportPackage.generated.h"
 
 class AAircraft;

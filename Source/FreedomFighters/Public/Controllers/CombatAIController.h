@@ -9,6 +9,7 @@
 
 class ACombatCharacter;
 class ACommanderCharacter;
+class UAIMovementComponent;
 class UCoverFinderComponent;
 class UTargetFinderComponent;
 class UMountedGunFinderComponent;
@@ -29,6 +30,8 @@ class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 
 private:
 	ACombatCharacter* OwningCombatCharacter;
+
+	UAIMovementComponent* AIMovementComponent;
 	UCoverFinderComponent* CoverFinderComponent;
 	UTargetFinderComponent* TargetFinderComponent;
 	UMountedGunFinderComponent* MountedGunFinderComponent;
@@ -132,7 +135,9 @@ private:
 	bool HasChosenNearTargetDest;
 
 public:
-	ACombatAIController();
+	//ACombatAIController();
+
+	ACombatAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	void FindEnemy();
 
