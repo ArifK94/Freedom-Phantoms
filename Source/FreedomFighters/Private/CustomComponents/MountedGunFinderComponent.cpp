@@ -3,7 +3,9 @@
 
 #include "CustomComponents/MountedGunFinderComponent.h"
 #include "Weapons/MountedGun.h"
+#include "Characters/BaseCharacter.h"
 
+#include "AIController.h"
 #include "Components/SphereComponent.h"
 
 
@@ -20,15 +22,29 @@ void UMountedGunFinderComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (SearchSphere == nullptr)
+	if (GetOwner())
 	{
-		SearchSphere = NewObject<USphereComponent>(GetOwner());
-		if (SearchSphere)
+		auto AIController = Cast<AAIController>(GetOwner());
+
+		auto Pawn = AIController->GetPawn();
+
+		if (Pawn)
 		{
-			SearchSphere->RegisterComponent();
-			SearchSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-			SearchSphere->SetSphereRadius(SearchRadius);
-			SearchSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+			auto Character = Cast<ABaseCharacter>(Pawn);
+
+			// Alternative to AI Sight Perception in case 360 sight is wanted
+			if (SearchSphere == nullptr && Character)
+			{
+				SearchSphere = NewObject<USphereComponent>(Character);
+				if (SearchSphere)
+				{
+					SearchSphere->RegisterComponent();
+					SearchSphere->AttachToComponent(Character->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+					SearchSphere->SetSphereRadius(SearchRadius);
+					SearchSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+				}
+
+			}
 		}
 	}
 }

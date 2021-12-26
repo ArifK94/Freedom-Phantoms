@@ -6,6 +6,7 @@
 #include "CustomComponents/TeamFactionComponent.h"
 #include "Characters/BaseCharacter.h"
 
+#include "AIController.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -14,7 +15,7 @@ UTargetFinderComponent::UTargetFinderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	TargetSightRadius = 7000.0f;
-	FinderLimit = 5;
+	FinderLimit = 3;
 }
 
 
@@ -22,22 +23,40 @@ void UTargetFinderComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Alternative to AI Sight Perception in case 360 sight is wanted
-	if (TargetSightSphere == nullptr)
+	if (GetOwner())
 	{
-		TargetSightSphere = NewObject<USphereComponent>(GetOwner());
-		if (TargetSightSphere)
+		auto AIController = Cast<AAIController>(GetOwner());
+
+		auto Pawn = AIController->GetPawn();
+
+		if (Pawn)
 		{
-			TargetSightSphere->RegisterComponent();
-			TargetSightSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-			TargetSightSphere->SetSphereRadius(TargetSightRadius);
-			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
+			Character = Cast<ABaseCharacter>(Pawn);
+
+			// Alternative to AI Sight Perception in case 360 sight is wanted
+			if (TargetSightSphere == nullptr && Character)
+			{
+				TargetSightSphere = NewObject<USphereComponent>(Character);
+
+				if (TargetSightSphere)
+				{
+					TargetSightSphere->RegisterComponent();
+					TargetSightSphere->AttachToComponent(Character->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+					TargetSightSphere->SetSphereRadius(TargetSightRadius);
+					TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
+				}
+
+			}
 		}
 	}
 }
 
 AActor* UTargetFinderComponent::FindTarget()
 {
+	if (!Character) {
+		return nullptr;
+	}
+
 	AActor* TargetActor = nullptr;
 	TArray<AActor*> ActorsInSight;
 	float TargetSightDistance = TargetSightRadius;
@@ -60,7 +79,6 @@ AActor* UTargetFinderComponent::FindTarget()
 			break;
 		}
 
-
 		AActor* PotentialEnemy = ActorsInSight[index];
 
 		auto TeamFaction = Cast<UTeamFactionComponent>(PotentialEnemy->GetComponentByClass(UTeamFactionComponent::StaticClass()));
@@ -68,7 +86,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		if (TeamFaction && TeamFaction->GetSelectedFaction() != TeamFaction::Neutral)
 		{
 			bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(PotentialEnemy);
-			bool IsEnemy = !UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
+			bool IsEnemy = !UTeamFactionComponent::IsFriendly(Character, PotentialEnemy);
 
 			// is target alive & an enemy
 			if (IsFactionCompActive && IsEnemy)
