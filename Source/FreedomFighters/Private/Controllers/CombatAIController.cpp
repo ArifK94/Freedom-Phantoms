@@ -87,9 +87,9 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
 
-	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
+	//TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
 
-	MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
+	//MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
 }
 
 void ACombatAIController::Init()
@@ -101,18 +101,59 @@ void ACombatAIController::Init()
 	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
 	OwningCombatCharacter->SetUseAimCameraSpring(false);
 
-	PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
+	if (!PerceptionComp)
+	{
+		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
 
-	// Get AI Sight Config
-	//UAISenseConfig* SightConfig = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
-	//if (SightConfig)
+		// Get AI Sight Config
+		//UAISenseConfig* SightConfig = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
+		//if (SightConfig)
+		//{
+		//	AISightConfig = Cast<UAISenseConfig_Sight>(SightConfig);
+		//}
+		//else
+		//{
+		//	UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
+		//}
+	}
+
+
+	//if (!AIMovementComponent)
 	//{
-	//	AISightConfig = Cast<UAISenseConfig_Sight>(SightConfig);
+	//	AIMovementComponent = NewObject<UAIMovementComponent>(OwningCombatCharacter);
+
+	//	if (AIMovementComponent)
+	//	{
+	//		AIMovementComponent->RegisterComponent();
+	//	}
 	//}
-	//else
+
+
+	//if (!CoverFinderComponent)
 	//{
-	//	UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
+	//	CoverFinderComponent = NewObject<UCoverFinderComponent>(OwningCombatCharacter);
+	//	CoverFinderComponent->RegisterComponent();
 	//}
+
+	if (!TargetFinderComponent)
+	{
+		TargetFinderComponent = NewObject<UTargetFinderComponent>(OwningCombatCharacter);
+
+		if (TargetFinderComponent)
+		{
+			TargetFinderComponent->RegisterComponent();
+		}
+	}
+
+	if (!MountedGunFinderComponent)
+	{
+		MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(OwningCombatCharacter);
+
+		if (MountedGunFinderComponent)
+		{
+			MountedGunFinderComponent->RegisterComponent();
+		}
+	}
 
 	HasAssignedOrderEvent = false;
 
@@ -204,8 +245,6 @@ void ACombatAIController::BeginPlay()
 	Super::BeginPlay();
 
 	DefaultDestinationRadius = DestinationRadius;
-
-	Init();
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -214,6 +253,8 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 	// get owning character
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
+
+	Init();
 
 	CanFindCover = true;
 

@@ -16,26 +16,40 @@ UAIMovementComponent::UAIMovementComponent()
 
 void UAIMovementComponent::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
 
-	if (GetOwner())
+	Init();
+}
+
+void UAIMovementComponent::Init()
+{
+	if (!GetOwner()) {
+		return;
+	}
+
+	AIController = Cast<AAIController>(GetOwner());
+
+	if (AIController)
 	{
-		AIController = Cast<AAIController>(GetOwner());
-
 		auto Pawn = AIController->GetPawn();
 
-		if (AIController && Pawn)
+		if (Pawn)
 		{
 			Character = Cast<ABaseCharacter>(Pawn);
 		}
 	}
-}
 
+}
 
 
 EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, bool WalkNearTarget)
 {
 	auto CurrentMovement = EPathFollowingRequestResult::Failed;
+
+	if (!AIController)
+	{
+		Init();
+	}
 
 	if (TargetDestination.IsZero() || !AIController) {
 		return CurrentMovement;

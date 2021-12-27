@@ -41,6 +41,8 @@ private:
 public:	
 	UAIMovementComponent();
 
+	void Init();
+
 protected:
 	virtual void BeginPlay() override;
 

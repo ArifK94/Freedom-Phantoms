@@ -7,7 +7,6 @@
 #include "TargetFinderComponent.generated.h"
 
 class USphereComponent;
-class ABaseCharacter;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UTargetFinderComponent : public UActorComponent
@@ -16,7 +15,6 @@ class FREEDOMFIGHTERS_API UTargetFinderComponent : public UActorComponent
 
 private:
 	USphereComponent* TargetSightSphere;
-	ABaseCharacter* Character;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TargetSightRadius;
@@ -27,6 +25,8 @@ private:
 
 public:	
 	UTargetFinderComponent();
+
+	void Init();
 
 	AActor* FindTarget();
 

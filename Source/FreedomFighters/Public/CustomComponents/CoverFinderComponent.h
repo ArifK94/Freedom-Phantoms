@@ -38,7 +38,6 @@ public:
 
 	bool IsCoverPointTaken(FVector PointLocation);
 
-protected:
 	virtual void BeginPlay() override;
 
 

@@ -27,6 +27,8 @@ private:
 public:	
 	UMountedGunFinderComponent();
 
+	void Init();
+
 	AMountedGun* FindMG();
 
 protected:

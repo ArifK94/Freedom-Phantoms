@@ -4,9 +4,7 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
-#include "Characters/BaseCharacter.h"
 
-#include "AIController.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -23,38 +21,38 @@ void UTargetFinderComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (GetOwner())
+	Init();
+}
+
+void UTargetFinderComponent::Init()
+{
+	if (!GetOwner()) {
+		return;
+	}
+
+	// Alternative to AI Sight Perception in case 360 sight is wanted
+	if (TargetSightSphere == nullptr)
 	{
-		auto AIController = Cast<AAIController>(GetOwner());
+		TargetSightSphere = NewObject<USphereComponent>(GetOwner());
 
-		auto Pawn = AIController->GetPawn();
-
-		if (Pawn)
+		if (TargetSightSphere)
 		{
-			Character = Cast<ABaseCharacter>(Pawn);
-
-			// Alternative to AI Sight Perception in case 360 sight is wanted
-			if (TargetSightSphere == nullptr && Character)
-			{
-				TargetSightSphere = NewObject<USphereComponent>(Character);
-
-				if (TargetSightSphere)
-				{
-					TargetSightSphere->RegisterComponent();
-					TargetSightSphere->AttachToComponent(Character->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-					TargetSightSphere->SetSphereRadius(TargetSightRadius);
-					TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
-				}
-
-			}
+			TargetSightSphere->RegisterComponent();
+			TargetSightSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+			TargetSightSphere->SetSphereRadius(TargetSightRadius);
+			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
 		}
 	}
 }
 
 AActor* UTargetFinderComponent::FindTarget()
 {
-	if (!Character) {
-		return nullptr;
+	if (!TargetSightSphere) {
+		Init();
+
+		if (!TargetSightSphere) {
+			return nullptr;
+		}
 	}
 
 	AActor* TargetActor = nullptr;
@@ -86,7 +84,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		if (TeamFaction && TeamFaction->GetSelectedFaction() != TeamFaction::Neutral)
 		{
 			bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(PotentialEnemy);
-			bool IsEnemy = !UTeamFactionComponent::IsFriendly(Character, PotentialEnemy);
+			bool IsEnemy = !UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
 
 			// is target alive & an enemy
 			if (IsFactionCompActive && IsEnemy)
