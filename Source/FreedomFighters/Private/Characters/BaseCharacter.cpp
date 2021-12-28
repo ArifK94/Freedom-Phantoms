@@ -382,22 +382,19 @@ void ABaseCharacter::ToggleSprint()
 
 void ABaseCharacter::BeginSprint()
 {
-	if (!isSprinting)
+	if (isTakingCover)
 	{
-		if (isTakingCover)
-		{
-			isTakingCover = false;
-		}
-
-		if (GetCharacterMovement()->IsCrouching())
-		{
-			UnCrouch();
-		}
-
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-
-		isSprinting = true;
+		isTakingCover = false;
 	}
+
+	if (GetCharacterMovement()->IsCrouching())
+	{
+		UnCrouch();
+	}
+
+	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+
+	isSprinting = true;
 }
 
 void ABaseCharacter::EndSprint()
@@ -454,6 +451,14 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 	// check if character is in the air
 	IsCharacterInAir = APawn::GetMovementComponent()->IsFalling();
+
+	if (IsSprintDefault)
+	{
+		isSprinting = IsCharacterMoving();
+	}
+
+	if (bUseControllerRotationYaw)
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("Some debug message!"));
 }
 
 void ABaseCharacter::UpdateSpeed()
@@ -536,6 +541,13 @@ void ABaseCharacter::UpdateDirection()
 	}
 }
 
+
+bool ABaseCharacter::IsCharacterMoving()
+{
+	auto Velocity = GetCharacterMovement()->Velocity.Size();
+
+	return Velocity > UKismetMathLibrary::Abs(.0f);
+}
 
 void ABaseCharacter::ShowCharacterOutline(bool CanShow)
 {

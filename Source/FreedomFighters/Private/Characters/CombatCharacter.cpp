@@ -384,6 +384,22 @@ void ACombatCharacter::EndSprint()
 	}
 }
 
+void ACombatCharacter::UpdateCharacterMovement()
+{
+	Super::UpdateCharacterMovement();
+
+	// update the bUseControllerRotationYaw by ending the sprint
+	// firing a weapon can be allowed during sprinting so need to check if character is not moving 
+	// aiming stops sprinting by default
+	if (isAiming || (!IsCharacterMoving() && isFiring)) {
+		EndSprint();
+	}
+	else
+	{
+		UpdateSprint();
+	}
+}
+
 // if in combat mode while sprinting and looking backwards then stop sprinting
 // a mechanic observed in call of duty gameplay
 void ACombatCharacter::DisableSprint()
@@ -419,12 +435,15 @@ void ACombatCharacter::UpdateCombatMode()
 		return;
 	}
 
+
+
 	if (isAiming || isFiring)
 	{
 		if (!isSprinting && !IsInAircraft && !isTakingCover && !isUsingMountedWeapon) {
 			bUseControllerRotationYaw = true;
 			GetCharacterMovement()->bOrientRotationToMovement = false;
 		}
+
 
 		isInCombatMode = true;
 		SetHandGaurdIK(1.0f);
@@ -435,10 +454,6 @@ void ACombatCharacter::UpdateCombatMode()
 		SetHandGaurdIK(0.0f);
 		isInCombatMode = false;
 		bUseControllerRotationYaw = false;
-	}
-
-	if (!isAiming) {
-		UpdateSprint();
 	}
 
 	OnCombatUpdated.Broadcast(this);

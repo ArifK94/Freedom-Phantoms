@@ -132,6 +132,8 @@ public:
 	virtual void BeginSprint() override;
 	virtual void EndSprint() override;
 
+	virtual	void UpdateCharacterMovement() override;
+
 	virtual	void BeginAim() override;
 	virtual	void EndAim() override;
 

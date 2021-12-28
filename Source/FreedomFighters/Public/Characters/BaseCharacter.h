@@ -241,7 +241,7 @@ protected:
 
 	void AimOffset();
 
-	void UpdateCharacterMovement();
+	virtual	void UpdateCharacterMovement();
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		virtual void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
@@ -273,6 +273,8 @@ public:
 	virtual void BeginSprint();
 	virtual void EndSprint();
 	void UpdateSprint();
+
+	bool IsCharacterMoving();
 
 	virtual void BeginAim();
 	virtual void EndAim();
