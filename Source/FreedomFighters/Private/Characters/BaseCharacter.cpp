@@ -456,9 +456,6 @@ void ABaseCharacter::UpdateCharacterMovement()
 	{
 		isSprinting = IsCharacterMoving();
 	}
-
-	if (bUseControllerRotationYaw)
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("Some debug message!"));
 }
 
 void ABaseCharacter::UpdateSpeed()
