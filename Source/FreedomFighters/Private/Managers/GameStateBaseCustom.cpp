@@ -78,11 +78,29 @@ void AGameStateBaseCustom::EndGame(bool MissionPassed)
 
 	if (MissionPassed)
 	{
+		if (MissionPassedMusic)
+		{
+			MusicAudioComponent->Sound = MissionPassedMusic;
+			MusicAudioComponent->Play();
+		}
 
 	}
 	else
 	{
-		MusicAudioComponent->Sound = MissionFailedMusic;
-		MusicAudioComponent->Play();
+		if (MissionFailedMusic)
+		{
+			MusicAudioComponent->Sound = MissionFailedMusic;
+			MusicAudioComponent->Play();
+		}
 	}
+}
+
+void AGameStateBaseCustom::PlayMusic(USoundBase* Music)
+{
+	if (!Music || HasGameEnded) {
+		return;
+	}
+
+	MusicAudioComponent->Sound = Music;
+	MusicAudioComponent->Play();
 }

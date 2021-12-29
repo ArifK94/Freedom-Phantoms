@@ -48,11 +48,17 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 		USoundBase* MissionFailedMusic;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+		USoundBase* NearEndMusic;
+
 
 public:
 	AGameStateBaseCustom();
 
 	void EndGame(bool MissionPassed);
+
+	UFUNCTION(BlueprintCallable)
+		void PlayMusic(USoundBase* Music);
 
 private:
 	UFUNCTION()
