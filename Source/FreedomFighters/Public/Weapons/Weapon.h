@@ -14,6 +14,7 @@ class UNiagaraSystem;
 class USoundBase;
 class USoundCue;
 class UAudioComponent;
+class AWeaponAttachment;
 class AWeaponClip;
 class AWeaponBullet;
 class UObjectPoolComponent;
@@ -59,6 +60,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UPointLightComponent* MuzzleLightComponent;
 	FTimerHandle THandler_MuzzleLight;
+
+
+	//----------------- ATTACHMENTS -----------------//
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attachments", meta = (AllowPrivateAccess = "true"))
+		TArray<TSubclassOf<AWeaponAttachment>> ScopeAttachmentClasses;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attachments", meta = (AllowPrivateAccess = "true"))
+		AWeaponAttachment* ScopeAttachment;
+
+
 
 
 
@@ -361,6 +373,8 @@ protected:
 		virtual void OnReload();
 
 	void ConfigSetup();
+
+	void SpawnScopeAttachment();
 
 	void SpawnMagazine();
 

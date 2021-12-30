@@ -1,6 +1,7 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponClip.h"
 #include "Weapons/WeaponBullet.h"
+#include "Weapons/WeaponAttachment.h"
 
 #include "FreedomFighters/FreedomFighters.h"
 
@@ -168,6 +169,8 @@ void AWeapon::ConfigSetup()
 	BulletSpreadCurrent = 0.0f;
 	BulletSpreadCurrent = BulletSpreadMin;
 
+	SpawnScopeAttachment();
+
 	if (weaponClipObj)
 	{
 		AmmoPerClip = weaponClipObj->GetAmmoCapacity();
@@ -211,6 +214,27 @@ void AWeapon::ConfigSetup()
 
 	CurrentMaxAmmo = MaxAmmoCapacity;
 	CurrentChargeUpTime = 0.0f;
+}
+
+void AWeapon::SpawnScopeAttachment()
+{
+	if (ScopeAttachmentClasses.Num() <= 0) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	auto RandomIndex = rand() % ScopeAttachmentClasses.Num();
+
+	ScopeAttachment = GetWorld()->SpawnActor<AWeaponAttachment>(ScopeAttachmentClasses[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	
+	if (ScopeAttachment)
+	{
+		ScopeAttachment->GetRootComponent()->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ScopeAttachment->GetParentSocket());
+	}
+
 }
 
 void AWeapon::ConvertWeaponName()
