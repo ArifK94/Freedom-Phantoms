@@ -14,3 +14,12 @@ AWeaponAttachment::AWeaponAttachment()
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->CanCharacterStepUpOn = ECB_No;
 }
+
+void AWeaponAttachment::SetDesertCamo()
+{
+	if (!DesertCamoMaterial) {
+		return;
+	}
+
+	MeshComp->SetMaterial(BodyMaterialIndex, DesertCamoMaterial);
+}
