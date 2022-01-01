@@ -9,6 +9,9 @@
 class UAudioComponent;
 class ABaseObjective;
 class USoundBase;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameEndedSignature, bool, isMissionPassed);
+
 UCLASS()
 class FREEDOMFIGHTERS_API AGameStateBaseCustom : public AGameStateBase
 {
@@ -59,6 +62,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void PlayMusic(USoundBase* Music);
+
+public:
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnGameEndedSignature OnGameEnded;
 
 private:
 	UFUNCTION()

@@ -93,6 +93,8 @@ void AGameStateBaseCustom::EndGame(bool MissionPassed)
 			MusicAudioComponent->Play();
 		}
 	}
+
+	OnGameEnded.Broadcast(MissionPassed);
 }
 
 void AGameStateBaseCustom::PlayMusic(USoundBase* Music)
