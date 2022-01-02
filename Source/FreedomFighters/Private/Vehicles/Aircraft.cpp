@@ -739,6 +739,19 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 
 		auto Character = TargetNode->Character;
 
+		// if character does not exist anymore
+		if (!Character || Character->GetName() == "None") {
+			// Destroy target marker
+			if (TargetNode->Marker)
+			{
+				TargetNode->Marker->Destroy();
+			}
+
+			TargetSystemNodes.RemoveAt(i);
+			continue;
+		}
+
+		// is the target is not active
 		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
 
 		if (!IsFactionCompActive) {

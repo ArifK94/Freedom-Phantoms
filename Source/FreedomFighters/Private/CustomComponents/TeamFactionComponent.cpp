@@ -35,7 +35,7 @@ bool UTeamFactionComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 
 bool UTeamFactionComponent::IsComponentActive(AActor* Owner)
 {
-	if (!Owner) {
+	if (!Owner || Owner->GetName() == "None") {
 		return false;
 	}
 

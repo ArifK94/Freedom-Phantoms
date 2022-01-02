@@ -13,7 +13,7 @@ UTargetFinderComponent::UTargetFinderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	TargetSightRadius = 7000.0f;
-	FinderLimit = 3;
+	FinderLimit = 5;
 }
 
 
@@ -122,9 +122,11 @@ AActor* UTargetFinderComponent::FindTarget()
 							TargetActor = PotentialEnemy;
 						}
 					}
+
+					CurrentProcessedCharacters++;
+
 				}
 
-				CurrentProcessedCharacters++;
 
 			}
 

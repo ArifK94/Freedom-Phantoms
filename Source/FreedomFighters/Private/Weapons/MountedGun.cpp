@@ -79,6 +79,11 @@ bool AMountedGun::CanInteract_Implementation()
 	return false;
 }
 
+void AMountedGun::OnPickup_Implementation()
+{
+	return;
+}
+
 
 void AMountedGun::AddControllerPitchInput(float Val)
 {
