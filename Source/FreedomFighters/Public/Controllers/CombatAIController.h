@@ -57,9 +57,6 @@ private:
 		float AcceptanceRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float DistanceDiffSprint;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class UNavigationQueryFilter> FilterClass;
 
 
@@ -96,15 +93,6 @@ private:
 
 	FVector ChosenCoverPoint;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
-		float MovementDebugSphereRadius;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
-		float MovementDebugLifetTime;
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float MountedGunSightRadius;
-
 	FVector LastSeenPosition;
 
 	/** The sphere radius for recruits to move around a order position so that multiple recruits do not stick together in one place */
@@ -135,8 +123,6 @@ private:
 	bool HasChosenNearTargetDest;
 
 public:
-	//ACombatAIController();
-
 	ACombatAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	void FindEnemy();
@@ -148,6 +134,9 @@ private:
 
 	UFUNCTION()
 		void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
+
+	UFUNCTION()
+		void OnMovementDestinationReached(FVector Destination);
 
 	UFUNCTION()
 		void OnRappelUpdated(ABaseCharacter* BaseCharacter);

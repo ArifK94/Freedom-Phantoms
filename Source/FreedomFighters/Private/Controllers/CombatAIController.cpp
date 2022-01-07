@@ -29,6 +29,11 @@
 #include "..\..\Public\Controllers\CombatAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+void ACombatAIController::OnMovementDestinationReached(FVector Destination)
+{
+	
+}
+
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 {
 	// ensure the owning character received the order
@@ -64,6 +69,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
 
 	MoveToTarget(TargetRadius);
+	//AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius);
 }
 
 ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -71,12 +77,6 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 	PrimaryActorTick.bCanEverTick = true;
 
 	AcceptanceRadius = 300.0f;
-	DistanceDiffSprint = 200.0f;
-	TargetSightRadius = 7000.0f;
-	MountedGunSightRadius = 500.0f;
-
-	MovementDebugSphereRadius = 10.0f;
-	MovementDebugLifetTime = 1.0f;
 
 	TimeBetweenShotsMin = 2.0f;
 	TimeBetweenShotsMax = 3.0f;
@@ -86,10 +86,6 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
 
 	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
-
-	//TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
-
-	//MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
 }
 
 void ACombatAIController::Init()
@@ -98,7 +94,7 @@ void ACombatAIController::Init()
 		return;
 	}
 
-	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
+	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 	OwningCombatCharacter->SetUseAimCameraSpring(false);
 
 	if (!PerceptionComp)
@@ -117,23 +113,26 @@ void ACombatAIController::Init()
 		//}
 	}
 
+	// Spawned actors do not create the components made in the constructor, so create the components again at runtime
+	if (!AIMovementComponent)
+	{
+		AIMovementComponent = NewObject<UAIMovementComponent>(this);
 
-	//if (!AIMovementComponent)
-	//{
-	//	AIMovementComponent = NewObject<UAIMovementComponent>(OwningCombatCharacter);
+		if (AIMovementComponent)
+		{
+			AIMovementComponent->RegisterComponent();
+		}
+	}
 
-	//	if (AIMovementComponent)
-	//	{
-	//		AIMovementComponent->RegisterComponent();
-	//	}
-	//}
+	if (!CoverFinderComponent)
+	{
+		CoverFinderComponent = NewObject<UCoverFinderComponent>(this);
 
-
-	//if (!CoverFinderComponent)
-	//{
-	//	CoverFinderComponent = NewObject<UCoverFinderComponent>(OwningCombatCharacter);
-	//	CoverFinderComponent->RegisterComponent();
-	//}
+		if (CoverFinderComponent)
+		{
+			CoverFinderComponent->RegisterComponent();
+		}
+	}
 
 	if (!TargetFinderComponent)
 	{
@@ -271,11 +270,24 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
 		//GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
 
+
 		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACombatAIController::OnRappelUpdated);
 
+		// Events! DON'T FORGET TO REMOVE ON THE UNPOSSESS() method
+		if (AIMovementComponent)
+		{
+			AIMovementComponent->OnDestinationReached.AddDynamic(this, &ACombatAIController::OnMovementDestinationReached);
+		}
+
+
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
-		HealthComp->SetRegenerateHealth(true);
-		HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthChanged);
+
+		if (HealthComp)
+		{
+			HealthComp->SetRegenerateHealth(true);
+			HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthChanged);
+		}
+
 	}
 
 	// run behavior tree if specified
@@ -291,10 +303,19 @@ void ACombatAIController::OnUnPossess()
 
 	if (OwningCombatCharacter)
 	{
+		if (AIMovementComponent)
+		{
+			AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
+		}
+
 		OwningCombatCharacter->OnRappelUpdate.RemoveDynamic(this, &ACombatAIController::OnRappelUpdated);
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
-		HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthChanged);
+
+		if (HealthComp)
+		{
+			HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthChanged);
+		}
 	}
 
 
@@ -538,11 +559,16 @@ void ACombatAIController::ShootAtEnemy()
 
 	// set unlimited ammo
 	if (!OwningCombatCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
+	{
 		OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
+	}
 
 	if (EnemyActor)
 	{
-		OwningCombatCharacter->BeginAim();
+		if (!OwningCombatCharacter->IsSprinting())
+		{
+			OwningCombatCharacter->BeginAim();
+		}
 
 		// if using a mounted gun
 		if (OwningCombatCharacter->GetMountedGun())
@@ -598,7 +624,11 @@ void ACombatAIController::ShootAtEnemy()
 
 		// Focus on the last seen enemy
 		if (!THandler_LastSeenEnemy.IsValid()) {
-			OwningCombatCharacter->BeginAim();
+			if (!OwningCombatCharacter->IsSprinting())
+			{
+				OwningCombatCharacter->BeginAim();
+			}
+
 			GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, false, FMath::RandRange(2.f, 5.f));
 		}
 
@@ -691,6 +721,7 @@ void ACombatAIController::FindMountedGun()
 		}
 		else // if MG is free, keep moving towards it
 		{
+			//AIMovementComponent->MoveToDestination(TargetDestination, .0f, false);
 			MoveToTarget(0.0f, false);
 			CanFindCover = false;
 			return;
@@ -710,6 +741,7 @@ void ACombatAIController::FindMountedGun()
 			CanFindCover = false;
 
 			TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
+			//AIMovementComponent->MoveToDestination(TargetDestination, .0f, false);
 			MoveToTarget(0.0f, false);
 		}
 	}
@@ -748,6 +780,7 @@ void ACombatAIController::MoveToCover()
 	}
 
 
+	//auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, .0f);
 	auto CurrentMovement = MoveToTarget(0.0f);
 
 	switch (CurrentMovement)
@@ -784,6 +817,8 @@ void ACombatAIController::MoveToRandomPoint()
 		return;
 	}
 
+	
+	//auto Movement = AIMovementComponent->MoveToDestination(TargetDestination, .0f);
 	auto Movement = MoveToTarget(0.0f);
 
 	// Find a random point around destination if has arrived at the original target destination
@@ -795,6 +830,7 @@ void ACombatAIController::MoveToRandomPoint()
 		{
 			TargetDestination = NearDestination; // upate the target destination
 			Movement = MoveToTarget(0.0f); // Move to new destination
+			//Movement = AIMovementComponent->MoveToDestination(TargetDestination, .0f);
 			HasChosenNearTargetDest = true;
 		}
 	}
@@ -895,6 +931,7 @@ void ACombatAIController::CheckCommanderOrder()
 		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
 		OwningCombatCharacter->DropMountedGun();
 		HasAssignedOrderEvent = true;
+		StayCombatAlert = false; // refresh state of behaviour
 	}
 
 
@@ -916,7 +953,10 @@ void ACombatAIController::CheckCommanderOrder()
 				OwningCombatCharacter->UnCrouch();
 		}
 
+
+		
 		auto CurrentMovement = MoveToTarget(AcceptanceRadius);
+		//auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius);
 
 		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal)
 		{

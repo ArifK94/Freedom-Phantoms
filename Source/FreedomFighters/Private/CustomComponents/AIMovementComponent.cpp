@@ -7,10 +7,17 @@
 #include "AIController.h"
 #include "NavigationSystem.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/SphereComponent.h"
 
 UAIMovementComponent::UAIMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+
+	AcceptanceRadius = 300.0f;
+
+	MovementDebugLifetTime = 1.0f;
+
+	IsDestinationSet = false;
 }
 
 
@@ -29,16 +36,44 @@ void UAIMovementComponent::Init()
 
 	AIController = Cast<AAIController>(GetOwner());
 
-	if (AIController)
-	{
-		auto Pawn = AIController->GetPawn();
+	if (!AIController) {
+		return;
+	}
+	PawnOwner = AIController->GetPawn();
 
-		if (Pawn)
+	if (PawnOwner)
+	{
+		Character = Cast<ABaseCharacter>(PawnOwner);
+
+		if (!DestinationTrigger)
 		{
-			Character = Cast<ABaseCharacter>(Pawn);
+			DestinationTrigger = NewObject<USphereComponent>(this);
+			DestinationTrigger->RegisterComponent();
+			DestinationTrigger->SetSphereRadius(.0f);
+			DestinationTrigger->SetWorldLocation(FVector::ZeroVector);
+			DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAll"));
+			DestinationTrigger->OnComponentBeginOverlap.AddDynamic(this, &UAIMovementComponent::OnOverlapBegin);
 		}
 	}
+	else
+	{
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("No Pawn Owner for the AI movement component!"));
+		UE_LOG(LogTemp, Error, TEXT("No Pawn Owner for the AI movement component"));
+	}
+}
 
+void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!OtherActor || !IsDestinationSet) {
+		return;
+	}
+
+	if (OtherActor == PawnOwner)
+	{
+		OnDestinationReached.Broadcast(DestinationTrigger->GetComponentLocation());
+		IsDestinationSet = false;
+		DestinationTrigger->SetSphereRadius(.0f); // set radius to zero, this allows the being overlap to trigger again if the next destination is within sphere radius
+	}
 }
 
 
@@ -46,16 +81,30 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 {
 	auto CurrentMovement = EPathFollowingRequestResult::Failed;
 
-	if (!AIController)
+	if (!AIController || !DestinationTrigger)
 	{
 		Init();
 	}
 
-	if (TargetDestination.IsZero() || !AIController) {
+	if (TargetDestination.IsZero() || !AIController || !DestinationTrigger) {
 		return CurrentMovement;
 	}
 
 	CurrentMovement = AIController->MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
+
+	if (CurrentMovement == EPathFollowingRequestResult::RequestSuccessful)
+	{
+		// Make sure sphere radius is not very small otherwise the overlap will never trigger
+		// Set a small random amount
+		// otherwise use the accept radius amount
+		float TargetRadius = AcceptRadius <= 1.f ? 1.f : AcceptRadius;
+
+		DestinationTrigger->SetSphereRadius(TargetRadius);
+		DestinationTrigger->SetWorldLocation(TargetDestination);
+		IsDestinationSet = true;
+	}
+
+
 
 	if (Character)
 	{
@@ -66,9 +115,10 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 
 			float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 
+			// if distance is outside of destination radius
 			if (CurrentTargetDistance > AcceptanceRadius)
 			{
-				Character->BeginSprint();
+				Character->BeginSprint();	// sprint
 			}
 			else
 			{

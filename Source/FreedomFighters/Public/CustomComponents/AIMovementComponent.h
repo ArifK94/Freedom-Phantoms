@@ -7,7 +7,9 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "AIMovementComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestinationReachedSignature, FVector, TargetDestination);
 
+class USphereComponent;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UAIMovementComponent : public UActorComponent
 {
@@ -16,6 +18,11 @@ class FREEDOMFIGHTERS_API UAIMovementComponent : public UActorComponent
 private:
 	class AAIController* AIController;
 	class ABaseCharacter* Character;
+	APawn* PawnOwner;
+
+	bool IsDestinationSet;
+
+	USphereComponent* DestinationTrigger;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float AcceptanceRadius;
@@ -38,13 +45,22 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class UNavigationQueryFilter> FilterClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		float MovementDebugLifetTime;
+
 public:	
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnDestinationReachedSignature OnDestinationReached;
+
 	UAIMovementComponent();
 
 	void Init();
 
 protected:
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:	
 	UFUNCTION(BlueprintCallable)
