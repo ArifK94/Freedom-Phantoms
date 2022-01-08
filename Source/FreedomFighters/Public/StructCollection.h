@@ -219,6 +219,18 @@ public:
 		TArray<TSubclassOf<ALoadout>> Loadouts;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<ALoadout> AssaultLoadout;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<ALoadout> LMGLoadout;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<ALoadout> ShotgunLoadout;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<ALoadout> SMGLoadout;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<TSubclassOf< AHeadgear>> Headgears;
 
 

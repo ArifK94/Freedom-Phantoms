@@ -36,6 +36,8 @@ public:
 	// If primary is true, then spawn primary weapon otherwise spawn secondary
 	AWeapon* SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary);
 
+	void HolsterWeapon(AWeapon* Weapon);
+
 	USkeletalMeshComponent* GetMesh() { return Mesh; }
 
 private:

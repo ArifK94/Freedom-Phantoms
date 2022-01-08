@@ -58,18 +58,40 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 	primaryWeaponObj = Weapon;
 	currentWeaponObj = primaryWeaponObj;
 
+	LoadoutType LoadoutType = LoadoutType::Assault;
+
+	switch (primaryWeaponObj->GetWeaponType())
+	{
+		case WeaponType::LMG:
+			LoadoutType = LoadoutType::LMG;
+			break;
+		case WeaponType::Shotgun:
+			LoadoutType = LoadoutType::Shotgun;
+			break;
+		case WeaponType::SMG:
+			LoadoutType = LoadoutType::SMG;
+			break;
+	}
+
+	// respawn loadout to match weapon type
+	SpawnLoadout(LoadoutType, true);
 
 	RetrieveWeaponAnimDataSet();
 }
 
 void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 {
-	//if (secondaryWeaponObj)
-	//{
-	//	secondaryWeaponObj->Destroy();
-	//}
+	if (secondaryWeaponObj)
+	{
+		secondaryWeaponObj->Destroy();
+	}
 
-	//secondaryWeaponObj = Weapon;
+	secondaryWeaponObj = Weapon;
+
+	if (Loadout)
+	{
+		Loadout->HolsterWeapon(secondaryWeaponObj);
+	}
 }
 
 ACombatCharacter::ACombatCharacter()
@@ -330,7 +352,7 @@ void ACombatCharacter::SpawnHelmet()
 
 }
 
-void ACombatCharacter::SpawnLoadout()
+void ACombatCharacter::SpawnLoadout(LoadoutType LoadoutType, bool SpecifyType)
 {
 	if (GetAccessorySet() == nullptr) {
 		return;
@@ -344,15 +366,44 @@ void ACombatCharacter::SpawnLoadout()
 		return;
 	}
 
+	if (Loadout) {
+		Loadout->Destroy();
+	}
+
 	int RandIndex = rand() % GetAccessorySet()->Loadouts.Num();
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+	TSubclassOf<ALoadout> LoadoutClass = NULL;
+
+	if (SpecifyType)
+	{
+		switch (LoadoutType)
+		{
+		case LoadoutType::SMG:
+			LoadoutClass = GetAccessorySet()->SMGLoadout;
+			break;
+		case LoadoutType::Shotgun:
+			LoadoutClass = GetAccessorySet()->ShotgunLoadout;
+			break;
+		case LoadoutType::LMG:
+			LoadoutClass = GetAccessorySet()->LMGLoadout;
+			break;
+		default: // Assault loadout by default
+			LoadoutClass = GetAccessorySet()->AssaultLoadout;
+			break;
+		}
+	}
+
+	if (!LoadoutClass)
+	{
+		LoadoutClass = GetAccessorySet()->Loadouts[RandIndex];
+	}
 
 	// Spawn a random helmet actor
-	Loadout = GetWorld()->SpawnActor<ALoadout>(GetAccessorySet()->Loadouts[RandIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	Loadout = GetWorld()->SpawnActor<ALoadout>(LoadoutClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (Loadout)
 	{

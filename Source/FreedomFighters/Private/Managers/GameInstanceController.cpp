@@ -44,7 +44,7 @@ AWeapon* UGameInstanceController::SpawnSecondaryWeapon(AActor* Owner)
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = Owner;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	return GetWorld()->SpawnActor<AWeapon>(PrimaryWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	return GetWorld()->SpawnActor<AWeapon>(SecondaryWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 }
 
 TArray<ASupportPackage*> UGameInstanceController::GetSupportPackage()

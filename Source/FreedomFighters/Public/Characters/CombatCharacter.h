@@ -200,7 +200,7 @@ public:
 
 private:
 	void SpawnHelmet();
-	void SpawnLoadout();
+	void SpawnLoadout(LoadoutType LoadoutType = LoadoutType::Assault, bool SpecifyType = false);
 
 	void UpdateCombatMode();
 

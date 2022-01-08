@@ -97,3 +97,11 @@ AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 
 	return Weapon;
 }
+
+void ALoadout::HolsterWeapon(AWeapon* Weapon)
+{
+	if (Weapon)
+	{
+		Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Weapon->getHolsterSocket());
+	}
+}
