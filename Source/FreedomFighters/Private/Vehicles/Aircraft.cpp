@@ -1029,7 +1029,10 @@ void AAircraft::OnDestroy()
 	{
 		for (FTargetSystemNode* node : FriendlyMarkerNodes)
 		{
-			node->Marker->Destroy();
+			if (node->Marker)
+			{
+				node->Marker->Destroy();
+			}
 		}
 	}
 
@@ -1037,7 +1040,10 @@ void AAircraft::OnDestroy()
 	{
 		for (FTargetSystemNode* node : EnemySystemNodes)
 		{
-			node->Marker->Destroy();
+			if (node->Marker)
+			{
+				node->Marker->Destroy();
+			}
 		}
 	}
 
