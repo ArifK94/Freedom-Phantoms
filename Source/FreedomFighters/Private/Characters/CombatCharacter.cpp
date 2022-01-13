@@ -168,7 +168,7 @@ void ACombatCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float
 {
 	Super::OnHealthChanged(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
 
-	if (isDead)
+	if (!HealthComp->IsAlive())
 	{
 		TeamFactionComponent->SetCompActive(false);
 
@@ -915,7 +915,7 @@ void ACombatCharacter::ResetVoiceSound()
 	HasPlayedEnemyKilledSound = false;
 }
 
-void ACombatCharacter::ShowCharacterOutline(bool CanShow)
+void ACombatCharacter::ShowCharacterOutline(bool CanShow, bool IgnoreDeath)
 {
 	Super::ShowCharacterOutline(CanShow);
 

@@ -456,15 +456,16 @@ struct FTargetSystemNode
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		ABaseCharacter* Character;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		ATargetSystemMarker* Marker; // the marker class containing the widget component
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		ATargetSystemMarker* Marker; // the marker object containing the widget component
 
 	FTargetSystemNode()
 	{
-
+		Character = nullptr;
+		Marker = nullptr;
 	}
 };
 

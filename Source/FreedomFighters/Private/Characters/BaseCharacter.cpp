@@ -235,7 +235,7 @@ FRotator ABaseCharacter::GetViewRotation() const
 
 void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
-	if (Health <= 0.0f && !isDead)
+	if (!HealthComp->IsAlive())
 	{
 		isDead = true;
 
@@ -246,7 +246,7 @@ void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float H
 		PrimaryActorTick.bCanEverTick = false;
 		ClearTimeHandlers();
 
-		ShowCharacterOutline(false);
+		ShowCharacterOutline(false, true);
 
 		GetCharacterMovement()->StopMovementImmediately();
 
@@ -543,11 +543,15 @@ bool ABaseCharacter::IsCharacterMoving()
 {
 	auto Velocity = GetCharacterMovement()->Velocity.Size();
 
-	return Velocity > UKismetMathLibrary::Abs(.0f);
+	return Velocity > UKismetMathLibrary::Abs(1.f);
 }
 
-void ABaseCharacter::ShowCharacterOutline(bool CanShow)
+void ABaseCharacter::ShowCharacterOutline(bool CanShow, bool IgnoreDeath)
 {
+	if (!HealthComp->IsAlive() && !IgnoreDeath) {
+		return;
+	}
+
 	TArray<USkeletalMeshComponent*> SkeletalMeshComponents;
 	GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
 	for (int32 ComponentIdx = 0; ComponentIdx < SkeletalMeshComponents.Num(); ++ComponentIdx)
@@ -805,9 +809,13 @@ void ABaseCharacter::PlayVoiceSound(USoundBase* Sound)
 
 void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
+	DeathAnimationAsset = DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
 	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
 
 	// Use dot product to determine where the character stands based on the impact point.
+	// DotProduct > 0.0f Same direction
+	// DotProduct == 0.0f Perpendicular direction
+	// DotProduct < 0.0f Opposite direction
 	float DotProduct = FVector::DotProduct(HitInfo.ImpactNormal, GetActorForwardVector());
 
 	bool HasHitFront = false;
@@ -828,9 +836,7 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 	}
 	//  else behind impact
 
-		// DotProduct > 0.0f Same direction
-		// DotProduct == 0.0f Perpendicular direction
-		// DotProduct < 0.0f Opposite direction
+
 
 
 	if (Bullet && Bullet->IsExplosive())
@@ -953,6 +959,11 @@ void ABaseCharacter::DetroyChildActor(TArray<AActor*> ParentActor)
 	for (int i = 0; i < ParentActor.Num(); i++)
 	{
 		AActor* ChildActor = ParentActor[i];
+
+		if (ChildActor == this) {
+			continue;
+		}
+
 
 		TArray<AActor*> ChildAttachedActors;
 		ChildActor->GetAttachedActors(ChildAttachedActors);

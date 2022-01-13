@@ -102,6 +102,10 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 
 void UHealthComponent::RegenerateHealth()
 {
+	if (!isAlive) {
+		return;
+	}
+
 	if (HasTakenDamage)
 	{
 		// delay regeneration if more than 0
@@ -127,3 +131,23 @@ void UHealthComponent::RegenerateHealth()
 	}
 }
 
+bool UHealthComponent::IsAlive(AActor* Owner)
+{
+	if (!Owner || Owner->GetName() == "None") {
+		return false;
+	}
+
+	auto ActorComponent = Owner->GetComponentByClass(UHealthComponent::StaticClass());
+
+	if (!ActorComponent) {
+		return false;
+	}
+
+	auto HealthComponent = Cast<UHealthComponent>(ActorComponent);
+
+	if (!HealthComponent) {
+		return false;
+	}
+
+	return HealthComponent->IsAlive();
+}

@@ -20,8 +20,23 @@ bool UTeamFactionComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 		return true;
 	}
 
-	auto FactionCompA = Cast<UTeamFactionComponent>(ActorA->GetComponentByClass(UTeamFactionComponent::StaticClass()));
-	auto FactionCompB = Cast<UTeamFactionComponent>(ActorB->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+	// If same actor
+	if (ActorA == ActorB) {
+		return true;
+	}
+
+	auto ActorComponentA = ActorA->GetComponentByClass(UTeamFactionComponent::StaticClass());
+	auto ActorComponentB = ActorB->GetComponentByClass(UTeamFactionComponent::StaticClass());
+
+	if (ActorComponentA == nullptr || ActorComponentB == nullptr)
+	{
+		// Assume Friendly
+		return true;
+	}
+
+
+	auto FactionCompA = Cast<UTeamFactionComponent>(ActorComponentA);
+	auto FactionCompB = Cast<UTeamFactionComponent>(ActorComponentB);
 
 
 	if (FactionCompA == nullptr || FactionCompB == nullptr)
@@ -39,7 +54,13 @@ bool UTeamFactionComponent::IsComponentActive(AActor* Owner)
 		return false;
 	}
 
-	auto FactionComp = Cast<UTeamFactionComponent>(Owner->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+	auto ActorComponent = Owner->GetComponentByClass(UTeamFactionComponent::StaticClass());
+
+	if (!ActorComponent) {
+		return false;
+	}
+
+	auto FactionComp = Cast<UTeamFactionComponent>(ActorComponent);
 
 	if (!FactionComp) {
 		return false;

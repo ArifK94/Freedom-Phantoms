@@ -284,7 +284,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 		if (HealthComp)
 		{
-			HealthComp->SetRegenerateHealth(true);
+			//HealthComp->SetRegenerateHealth(true);
 			HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthChanged);
 		}
 

@@ -265,7 +265,8 @@ private:
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
 
-	virtual void ShowCharacterOutline(bool CanShow);
+	// Ignoring death allows to call this function and display outline after character death.
+	virtual void ShowCharacterOutline(bool CanShow, bool IgnoreDeath = false);
 
 	void ToggleCrouch();
 

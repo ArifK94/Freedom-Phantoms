@@ -676,30 +676,26 @@ void AAircraft::SetTargetSystem()
 		return;
 	}
 
-	TArray<AActor*> Characters;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseCharacter::StaticClass(), Characters);
+	TArray<AActor*> Actors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), Actors);
 
 	// adding characters to targetting
-	for (AActor* Actor : Characters)
+	for (AActor* Actor : Actors)
 	{
 		ABaseCharacter* Character = Cast<ABaseCharacter>(Actor);
 
-		if (!Character) {
-			continue;
-		}
-
 		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
-		bool isFriendly = UTeamFactionComponent::IsFriendly(MyOwner, Character);
 
 		if (IsFactionCompActive)
 		{
+			bool isFriendly = UTeamFactionComponent::IsFriendly(MyOwner, Character);
+
 			if (isFriendly)
 			{
 				if (!DoesFriendlyNodeExists(Character))
 				{
 					FTargetSystemNode* TargetNode = new FTargetSystemNode;
 					TargetNode->Character = Character;
-					TargetNode->Marker = nullptr;
 					FriendlyMarkerNodes.Add(TargetNode);
 				}
 			}
@@ -709,13 +705,15 @@ void AAircraft::SetTargetSystem()
 				{
 					FTargetSystemNode* TargetNode = new FTargetSystemNode;
 					TargetNode->Character = Character;
-					TargetNode->Marker = nullptr;
 					EnemySystemNodes.Add(TargetNode);
 				}
 			}
 		}
+	}
 
-
+	if (HighlightCharacters)
+	{
+		ShowOutlines(true);
 	}
 
 	UpdateMarker(FriendlyMarkerNodes, FriendlyMarkerClass);
@@ -735,45 +733,34 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 
 	for (int i = 0; i < TargetSystemNodes.Num(); i++)
 	{
-		FTargetSystemNode* TargetNode = TargetSystemNodes[i];
-
+		auto TargetNode = TargetSystemNodes[i];
 		auto Character = TargetNode->Character;
 
-		// if character does not exist anymore
-		if (!Character || Character->GetName() == "None") {
-			// Destroy target marker
-			if (TargetNode->Marker)
-			{
-				TargetNode->Marker->Destroy();
-			}
-
-			TargetSystemNodes.RemoveAt(i);
-			continue;
-		}
-
-		// is the target is not active
+		// if the target is not active
 		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
 
-		if (!IsFactionCompActive) {
-
+		if (IsFactionCompActive)
+		{
+			if (TargetNode->Marker) // marker to follow the actor location
+			{
+				TargetNode->Marker->SetActorLocation(Character->GetActorLocation());
+			}
+			else // otherwise create a marker if does not exist 
+			{
+				TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, Character->GetActorLocation(), FRotator::ZeroRotator);
+			}
+		}
+		else
+		{
 			// Destroy target marker
 			if (TargetNode->Marker)
 			{
 				TargetNode->Marker->Destroy();
 			}
 
-			TargetSystemNodes.RemoveAt(i);
-			continue;
+			//TargetSystemNodes.RemoveAt(i);
 		}
 
-		if (TargetNode->Marker) // marker to follow the actor location
-		{
-			TargetNode->Marker->SetActorLocation(Character->GetActorLocation());
-		}
-		else // otherwise create a marker if does not exist 
-		{
-			TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, Character->GetActorLocation(), FRotator::ZeroRotator);
-		}
 	}
 
 }
@@ -853,11 +840,6 @@ void AAircraft::SetPlayerControl(APlayerController* OurPlayerController, bool En
 	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeaponObj, CameraSwitchDelay);
 
 	ThermalVisionPPComp->bEnabled = EnableThermalPP;
-
-	if (HighlightCharacters)
-	{
-		ShowOutlines(ShowOutline);
-	}
 
 	if (ThermalVisionPPComp->bEnabled)
 	{

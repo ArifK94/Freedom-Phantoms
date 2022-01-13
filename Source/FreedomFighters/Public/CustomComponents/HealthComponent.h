@@ -72,6 +72,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Health Component")
 		FOnHealthChangedSignature OnHealthChanged;
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	static bool IsAlive(AActor* Owner);
+
 	void OnDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
 
 	float getCurrentHealth() {
