@@ -552,8 +552,38 @@ void ABaseCharacter::ShowCharacterOutline(bool CanShow, bool IgnoreDeath)
 		return;
 	}
 
+	SetActorOutline(this, CanShow);
+	TArray<AActor*> AttachedActors;
+	GetAttachedActors(AttachedActors);
+	ShowActorOutlineRecursive(AttachedActors, CanShow);
+
+}
+
+void ABaseCharacter::ShowActorOutlineRecursive(TArray<AActor*> ParentActor, bool CanShow)
+{
+	if (ParentActor.Num() <= 0) {
+		return;
+	}
+
+	for (int i = 0; i < ParentActor.Num(); i++)
+	{
+		AActor* ChildActor = ParentActor[i];
+
+		SetActorOutline(ChildActor, CanShow);
+
+		// Ignore this parent's component
+		if (ChildActor != this) {
+			TArray<AActor*> ChildAttachedActors;
+			ChildActor->GetAttachedActors(ChildAttachedActors);
+			ShowActorOutlineRecursive(ChildAttachedActors, CanShow);
+		}
+	}
+}
+
+void ABaseCharacter::SetActorOutline(AActor* Actor, bool CanShow)
+{
 	TArray<USkeletalMeshComponent*> SkeletalMeshComponents;
-	GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
+	Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
 	for (int32 ComponentIdx = 0; ComponentIdx < SkeletalMeshComponents.Num(); ++ComponentIdx)
 	{
 		auto currentSkel = Cast<USkeletalMeshComponent>(SkeletalMeshComponents[ComponentIdx]);
@@ -561,7 +591,7 @@ void ABaseCharacter::ShowCharacterOutline(bool CanShow, bool IgnoreDeath)
 	}
 
 	TArray<UStaticMeshComponent*> StaticComponents;
-	GetComponents<UStaticMeshComponent>(StaticComponents);
+	Actor->GetComponents<UStaticMeshComponent>(StaticComponents);
 	for (int32 ComponentIdx = 0; ComponentIdx < StaticComponents.Num(); ++ComponentIdx)
 	{
 		auto currentStatic = Cast<UStaticMeshComponent>(StaticComponents[ComponentIdx]);

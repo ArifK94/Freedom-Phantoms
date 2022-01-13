@@ -915,50 +915,6 @@ void ACombatCharacter::ResetVoiceSound()
 	HasPlayedEnemyKilledSound = false;
 }
 
-void ACombatCharacter::ShowCharacterOutline(bool CanShow, bool IgnoreDeath)
-{
-	Super::ShowCharacterOutline(CanShow);
-
-	if (Loadout != nullptr)
-	{
-		TArray<USkeletalMeshComponent*> LoadoutSkeletalMeshComponents;
-		Loadout->GetComponents<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents);
-		for (int32 ComponentIdx = 0; ComponentIdx < LoadoutSkeletalMeshComponents.Num(); ++ComponentIdx)
-		{
-			auto currentComp = Cast<USkeletalMeshComponent>(LoadoutSkeletalMeshComponents[ComponentIdx]);
-			currentComp->SetRenderCustomDepth(CanShow);
-		}
-
-		TArray<UStaticMeshComponent*> LoadoutStaticComponents;
-		Loadout->GetComponents<UStaticMeshComponent>(LoadoutStaticComponents);
-		for (int32 ComponentIdx = 0; ComponentIdx < LoadoutStaticComponents.Num(); ++ComponentIdx)
-		{
-			auto currentComp = Cast<UStaticMeshComponent>(LoadoutStaticComponents[ComponentIdx]);
-			currentComp->SetRenderCustomDepth(CanShow);
-		}
-	}
-
-	if (Headgear != nullptr)
-	{
-		TArray<USkeletalMeshComponent*> HeadgearSkeletalMeshComponents;
-		Headgear->GetComponents<USkeletalMeshComponent>(HeadgearSkeletalMeshComponents);
-		for (int32 ComponentIdx = 0; ComponentIdx < HeadgearSkeletalMeshComponents.Num(); ++ComponentIdx)
-		{
-			auto currentComp = Cast<USkeletalMeshComponent>(HeadgearSkeletalMeshComponents[ComponentIdx]);
-			currentComp->SetRenderCustomDepth(CanShow);
-		}
-
-
-		TArray<UStaticMeshComponent*> HeadgearStaticComponents;
-		Headgear->GetComponents<UStaticMeshComponent>(HeadgearStaticComponents);
-		for (int32 ComponentIdx = 0; ComponentIdx < HeadgearStaticComponents.Num(); ++ComponentIdx)
-		{
-			auto currentComp = Cast<UStaticMeshComponent>(HeadgearStaticComponents[ComponentIdx]);
-			currentComp->SetRenderCustomDepth(CanShow);
-		}
-	}
-}
-
 void ACombatCharacter::UseMountedGun()
 {
 	if (MountedGun == nullptr) {

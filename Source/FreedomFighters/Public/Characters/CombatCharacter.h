@@ -188,8 +188,6 @@ public:
 
 	void ResetVoiceSound();
 
-	void ShowCharacterOutline(bool CanShow, bool IgnoreDeath = false) override;
-
 	void SetMountedGun(AWeapon* Mount);
 
 	void UseMountedGun();

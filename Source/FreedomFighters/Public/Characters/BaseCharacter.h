@@ -266,7 +266,9 @@ public:
 	FOnRappelUpdateignature OnRappelUpdate;
 
 	// Ignoring death allows to call this function and display outline after character death.
-	virtual void ShowCharacterOutline(bool CanShow, bool IgnoreDeath = false);
+	void ShowCharacterOutline(bool CanShow, bool IgnoreDeath = false);
+	void ShowActorOutlineRecursive(TArray<AActor*> ParentActor, bool CanShow);
+	void SetActorOutline(AActor* Actor, bool CanShow);
 
 	void ToggleCrouch();
 
