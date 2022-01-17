@@ -365,6 +365,14 @@ public:
 		return isFacingCoverRHS;
 	}
 
+	bool GetIsSprintDefault() {
+		return IsSprintDefault;
+	}
+
+	void SetSprintDefault(bool Value) {
+		IsSprintDefault = Value;
+	}
+
 
 	void SetUseAimCameraSpring(bool Value) {
 		UseAimCameraSpring = Value;

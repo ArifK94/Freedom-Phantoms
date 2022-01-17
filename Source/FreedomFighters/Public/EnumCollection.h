@@ -91,3 +91,12 @@ enum class CommanderOrders : uint8
 	Attack		UMETA(DisplayName = "Attack"),
 	Defend 		UMETA(DisplayName = "Defend")
 };
+
+UENUM(BlueprintType)
+enum class AIBehaviourState : uint8
+{
+	Normal					UMETA(DisplayName = "Normal"),
+	Patrol					UMETA(DisplayName = "Patrol"),
+	PriorityDestination		UMETA(DisplayName = "PriorityDestination"),
+	PriorityOrdersCommander	UMETA(DisplayName = "PriorityOrdersCommander"),
+};

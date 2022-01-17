@@ -3,10 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EnumCollection.h"
 #include "Components/ActorComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AIMovementComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestinationSetSignature, AIBehaviourState, BehaviourState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestinationReachedSignature, FVector, TargetDestination);
 
 class USphereComponent;
@@ -25,7 +27,7 @@ private:
 	USphereComponent* DestinationTrigger;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float AcceptanceRadius;
+		float MinAcceptanceRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool StopOnOverlap;
@@ -49,6 +51,9 @@ private:
 		float MovementDebugLifetTime;
 
 public:	
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnDestinationSetSignature OnDestinationSet;
+
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnDestinationReachedSignature OnDestinationReached;
 

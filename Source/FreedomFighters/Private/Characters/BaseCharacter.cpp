@@ -404,14 +404,17 @@ void ABaseCharacter::EndSprint()
 	isSprinting = false;
 }
 
+// TODO: Fix default sprint mechanic, uncomment the commented out code to check if it works
 void ABaseCharacter::UpdateSprint()
 {
 	if (IsSprintDefault)
 	{
+		//GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 		BeginSprint();
 	}
 	else
 	{
+		//GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
 		EndSprint();
 	}
 }

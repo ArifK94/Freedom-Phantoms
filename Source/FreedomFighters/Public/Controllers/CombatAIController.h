@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "EnumCollection.h"
 #include "Characters/CommanderCharacter.h"
 #include "CombatAIController.generated.h"
 
 class ACombatCharacter;
 class ACommanderCharacter;
+
 class UAIMovementComponent;
+class UPatrolFollowerComponent;
 class UCoverFinderComponent;
 class UTargetFinderComponent;
 class UMountedGunFinderComponent;
@@ -32,6 +35,7 @@ private:
 	ACombatCharacter* OwningCombatCharacter;
 
 	UAIMovementComponent* AIMovementComponent;
+	UPatrolFollowerComponent* PatrolFollowerComponent;
 	UCoverFinderComponent* CoverFinderComponent;
 	UTargetFinderComponent* TargetFinderComponent;
 	UMountedGunFinderComponent* MountedGunFinderComponent;
@@ -41,13 +45,18 @@ private:
 	UAIPerceptionComponent* PerceptionComp;
 	APumpActionWeapon* PumpActionWeapon;
 	AActor* LastSeenEnemyActor;
-	CommanderOrders CurrentCommand;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		CommanderOrders CurrentCommand;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		AIBehaviourState CurrentBehaviourState;
 
 	// to take defensive positions within the stronghold
 	AStronghold* CurrentStronghold;
 	class UCoverPointComponent* ChosenCoverPointComponent;
 	ACommanderCharacter* Commander;
+
+
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -136,6 +145,9 @@ private:
 		void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
 
 	UFUNCTION()
+		void OnMovementDestinationSet(AIBehaviourState BehaviourState);
+
+	UFUNCTION()
 		void OnMovementDestinationReached(FVector Destination);
 
 	UFUNCTION()
@@ -169,6 +181,8 @@ private:
 	void CheckCommanderOrder();
 
 	void MoveToCover();
+
+	void MoveToPatrol();
 
 	void TargetFound();
 

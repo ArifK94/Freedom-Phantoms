@@ -13,9 +13,9 @@ UAIMovementComponent::UAIMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-	AcceptanceRadius = 300.0f;
-
+	MinAcceptanceRadius = 50.f;
 	MovementDebugLifetTime = 1.0f;
+	ProjectDestinationToNavigation = true;
 
 	IsDestinationSet = false;
 }
@@ -51,20 +51,20 @@ void UAIMovementComponent::Init()
 			DestinationTrigger->RegisterComponent();
 			DestinationTrigger->SetSphereRadius(.0f);
 			DestinationTrigger->SetWorldLocation(FVector::ZeroVector);
-			DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAll"));
+			DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
+			DestinationTrigger->ShapeColor = FColor(0, 255, 0, 255);
 			DestinationTrigger->OnComponentBeginOverlap.AddDynamic(this, &UAIMovementComponent::OnOverlapBegin);
 		}
 	}
 	else
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("No Pawn Owner for the AI movement component!"));
 		UE_LOG(LogTemp, Error, TEXT("No Pawn Owner for the AI movement component"));
 	}
 }
 
 void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!OtherActor || !IsDestinationSet) {
+	if (!OtherActor || !PawnOwner || !IsDestinationSet) {
 		return;
 	}
 
@@ -81,12 +81,11 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 {
 	auto CurrentMovement = EPathFollowingRequestResult::Failed;
 
-	if (!AIController || !DestinationTrigger)
-	{
+	if (!AIController || !DestinationTrigger) {
 		Init();
 	}
 
-	if (TargetDestination.IsZero() || !AIController || !DestinationTrigger) {
+	if (!AIController || !DestinationTrigger || TargetDestination.IsZero()) {
 		return CurrentMovement;
 	}
 
@@ -97,46 +96,48 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 		// Make sure sphere radius is not very small otherwise the overlap will never trigger
 		// Set a small random amount
 		// otherwise use the accept radius amount
-		float TargetRadius = AcceptRadius <= 1.f ? 1.f : AcceptRadius;
+		float TargetRadius = AcceptRadius <= 1.f ? MinAcceptanceRadius : AcceptRadius;
 
-		DestinationTrigger->SetSphereRadius(TargetRadius);
 		DestinationTrigger->SetWorldLocation(TargetDestination);
+		DestinationTrigger->SetSphereRadius(TargetRadius);
 		IsDestinationSet = true;
+
+		OnDestinationSet.Broadcast(AIBehaviourState::PriorityDestination);
 	}
 
 
 
-	if (Character)
-	{
-		// Walk when close to desination
-		if (WalkNearTarget)
-		{
-			FVector OwnerLocation = Character->GetActorLocation();
+	//if (Character)
+	//{
+	//	// Walk when close to desination
+	//	if (WalkNearTarget)
+	//	{
+	//		FVector OwnerLocation = Character->GetActorLocation();
 
-			float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
+	//		float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 
-			// if distance is outside of destination radius
-			if (CurrentTargetDistance > AcceptanceRadius)
-			{
-				Character->BeginSprint();	// sprint
-			}
-			else
-			{
-				Character->EndSprint();
-			}
-		}
-		else
-		{
-			if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
-			{
-				Character->BeginSprint();
-			}
-			else
-			{
-				Character->EndSprint();
-			}
-		}
-	}
+	//		// if distance is outside of destination radius
+	//		if (CurrentTargetDistance > AcceptanceRadius)
+	//		{
+	//			Character->BeginSprint();	// sprint
+	//		}
+	//		else
+	//		{
+	//			Character->EndSprint();
+	//		}
+	//	}
+	//	else
+	//	{
+	//		if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
+	//		{
+	//			Character->BeginSprint();
+	//		}
+	//		else
+	//		{
+	//			Character->EndSprint();
+	//		}
+	//	}
+	//}
 
 	return CurrentMovement;
 }

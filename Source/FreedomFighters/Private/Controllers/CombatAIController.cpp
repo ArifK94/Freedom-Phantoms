@@ -7,6 +7,7 @@
 #include "Weapons/MountedGun.h"
 #include "Props/Stronghold.h"
 #include "CustomComponents/AIMovementComponent.h"
+#include "CustomComponents/PatrolFollowerComponent.h"
 #include "CustomComponents/CoverFinderComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
@@ -29,9 +30,25 @@
 #include "..\..\Public\Controllers\CombatAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+
+void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
+{
+	if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander)
+	{
+		CurrentBehaviourState = BehaviourState;
+	}
+}
+
 void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 {
-	
+	// Patrol points
+	if (CurrentBehaviourState == AIBehaviourState::Patrol)
+	{
+		FVector OutLocation;
+		PatrolFollowerComponent->GetNextPathPoint(OutLocation);
+		TargetDestination = OutLocation;
+		AIMovementComponent->MoveToDestination(TargetDestination, 0.f);
+	}
 }
 
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
@@ -84,7 +101,6 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 	DestinationRadius = 300.0f;
 
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
-
 	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
 }
 
@@ -96,6 +112,11 @@ void ACombatAIController::Init()
 
 	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 	OwningCombatCharacter->SetUseAimCameraSpring(false);
+
+	// Remove sprint by default as the custom move to location will toggle sprint based on distance of the destination
+	//if (OwningCombatCharacter->GetIsSprintDefault()) {
+	//	OwningCombatCharacter->ToggleSprint();
+	//}
 
 	if (!PerceptionComp)
 	{
@@ -121,6 +142,24 @@ void ACombatAIController::Init()
 		if (AIMovementComponent)
 		{
 			AIMovementComponent->RegisterComponent();
+		}
+	}
+
+
+	// We want to add patrol path to existing characters on the level rather than spawning AI characters then assigning them
+	auto ActorComponent = OwningCombatCharacter->GetComponentByClass(UPatrolFollowerComponent::StaticClass());
+
+	if (ActorComponent) {
+		PatrolFollowerComponent = Cast<UPatrolFollowerComponent>(ActorComponent);
+	}
+
+	if (!PatrolFollowerComponent)
+	{
+		PatrolFollowerComponent = NewObject<UPatrolFollowerComponent>(OwningCombatCharacter);
+
+		if (PatrolFollowerComponent)
+		{
+			PatrolFollowerComponent->RegisterComponent();
 		}
 	}
 
@@ -276,6 +315,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		// Events! DON'T FORGET TO REMOVE ON THE UNPOSSESS() method
 		if (AIMovementComponent)
 		{
+			AIMovementComponent->OnDestinationSet.AddDynamic(this, &ACombatAIController::OnMovementDestinationSet);
 			AIMovementComponent->OnDestinationReached.AddDynamic(this, &ACombatAIController::OnMovementDestinationReached);
 		}
 
@@ -287,7 +327,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 			//HealthComp->SetRegenerateHealth(true);
 			HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthChanged);
 		}
-
 	}
 
 	// run behavior tree if specified
@@ -305,6 +344,7 @@ void ACombatAIController::OnUnPossess()
 	{
 		if (AIMovementComponent)
 		{
+			AIMovementComponent->OnDestinationSet.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationSet);
 			AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
 		}
 
@@ -415,6 +455,7 @@ void ACombatAIController::FindEnemy()
 		return;
 	}
 
+	MoveToPatrol();
 
 	AActor* ChosenTarget = TargetFinderComponent->FindTarget();
 
@@ -470,7 +511,11 @@ void ACombatAIController::FindEnemy()
 
 		// Do find a random point if current command is defend
 		// & is set to use the mounted gun
-		if (!THandler_MoveToNearbyDestination.IsValid() && CurrentCommand != CommanderOrders::Defend && !OwningCombatCharacter->GetMountedGun()) {
+		if (!THandler_MoveToNearbyDestination.IsValid()
+			&& CurrentCommand != CommanderOrders::Defend
+			&& CurrentBehaviourState != AIBehaviourState::PriorityDestination
+			&& !OwningCombatCharacter->GetMountedGun()) 
+		{
 			HasChosenNearTargetDest = false;
 			TargetDestination = OwningCombatCharacter->GetActorLocation();
 			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, FMath::RandRange(.5f, 2.f), true);
@@ -491,6 +536,11 @@ void ACombatAIController::FindEnemy()
 			LastSeenPosition = LastSeenEnemyActor->GetActorLocation();
 			EnemyActor = nullptr;
 		}
+
+		//if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander && CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander)
+		//{
+		//	CurrentBehaviourState = AIBehaviourState::Normal;
+		//}
 	}
 }
 
@@ -817,7 +867,7 @@ void ACombatAIController::MoveToRandomPoint()
 		return;
 	}
 
-	
+
 	//auto Movement = AIMovementComponent->MoveToDestination(TargetDestination, .0f);
 	auto Movement = MoveToTarget(0.0f);
 
@@ -913,9 +963,23 @@ FVector ACombatAIController::FindNearbyDestinationPoint()
 		}
 	}
 
-
-
 	return TargetDest;
+}
+
+void ACombatAIController::MoveToPatrol()
+{
+	if (!PatrolFollowerComponent || EnemyActor || LastSeenEnemyActor || CurrentBehaviourState == AIBehaviourState::Patrol) {
+		return;
+	}
+
+	FVector OutLocation;
+	PatrolFollowerComponent->GetCurrentPathPoint(OutLocation);
+	auto Movement = AIMovementComponent->MoveToDestination(OutLocation, 0.f);
+
+	if (Movement == EPathFollowingRequestResult::RequestSuccessful)
+	{
+		CurrentBehaviourState = AIBehaviourState::Patrol;
+	}
 }
 
 void ACombatAIController::CheckCommanderOrder()
@@ -932,6 +996,7 @@ void ACombatAIController::CheckCommanderOrder()
 		OwningCombatCharacter->DropMountedGun();
 		HasAssignedOrderEvent = true;
 		StayCombatAlert = false; // refresh state of behaviour
+		CurrentBehaviourState = AIBehaviourState::PriorityOrdersCommander;
 	}
 
 
@@ -954,7 +1019,7 @@ void ACombatAIController::CheckCommanderOrder()
 		}
 
 
-		
+
 		auto CurrentMovement = MoveToTarget(AcceptanceRadius);
 		//auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius);
 
