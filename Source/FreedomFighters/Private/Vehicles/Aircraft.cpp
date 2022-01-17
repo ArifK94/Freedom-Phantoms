@@ -1086,3 +1086,10 @@ void AAircraft::DestroyChildActor(TArray<AActor*> ParentActor)
 		ChildActor->Destroy();
 	}
 }
+
+void AAircraft::Destroyed()
+{
+	Super::Destroyed();
+
+	OnDestroy();
+}

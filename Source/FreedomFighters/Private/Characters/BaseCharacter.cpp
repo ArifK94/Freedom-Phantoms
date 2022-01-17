@@ -241,9 +241,8 @@ void ABaseCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float He
 
 		VoiceAudioComponent->Stop();
 
-		GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+		//GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 
-		PrimaryActorTick.bCanEverTick = false;
 		ClearTimeHandlers();
 
 		ShowCharacterOutline(false, true);
@@ -281,7 +280,7 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 		Character->GetCapsuleComponent()->IgnoreActorWhenMoving(this, true);
 	}
 
-	if (isDead && OtherActor != this)
+	if (!HealthComp->IsAlive() && OtherActor != this)
 	{
 		PostDeath();
 	}
@@ -974,9 +973,9 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 void ABaseCharacter::PostDeath()
 {
 	//GetMesh()->SetAnimInstanceClass(NULL);
-	//GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-	//GetMesh()->SetSimulatePhysics(true);
-	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABaseCharacter::StartDestroy()

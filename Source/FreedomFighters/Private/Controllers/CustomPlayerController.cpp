@@ -471,7 +471,7 @@ void ACustomPlayerController::OnHealthUpdate(UHealthComponent* OwningHealthComp,
 
 void ACustomPlayerController::PostDeath()
 {
-	OwningCombatCharacter->DetachFromControllerPendingDestroy();
+	//OwningCombatCharacter->DetachFromControllerPendingDestroy();
 }
 
 void ACustomPlayerController::OnCharacterHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -634,7 +634,11 @@ void ACustomPlayerController::DisplayEndGameUMG()
 	EndFire();
 	SetViewTargetWithBlend(OwningCombatCharacter);
 	DisableInput(this);
-	ControlledAircraft = nullptr;
+
+	if (ControlledAircraft)
+	{
+		ControlledAircraft->Destroy();
+	}
 
 	UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
 

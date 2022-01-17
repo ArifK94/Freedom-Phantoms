@@ -299,7 +299,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	if (OwningCombatCharacter)
 	{
 		// Attach Follow Camera to head socket
-		OwningCombatCharacter->FollowCamera->AttachToComponent(OwningCombatCharacter->GetMesh(), FAttachmentTransformRules::KeepWorldTransform, OwningCombatCharacter->GetHeadSocket());
+		OwningCombatCharacter->FollowCamera->AttachToComponent(OwningCombatCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, OwningCombatCharacter->GetHeadSocket());
 
 		PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetPrimaryWeapon());
 
