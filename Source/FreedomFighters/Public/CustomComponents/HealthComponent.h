@@ -94,6 +94,9 @@ public:
 		CanRegenerateHealth = Value;
 	}
 
+	void SetUnlimitedHealth(bool Value) {
+		HasUnlimitedHealth = Value;
+	}
 
 	void SetDamageReduceFactor(float Value) { DamageReduceFactor = Value; }
 };

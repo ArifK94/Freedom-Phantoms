@@ -181,7 +181,8 @@ void ACustomPlayerController::InitBeginPlayCommon()
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 		HealthComp->SetRegenerateHealth(true);
-		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthChanged);
+		HealthComp->SetUnlimitedHealth(false);
+		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthUpdate);
 
 
 		PlayerFaction = OwningCombatCharacter->GetTeamFactionComponent()->GetSelectedFaction();
@@ -454,7 +455,7 @@ void ACustomPlayerController::AddUIWidgets()
 	}
 }
 
-void ACustomPlayerController::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ACustomPlayerController::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
 	if (HasGameEnded) {
 		return;

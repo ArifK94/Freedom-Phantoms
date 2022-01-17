@@ -310,9 +310,10 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		//GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
 
 
+		// Events! DON'T FORGET TO REMOVE EVENTS ON THE UNPOSSESS() method to prevent a crash when switching between possess & unpossess
+
 		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACombatAIController::OnRappelUpdated);
 
-		// Events! DON'T FORGET TO REMOVE ON THE UNPOSSESS() method
 		if (AIMovementComponent)
 		{
 			AIMovementComponent->OnDestinationSet.AddDynamic(this, &ACombatAIController::OnMovementDestinationSet);
@@ -324,8 +325,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 		if (HealthComp)
 		{
-			//HealthComp->SetRegenerateHealth(true);
-			HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthChanged);
+			HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthUpdate);
 		}
 	}
 
@@ -354,7 +354,7 @@ void ACombatAIController::OnUnPossess()
 
 		if (HealthComp)
 		{
-			HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthChanged);
+			HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthUpdate);
 		}
 	}
 
@@ -362,7 +362,7 @@ void ACombatAIController::OnUnPossess()
 	ClearTimers();
 }
 
-void ACombatAIController::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ACombatAIController::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
 	if (Health <= 0.0f)
 	{

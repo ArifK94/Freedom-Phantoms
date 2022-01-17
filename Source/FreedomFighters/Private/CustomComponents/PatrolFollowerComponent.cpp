@@ -101,9 +101,5 @@ void UPatrolFollowerComponent::GetNextPathPoint(FVector& OutLocation)
 		CurrentPathIndex--;
 	}
 
-
-
-
-
 	OutLocation = SplinePathComp->GetLocationAtSplinePoint(CurrentPathIndex, ESplineCoordinateSpace::World);
 }

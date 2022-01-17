@@ -162,7 +162,6 @@ ABaseCharacter::ABaseCharacter()
 	CoverRotationRightPitch = FVector2D(-10.0f, 10.0f);
 	CoverRotationRightYaw = FVector2D(0.0f, 20.0f);
 
-	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthChanged);
 }
 
 void ABaseCharacter::BeginPlay()
@@ -190,6 +189,7 @@ void ABaseCharacter::BeginPlay()
 	InitTimeHandlers();
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
+	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthUpdate);
 }
 
 void ABaseCharacter::InitTimeHandlers()
@@ -233,7 +233,7 @@ FRotator ABaseCharacter::GetViewRotation() const
 	return Super::GetViewRotation();
 }
 
-void ABaseCharacter::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ABaseCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
 	if (!HealthComp->IsAlive())
 	{
@@ -404,18 +404,15 @@ void ABaseCharacter::EndSprint()
 	isSprinting = false;
 }
 
-// TODO: Fix default sprint mechanic, uncomment the commented out code to check if it works
 void ABaseCharacter::UpdateSprint()
 {
 	if (IsSprintDefault)
 	{
-		//GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-		BeginSprint();
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 	}
 	else
 	{
-		//GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
-		EndSprint();
+		GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
 	}
 }
 
@@ -457,7 +454,14 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 	if (IsSprintDefault)
 	{
-		isSprinting = IsCharacterMoving();
+		if (IsCharacterMoving())
+		{
+			BeginSprint();
+		}
+		else
+		{
+			EndSprint();
+		}
 	}
 }
 
@@ -969,10 +973,10 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 
 void ABaseCharacter::PostDeath()
 {
-	GetMesh()->SetAnimInstanceClass(NULL);
-	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-	GetMesh()->SetSimulatePhysics(true);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//GetMesh()->SetAnimInstanceClass(NULL);
+	//GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	//GetMesh()->SetSimulatePhysics(true);
+	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABaseCharacter::StartDestroy()
