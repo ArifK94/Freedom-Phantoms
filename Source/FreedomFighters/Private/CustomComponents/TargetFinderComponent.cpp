@@ -7,6 +7,10 @@
 
 #include "Components/SphereComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+//#include "Perception/AIPerceptionComponent.h"
+//#include "Perception/AISenseConfig.h"
+//#include "Perception/AISenseConfig_Sight.h"
+//#include "Perception/AISense_Sight.h"
 
 UTargetFinderComponent::UTargetFinderComponent()
 {
@@ -42,6 +46,22 @@ void UTargetFinderComponent::Init()
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
 		}
+	}
+
+	if (!PerceptionComp)
+	{
+		//PerceptionComp = Cast<UAIPerceptionComponent>(GetOwner()->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
+
+		// Get AI Sight Config
+		//UAISenseConfig* SightConfig = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
+		//if (SightConfig)
+		//{
+		//	AISightConfig = Cast<UAISenseConfig_Sight>(SightConfig);
+		//}
+		//else
+		//{
+		//	UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
+		//}
 	}
 }
 
@@ -155,3 +175,41 @@ bool UTargetFinderComponent::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
 
 	return false;
 }
+
+//UAISenseConfig* UTargetFinderComponent::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
+//{
+//	UAISenseConfig* result = nullptr;
+//
+//	FAISenseID Id = UAISense::GetSenseID(SenseClass);
+//	if (!Id.IsValid())
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("GetPerceptionSenseConfig: Wrong Sense ID"));
+//	}
+//	else
+//	{
+//		result = PerceptionComp->GetSenseConfig(Id);
+//	}
+//
+//	return result;
+//}
+//
+//
+//void UTargetFinderComponent::SetVisionAngle()
+//{
+//	if (AISightConfig == nullptr) {
+//		return;
+//	}
+//
+//	// Set Vision angle based whether character is in the helicopter
+//	if (OwningCombatCharacter->GetIsInAircraft())
+//	{
+//		AISightConfig->PeripheralVisionAngleDegrees = 90.0f;
+//	}
+//	else
+//	{
+//		AISightConfig->PeripheralVisionAngleDegrees = 180.0f;
+//	}
+//
+//	PerceptionComp->RequestStimuliListenerUpdate();
+//
+//}

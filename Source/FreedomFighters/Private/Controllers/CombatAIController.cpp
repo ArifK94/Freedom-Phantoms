@@ -23,10 +23,6 @@
 #include "NavigationSystem.h"
 #include "NavFilters/NavigationQueryFilter.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "Perception/AIPerceptionComponent.h"
-#include "Perception/AISenseConfig.h"
-#include "Perception/AISenseConfig_Sight.h"
-#include "Perception/AISense_Sight.h"
 #include "..\..\Public\Controllers\CombatAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -41,13 +37,11 @@ void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourSta
 
 void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 {
-	// Patrol points
-	if (CurrentBehaviourState == AIBehaviourState::Patrol)
+	switch (CurrentBehaviourState)
 	{
-		FVector OutLocation;
-		PatrolFollowerComponent->GetNextPathPoint(OutLocation);
-		TargetDestination = OutLocation;
-		AIMovementComponent->MoveToDestination(TargetDestination, 0.f, false);
+	case AIBehaviourState::Patrol:
+		MoveToNextPatrolPoint();
+		break;
 	}
 }
 
@@ -70,10 +64,13 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	CurrentCommand = RecruitInfo->CurrentCommand;
 	TargetDestination = RecruitInfo->TargetLocation;
 
+	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
+
 	// Defending point should be right where it was ordered to go to
 	if (CurrentCommand == CommanderOrders::Defend)
 	{
 		TargetRadius = 0.0f;
+		OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
 	}
 
 	CanFindCover = true;
@@ -84,9 +81,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	UpdatCombatAlert();
 
 	GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
-
-	MoveToTarget(TargetRadius);
-	//AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius);
+	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius);
 }
 
 ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -116,22 +111,6 @@ void ACombatAIController::Init()
 	// Remove sprint by default as the custom move to location will toggle sprint based on distance of the destination
 	if (OwningCombatCharacter->GetIsSprintDefault()) {
 		OwningCombatCharacter->ToggleSprint();
-	}
-
-	if (!PerceptionComp)
-	{
-		PerceptionComp = Cast<UAIPerceptionComponent>(OwningCombatCharacter->GetComponentByClass(UAIPerceptionComponent::StaticClass()));
-
-		// Get AI Sight Config
-		//UAISenseConfig* SightConfig = GetPerceptionSenseConfig(UAISense_Sight::StaticClass());
-		//if (SightConfig)
-		//{
-		//	AISightConfig = Cast<UAISenseConfig_Sight>(SightConfig);
-		//}
-		//else
-		//{
-		//	UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
-		//}
 	}
 
 	// Spawned actors do not create the components made in the constructor, so create the components again at runtime
@@ -202,42 +181,6 @@ void ACombatAIController::Init()
 	}
 }
 
-UAISenseConfig* ACombatAIController::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
-{
-	UAISenseConfig* result = nullptr;
-
-	FAISenseID Id = UAISense::GetSenseID(SenseClass);
-	if (!Id.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT("GetPerceptionSenseConfig: Wrong Sense ID"));
-	}
-	else
-	{
-		result = PerceptionComp->GetSenseConfig(Id);
-	}
-
-	return result;
-}
-
-void ACombatAIController::SetVisionAngle()
-{
-	if (AISightConfig == nullptr) {
-		return;
-	}
-
-	// Set Vision angle based whether character is in the helicopter
-	if (OwningCombatCharacter->GetIsInAircraft())
-	{
-		AISightConfig->PeripheralVisionAngleDegrees = 90.0f;
-	}
-	else
-	{
-		AISightConfig->PeripheralVisionAngleDegrees = 180.0f;
-	}
-
-	PerceptionComp->RequestStimuliListenerUpdate();
-
-}
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
@@ -514,7 +457,7 @@ void ACombatAIController::FindEnemy()
 		if (!THandler_MoveToNearbyDestination.IsValid()
 			&& CurrentCommand != CommanderOrders::Defend
 			&& CurrentBehaviourState != AIBehaviourState::PriorityDestination
-			&& !OwningCombatCharacter->GetMountedGun()) 
+			&& !OwningCombatCharacter->GetMountedGun())
 		{
 			CurrentBehaviourState = AIBehaviourState::Normal;
 			HasChosenNearTargetDest = false;
@@ -538,7 +481,7 @@ void ACombatAIController::FindEnemy()
 			EnemyActor = nullptr;
 		}
 
-		if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander && 
+		if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander &&
 			CurrentBehaviourState != AIBehaviourState::PriorityDestination &&
 			CurrentBehaviourState == AIBehaviourState::Normal)
 		{
@@ -874,7 +817,7 @@ void ACombatAIController::MoveToRandomPoint()
 	//auto Movement = AIMovementComponent->MoveToDestination(TargetDestination, .0f);
 	auto Movement = MoveToTarget(0.0f);
 
-	// Find a random point around destination if has arrived at the original target destination
+	//// Find a random point around destination if has arrived at the original target destination
 	if (!HasChosenNearTargetDest && Movement == EPathFollowingRequestResult::AlreadyAtGoal)
 	{
 		auto NearDestination = FindNearbyDestinationPoint();
@@ -882,9 +825,10 @@ void ACombatAIController::MoveToRandomPoint()
 		if (!NearDestination.IsZero())
 		{
 			TargetDestination = NearDestination; // upate the target destination
-			Movement = MoveToTarget(0.0f); // Move to new destination
-			//Movement = AIMovementComponent->MoveToDestination(TargetDestination, .0f);
+			//Movement = MoveToTarget(0.0f); // Move to new destination
+			AIMovementComponent->MoveToDestination(NearDestination, .0f);
 			HasChosenNearTargetDest = true;
+			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
 		}
 	}
 
@@ -983,6 +927,14 @@ void ACombatAIController::MoveToPatrol()
 	{
 		CurrentBehaviourState = AIBehaviourState::Patrol;
 	}
+}
+
+void ACombatAIController::MoveToNextPatrolPoint()
+{
+	FVector OutLocation;
+	PatrolFollowerComponent->GetNextPathPoint(OutLocation);
+	TargetDestination = OutLocation;
+	AIMovementComponent->MoveToDestination(TargetDestination, 0.f, false);
 }
 
 void ACombatAIController::CheckCommanderOrder()

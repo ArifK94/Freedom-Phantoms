@@ -17,10 +17,6 @@ class UCoverFinderComponent;
 class UTargetFinderComponent;
 class UMountedGunFinderComponent;
 
-class UAISenseConfig;
-class UAISenseConfig_Sight;
-class UAISense;
-class UAIPerceptionComponent;
 class AWeapon;
 class APumpActionWeapon;
 class AStronghold;
@@ -40,24 +36,19 @@ private:
 	UTargetFinderComponent* TargetFinderComponent;
 	UMountedGunFinderComponent* MountedGunFinderComponent;
 
-	UAISenseConfig_Sight* AISightConfig;
 	AWeapon* CurrentWeapon;
-	UAIPerceptionComponent* PerceptionComp;
 	APumpActionWeapon* PumpActionWeapon;
 	AActor* LastSeenEnemyActor;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		CommanderOrders CurrentCommand;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		AIBehaviourState CurrentBehaviourState;
 
 	// to take defensive positions within the stronghold
 	AStronghold* CurrentStronghold;
 	class UCoverPointComponent* ChosenCoverPointComponent;
 	ACommanderCharacter* Commander;
 
-
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		CommanderOrders CurrentCommand;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		AIBehaviourState CurrentBehaviourState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UBehaviorTree* BTAsset;
@@ -159,10 +150,6 @@ private:
 
 	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
 
-	UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
-
-	void SetVisionAngle();
-
 	void UpdatCombatAlert();
 
 	void BeginCoverPeak();
@@ -187,6 +174,8 @@ private:
 	void TargetFound();
 
 	void MoveToRandomPoint();
+
+	void MoveToNextPatrolPoint();
 
 	FVector FindNearbyDestinationPoint();
 
