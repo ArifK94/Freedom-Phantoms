@@ -77,7 +77,7 @@ void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedC
 }
 
 
-EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, bool WalkNearTarget)
+EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget, bool WalkNearTarget)
 {
 	auto CurrentMovement = EPathFollowingRequestResult::Failed;
 
@@ -91,53 +91,53 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 
 	CurrentMovement = AIController->MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
 
-	if (CurrentMovement == EPathFollowingRequestResult::RequestSuccessful)
-	{
-		// Make sure sphere radius is not very small otherwise the overlap will never trigger
-		// Set a small random amount
-		// otherwise use the accept radius amount
-		float TargetRadius = AcceptRadius <= 1.f ? MinAcceptanceRadius : AcceptRadius;
-
-		DestinationTrigger->SetWorldLocation(TargetDestination);
-		DestinationTrigger->SetSphereRadius(TargetRadius);
-		IsDestinationSet = true;
-
-		OnDestinationSet.Broadcast(AIBehaviourState::PriorityDestination);
+	if (CurrentMovement != EPathFollowingRequestResult::RequestSuccessful) {
+		return CurrentMovement;
 	}
 
+	// Make sure sphere radius is not very small otherwise the overlap will never trigger
+	// Set a small random amount
+	// otherwise use the accept radius amount
+	float TargetRadius = AcceptRadius <= 1.f ? MinAcceptanceRadius : AcceptRadius;
+
+	DestinationTrigger->SetWorldLocation(TargetDestination);
+	DestinationTrigger->SetSphereRadius(TargetRadius);
+	IsDestinationSet = true;
 
 
-	//if (Character)
-	//{
-	//	// Walk when close to desination
-	//	if (WalkNearTarget)
-	//	{
-	//		FVector OwnerLocation = Character->GetActorLocation();
+	if (Character && SprintToTarget)
+	{
+		// Walk when close to desination
+		if (WalkNearTarget)
+		{
+			FVector OwnerLocation = Character->GetActorLocation();
 
-	//		float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
+			float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 
-	//		// if distance is outside of destination radius
-	//		if (CurrentTargetDistance > AcceptanceRadius)
-	//		{
-	//			Character->BeginSprint();	// sprint
-	//		}
-	//		else
-	//		{
-	//			Character->EndSprint();
-	//		}
-	//	}
-	//	else
-	//	{
-	//		if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
-	//		{
-	//			Character->BeginSprint();
-	//		}
-	//		else
-	//		{
-	//			Character->EndSprint();
-	//		}
-	//	}
-	//}
+			// if distance is outside of destination radius
+			if (CurrentTargetDistance > TargetRadius)
+			{
+				Character->BeginSprint();	// sprint
+			}
+			else
+			{
+				Character->EndSprint();
+			}
+		}
+		else
+		{
+			if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
+			{
+				Character->BeginSprint();
+			}
+			else
+			{
+				Character->EndSprint();
+			}
+		}
+	}
+
+	OnDestinationSet.Broadcast(AIBehaviourState::PriorityDestination);
 
 	return CurrentMovement;
 }

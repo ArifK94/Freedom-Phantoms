@@ -181,7 +181,6 @@ void ACustomPlayerController::InitBeginPlayCommon()
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 		HealthComp->SetRegenerateHealth(true);
-		HealthComp->SetUnlimitedHealth(false);
 		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthUpdate);
 
 

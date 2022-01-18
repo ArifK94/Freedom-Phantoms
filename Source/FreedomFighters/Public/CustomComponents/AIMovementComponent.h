@@ -69,7 +69,7 @@ protected:
 
 public:	
 	UFUNCTION(BlueprintCallable)
-		EPathFollowingRequestResult::Type MoveToDestination(FVector TargetDestination, float AcceptRadius, bool WalkNearTarget = true);
+		EPathFollowingRequestResult::Type MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget = true, bool WalkNearTarget = true);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FVector ValidateDestination(FVector Location, bool& IsLocationValid);

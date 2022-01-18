@@ -290,7 +290,7 @@ void AAircraft::FollowSplinePath(float Value)
 		}
 		else
 		{
-			OnDestroy();
+			Destroy();
 		}
 	}
 }
@@ -1089,7 +1089,7 @@ void AAircraft::DestroyChildActor(TArray<AActor*> ParentActor)
 
 void AAircraft::Destroyed()
 {
-	Super::Destroyed();
-
 	OnDestroy();
+
+	Super::Destroyed();
 }

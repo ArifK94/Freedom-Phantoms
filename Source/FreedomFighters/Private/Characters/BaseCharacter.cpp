@@ -174,7 +174,6 @@ void ABaseCharacter::BeginPlay()
 
 	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	SprintSpeed = DefaultMaxWalkSpeed * 2.0f;
-	UpdateSprint();
 
 	DefaultAIController = Cast<AAIController>(GetController());
 
@@ -376,7 +375,11 @@ void ABaseCharacter::ToggleSprint()
 {
 	IsSprintDefault = !IsSprintDefault;
 
-	UpdateSprint();
+	// to make easier to go from crouch to stand (user experience purpose)
+	if (GetCharacterMovement()->IsCrouching())
+	{
+		UnCrouch();
+	}
 }
 
 void ABaseCharacter::BeginSprint()
@@ -401,18 +404,6 @@ void ABaseCharacter::EndSprint()
 	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
 
 	isSprinting = false;
-}
-
-void ABaseCharacter::UpdateSprint()
-{
-	if (IsSprintDefault)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-	}
-	else
-	{
-		GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
-	}
 }
 
 void ABaseCharacter::ToggleCrouch()
@@ -453,7 +444,7 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 	if (IsSprintDefault)
 	{
-		if (IsCharacterMoving())
+		if (IsCharacterMoving() && !GetCharacterMovement()->IsCrouching())
 		{
 			BeginSprint();
 		}

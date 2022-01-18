@@ -47,7 +47,7 @@ void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 		FVector OutLocation;
 		PatrolFollowerComponent->GetNextPathPoint(OutLocation);
 		TargetDestination = OutLocation;
-		AIMovementComponent->MoveToDestination(TargetDestination, 0.f);
+		AIMovementComponent->MoveToDestination(TargetDestination, 0.f, false);
 	}
 }
 
@@ -114,9 +114,9 @@ void ACombatAIController::Init()
 	OwningCombatCharacter->SetUseAimCameraSpring(false);
 
 	// Remove sprint by default as the custom move to location will toggle sprint based on distance of the destination
-	//if (OwningCombatCharacter->GetIsSprintDefault()) {
-	//	OwningCombatCharacter->ToggleSprint();
-	//}
+	if (OwningCombatCharacter->GetIsSprintDefault()) {
+		OwningCombatCharacter->ToggleSprint();
+	}
 
 	if (!PerceptionComp)
 	{
@@ -516,6 +516,7 @@ void ACombatAIController::FindEnemy()
 			&& CurrentBehaviourState != AIBehaviourState::PriorityDestination
 			&& !OwningCombatCharacter->GetMountedGun()) 
 		{
+			CurrentBehaviourState = AIBehaviourState::Normal;
 			HasChosenNearTargetDest = false;
 			TargetDestination = OwningCombatCharacter->GetActorLocation();
 			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, FMath::RandRange(.5f, 2.f), true);
@@ -537,10 +538,12 @@ void ACombatAIController::FindEnemy()
 			EnemyActor = nullptr;
 		}
 
-		//if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander && CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander)
-		//{
-		//	CurrentBehaviourState = AIBehaviourState::Normal;
-		//}
+		if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander && 
+			CurrentBehaviourState != AIBehaviourState::PriorityDestination &&
+			CurrentBehaviourState == AIBehaviourState::Normal)
+		{
+			CurrentBehaviourState = AIBehaviourState::Patrol;
+		}
 	}
 }
 
@@ -974,7 +977,7 @@ void ACombatAIController::MoveToPatrol()
 
 	FVector OutLocation;
 	PatrolFollowerComponent->GetCurrentPathPoint(OutLocation);
-	auto Movement = AIMovementComponent->MoveToDestination(OutLocation, 0.f);
+	auto Movement = AIMovementComponent->MoveToDestination(OutLocation, 0.f, false);
 
 	if (Movement == EPathFollowingRequestResult::RequestSuccessful)
 	{

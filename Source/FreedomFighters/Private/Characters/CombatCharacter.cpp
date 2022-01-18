@@ -445,10 +445,6 @@ void ACombatCharacter::UpdateCharacterMovement()
 	if (isAiming || (!IsCharacterMoving() && isFiring)) {
 		EndSprint();
 	}
-	else
-	{
-		UpdateSprint();
-	}
 }
 
 // if in combat mode while sprinting and looking backwards then stop sprinting
