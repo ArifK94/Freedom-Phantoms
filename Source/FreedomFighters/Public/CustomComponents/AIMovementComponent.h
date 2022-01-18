@@ -50,6 +50,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		float MovementDebugLifetTime;
 
+
+	/** The sphere radius for NPC to move around the same target position so that multiple NPCs do not stick together in one place */
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	//	float DestinationRadius;
+
 public:	
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnDestinationSetSignature OnDestinationSet;
@@ -68,8 +73,11 @@ protected:
 		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 		EPathFollowingRequestResult::Type MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget = true, bool WalkNearTarget = true);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FVector FindNearbyDestinationPoint(FVector TargetDestination, float Radius, TArray<AActor*> IgnoreActors);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FVector ValidateDestination(FVector Location, bool& IsLocationValid);

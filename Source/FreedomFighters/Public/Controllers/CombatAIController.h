@@ -96,7 +96,7 @@ private:
 	FVector LastSeenPosition;
 
 	/** The sphere radius for recruits to move around a order position so that multiple recruits do not stick together in one place */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float DestinationRadius;
 	float DefaultDestinationRadius;
 
@@ -177,7 +177,9 @@ private:
 
 	void MoveToNextPatrolPoint();
 
-	FVector FindNearbyDestinationPoint();
+	bool IsNearCommander();
+
+	bool IsNearCommander(FVector Location);
 
 protected:
 	virtual void BeginPlay() override;

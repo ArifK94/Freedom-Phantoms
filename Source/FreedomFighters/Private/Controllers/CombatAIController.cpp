@@ -43,6 +43,18 @@ void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 		MoveToNextPatrolPoint();
 		break;
 	}
+
+	if (Commander && CurrentCommand != CommanderOrders::Follow)
+	{
+		FindMountedGun();
+	}
+	
+	if (!OwningCombatCharacter->GetMountedGun())
+	{
+		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
+	}
+
+
 }
 
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
@@ -80,7 +92,6 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	StayCombatAlert = false;
 	UpdatCombatAlert();
 
-	GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
 	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius);
 }
 
@@ -688,9 +699,9 @@ void ACombatAIController::ReloadWeapon()
 void ACombatAIController::FindMountedGun()
 {
 	// if already using an MG
+	// if using an aircraft MG for instance, which should not be exited, no need to run this method
 	if (OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
 	{
-		// if using an aircraft MG for instance, which should not be exited
 		GetWorldTimerManager().ClearTimer(THandler_MountedGun);
 		return;
 	}
@@ -700,7 +711,14 @@ void ACombatAIController::FindMountedGun()
 	{
 		if (!OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsUsingMountedWeapon())
 		{
-			OwningCombatCharacter->UseMountedGun();
+			// Don't want AI to teleport to the MG, needs to be close enough to use it
+			auto DistanceToMG = FVector::Distance(OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos());
+
+			if (DistanceToMG < 100.f)
+			{
+				OwningCombatCharacter->UseMountedGun();
+			}
+
 			return;
 		}
 
@@ -709,36 +727,50 @@ void ACombatAIController::FindMountedGun()
 		{
 			OwningCombatCharacter->DropMountedGun();
 			CanFindCover = true;
+			return;
 		}
 		else if (TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, EnemyActor))
 		{
+			// Still posssess MG when enemy is no longer behing AI
 			OwningCombatCharacter->DropMountedGun(false);
-			CanFindCover = true;
-		}
-		else // if MG is free, keep moving towards it
-		{
-			//AIMovementComponent->MoveToDestination(TargetDestination, .0f, false);
-			MoveToTarget(0.0f, false);
 			CanFindCover = false;
 			return;
 		}
 	}
 
-	if (MountedGunFinderComponent)
+
+	bool CanFindMG = true;
+
+	if (Commander && !IsNearCommander()) {
+		CanFindMG = false;
+	}
+
+	if (MountedGunFinderComponent && !OwningCombatCharacter->GetMountedGun() && CanFindMG)
 	{
 		auto SelectedMG = MountedGunFinderComponent->FindMG();
 
 		// if found an MG 
 		// & enemy is not behind the MG
-		if (SelectedMG && !TargetFinderComponent->IsTargetBehind(SelectedMG, EnemyActor))
+		if (SelectedMG)
 		{
-			SelectedMG->SetPotentialOwner(OwningCombatCharacter);
-			OwningCombatCharacter->SetMountedGun(SelectedMG);
-			CanFindCover = false;
+			bool IsMGValid = true;
+			// Check if AI has a ollow order, if it's defend or attack then the if statement should be ignored
+			// and commander is near the MG,
+			if (Commander && CurrentCommand == CommanderOrders::Follow && !IsNearCommander(SelectedMG->GetCharacterStandPos()))
+			{
+				IsMGValid = false;
+			}
 
-			TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
-			//AIMovementComponent->MoveToDestination(TargetDestination, .0f, false);
-			MoveToTarget(0.0f, false);
+			if (!TargetFinderComponent->IsTargetBehind(SelectedMG, EnemyActor) && IsMGValid)
+			{
+				SelectedMG->SetPotentialOwner(OwningCombatCharacter);
+				OwningCombatCharacter->SetMountedGun(SelectedMG);
+				CanFindCover = false;
+
+				TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
+				AIMovementComponent->MoveToDestination(TargetDestination, .0f, false);
+			}
+
 		}
 	}
 
@@ -820,7 +852,13 @@ void ACombatAIController::MoveToRandomPoint()
 	//// Find a random point around destination if has arrived at the original target destination
 	if (!HasChosenNearTargetDest && Movement == EPathFollowingRequestResult::AlreadyAtGoal)
 	{
-		auto NearDestination = FindNearbyDestinationPoint();
+		TArray<AActor*> IgnoreActors;
+
+		if (Commander) {
+			IgnoreActors.Add(Commander);
+		}
+
+		auto NearDestination = AIMovementComponent->FindNearbyDestinationPoint(TargetDestination, DestinationRadius, IgnoreActors);
 
 		if (!NearDestination.IsZero())
 		{
@@ -852,66 +890,7 @@ void ACombatAIController::MoveToRandomPoint()
 	}
 }
 
-FVector ACombatAIController::FindNearbyDestinationPoint()
-{
-	// Assign default target by the destination set
-	FVector TargetDest = TargetDestination;
 
-	// create a collision sphere
-	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(DestinationRadius);
-
-	// create tarray for hit results
-	TArray<FHitResult> OutHits;
-
-	// check if something got hit in the sweep
-	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, TargetDest, TargetDest, FQuat::Identity, ECC_Visibility, MyColSphere);
-
-
-	if (isHit)
-	{
-		// Is there already a character in that target dest?
-		bool IsPointTaken = false;
-		for (auto& Hit : OutHits)
-		{
-			AActor* DamagedActor = Hit.GetActor();
-			if (DamagedActor)
-			{
-				auto HitCharacter = Cast<ABaseCharacter>(DamagedActor);
-				if (HitCharacter && HitCharacter->GetHealthComp()->IsAlive())
-				{
-					// if the character hit is the commander then this hit point location should be available
-					if (Commander)
-					{
-						if (HitCharacter != Commander)
-						{
-							IsPointTaken = true;
-						}
-					}
-					else
-					{
-						IsPointTaken = true;
-					}
-
-				}
-			}
-		}
-
-		if (IsPointTaken)
-		{
-			FNavLocation NavLocation;
-			UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-			bool navResult = NavigationArea->GetRandomReachablePointInRadius(TargetDestination, DestinationRadius, NavLocation);
-
-			if (navResult)
-			{
-				TargetDest = NavLocation.Location;
-			}
-
-		}
-	}
-
-	return TargetDest;
-}
 
 void ACombatAIController::MoveToPatrol()
 {
@@ -957,7 +936,6 @@ void ACombatAIController::CheckCommanderOrder()
 
 	if (CurrentCommand == CommanderOrders::Follow)
 	{
-		TargetDestination = Commander->GetActorLocation();
 		HasChosenNearTargetDest = true;
 		CanFindCover = false;
 
@@ -975,18 +953,17 @@ void ACombatAIController::CheckCommanderOrder()
 
 
 
-		auto CurrentMovement = MoveToTarget(AcceptanceRadius);
-		//auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius);
-
-		if (CurrentMovement == EPathFollowingRequestResult::AlreadyAtGoal)
+		if (!IsNearCommander())
 		{
-			FindMountedGun();
+			OwningCombatCharacter->DropMountedGun();
+			TargetDestination = Commander->GetActorLocation();
+			auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius);
 		}
 		else
 		{
-			// exit from MG if currently using or if an MG has been assigned
-			OwningCombatCharacter->DropMountedGun();
+			FindMountedGun();
 		}
+
 	}
 }
 
@@ -998,4 +975,20 @@ void ACombatAIController::TargetFound()
 		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->TargetFoundSound);
 		HasPlayedTargetFoundSound = true;
 	}
+}
+
+bool ACombatAIController::IsNearCommander()
+{
+	if (Commander && OwningCombatCharacter->GetDistanceTo(Commander) <= AcceptanceRadius) {
+		return true;
+	}
+	return false;
+}
+
+bool ACombatAIController::IsNearCommander(FVector Location)
+{
+	if (Commander && FVector::Distance(Commander->GetActorLocation(), Location) <= AcceptanceRadius) {
+		return true;
+	}
+	return false;
 }

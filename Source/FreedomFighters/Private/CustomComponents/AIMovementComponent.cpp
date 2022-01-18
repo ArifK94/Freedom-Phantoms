@@ -2,6 +2,7 @@
 
 
 #include "CustomComponents/AIMovementComponent.h"
+#include "CustomComponents/HealthComponent.h"
 #include "Characters/BaseCharacter.h"
 
 #include "AIController.h"
@@ -140,6 +141,63 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 	OnDestinationSet.Broadcast(AIBehaviourState::PriorityDestination);
 
 	return CurrentMovement;
+}
+
+FVector UAIMovementComponent::FindNearbyDestinationPoint(FVector TargetDestination, float Radius, TArray<AActor*> IgnoreActors)
+{
+	// Assign default target by the destination set
+	FVector TargetDest = TargetDestination;
+
+	// create a collision sphere
+	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(Radius);
+
+	// create tarray for hit results
+	TArray<FHitResult> OutHits;
+
+	// check if something got hit in the sweep
+	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, TargetDest, TargetDest, FQuat::Identity, ECC_Visibility, MyColSphere);
+
+
+	if (isHit)
+	{
+		// Is there already a character in that target dest?
+		bool IsPointTaken = false;
+		for (auto& Hit : OutHits)
+		{
+			AActor* HitActor = Hit.GetActor();
+			if (HitActor)
+			{
+				if (UHealthComponent::IsAlive(HitActor))
+				{
+					for (int i = 0; i < IgnoreActors.Num(); i++)
+					{
+						auto Actor = IgnoreActors[i];
+
+						if (Actor != HitActor)
+						{
+							IsPointTaken = true;
+						}
+					}
+				}
+			}
+		}
+
+		// find another point in a nav radius if point is taken by another
+		if (IsPointTaken)
+		{
+			FNavLocation NavLocation;
+			UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+			bool navResult = NavigationArea->GetRandomReachablePointInRadius(TargetDestination, Radius, NavLocation);
+
+			if (navResult)
+			{
+				TargetDest = NavLocation.Location;
+			}
+
+		}
+	}
+
+	return TargetDest;
 }
 
 FVector UAIMovementComponent::ValidateDestination(FVector Location, bool& IsLocationValid)
