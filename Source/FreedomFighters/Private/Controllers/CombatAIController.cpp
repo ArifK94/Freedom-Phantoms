@@ -768,7 +768,7 @@ void ACombatAIController::FindMountedGun()
 				CanFindCover = false;
 
 				TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
-				AIMovementComponent->MoveToDestination(TargetDestination, .0f, false);
+				AIMovementComponent->MoveToDestination(TargetDestination, .0f, true, false);
 			}
 
 		}
