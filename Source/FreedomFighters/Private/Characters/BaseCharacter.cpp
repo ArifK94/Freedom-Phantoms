@@ -148,8 +148,6 @@ ABaseCharacter::ABaseCharacter()
 
 	IsSprintDefault = true;
 	isSprinting = false;
-	isDead = false;
-	ReceeivedInitialDirection = false;
 	UseRootMotion = false;
 	isFacingCoverRHS = false;
 
@@ -236,8 +234,6 @@ void ABaseCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float He
 {
 	if (!HealthComp->IsAlive())
 	{
-		isDead = true;
-
 		VoiceAudioComponent->Stop();
 
 		ClearTimeHandlers();
@@ -455,87 +451,22 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 void ABaseCharacter::UpdateSpeed()
 {
-	float TargetSpeed = 0.0f;
-
-	if (UseRootMotion)
-	{
-		TargetSpeed = FMath::Clamp(FMath::Abs(ForwardInputValue) + FMath::Abs(RightInputValue), 0.0f, 1.0f);
-
-		if (isSprinting)
-		{
-			TargetSpeed = TargetSpeed * 2.0f;
-		}
-
-		if (LastForwardInputVal != ForwardInputValue || LastRightInput != RightInputValue)
-		{
-			ChangedCharacterDirection = true;
-		}
-		else
-		{
-			ChangedCharacterDirection = false;
-		}
-
-		LastForwardInputVal = ForwardInputValue;
-		LastRightInput = RightInputValue;
-	}
-	else
-	{
-		TargetSpeed = GetVelocity().Size();
-	}
+	auto TargetSpeed = GetVelocity().Size();
 	CharacterSpeed = TargetSpeed;
 }
 
 void ABaseCharacter::UpdateDirection()
 {
-	if (UseRootMotion)
+	// get the direction of the character
+	if (AnimInstance)
 	{
-		float x = 0.0f, y = 0.0f;
-		float Pitch = 0.0f, Yaw = 0.0f, Roll = 0.0f;
+		// We want to character to face towards camera's forward direction rather than actor's position,
+		// this allows run and shoot to rotate towards camera direction
+		auto TargetDirection = FollowCamera->GetComponentRotation() - GetActorRotation();
+		//auto Direction = AnimInstance->CalculateDirection(GetVelocity(), FollowCamera->GetComponentRotation());
 
-		FVector InputPos = UKismetMathLibrary::MakeVector(ForwardInputValue, RightInputValue, 0.0f);
-
-		FRotator rotation = UKismetMathLibrary::MakeRotFromX(InputPos);
-
-		FRotator Rotator = UKismetMathLibrary::NormalizedDeltaRotator(FollowCamera->GetComponentRotation(), GetCapsuleComponent()->GetComponentRotation());
-		FRotator TargetRotator = UKismetMathLibrary::NormalizedDeltaRotator(rotation, Rotator);
-
-
-		if (CharacterSpeed > 0.01f)
-		{
-			if (ReceeivedInitialDirection)
-			{
-				if (CharacterSpeed < 0.01f)
-				{
-					ReceeivedInitialDirection = false;
-				}
-			}
-			else
-			{
-				CharacterDirection = TargetRotator.Yaw;
-				GetWorldTimerManager().SetTimer(THandler_ResetInitialDirectionBool, this, &ABaseCharacter::ResetInitialDirectionBool, 1.0f, false, .1f);
-			}
-		}
-		else
-		{
-			if (CharacterSpeed < 0.01f)
-			{
-				ReceeivedInitialDirection = false;
-			}
-		}
-	}
-	else
-	{
-		// get the direction of the character
-		if (AnimInstance)
-		{
-			// We want to character to face towards camera's forward direction rather than actor's position,
-			// this allows run and shoot to rotate towards camera direction
-			auto TargetDirection = FollowCamera->GetComponentRotation() - GetActorRotation();
-			//auto Direction = AnimInstance->CalculateDirection(GetVelocity(), FollowCamera->GetComponentRotation());
-
-			auto Direction = TargetDirection.Yaw;
-			CharacterDirection = UKismetMathLibrary::Clamp(Direction, -180.f, 180.f);
-		}
+		auto Direction = TargetDirection.Yaw;
+		CharacterDirection = UKismetMathLibrary::Clamp(Direction, -180.f, 180.f);
 	}
 }
 
@@ -766,12 +697,6 @@ void ABaseCharacter::CoverMovement(float Value)
 }
 
 
-void ABaseCharacter::ResetInitialDirectionBool()
-{
-	ReceeivedInitialDirection = true;
-	GetWorldTimerManager().ClearTimer(THandler_ResetInitialDirectionBool);
-}
-
 void ABaseCharacter::BeginAim()
 {
 	if (isTakingCover)
@@ -967,7 +892,7 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 
 void ABaseCharacter::PostDeath()
 {
-	//GetMesh()->SetAnimInstanceClass(NULL);
+	GetMesh()->SetAnimInstanceClass(NULL);
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);

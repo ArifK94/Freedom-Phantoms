@@ -936,23 +936,6 @@ void ACombatCharacter::UseMountedGun()
 
 	if (MountedGun->GetAdjustBehindMG())
 	{
-		FLatentActionInfo LatentInfo;
-		LatentInfo.CallbackTarget = this;
-
-
-		//UKismetSystemLibrary::MoveComponentTo(
-		//	GetCapsuleComponent(),
-		//	MountedGun->GetCharacterStandPos(),
-		//	MountedGun->GetCharacterStandRot(),
-		//	false,
-		//	false,
-		//	.2f,
-		//	false,
-		//	EMoveComponentAction::Type::Move,
-		//	LatentInfo
-		//);
-
-
 		AttachToComponent(MountedGun->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MountedGun->GetCharacterPositionSocket());
 		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	}

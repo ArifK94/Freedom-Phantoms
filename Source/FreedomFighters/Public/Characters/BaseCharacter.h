@@ -133,9 +133,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", ClampMin = 0.1, ClampMax = 100))
 		float AimCameraZoomSpeed;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isDead;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isTakingCover;
 
@@ -157,8 +154,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isFacingCoverRHS;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool ReceeivedInitialDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool ChangedCharacterDirection;
@@ -220,7 +215,6 @@ private:
 
 	float SprintSpeed;
 
-	FTimerHandle THandler_ResetInitialDirectionBool;
 	FTimerHandle THandler_CharacterMovement;
 	FTimerHandle THandler_CharacterDirection;
 
@@ -254,8 +248,6 @@ protected:
 
 private:
 	void UpdateDirection();
-
-	void ResetInitialDirectionBool();
 
 	void StartCover(FHitResult OutHit);
 
@@ -338,10 +330,6 @@ public:
 
 	bool IsAiming() {
 		return isAiming;
-	}
-
-	bool getisDead() {
-		return isDead;
 	}
 
 	bool GetIsInAircraft() {
