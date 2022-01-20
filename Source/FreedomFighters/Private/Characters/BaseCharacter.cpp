@@ -240,8 +240,6 @@ void ABaseCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float He
 
 		VoiceAudioComponent->Stop();
 
-		//GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
-
 		ClearTimeHandlers();
 
 		ShowCharacterOutline(false, true);
@@ -530,7 +528,13 @@ void ABaseCharacter::UpdateDirection()
 		// get the direction of the character
 		if (AnimInstance)
 		{
-			CharacterDirection = AnimInstance->CalculateDirection(GetVelocity(), FollowCamera->GetComponentRotation()) * -1.0f;
+			// We want to character to face towards camera's forward direction rather than actor's position,
+			// this allows run and shoot to rotate towards camera direction
+			auto TargetDirection = FollowCamera->GetComponentRotation() - GetActorRotation();
+			//auto Direction = AnimInstance->CalculateDirection(GetVelocity(), FollowCamera->GetComponentRotation());
+
+			auto Direction = TargetDirection.Yaw;
+			CharacterDirection = UKismetMathLibrary::Clamp(Direction, -180.f, 180.f);
 		}
 	}
 }
