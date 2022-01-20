@@ -97,6 +97,7 @@ enum class AIBehaviourState : uint8
 {
 	Normal					UMETA(DisplayName = "Normal"),
 	Patrol					UMETA(DisplayName = "Patrol"),
+	MovingToLastSeenEnemy	UMETA(DisplayName = "MovingToLastSeenEnemy"),
 	PriorityDestination		UMETA(DisplayName = "PriorityDestination"),
 	PriorityOrdersCommander	UMETA(DisplayName = "PriorityOrdersCommander"),
 };

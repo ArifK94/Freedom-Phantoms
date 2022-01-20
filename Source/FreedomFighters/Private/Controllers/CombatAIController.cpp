@@ -42,6 +42,9 @@ void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 	case AIBehaviourState::Patrol:
 		MoveToNextPatrolPoint();
 		break;
+	case AIBehaviourState::MovingToLastSeenEnemy:
+		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, false, FMath::RandRange(2.f, 5.f));
+		break;
 	}
 
 	if (Commander && CurrentCommand != CommanderOrders::Follow)
@@ -416,6 +419,7 @@ void ACombatAIController::FindEnemy()
 
 	if (ChosenTarget) // found an enemy?
 	{
+		LastSeenEnemyActor = nullptr;
 
 		if (OwningCombatCharacter->IsTakingCover())
 		{
@@ -490,6 +494,7 @@ void ACombatAIController::FindEnemy()
 			LastSeenEnemyActor = EnemyActor;
 			LastSeenPosition = LastSeenEnemyActor->GetActorLocation();
 			EnemyActor = nullptr;
+			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
 		}
 
 		if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander &&
@@ -503,8 +508,6 @@ void ACombatAIController::FindEnemy()
 
 void ACombatAIController::UpdateLastSeen()
 {
-	SetFocalPoint(LastSeenPosition);
-
 	// look straight ahead with the MG direction
 	if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetAdjustBehindMG())
 	{
@@ -531,6 +534,7 @@ void ACombatAIController::UpdateLastSeen()
 	}
 
 	LastSeenEnemyActor = nullptr;
+	SetFocalPoint(FVector::ZeroVector);
 	GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 }
 
@@ -628,18 +632,29 @@ void ACombatAIController::ShootAtEnemy()
 	else
 	{
 		OwningCombatCharacter->EndFire();
+		GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
 
 		// Focus on the last seen enemy
-		if (!THandler_LastSeenEnemy.IsValid()) {
-			if (!OwningCombatCharacter->IsSprinting())
+		if (LastSeenEnemyActor) {
+
+			OwningCombatCharacter->BeginAim();
+
+			// Move near nearest enemy last seen
+			if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander ||
+				CurrentBehaviourState != AIBehaviourState::PriorityDestination ||
+				CurrentBehaviourState != AIBehaviourState::MovingToLastSeenEnemy)
 			{
-				OwningCombatCharacter->BeginAim();
+				CurrentBehaviourState = AIBehaviourState::MovingToLastSeenEnemy;
+
+
+				// Go near the last seen postion on a random radius
+				float Radius = FMath::RandRange(500.f, 1000.f);
+				TArray<AActor*> IgnoreActors;
+				TargetDestination = AIMovementComponent->FindNearbyDestinationPoint(LastSeenPosition, Radius, IgnoreActors);
+				AIMovementComponent->MoveToDestination(TargetDestination, Radius, false, true, CurrentBehaviourState);
+				SetFocalPoint(LastSeenPosition);
 			}
-
-			GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, false, FMath::RandRange(2.f, 5.f));
 		}
-
-		GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
 	}
 
 }

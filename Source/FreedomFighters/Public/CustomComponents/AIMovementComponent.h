@@ -74,7 +74,7 @@ protected:
 
 public:	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		EPathFollowingRequestResult::Type MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget = true, bool WalkNearTarget = true);
+		EPathFollowingRequestResult::Type MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget = true, bool WalkNearTarget = true, AIBehaviourState BehaviourState = AIBehaviourState::MovingToLastSeenEnemy);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FVector FindNearbyDestinationPoint(FVector TargetDestination, float Radius, TArray<AActor*> IgnoreActors);

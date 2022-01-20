@@ -45,6 +45,15 @@ private:
 	class UCoverPointComponent* ChosenCoverPointComponent;
 	ACommanderCharacter* Commander;
 
+
+	bool StayCombatAlert;
+	bool HasChosenCover;
+	bool CanFindCover;
+
+	FVector ChosenCoverPoint;
+	FVector LastSeenPosition;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		CommanderOrders CurrentCommand;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -86,14 +95,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TimeBetweenShotsMax;
-
-	bool StayCombatAlert;
-	bool HasChosenCover;
-	bool CanFindCover;
-
-	FVector ChosenCoverPoint;
-
-	FVector LastSeenPosition;
 
 	/** The sphere radius for recruits to move around a order position so that multiple recruits do not stick together in one place */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))

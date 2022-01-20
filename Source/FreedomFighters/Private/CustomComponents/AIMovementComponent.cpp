@@ -78,7 +78,7 @@ void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedC
 }
 
 
-EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget, bool WalkNearTarget)
+EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget, bool WalkNearTarget, AIBehaviourState BehaviourState)
 {
 	auto CurrentMovement = EPathFollowingRequestResult::Failed;
 
@@ -138,7 +138,7 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 		}
 	}
 
-	OnDestinationSet.Broadcast(AIBehaviourState::PriorityDestination);
+	OnDestinationSet.Broadcast(BehaviourState);
 
 	return CurrentMovement;
 }
