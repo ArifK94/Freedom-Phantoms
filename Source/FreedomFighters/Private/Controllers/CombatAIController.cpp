@@ -706,6 +706,12 @@ void ACombatAIController::FindMountedGun()
 		return;
 	}
 
+	// If in patrol mode & no enemy in sight then do not search for MG
+	if (!EnemyActor && CurrentBehaviourState == AIBehaviourState::Patrol)
+	{
+		return;
+	}
+
 	// If an MG has been assigned
 	if (OwningCombatCharacter->GetMountedGun())
 	{
