@@ -36,7 +36,6 @@ private:
 	UTargetFinderComponent* TargetFinderComponent;
 	UMountedGunFinderComponent* MountedGunFinderComponent;
 
-	AWeapon* CurrentWeapon;
 	APumpActionWeapon* PumpActionWeapon;
 	AActor* LastSeenEnemyActor;
 

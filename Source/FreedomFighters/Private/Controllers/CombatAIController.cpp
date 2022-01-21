@@ -51,7 +51,7 @@ void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 	{
 		FindMountedGun();
 	}
-	
+
 	if (!OwningCombatCharacter->GetMountedGun())
 	{
 		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
@@ -514,14 +514,14 @@ void ACombatAIController::UpdateLastSeen()
 		OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(OwningCombatCharacter->GetMountedGun()->GetCharacterStandRot());
 	}
 
-	if (CurrentWeapon->getCurrentAmmo() <= 0 || CurrentWeapon->getCurrentAmmo() < CurrentWeapon->getAmmoPerClip()) // reload clip if finished completely or  reload if not on full clip
+	if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() < OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip()) // reload clip if finished completely or  reload if not on full clip
 	{
 		OwningCombatCharacter->BeginReload();
 	}
 	else
 	{
 		// switch back to primary
-		if (CurrentWeapon == OwningCombatCharacter->GetSecondaryWeaponObj())
+		if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj())
 		{
 			OwningCombatCharacter->BeginWeaponSwap();
 		}
@@ -540,9 +540,7 @@ void ACombatAIController::UpdateLastSeen()
 
 void ACombatAIController::ShootAtEnemy()
 {
-	CurrentWeapon = OwningCombatCharacter->GetCurrentWeapon();
-
-	if (CurrentWeapon == nullptr) {
+	if (OwningCombatCharacter->GetCurrentWeapon() == nullptr) {
 		return;
 	}
 
@@ -553,7 +551,7 @@ void ACombatAIController::ShootAtEnemy()
 		*/
 		if (OwningCombatCharacter->IsReloading())
 		{
-			if (CurrentWeapon->getCurrentAmmo() >= CurrentWeapon->getAmmoPerClip())
+			if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() >= OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip())
 			{
 				OwningCombatCharacter->EndReload();
 			}
@@ -588,7 +586,7 @@ void ACombatAIController::ShootAtEnemy()
 			OwningCombatCharacter->GetMountedGun()->SetRotatioInput(TargetRot);
 		}
 
-		if (CurrentWeapon->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
+		if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
 		{
 			ReloadWeapon();
 		}
@@ -599,7 +597,7 @@ void ACombatAIController::ShootAtEnemy()
 			float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);
 			bool IsTargetClose = DistanceDiff < randomDistanceLimit;
 
-			if (!IsTargetClose && CurrentWeapon == OwningCombatCharacter->GetSecondaryWeaponObj() // if target is not close, then switch back to primary
+			if (!IsTargetClose && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj() // if target is not close, then switch back to primary
 				&& !OwningCombatCharacter->GetIsInAircraft())
 			{
 				OwningCombatCharacter->BeginWeaponSwap();
@@ -679,10 +677,10 @@ void ACombatAIController::ReloadWeapon()
 	float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);
 	bool IsTargetClose = DistanceDiff < randomDistanceLimit;
 
-	if (CurrentWeapon->getCurrentAmmo() <= 0 && !PumpActionWeapon) // Reload the weapon
+	if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 && !PumpActionWeapon) // Reload the weapon
 	{
 		if (IsTargetClose &&
-			CurrentWeapon != OwningCombatCharacter->GetSecondaryWeaponObj() && // if using primary weapon & enemy is nearby, then swap to secondary
+			OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetSecondaryWeaponObj() && // if using primary weapon & enemy is nearby, then swap to secondary
 			!OwningCombatCharacter->GetIsInAircraft())
 		{
 			OwningCombatCharacter->BeginWeaponSwap();
@@ -692,11 +690,11 @@ void ACombatAIController::ReloadWeapon()
 			OwningCombatCharacter->BeginReload();
 		}
 	}
-	else if (PumpActionWeapon && (CurrentWeapon->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())) // pump action weapons can be fired as soon as the first ammo shell is inserted, so better to add few more bullets first before firing again
+	else if (PumpActionWeapon && (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())) // pump action weapons can be fired as soon as the first ammo shell is inserted, so better to add few more bullets first before firing again
 	{
-		int RandomAmount = rand() % CurrentWeapon->getAmmoPerClip();
+		int RandomAmount = rand() % OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip();
 
-		if (CurrentWeapon->getCurrentAmmo() <= 0 || CurrentWeapon->getCurrentAmmo() < RandomAmount)
+		if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() < RandomAmount)
 		{
 			OwningCombatCharacter->BeginReload();
 		}
