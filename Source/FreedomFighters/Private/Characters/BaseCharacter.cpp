@@ -463,10 +463,8 @@ void ABaseCharacter::UpdateDirection()
 		// We want to character to face towards camera's forward direction rather than actor's position,
 		// this allows run and shoot to rotate towards camera direction
 		auto TargetDirection = FollowCamera->GetComponentRotation() - GetActorRotation();
-		//auto Direction = AnimInstance->CalculateDirection(GetVelocity(), FollowCamera->GetComponentRotation());
-
 		auto Direction = TargetDirection.Yaw;
-		CharacterDirection = UKismetMathLibrary::Clamp(Direction, -180.f, 180.f);
+		CharacterDirection = Direction;
 	}
 }
 
