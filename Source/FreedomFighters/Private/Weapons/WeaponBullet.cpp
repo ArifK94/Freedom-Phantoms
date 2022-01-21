@@ -385,6 +385,7 @@ FSurfaceImpactSet AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 	{
 	case SURFACE_HEAD:
 	case SURFACE_GROIN:
+	case SURFACE_LEGS:
 	case SURFACE_FLESHDEFAULT:
 	case SURFACE_FLESHVULNERABLE:
 		SurfaceImpactSet = SurfaceImpact->Flesh;
