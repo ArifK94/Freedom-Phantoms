@@ -906,10 +906,6 @@ void ABaseCharacter::StartDestroy()
 
 void ABaseCharacter::DetroyChildActor(TArray<AActor*> ParentActor)
 {
-	if (ParentActor.Num() <= 0) {
-		return;
-	}
-
 	for (int i = 0; i < ParentActor.Num(); i++)
 	{
 		AActor* ChildActor = ParentActor[i];

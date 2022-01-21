@@ -1066,10 +1066,6 @@ void AAircraft::OnDestroy()
 // Recursively destroy children actors
 void AAircraft::DestroyChildActor(TArray<AActor*> ParentActor)
 {
-	if (ParentActor.Num() <= 0) {
-		return;
-	}
-
 	for (int i = 0; i < ParentActor.Num(); i++)
 	{
 		AActor* ChildActor = ParentActor[i];
