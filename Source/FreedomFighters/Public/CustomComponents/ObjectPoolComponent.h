@@ -6,6 +6,7 @@
 
 #include "ObjectPoolComponent.generated.h"
 
+class AGameStateBaseCustom;
 class AObjectPoolActor;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UObjectPoolComponent : public UActorComponent
@@ -13,12 +14,7 @@ class FREEDOMFIGHTERS_API UObjectPoolComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		int PoolSize;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ClampMin = 0.0f))
-		float LifeSpan;
-
+	AGameStateBaseCustom* GameStateBaseCustom;
 	TArray<FObjectPoolParameters*> ActorsInObjectPool;
 
 public:	
@@ -26,7 +22,10 @@ public:
 
 	TArray<FObjectPoolParameters*> AddToPool(FObjectPoolParameters* ObjectPoolParams);
 
-	void ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation);
+	AObjectPoolActor* ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation);
+
+	// Using Game state list of pool objects rather than itself in order to prevent less object actors to be created such as bullets, don't want a dozen of common projectiles spawned
+	AObjectPoolActor* ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation, bool UseGameState);
 
 protected:
 	virtual void BeginPlay() override;

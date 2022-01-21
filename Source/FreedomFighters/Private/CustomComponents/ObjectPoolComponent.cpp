@@ -1,6 +1,9 @@
 #include "CustomComponents/ObjectPoolComponent.h"
+#include "Managers/GameStateBaseCustom.h"
 #include "ObjectPoolActor.h"
+
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 UObjectPoolComponent::UObjectPoolComponent()
 {
@@ -10,6 +13,12 @@ UObjectPoolComponent::UObjectPoolComponent()
 void UObjectPoolComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	auto GameState = UGameplayStatics::GetGameState(GetWorld());
+
+	if (GameState) {
+		GameStateBaseCustom = Cast<AGameStateBaseCustom>(GameState);
+	}
 }
 
 void UObjectPoolComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
@@ -49,29 +58,27 @@ TArray<FObjectPoolParameters*> UObjectPoolComponent::AddToPool(FObjectPoolParame
 			ObjectPoolParameters->PoolableActor = ActorObj;
 
 			ActorsInObjectPool.Add(ObjectPoolParameters);
+
+			if (GameStateBaseCustom) {
+				GameStateBaseCustom->AddPoolActor(ObjectPoolParameters);
+			}
 		}
 	}
 	return ActorsInObjectPool;
 }
 
 
-void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation)
+AObjectPoolActor* UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation)
 {
 	// Backup param incase an object cannot be found
-	FObjectPoolParameters* ObjectPoolParams = nullptr;
+	AObjectPoolActor* PoolableActor = nullptr;
 
 	for (int i = 0; i < ActorsInObjectPool.Num(); i++)
 	{
 		if (ActorsInObjectPool[i]->PoolableActorClass == ActorClass)
 		{
-			AObjectPoolActor* PoolableActor = ActorsInObjectPool[i]->PoolableActor;
+			PoolableActor = ActorsInObjectPool[i]->PoolableActor;
 
-			if (ObjectPoolParams == nullptr) {
-				ObjectPoolParams = new FObjectPoolParameters();
-				ObjectPoolParams->PoolSize = 1;
-				ObjectPoolParams->PoolableActorClass = ActorClass;
-
-			}
 			if (PoolableActor == nullptr)
 			{
 				// Actors can be destroyed if reached outside of map
@@ -79,22 +86,49 @@ void UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, AA
 			}
 			else
 			{
-				if (PoolableActor != nullptr && !PoolableActor->IsActive())
+				if (PoolableActor && !PoolableActor->IsActive())
 				{
 					ActorsInObjectPool[i]->PoolableActor->SetOwner(Owner);
 					PoolableActor->SetActorLocationAndRotation(Location, Rotation.Quaternion());
 					PoolableActor->Activate();
-					return;
+					return PoolableActor;
 				}
 			}
 		}
 	}
 
 
-	// Create another Pool Actor if none retrieved from previous loop
-	if (ObjectPoolParams)
+	// Create another Pool Actor if none retrieved
+	auto ObjectPoolParams = new FObjectPoolParameters();
+	ObjectPoolParams->PoolSize = 1;
+	ObjectPoolParams->PoolableActorClass = ActorClass;
+	AddToPool(ObjectPoolParams);
+	PoolableActor = ActivatePoolObject(ObjectPoolParams->PoolableActorClass, Owner, Location, Rotation);
+
+
+	return PoolableActor;
+}
+
+AObjectPoolActor* UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation, bool UseGameState)
+{
+	if (UseGameState && GameStateBaseCustom)
 	{
-		AddToPool(ObjectPoolParams);
-		ActivatePoolObject(ObjectPoolParams->PoolableActorClass, Owner, Location, Rotation);
+		auto Actor = GameStateBaseCustom->GetPoolActorAvailable(ActorClass);
+
+		if (Actor) {
+			Actor->SetOwner(Owner);
+			Actor->SetActorLocationAndRotation(Location, Rotation.Quaternion());
+			Actor->Activate();
+			return Actor;
+		}
+		else
+		{
+			return ActivatePoolObject(ActorClass, Owner, Location, Rotation);
+		}
 	}
+	else
+	{
+		return ActivatePoolObject(ActorClass, Owner, Location, Rotation);
+	}
+
 }

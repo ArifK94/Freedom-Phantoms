@@ -181,35 +181,6 @@ void AWeapon::ConfigSetup()
 		CurrentAmmo = AmmoPerClip;
 	}
 
-	// Add neccessary Actors to the Object pool
-	if (UseObjectPool && BulletClass)
-	{
-		FObjectPoolParameters* ObjectPoolParams = new FObjectPoolParameters();
-		ObjectPoolParams->PoolableActorClass = BulletClass;
-
-		if (AmmoPerClip <= 0)
-		{
-			// for weapons that are mounted which do not have a reload system
-			ObjectPoolParams->PoolSize = 10;
-		}
-		else
-		{
-			ObjectPoolParams->PoolSize = AmmoPerClip;
-		}
-
-		TArray<FObjectPoolParameters*> PoolActors = ObjectPoolComponent->AddToPool(ObjectPoolParams);
-
-		for (int i = 0; i < PoolActors.Num(); i++)
-		{
-			AWeaponBullet* Bullet = Cast<AWeaponBullet>(PoolActors[i]->PoolableActor);
-
-			if (Bullet)
-			{
-				Bullet->SetWeaponParent(this);
-			}
-		}
-	}
-
 	TimeBetweenShots = 60 / RateOfFire;
 
 	CurrentMaxAmmo = MaxAmmoCapacity;
@@ -420,22 +391,33 @@ void AWeapon::CreateBullet()
 
 		if (BulletClass)
 		{
+			AWeaponBullet* Bullet = nullptr;
+
+			// Use object pooling if specified
 			if (UseObjectPool)
 			{
-				ObjectPoolComponent->ActivatePoolObject(BulletClass, MyOwner, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+				auto PoolActor = ObjectPoolComponent->ActivatePoolObject(BulletClass, MyOwner, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), true);
+
+				if (PoolActor)
+				{
+					Bullet = Cast<AWeaponBullet>(PoolActor);
+				}
 			}
-			else
+			
+			// If no bullet object not created
+			if (Bullet == nullptr)
 			{
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.Owner = MyOwner;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				AWeaponBullet* Bullet = GetWorld()->SpawnActor<AWeaponBullet>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
+				Bullet = GetWorld()->SpawnActor<AWeaponBullet>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
+			}
 
-				if (Bullet)
-				{
-					Bullet->SetWeaponParent(this);
-				}
+
+			if (Bullet)
+			{
+				Bullet->SetWeaponParent(this);
 			}
 		}
 

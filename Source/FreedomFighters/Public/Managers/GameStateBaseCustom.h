@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+#include "StructCollection.h"
 #include "GameStateBaseCustom.generated.h"
 
 class UAudioComponent;
@@ -54,6 +55,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 		USoundBase* NearEndMusic;
 
+	TArray<FObjectPoolParameters*> ProjectilesPool;
 
 public:
 	AGameStateBaseCustom();
@@ -66,6 +68,10 @@ public:
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnGameEndedSignature OnGameEnded;
+
+	AObjectPoolActor* GetPoolActorAvailable(TSubclassOf<AActor> ActorClass);
+
+	void AddPoolActor(FObjectPoolParameters* PoolableActor);
 
 private:
 	UFUNCTION()
@@ -87,4 +93,5 @@ public:
 	bool GetHasGameEnded() {
 		return HasGameEnded;
 	}
+
 };

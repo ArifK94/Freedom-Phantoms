@@ -3,6 +3,7 @@
 
 #include "Managers/GameStateBaseCustom.h"
 #include "Objectives/BaseObjective.h"
+#include "ObjectPoolActor.h"
 
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -105,4 +106,28 @@ void AGameStateBaseCustom::PlayMusic(USoundBase* Music)
 
 	MusicAudioComponent->Sound = Music;
 	MusicAudioComponent->Play();
+}
+
+AObjectPoolActor* AGameStateBaseCustom::GetPoolActorAvailable(TSubclassOf<AActor> ActorClass)
+{
+	for (int i = 0; i < ProjectilesPool.Num(); i++)
+	{
+		auto PoolParam = ProjectilesPool[i];
+
+		if (!PoolParam) {
+			continue;
+		}
+
+		if (PoolParam->PoolableActorClass == ActorClass && !PoolParam->PoolableActor->IsActive())
+		{
+			return PoolParam->PoolableActor;
+		}
+	}
+
+	return nullptr;
+}
+
+void AGameStateBaseCustom::AddPoolActor(FObjectPoolParameters* PoolableActor)
+{
+	ProjectilesPool.Add(PoolableActor);
 }
