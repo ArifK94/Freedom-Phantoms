@@ -40,6 +40,7 @@ AMountedGun::AMountedGun()
 	MeshComp->SetCollisionProfileName(TEXT("MountedWeapon"));
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(MeshComp);
 
 	CameraPositionSocket = "CamPos";
 	CharacterPositionSocket = "CharacterPosition";
