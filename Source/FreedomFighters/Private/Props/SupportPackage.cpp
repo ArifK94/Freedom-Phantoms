@@ -4,6 +4,7 @@
 #include "Props/SupportPackage.h"
 #include "Vehicles/Aircraft.h"
 #include "Characters/BaseCharacter.h"
+#include "Controllers/CustomPlayerController.h"
 #include "CustomComponents/TeamFactionComponent.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -23,8 +24,21 @@ FString ASupportPackage::OnInteractionFound_Implementation()
 	return ActionMessage.ToString();
 }
 
-void ASupportPackage::OnPickup_Implementation()
+AActor* ASupportPackage::OnPickup_Implementation(APawn* InPawn, AController* InController)
 {
+	if (!InController) {
+		return nullptr;
+	}
+
+	auto PlayerController = Cast<ACustomPlayerController>(InController);
+
+	if (!PlayerController) {
+		return nullptr;
+	}
+
+	PlayerController->AddSupportPackage(this);
+	PlayInteractSound();
+
 	SetActorHiddenInGame(true);
 	SetHidden(true);
 	SetActorEnableCollision(false);
@@ -41,19 +55,41 @@ void ASupportPackage::OnPickup_Implementation()
 			PlayVoiceOverSound(FactionComp->GetSelectedFaction());
 		}
 	}
+
+	return this;
+
 }
 
-bool ASupportPackage::OnUseInteraction_Implementation()
+bool ASupportPackage::OnUseInteraction_Implementation(APawn* InPawn, AController* InController)
 {
+	if (!InController) {
+		return false;
+	}
+
 	PlayInteractSound();
 
-	return true;
+	auto PlayerController = Cast<ACustomPlayerController>(InController);
+
+	if (PlayerController)
+	{
+		AAircraft* Aircraft = SpawnAircraft(Cast<ABaseCharacter>(InPawn), PlayerController);
+		PlayerController->SetControlledAircraft(Aircraft, IsControllable);
+		return true;
+	}
+
+	return false;
 }
 
-bool ASupportPackage::CanInteract_Implementation()
+bool ASupportPackage::CanInteract_Implementation(APawn* InPawn, AController* InController)
 {
-	if (GetOwner() == nullptr) {
-		return true;
+	if (InController)
+	{
+		auto Player = Cast<ACustomPlayerController>(InController);
+
+		if (Player)
+		{
+			return Player->CanAddSupportPackages();
+		}
 	}
 
 	return false;
@@ -70,15 +106,6 @@ AAircraft* ASupportPackage::SpawnAircraft(ABaseCharacter* Character, APlayerCont
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	AAircraft* Aircraft = GetWorld()->SpawnActor<AAircraft>(AircraftClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-	if (Aircraft)
-	{
-		if (IsControllable)
-		{
-			//Character->DisableInput(PlayerController);
-			//Aircraft->SetPlayerControl(PlayerController);
-		}
-	}
 
 	return Aircraft;
 }

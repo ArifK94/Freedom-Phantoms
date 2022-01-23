@@ -29,12 +29,12 @@ public:
 		FString OnInteractionFound();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		void OnPickup();
+		AActor* OnPickup(APawn* InPawn, AController* InController);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		bool OnUseInteraction();
+		bool OnUseInteraction(APawn* InPawn, AController* InController);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		bool CanInteract();
+		bool CanInteract(APawn* InPawn, AController* InController);
 
 };

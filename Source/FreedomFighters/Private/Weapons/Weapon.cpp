@@ -2,7 +2,7 @@
 #include "Weapons/WeaponClip.h"
 #include "Weapons/WeaponBullet.h"
 #include "Weapons/WeaponAttachment.h"
-
+#include "Characters/CombatCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "DrawDebugHelpers.h"
@@ -11,9 +11,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine/EngineTypes.h"
 #include "Math/Vector.h"
-
 #include "Particles/ParticleSystem.h"
-
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AudioComponent.h"
@@ -21,8 +19,6 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Niagara/Public/NiagaraFunctionLibrary.h"
 #include "CustomComponents/ObjectPoolComponent.h"
-
-
 #include "TimerManager.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Sound/SoundBase.h"
@@ -118,8 +114,18 @@ FString AWeapon::OnInteractionFound_Implementation()
 	return Message;
 }
 
-void AWeapon::OnPickup_Implementation()
+AActor* AWeapon::OnPickup_Implementation(APawn* InPawn, AController* InController)
 {
+	if (!InPawn) {
+		return nullptr;
+	}
+
+	auto CombatCharacter = Cast<ACombatCharacter>(InPawn);
+
+	if(!CombatCharacter) {
+		return nullptr;
+	}
+
 	MeshComp->SetSimulatePhysics(false);
 	MeshComp->SetGenerateOverlapEvents(false);
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
@@ -128,16 +134,21 @@ void AWeapon::OnPickup_Implementation()
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation(), 1.f, 1.f, 0.f, FireAttenuation);
 	}
+
+	CombatCharacter->PickupWeapon(this);
+
+	return this;
 }
 
-bool AWeapon::OnUseInteraction_Implementation()
+bool AWeapon::OnUseInteraction_Implementation(APawn* InPawn, AController* InController)
 {
 	return false;
 }
 
-bool AWeapon::CanInteract_Implementation()
+bool AWeapon::CanInteract_Implementation(APawn* InPawn, AController* InController)
 {
-	if (GetOwner() == nullptr) {
+	auto OutOwner = GetOwner();
+	if (!OutOwner) {
 		return true;
 	}
 
@@ -185,6 +196,14 @@ void AWeapon::ConfigSetup()
 
 	CurrentMaxAmmo = MaxAmmoCapacity;
 	CurrentChargeUpTime = 0.0f;
+
+
+	// If not owner set then it implies this weapon is not possesed by anyone and can be picked up
+	if (!GetOwner())
+	{
+		MeshComp->SetCollisionProfileName(TEXT("Weapon"));
+		MeshComp->SetGenerateOverlapEvents(true);
+	}
 }
 
 void AWeapon::SpawnScopeAttachment()

@@ -10,7 +10,6 @@ class AGameStateBaseCustom;
 class AGameStateBaseCustom;
 class ABaseCharacter;
 class ACommanderCharacter;
-class AMountedGun;
 class ABaseObjective;
 class UHealthComponent;
 class AMapCamera;
@@ -40,7 +39,6 @@ private:
 	APawn* OwningPawn;
 	UGameInstanceController* GameInstanceController;
 	AGameStateBaseCustom* GameStateBaseCustom;
-	AMountedGun* MountedGun;
 	TeamFaction PlayerFaction;
 
 	USphereComponent* OverlapSphere;
@@ -243,9 +241,15 @@ public:
 	void DetectInteractable(AActor* Actor);
 	AActor* DetectInteractableByOverlap();
 
+
+	void SetControlledAircraft(AAircraft* InAircraft, bool IsContolled);
+	void AddSupportPackage(ASupportPackage* InSupportPackage);
 	void SortSupportPackages();
 
+	bool CanAddSupportPackages();
+
 	void UseMountedGun();
+	void DropMountedGun();
 
 	////////////// -------------------------- Aircraft Functions -------------------------- //////////////
 

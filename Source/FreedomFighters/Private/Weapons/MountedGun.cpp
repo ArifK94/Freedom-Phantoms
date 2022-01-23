@@ -3,6 +3,8 @@
 
 #include "Weapons/MountedGun.h"
 #include "Characters/BaseCharacter.h"
+#include "Characters/CombatCharacter.h"
+#include "Controllers/CustomPlayerController.h"
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
@@ -70,7 +72,7 @@ FString AMountedGun::OnInteractionFound_Implementation()
 }
 
 
-bool AMountedGun::CanInteract_Implementation()
+bool AMountedGun::CanInteract_Implementation(APawn* InPawn, AController* InController)
 {
 	if (CanTraceInteraction && GetOwner() == nullptr) {
 		return true;
@@ -79,9 +81,43 @@ bool AMountedGun::CanInteract_Implementation()
 	return false;
 }
 
-void AMountedGun::OnPickup_Implementation()
+AActor* AMountedGun::OnPickup_Implementation(APawn* InPawn, AController* InController)
 {
-	return;
+	if (!InPawn || !InController) {
+		return nullptr;
+	}
+
+	auto CombatCharacter = Cast<ACombatCharacter>(InPawn);
+	auto PlayerController = Cast<ACustomPlayerController>(InController);
+
+	if (!CombatCharacter || !PlayerController) {
+		return nullptr;
+	}
+
+	// Stop using the mounted gun if currently using it
+	if (CombatCharacter->GetCurrentWeapon() == this)
+	{
+		if (CanExit)
+		{
+			PlayerController->DropMountedGun();
+			CombatCharacter->DropMountedGun();
+			RemovePlayerControl(PlayerController, CombatCharacter);
+
+			// renable character input
+			CombatCharacter->EnableInput(PlayerController);
+			return nullptr;
+		}
+	}
+	else
+	{
+		CombatCharacter->SetMountedGun(this);
+		CombatCharacter->UseMountedGun();
+		PlayerController->UseMountedGun();
+		SetPlayerControl(PlayerController, CombatCharacter);
+		return this;
+	}
+
+	return nullptr;
 }
 
 

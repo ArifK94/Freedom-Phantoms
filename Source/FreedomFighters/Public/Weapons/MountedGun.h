@@ -73,8 +73,8 @@ public:
 
 	// Interactable interface methods
 	virtual FString OnInteractionFound_Implementation() override;
-	virtual bool CanInteract_Implementation() override;
-	virtual void OnPickup_Implementation() override;
+	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
+	virtual AActor* OnPickup_Implementation(APawn* InPawn, AController* InController) override;
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
