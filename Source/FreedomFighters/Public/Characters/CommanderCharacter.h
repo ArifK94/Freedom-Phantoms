@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CombatCharacter.h"
+#include "Interfaces/Interactable.h"
 #include "EnumCollection.h"
 #include "Engine/DataTable.h"
 
@@ -60,7 +61,7 @@ public:
 };
 
 UCLASS()
-class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter
+class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -81,10 +82,11 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		uint8 CurrentRecruitIndex;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		uint8 MaxRecruits;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		FName RecruitMessage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> CommanderHUDWidgetClass;
@@ -176,6 +178,15 @@ private:
 
 protected:
 	virtual void Tick(float DeltaTime) override;
+
+
+public:
+	// Interactable interface methods
+	virtual FString GetKeyDisplayName_Implementation() override;
+	virtual FString OnInteractionFound_Implementation(APawn* InPawn, AController* InController) override;
+	virtual AActor* OnPickup_Implementation(APawn* InPawn, AController* InController) override;
+	virtual bool OnUseInteraction_Implementation(APawn* InPawn, AController* InController) override;
+	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 
 public:
 	void SetCanRecruit(bool Value) { CanRecruit = Value; }

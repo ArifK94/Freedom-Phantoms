@@ -72,7 +72,7 @@ public:
 	AMountedGun();
 
 	// Interactable interface methods
-	virtual FString OnInteractionFound_Implementation() override;
+	virtual FString OnInteractionFound_Implementation(APawn* InPawn, AController* InController) override;
 	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 	virtual AActor* OnPickup_Implementation(APawn* InPawn, AController* InController) override;
 

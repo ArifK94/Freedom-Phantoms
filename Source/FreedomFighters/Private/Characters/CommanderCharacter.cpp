@@ -15,6 +15,44 @@ ACommanderCharacter::ACommanderCharacter()
 	MaxRecruits = 12;
 
 	CanRecruit = true;
+
+	RecruitMessage = "Recruit Operative";
+}
+
+FString ACommanderCharacter::GetKeyDisplayName_Implementation()
+{
+	return FString();
+}
+
+FString ACommanderCharacter::OnInteractionFound_Implementation(APawn* InPawn, AController* InController)
+{
+	CheckRecruit();
+
+	if (PotentialRecruit) {
+		return RecruitMessage.ToString();
+	}
+
+	return FString();
+}
+
+AActor* ACommanderCharacter::OnPickup_Implementation(APawn* InPawn, AController* InController)
+{
+	Recruit();
+	return nullptr;
+}
+
+bool ACommanderCharacter::OnUseInteraction_Implementation(APawn* InPawn, AController* InController)
+{
+	return false;
+}
+
+bool ACommanderCharacter::CanInteract_Implementation(APawn* InPawn, AController* InController)
+{
+	if (CanRecruit && ActiveRecruits.Num() < MaxRecruits) {
+		return true;
+	}
+
+	return false;
 }
 
 void ACommanderCharacter::AddUIWidget()
@@ -38,9 +76,9 @@ void ACommanderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (CanRecruit && ActiveRecruits.Num() < MaxRecruits) {
-		CheckRecruit();
-	}
+	//if (CanRecruit && ActiveRecruits.Num() < MaxRecruits) {
+	//	CheckRecruit();
+	//}
 
 	UpdateActiveRecruits();
 }
@@ -89,6 +127,11 @@ void ACommanderCharacter::CheckRecruit()
 		ResetTargetActor();
 
 		AActor* CurrentTargetActor = HitResult.GetActor();
+
+		if (CurrentTargetActor == this) {
+			return;
+		}
+
 		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
 		bool isFriendly = UTeamFactionComponent::IsFriendly(this, CurrentTargetActor);
 

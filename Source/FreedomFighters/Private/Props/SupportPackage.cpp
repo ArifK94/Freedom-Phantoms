@@ -19,7 +19,7 @@ FString ASupportPackage::GetKeyDisplayName_Implementation()
 	return FString();
 }
 
-FString ASupportPackage::OnInteractionFound_Implementation()
+FString ASupportPackage::OnInteractionFound_Implementation(APawn* InPawn, AController* InController)
 {
 	return ActionMessage.ToString();
 }

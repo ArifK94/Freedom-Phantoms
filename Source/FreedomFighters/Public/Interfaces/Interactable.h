@@ -26,7 +26,7 @@ public:
 		FString GetKeyDisplayName();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		FString OnInteractionFound();
+		FString OnInteractionFound(APawn* InPawn, AController* InController);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		AActor* OnPickup(APawn* InPawn, AController* InController);

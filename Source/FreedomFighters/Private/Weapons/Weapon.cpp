@@ -107,7 +107,7 @@ FString AWeapon::GetKeyDisplayName_Implementation()
 	return FString();
 }
 
-FString AWeapon::OnInteractionFound_Implementation()
+FString AWeapon::OnInteractionFound_Implementation(APawn* InPawn, AController* InController)
 {
 	FString Message = "Pickup ";
 	Message.Append(WeaponName.ToString());

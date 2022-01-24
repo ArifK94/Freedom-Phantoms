@@ -992,7 +992,7 @@ void ACustomPlayerController::DetectInteractable(AActor* Actor)
 		{
 			FocusedInteractableActor = Actor;
 			KeyInputDisplayName = IInteractable::Execute_GetKeyDisplayName(Actor);
-			ActionMessage = IInteractable::Execute_OnInteractionFound(Actor);
+			ActionMessage = IInteractable::Execute_OnInteractionFound(Actor, OwningCombatCharacter, this);
 		}
 	}
 

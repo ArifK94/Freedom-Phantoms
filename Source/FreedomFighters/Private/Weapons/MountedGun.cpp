@@ -67,7 +67,7 @@ void AMountedGun::BeginPlay()
 	ResetCamera();
 }
 
-FString AMountedGun::OnInteractionFound_Implementation()
+FString AMountedGun::OnInteractionFound_Implementation(APawn* InPawn, AController* InController)
 {
 	return PickupMessage.ToString();
 }
