@@ -9,6 +9,7 @@
 #include "NavigationSystem.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SphereComponent.h"
+#include "DrawDebugHelpers.h"
 
 UAIMovementComponent::UAIMovementComponent()
 {
@@ -17,8 +18,6 @@ UAIMovementComponent::UAIMovementComponent()
 	MinAcceptanceRadius = 50.f;
 	MovementDebugLifetTime = 1.0f;
 	ProjectDestinationToNavigation = true;
-
-	IsDestinationSet = false;
 }
 
 
@@ -45,17 +44,6 @@ void UAIMovementComponent::Init()
 	if (PawnOwner)
 	{
 		Character = Cast<ABaseCharacter>(PawnOwner);
-
-		if (!DestinationTrigger)
-		{
-			DestinationTrigger = NewObject<USphereComponent>(this);
-			DestinationTrigger->RegisterComponent();
-			DestinationTrigger->SetSphereRadius(.0f);
-			DestinationTrigger->SetWorldLocation(FVector::ZeroVector);
-			DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
-			DestinationTrigger->ShapeColor = FColor(0, 255, 0, 255);
-			DestinationTrigger->OnComponentBeginOverlap.AddDynamic(this, &UAIMovementComponent::OnOverlapBegin);
-		}
 	}
 	else
 	{
@@ -65,28 +53,31 @@ void UAIMovementComponent::Init()
 
 void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!OtherActor || !PawnOwner || !IsDestinationSet) {
+	if (!OtherActor || !PawnOwner) {
 		return;
 	}
 
+
 	if (OtherActor == PawnOwner)
 	{
-		OnDestinationReached.Broadcast(DestinationTrigger->GetComponentLocation());
-		IsDestinationSet = false;
-		DestinationTrigger->SetSphereRadius(.0f); // set radius to zero, this allows the being overlap to trigger again if the next destination is within sphere radius
+		auto TriggerLocation = OtherActor->GetActorLocation();
+	//	DrawDebugSphere(GetWorld(), TriggerLocation, 30.f, 20, FColor::Red, false, 20.f, 0, 2);
+		DestinationTrigger->OnComponentBeginOverlap.RemoveDynamic(this, &UAIMovementComponent::OnOverlapBegin);
+		DestinationTrigger->DestroyComponent();
+		OnDestinationReached.Broadcast(TriggerLocation);
 	}
 }
 
 
-EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget, bool WalkNearTarget, AIBehaviourState BehaviourState)
+EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, AIBehaviourState BehaviourState, bool SprintToTarget, bool WalkNearTarget)
 {
 	auto CurrentMovement = EPathFollowingRequestResult::Failed;
 
-	if (!AIController || !DestinationTrigger) {
+	if (!AIController) {
 		Init();
 	}
 
-	if (!AIController || !DestinationTrigger || TargetDestination.IsZero()) {
+	if (!AIController || TargetDestination.IsZero()) {
 		return CurrentMovement;
 	}
 
@@ -101,10 +92,9 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 	// otherwise use the accept radius amount
 	float TargetRadius = AcceptRadius <= 1.f ? MinAcceptanceRadius : AcceptRadius;
 
-	DestinationTrigger->SetWorldLocation(TargetDestination);
-	DestinationTrigger->SetSphereRadius(TargetRadius);
-	IsDestinationSet = true;
 
+	CreateDestinationTrigger(TargetDestination, TargetRadius);
+	//DrawDebugSphere(GetWorld(), TargetDestination, TargetRadius, 20, FColor::Purple, false, 20.f, 0, 2);
 
 	if (Character && SprintToTarget)
 	{
@@ -215,4 +205,15 @@ FVector UAIMovementComponent::ValidateDestination(FVector Location, bool& IsLoca
 	}
 
 	return Destination;
+}
+
+void UAIMovementComponent::CreateDestinationTrigger(FVector Location, float Radius)
+{
+	DestinationTrigger = NewObject<USphereComponent>(this);
+	DestinationTrigger->RegisterComponent();
+	DestinationTrigger->SetSphereRadius(Radius);
+	DestinationTrigger->SetWorldLocation(Location);
+	DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
+	DestinationTrigger->ShapeColor = FColor(0, 255, 0, 255);
+	DestinationTrigger->OnComponentBeginOverlap.AddDynamic(this, &UAIMovementComponent::OnOverlapBegin);
 }

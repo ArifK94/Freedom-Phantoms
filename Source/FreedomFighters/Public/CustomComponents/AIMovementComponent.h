@@ -21,9 +21,6 @@ private:
 	class AAIController* AIController;
 	class ABaseCharacter* Character;
 	APawn* PawnOwner;
-
-	bool IsDestinationSet;
-
 	USphereComponent* DestinationTrigger;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -72,9 +69,12 @@ protected:
 	UFUNCTION()
 		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+private:
+	void CreateDestinationTrigger(FVector Location, float Radius);
+
 public:	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		EPathFollowingRequestResult::Type MoveToDestination(FVector TargetDestination, float AcceptRadius, bool SprintToTarget = true, bool WalkNearTarget = true, AIBehaviourState BehaviourState = AIBehaviourState::MovingToLastSeenEnemy);
+		EPathFollowingRequestResult::Type MoveToDestination(FVector TargetDestination, float AcceptRadius, AIBehaviourState BehaviourState, bool SprintToTarget = true, bool WalkNearTarget = true);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FVector FindNearbyDestinationPoint(FVector TargetDestination, float Radius, TArray<AActor*> IgnoreActors);

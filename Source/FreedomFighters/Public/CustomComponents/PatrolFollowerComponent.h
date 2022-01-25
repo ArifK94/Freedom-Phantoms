@@ -33,8 +33,8 @@ private:
 public:	
 	UPatrolFollowerComponent();
 
-	void GetCurrentPathPoint(FVector& OutLocation);
-	void GetNextPathPoint(FVector& OutLocation);
+	FVector GetCurrentPathPoint();
+	FVector GetNextPathPoint();
 
 protected:
 	virtual void BeginPlay() override;

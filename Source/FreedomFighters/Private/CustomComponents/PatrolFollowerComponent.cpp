@@ -33,42 +33,42 @@ void UPatrolFollowerComponent::BeginPlay()
 	}
 }
 
-void UPatrolFollowerComponent::GetCurrentPathPoint(FVector& OutLocation)
+FVector UPatrolFollowerComponent::GetCurrentPathPoint()
 {
-	OutLocation = FVector::ZeroVector;
+	auto OutLocation = FVector::ZeroVector;
 
 	if (!SplinePathComp) {
 		if (PatrolPath) {
 			SplinePathComp = PatrolPath->GetSplinePathComp();
 		}
 		else {
-			return;
+			return OutLocation;
 		}
 	}
 
 	if (!SplinePathComp) {
-		return;
+		return OutLocation;
 	}
 
-	OutLocation = SplinePathComp->GetLocationAtSplinePoint(CurrentPathIndex, ESplineCoordinateSpace::World);
+	return SplinePathComp->GetLocationAtSplinePoint(CurrentPathIndex, ESplineCoordinateSpace::World);
 }
 
 
-void UPatrolFollowerComponent::GetNextPathPoint(FVector& OutLocation)
+FVector UPatrolFollowerComponent::GetNextPathPoint()
 {
-	OutLocation = FVector::ZeroVector;
+	auto OutLocation = FVector::ZeroVector;
 
 	if (!SplinePathComp) {
 		if (PatrolPath) {
 			SplinePathComp = PatrolPath->GetSplinePathComp();
 		}
 		else {
-			return;
+			return OutLocation;
 		}
 	}
 
 	if (!SplinePathComp) {
-		return;
+		return OutLocation;
 	}
 
 	int TotalPoints = SplinePathComp->GetNumberOfSplinePoints();
@@ -101,5 +101,5 @@ void UPatrolFollowerComponent::GetNextPathPoint(FVector& OutLocation)
 		CurrentPathIndex--;
 	}
 
-	OutLocation = SplinePathComp->GetLocationAtSplinePoint(CurrentPathIndex, ESplineCoordinateSpace::World);
+	return SplinePathComp->GetLocationAtSplinePoint(CurrentPathIndex, ESplineCoordinateSpace::World);
 }

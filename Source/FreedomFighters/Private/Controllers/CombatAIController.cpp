@@ -29,10 +29,7 @@
 
 void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
 {
-	if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander)
-	{
-		CurrentBehaviourState = BehaviourState;
-	}
+	SetBehaviourState(BehaviourState);
 }
 
 void ACombatAIController::OnMovementDestinationReached(FVector Destination)
@@ -41,15 +38,10 @@ void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 	{
 	case AIBehaviourState::Patrol:
 		MoveToNextPatrolPoint();
-		break;
+		return;
 	case AIBehaviourState::MovingToLastSeenEnemy:
-		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, false, FMath::RandRange(2.f, 5.f));
-		break;
-	}
-
-	if (Commander && CurrentCommand != CommanderOrders::Follow)
-	{
-		FindMountedGun();
+		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, true, FMath::RandRange(2.f, 5.f));
+		return;
 	}
 
 	if (!OwningCombatCharacter->GetMountedGun())
@@ -57,6 +49,7 @@ void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
 	}
 
+	GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
 
 }
 
@@ -72,6 +65,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 		OwningCombatCharacter->StopCover();
 	}
 
+	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
 	OwningCombatCharacter->DropMountedGun();
 
 	float TargetRadius = AcceptanceRadius;
@@ -95,7 +89,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	StayCombatAlert = false;
 	UpdatCombatAlert();
 
-	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius);
+	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius, AIBehaviourState::PriorityOrdersCommander);
 }
 
 ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -262,7 +256,8 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 		GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
-		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
+		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true, 2.0f); // delay finding MG after checking if AI is set for patrol
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
 		//GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
 
@@ -360,6 +355,7 @@ void ACombatAIController::ClearTimers()
 	GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 	GetWorldTimerManager().ClearTimer(THandler_FindCover);
+	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
 }
 
 void ACombatAIController::UpdatCombatAlert()
@@ -411,8 +407,6 @@ void ACombatAIController::FindEnemy()
 	if (TargetFinderComponent == nullptr) {
 		return;
 	}
-
-	MoveToPatrol();
 
 	AActor* ChosenTarget = TargetFinderComponent->FindTarget();
 
@@ -474,7 +468,7 @@ void ACombatAIController::FindEnemy()
 			&& CurrentBehaviourState != AIBehaviourState::PriorityDestination
 			&& !OwningCombatCharacter->GetMountedGun())
 		{
-			CurrentBehaviourState = AIBehaviourState::Normal;
+			SetBehaviourState(AIBehaviourState::Normal);
 			HasChosenNearTargetDest = false;
 			TargetDestination = OwningCombatCharacter->GetActorLocation();
 			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, FMath::RandRange(.5f, 2.f), true);
@@ -495,13 +489,6 @@ void ACombatAIController::FindEnemy()
 			LastSeenPosition = LastSeenEnemyActor->GetActorLocation();
 			EnemyActor = nullptr;
 			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
-		}
-
-		if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander &&
-			CurrentBehaviourState != AIBehaviourState::PriorityDestination &&
-			CurrentBehaviourState == AIBehaviourState::Normal)
-		{
-			CurrentBehaviourState = AIBehaviourState::Patrol;
 		}
 	}
 }
@@ -534,7 +521,17 @@ void ACombatAIController::UpdateLastSeen()
 	}
 
 	LastSeenEnemyActor = nullptr;
-	SetFocalPoint(FVector::ZeroVector);
+
+	// Go back to patrolling if not following commander or has no destination set
+	if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander &&
+		CurrentBehaviourState != AIBehaviourState::PriorityDestination)
+	{
+		if (!THandler_PatrolStart.IsValid()) {
+			GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
+		}
+	}
+
+
 	GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 }
 
@@ -642,15 +639,23 @@ void ACombatAIController::ShootAtEnemy()
 				CurrentBehaviourState != AIBehaviourState::PriorityDestination ||
 				CurrentBehaviourState != AIBehaviourState::MovingToLastSeenEnemy)
 			{
-				CurrentBehaviourState = AIBehaviourState::MovingToLastSeenEnemy;
+				SetBehaviourState(AIBehaviourState::MovingToLastSeenEnemy);
 
 
-				// Go near the last seen postion on a random radius
-				float Radius = FMath::RandRange(500.f, 1000.f);
-				TArray<AActor*> IgnoreActors;
-				TargetDestination = AIMovementComponent->FindNearbyDestinationPoint(LastSeenPosition, Radius, IgnoreActors);
-				AIMovementComponent->MoveToDestination(TargetDestination, Radius, false, true, CurrentBehaviourState);
-				SetFocalPoint(LastSeenPosition);
+				if (CurrentBehaviourState == AIBehaviourState::MovingToLastSeenEnemy)
+				{
+					if (OwningCombatCharacter->GetMountedGun())
+					{
+						OwningCombatCharacter->DropMountedGun();
+					}
+
+					// Go near the last seen postion on a random radius
+					float Radius = FMath::RandRange(500.f, 1000.f);
+					TArray<AActor*> IgnoreActors;
+					TargetDestination = AIMovementComponent->FindNearbyDestinationPoint(LastSeenPosition, Radius, IgnoreActors);
+					AIMovementComponent->MoveToDestination(TargetDestination, Radius, CurrentBehaviourState, false, true);
+					SetFocalPoint(LastSeenPosition);
+				}
 			}
 		}
 	}
@@ -720,9 +725,14 @@ void ACombatAIController::FindMountedGun()
 	}
 
 	// If in patrol mode & no enemy in sight then do not search for MG
-	if (!EnemyActor && CurrentBehaviourState == AIBehaviourState::Patrol)
+	if (CurrentBehaviourState == AIBehaviourState::Patrol)
 	{
-		return;
+		if (!EnemyActor)
+		{
+			OwningCombatCharacter->DropMountedGun();
+			GetWorldTimerManager().ClearTimer(THandler_MountedGun);
+			return;
+		}
 	}
 
 	// If an MG has been assigned
@@ -787,7 +797,7 @@ void ACombatAIController::FindMountedGun()
 				CanFindCover = false;
 
 				TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
-				AIMovementComponent->MoveToDestination(TargetDestination, .0f, true, false);
+				AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::Normal, true, false);
 			}
 
 		}
@@ -883,7 +893,7 @@ void ACombatAIController::MoveToRandomPoint()
 		{
 			TargetDestination = NearDestination; // upate the target destination
 			//Movement = MoveToTarget(0.0f); // Move to new destination
-			AIMovementComponent->MoveToDestination(NearDestination, .0f);
+			AIMovementComponent->MoveToDestination(NearDestination, .0f, AIBehaviourState::Normal);
 			HasChosenNearTargetDest = true;
 			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
 		}
@@ -911,28 +921,39 @@ void ACombatAIController::MoveToRandomPoint()
 
 
 
-void ACombatAIController::MoveToPatrol()
+void ACombatAIController::StartPatrol()
 {
 	if (!PatrolFollowerComponent || EnemyActor || LastSeenEnemyActor || CurrentBehaviourState == AIBehaviourState::Patrol) {
+		GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
 		return;
 	}
 
-	FVector OutLocation;
-	PatrolFollowerComponent->GetCurrentPathPoint(OutLocation);
-	auto Movement = AIMovementComponent->MoveToDestination(OutLocation, 0.f, false);
+	auto OutLocation = PatrolFollowerComponent->GetCurrentPathPoint();
 
-	if (Movement == EPathFollowingRequestResult::RequestSuccessful)
+	if (!OutLocation.IsZero())
 	{
-		CurrentBehaviourState = AIBehaviourState::Patrol;
+		TargetDestination = OutLocation;
+		auto Movement = AIMovementComponent->MoveToDestination(TargetDestination, 0.f, AIBehaviourState::Patrol, false);
+
+		if (Movement == EPathFollowingRequestResult::RequestSuccessful)
+		{
+			SetBehaviourState(AIBehaviourState::Patrol);
+			GetWorldTimerManager().ClearTimer(THandler_MountedGun);
+			GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
+		}
 	}
 }
 
 void ACombatAIController::MoveToNextPatrolPoint()
 {
-	FVector OutLocation;
-	PatrolFollowerComponent->GetNextPathPoint(OutLocation);
-	TargetDestination = OutLocation;
-	AIMovementComponent->MoveToDestination(TargetDestination, 0.f, false);
+	auto OutLocation = PatrolFollowerComponent->GetNextPathPoint();
+
+	if (!OutLocation.IsZero())
+	{
+		TargetDestination = OutLocation;
+		AIMovementComponent->MoveToDestination(TargetDestination, 0.f, AIBehaviourState::Patrol, false);
+	}
+
 }
 
 void ACombatAIController::CheckCommanderOrder()
@@ -949,7 +970,7 @@ void ACombatAIController::CheckCommanderOrder()
 		OwningCombatCharacter->DropMountedGun();
 		HasAssignedOrderEvent = true;
 		StayCombatAlert = false; // refresh state of behaviour
-		CurrentBehaviourState = AIBehaviourState::PriorityOrdersCommander;
+		SetBehaviourState(AIBehaviourState::PriorityOrdersCommander);
 	}
 
 
@@ -976,7 +997,7 @@ void ACombatAIController::CheckCommanderOrder()
 		{
 			OwningCombatCharacter->DropMountedGun();
 			TargetDestination = Commander->GetActorLocation();
-			auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius);
+			AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius, AIBehaviourState::PriorityOrdersCommander);
 		}
 		else
 		{
@@ -1010,4 +1031,13 @@ bool ACombatAIController::IsNearCommander(FVector Location)
 		return true;
 	}
 	return false;
+}
+
+void ACombatAIController::SetBehaviourState(AIBehaviourState State)
+{
+	if (CurrentBehaviourState == AIBehaviourState::PriorityOrdersCommander) {
+		return;
+	}
+
+	CurrentBehaviourState = State;
 }

@@ -115,6 +115,7 @@ private:
 	FTimerHandle THandler_EndPeakCover;
 	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
+	FTimerHandle THandler_PatrolStart;
 
 
 	bool HasPlayedTargetFoundSound;
@@ -169,7 +170,7 @@ private:
 
 	void MoveToCover();
 
-	void MoveToPatrol();
+	void StartPatrol();
 
 	void TargetFound();
 
@@ -180,6 +181,8 @@ private:
 	bool IsNearCommander();
 
 	bool IsNearCommander(FVector Location);
+
+	void SetBehaviourState(AIBehaviourState State);
 
 protected:
 	virtual void BeginPlay() override;
