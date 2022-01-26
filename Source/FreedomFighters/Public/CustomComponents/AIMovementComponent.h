@@ -73,7 +73,7 @@ private:
 	void CreateDestinationTrigger(FVector Location, float Radius);
 
 public:	
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintCallable)
 		EPathFollowingRequestResult::Type MoveToDestination(FVector TargetDestination, float AcceptRadius, AIBehaviourState BehaviourState, bool SprintToTarget = true, bool WalkNearTarget = true);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)

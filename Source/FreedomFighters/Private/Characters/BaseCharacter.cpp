@@ -258,6 +258,12 @@ void ABaseCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float He
 
 		PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
 
+		// In case death anim asset is empty
+		if (!DeathAnimationAsset) {
+			DeathAnimationAsset = DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
+		}
+
+
 		GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, DestroyDelayTime, false);
 	}
 }
@@ -770,7 +776,6 @@ void ABaseCharacter::PlayVoiceSound(USoundBase* Sound)
 
 void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
-	DeathAnimationAsset = DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
 	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
 
 	// Use dot product to determine where the character stands based on the impact point.

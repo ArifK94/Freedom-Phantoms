@@ -103,6 +103,8 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	DestinationRadius = 300.0f;
 
+	MoveToLastSeenEnemy = true;
+
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
 	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
 }
@@ -630,8 +632,8 @@ void ACombatAIController::ShootAtEnemy()
 		GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
 
 		// Focus on the last seen enemy
-		if (LastSeenEnemyActor) {
-
+		if (LastSeenEnemyActor) 
+		{
 			OwningCombatCharacter->BeginAim();
 
 			// Move near nearest enemy last seen
@@ -642,7 +644,7 @@ void ACombatAIController::ShootAtEnemy()
 				SetBehaviourState(AIBehaviourState::MovingToLastSeenEnemy);
 
 
-				if (CurrentBehaviourState == AIBehaviourState::MovingToLastSeenEnemy)
+				if (CurrentBehaviourState == AIBehaviourState::MovingToLastSeenEnemy && MoveToLastSeenEnemy)
 				{
 					if (OwningCombatCharacter->GetMountedGun())
 					{

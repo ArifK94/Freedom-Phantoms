@@ -922,6 +922,11 @@ void ACombatCharacter::UseMountedGun()
 		return;
 	}
 
+	if (GetCharacterMovement()->IsCrouching())
+	{
+		UnCrouch();
+	}
+
 	// Ignore the mounted gun, so that it does push away the character from the MG when using it
 	GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, true);
 

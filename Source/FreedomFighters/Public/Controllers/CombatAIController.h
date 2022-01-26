@@ -100,10 +100,11 @@ private:
 		float DestinationRadius;
 	float DefaultDestinationRadius;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AActor* EnemyActor;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool MoveToLastSeenEnemy;
 
 	FTimerHandle THandler_ShootEnemy;
 	FTimerHandle THandler_EndFire;
