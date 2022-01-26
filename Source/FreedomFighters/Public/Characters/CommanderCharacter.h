@@ -142,7 +142,7 @@ private:
 	void CheckRecruit();
 
 
-	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, UHealthComponent* TargetHealth, bool IsFactionCompActive, bool isFriendly, FHitResult HitResult);
+	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult);
 
 	void DefendAreaSingle(UCommanderRecruit* Recruit);
 

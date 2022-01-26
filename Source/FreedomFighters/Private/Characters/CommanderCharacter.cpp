@@ -245,7 +245,7 @@ void ACommanderCharacter::Attack(bool CommandAll)
 		return;
 	}
 
-	FHitResult HitResult = GetCurrentTraceHit(50000.0f);
+	FHitResult HitResult = GetCurrentTraceHit(9999999999999.0f);
 
 	if (HitResult.bBlockingHit)
 	{
@@ -260,34 +260,32 @@ void ACommanderCharacter::Attack(bool CommandAll)
 		{
 			for (int i = 0; i < ActiveRecruits.Num(); i++)
 			{
-				AttackSingle(ActiveRecruits[i], EnemyCharacter, TargetHealth, IsTargetFactionCompActive, isFriendly, HitResult);
+				AttackSingle(ActiveRecruits[i], EnemyCharacter, HitResult);
 			}
 		}
 		else
 		{
-			AttackSingle(CurrentRecruit, EnemyCharacter, TargetHealth, IsTargetFactionCompActive, isFriendly, HitResult);
+			AttackSingle(CurrentRecruit, EnemyCharacter, HitResult);
 			IncrementCurrentRecruit();
 		}
 	}
 
 	PlayCommunicationSound(GetVoiceClipsSet()->AttackSound, CurrentRecruit);
-
 }
 
-void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, UHealthComponent* TargetHealth, bool IsFactionCompActive, bool isFriendly, FHitResult HitResult)
+void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult)
 {
-	if (!IsFactionCompActive) {
+	if (!Recruit) {
 		return;
 	}
 
 	Recruit->CurrentCommand = CommanderOrders::Attack;
 	DisplayOverheadIcon(Recruit->AttackOverheadIcon, Recruit->OverheadIconArray);
 
-	if (EnemyCharacter && TargetHealth && TargetHealth->IsAlive() && !isFriendly) // if hit result is an enemy character
+	if (EnemyCharacter && UHealthComponent::IsAlive(EnemyCharacter) && !UTeamFactionComponent::IsFriendly(this, EnemyCharacter)) // if hit result is an enemy character
 	{
 		Recruit->HighValueTarget = EnemyCharacter;
-		Recruit->TargetLocation = GetPositionToNav(EnemyCharacter->GetActorLocation()).Location;
-
+		Recruit->TargetLocation = EnemyCharacter->GetActorLocation();
 
 		// attach the HVT overhead icon to the target head, rather than updating the location every frame of the enemy's head position
 		FVector HeadLocation = EnemyCharacter->GetMesh()->GetSocketLocation(EnemyCharacter->GetHeadSocket());

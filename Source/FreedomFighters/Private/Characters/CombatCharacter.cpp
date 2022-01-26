@@ -484,8 +484,6 @@ void ACombatCharacter::UpdateCombatMode()
 		return;
 	}
 
-
-
 	if (isAiming || isFiring)
 	{
 		if (!isSprinting && !IsInAircraft && !isTakingCover && !isUsingMountedWeapon)
