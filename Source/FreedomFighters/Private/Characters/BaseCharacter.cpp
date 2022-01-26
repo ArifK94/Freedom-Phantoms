@@ -457,14 +457,21 @@ void ABaseCharacter::UpdateSpeed()
 
 void ABaseCharacter::UpdateDirection()
 {
-	// get the direction of the character
-	if (AnimInstance)
+	if (IsSprinting())
 	{
 		// We want to character to face towards camera's forward direction rather than actor's position,
 		// this allows run and shoot to rotate towards camera direction
 		auto TargetDirection = FollowCamera->GetComponentRotation() - GetActorRotation();
 		auto Direction = TargetDirection.Yaw;
 		CharacterDirection = Direction;
+	}
+	else
+	{
+		// To be used for blendspaces
+		if (AnimInstance)
+		{
+			CharacterDirection = AnimInstance->CalculateDirection(GetVelocity(), GetActorRotation());
+		}
 	}
 }
 

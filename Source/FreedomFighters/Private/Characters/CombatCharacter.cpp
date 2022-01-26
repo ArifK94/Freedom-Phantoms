@@ -62,15 +62,15 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 
 	switch (primaryWeaponObj->GetWeaponType())
 	{
-		case WeaponType::LMG:
-			LoadoutType = LoadoutType::LMG;
-			break;
-		case WeaponType::Shotgun:
-			LoadoutType = LoadoutType::Shotgun;
-			break;
-		case WeaponType::SMG:
-			LoadoutType = LoadoutType::SMG;
-			break;
+	case WeaponType::LMG:
+		LoadoutType = LoadoutType::LMG;
+		break;
+	case WeaponType::Shotgun:
+		LoadoutType = LoadoutType::Shotgun;
+		break;
+	case WeaponType::SMG:
+		LoadoutType = LoadoutType::SMG;
+		break;
 	}
 
 	// respawn loadout to match weapon type
@@ -445,6 +445,8 @@ void ACombatCharacter::UpdateCharacterMovement()
 	if (isAiming || (!IsCharacterMoving() && isFiring)) {
 		EndSprint();
 	}
+
+	UpdateCombatMode();
 }
 
 // if in combat mode while sprinting and looking backwards then stop sprinting
@@ -486,21 +488,26 @@ void ACombatCharacter::UpdateCombatMode()
 
 	if (isAiming || isFiring)
 	{
-		if (!isSprinting && !IsInAircraft && !isTakingCover && !isUsingMountedWeapon) {
+		if (!isSprinting && !IsInAircraft && !isTakingCover && !isUsingMountedWeapon)
+		{
 			bUseControllerRotationYaw = true;
 			GetCharacterMovement()->bOrientRotationToMovement = false;
 		}
-
+		else
+		{
+			bUseControllerRotationYaw = false;
+			GetCharacterMovement()->bOrientRotationToMovement = true;
+		}
 
 		isInCombatMode = true;
 		SetHandGaurdIK(1.0f);
 	}
 	else
 	{
+		bUseControllerRotationYaw = false;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
 		SetHandGaurdIK(0.0f);
 		isInCombatMode = false;
-		bUseControllerRotationYaw = false;
 	}
 
 	OnCombatUpdated.Broadcast(this);
