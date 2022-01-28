@@ -35,7 +35,8 @@ public:
 
 	void Init();
 
-	AActor* FindTarget();
+	UFUNCTION(BlueprintCallable)
+		AActor* FindTarget();
 
 	bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
 

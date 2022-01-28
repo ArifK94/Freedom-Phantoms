@@ -55,12 +55,6 @@ void AWeaponBullet::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (GetOwner())
-	{
-		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
-		OwnerHealth = OwningCombatCharacter->GetHealthComp();
-	}
-
 	BulletMovementAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 	BulletMovementAudio->SetRelativeLocation(FVector::ZeroVector);
 
@@ -154,11 +148,22 @@ void AWeaponBullet::Activate()
 		BulletMovementAudio->Play();
 	}
 
+	// The owner of this bullet can change if you swap weapons
 	if (GetOwner())
 	{
 		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
-		OwnerHealth = OwningCombatCharacter->GetHealthComp();
-		OwnerFaction = OwningCombatCharacter->GetTeamFactionComponent();
+
+		auto HealthComp = GetOwner()->GetComponentByClass(UHealthComponent::StaticClass());
+		if (HealthComp)
+		{
+			OwnerHealth = Cast<UHealthComponent>(HealthComp);
+		}
+
+		auto FactionComp = GetOwner()->GetComponentByClass(UTeamFactionComponent::StaticClass());
+		if (FactionComp)
+		{
+			OwnerFaction = Cast<UTeamFactionComponent>(FactionComp);
+		}
 	}
 }
 
@@ -218,10 +223,10 @@ void AWeaponBullet::DetectHit()
 	// Use line trace by channelto allow trace to hit on surfaces such as water where characters can move through
 	// charactermesh collision profile needs to have visibility on block
 	bool SphereTrace = GetWorld()->SweepSingleByChannel(
-		OutHit, 
-		PreviousPosition, 
-		NextPosition, 
-		FQuat::Identity, 
+		OutHit,
+		PreviousPosition,
+		NextPosition,
+		FQuat::Identity,
 		ECC_Visibility,
 		FCollisionShape::MakeSphere(CapsuleComponent->GetScaledSphereRadius()),
 		QueryParams);
@@ -312,7 +317,10 @@ void AWeaponBullet::DetectHit()
 			IsMultiKill = true;
 		}
 
-		OwningCombatCharacter->SetKillCount(KillCount);
+		if (OwningCombatCharacter) 
+		{
+			OwningCombatCharacter->SetKillCount(KillCount);
+		}
 
 		OnKillConfirmed.Broadcast(KillCount, IsSingleKill, IsDoubleKill, IsMultiKill);
 	}
@@ -418,7 +426,7 @@ void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionCo
 	// damaged actor is not on the same faction side as the owner of this bullet &
 	// damaged is not neutral
 
-	if (!DamagedActorHealth || !OwnerFaction || !DamagedActorFaction) {
+	if (!OwnerHealth || !OwnerFaction || !DamagedActorHealth || !DamagedActorFaction) {
 		return;
 	}
 
@@ -426,7 +434,7 @@ void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionCo
 	if (!DamagedActorHealth->IsAlive()
 		&& DamagedActorHealth != OwnerHealth
 		&& OwnerFaction->GetSelectedFaction() != DamagedActorFaction->GetSelectedFaction()
-		&& DamagedActorFaction->GetSelectedFaction()!= TeamFaction::Neutral)
+		&& DamagedActorFaction->GetSelectedFaction() != TeamFaction::Neutral)
 	{
 		KillCount++;
 	}

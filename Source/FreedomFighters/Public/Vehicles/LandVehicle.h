@@ -18,7 +18,7 @@ class FREEDOMFIGHTERS_API ALandVehicle : public AActor
 {
 	GENERATED_BODY()
 
-private:
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* MeshComp;
 

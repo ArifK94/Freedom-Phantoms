@@ -122,7 +122,7 @@ AActor* AWeapon::OnPickup_Implementation(APawn* InPawn, AController* InControlle
 
 	auto CombatCharacter = Cast<ACombatCharacter>(InPawn);
 
-	if(!CombatCharacter) {
+	if (!CombatCharacter) {
 		return nullptr;
 	}
 
@@ -219,7 +219,7 @@ void AWeapon::SpawnScopeAttachment()
 	auto RandomIndex = rand() % ScopeAttachmentClasses.Num();
 
 	ScopeAttachment = GetWorld()->SpawnActor<AWeaponAttachment>(ScopeAttachmentClasses[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-	
+
 	if (ScopeAttachment)
 	{
 		ScopeAttachment->GetRootComponent()->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ScopeAttachment->GetParentSocket());
@@ -422,7 +422,7 @@ void AWeapon::CreateBullet()
 					Bullet = Cast<AWeaponBullet>(PoolActor);
 				}
 			}
-			
+
 			// If no bullet object not created
 			if (Bullet == nullptr)
 			{
@@ -538,13 +538,19 @@ void AWeapon::StartFire()
 	switch (selectiveFireMode)
 	{
 	case SelectiveFire::Automatic:
-		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+		if (!THandler_TimeBetweenShots.IsValid()) {
+			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+		}
 		break;
 	case SelectiveFire::SemiAutomatic:
-		GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+		if (!THandler_TimeBetweenShots.IsValid()) {
+			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, false, FirstDelay);
+		}
 		break;
 	case SelectiveFire::Burst:
-		GetWorldTimerManager().SetTimer(THandler_BurstFire, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+		if (!THandler_BurstFire.IsValid()) {
+			GetWorldTimerManager().SetTimer(THandler_BurstFire, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+		}
 		break;
 	default:
 		Fire();

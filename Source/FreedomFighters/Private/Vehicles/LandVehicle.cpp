@@ -13,6 +13,7 @@ ALandVehicle::ALandVehicle()
 	PrimaryActorTick.bCanEverTick = false;
 
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	MeshComp->SetCollisionProfileName(TEXT("Vehicle"));
 	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
 	RootComponent = MeshComp;
 

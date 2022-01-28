@@ -311,9 +311,11 @@ public:
 	virtual bool OnUseInteraction_Implementation(APawn* InPawn, AController* InController) override;
 	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 
-	void StartFire();
+	UFUNCTION(BlueprintCallable)
+		void StartFire();
 
-	void StopFire();
+	UFUNCTION(BlueprintCallable)
+		void StopFire();
 
 	// Charging the weapon before being able to fire or used when holding the aim button eg. minigun aiming
 	void ChargeUp();

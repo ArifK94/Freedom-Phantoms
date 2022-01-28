@@ -451,6 +451,39 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FVehicleWeapon
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<AMountedGun> WeaponClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FName WeaponSocketName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float PitchMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float PitchMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<UUserWidget> HUD;
+
+	FVehicleWeapon()
+	{
+
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FTargetSystemNode
 {
 	GENERATED_BODY()
