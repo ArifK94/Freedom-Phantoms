@@ -46,14 +46,18 @@ void UShooterComponent::PauseFire()
 	EndFire();
 
 	auto MyOwner = GetOwner();
+	
+	auto ResumeDelay = FMath::RandRange(m_TimeBetweenShotsMin, m_TimeBetweenShotsMax);
+
+	OnShootPause.Broadcast(ResumeDelay);
 
 	// Resume fire
-	MyOwner->GetWorldTimerManager().SetTimer(THandler_ResumeShoot, this, &UShooterComponent::BeginFire, 1.f, true, FMath::RandRange(m_TimeBetweenShotsMin, m_TimeBetweenShotsMax)); // stop firing after a random x secs
+	MyOwner->GetWorldTimerManager().SetTimer(THandler_ResumeShoot, this, &UShooterComponent::BeginFire, 1.f, true, ResumeDelay); // stop firing after a random x secs
 }
 
 void UShooterComponent::EndFire()
 {
-	if (!GetOwner()) {
+	if (!m_Weapon || !GetOwner()) {
 		return;
 	}
 	auto MyOwner = GetOwner();

@@ -59,6 +59,6 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnTargetSearchSignature OnTargetSearch;
 
-	bool SetFindTargetPerFrame(bool Value) { FindTargetPerFrame = Value; }
+	void SetFindTargetPerFrame(bool Value) { FindTargetPerFrame = Value; }
 		
 };

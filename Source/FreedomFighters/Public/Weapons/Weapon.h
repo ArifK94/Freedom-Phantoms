@@ -29,6 +29,7 @@ class FREEDOMFIGHTERS_API AWeapon : public AActor, public IInteractable
 	GENERATED_BODY()
 
 private:
+	FTimerHandle THandler_DelayedInit;
 	FTimerHandle THandler_BulletSpread;
 	FTimerHandle THandler_BurstFire;
 	int BurstAmmountCount;
@@ -78,6 +79,10 @@ protected:
 	/** Not all weapons may need to have bullet object pooled */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool UseObjectPool;
+
+	/** Some imported models such as tanks or helicopters have turrets built in but cannot be separated actors, so using the vehicle's turret muzzles should be used */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool UseParentMuzzle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponClip> weaponClip;
@@ -366,6 +371,8 @@ private:
 
 protected:
 	virtual void BeginPlay() override;
+
+	void DelayedInit();
 
 	virtual void Fire();
 

@@ -83,6 +83,7 @@ AWeapon::AWeapon()
 	ZoomFOV = 90.0f;
 	BulletsPerFire = 1;
 
+	UseParentMuzzle = false;
 	isReloading = false;
 	canShowClip = true;
 	hasRecoil = true;
@@ -244,6 +245,14 @@ void AWeapon::ConvertWeaponName()
 
 FVector AWeapon::getMuzzleLocation()
 {
+	if (UseParentMuzzle) {
+		auto AttachedParent = GetAttachParentActor();
+
+		if (AttachedParent) {
+			return AttachedParent->GetRootComponent()->GetSocketLocation(MuzzleSocket);
+		}
+	}
+
 	return MeshComp->GetSocketLocation(MuzzleSocket);
 }
 
@@ -255,8 +264,24 @@ void AWeapon::BeginPlay()
 	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
+	GetWorldTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, true);
+
 	SpawnMagazine();
 	ConfigSetup();
+}
+
+void AWeapon::DelayedInit()
+{
+	auto AttachedParent = GetAttachParentActor();
+	if (UseParentMuzzle && AttachedParent)
+	{
+		MuzzleLightComponent->AttachToComponent(AttachedParent->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+		ShotAudioComponent->AttachToComponent(AttachedParent->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+		ClipAudioComponent->AttachToComponent(AttachedParent->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+	}
+
+
+	GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
 }
 
 void AWeapon::Fire()

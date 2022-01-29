@@ -43,8 +43,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float YawMax;
 
+	/** The main cannon */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TArray<FVehicleWeapon> VehicleWeapons;
+		FVehicleWeapon VehicleWeaponMain;
+
+	/** Turret weapons */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<FVehicleWeapon> VehicleWeaponTurrets;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<AMountedGun*> WeaponsCollection;
@@ -57,13 +62,13 @@ public:
 	ATankVehicle();
 
 	UFUNCTION(BlueprintCallable)
-		void SetRotationInput(FRotator Rotation);
+		void SetRotationInput(FRotator InRotation);
 
 	UFUNCTION(BlueprintCallable)
 		void ChangeWeapon();
 
 private:
-	void SpawnWeapons();
+	void SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
 
 protected:
 	virtual void BeginPlay() override;

@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ShooterComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShootPauseSignature, float, ResumeDelay);
 
 class AWeapon;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -43,6 +44,10 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+public:
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnShootPauseSignature OnShootPause;
 
 public:
 	float TimeBetweenShotsMin() { return m_TimeBetweenShotsMin; }

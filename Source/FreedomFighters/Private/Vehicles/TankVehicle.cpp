@@ -8,9 +8,15 @@
 #include "CustomComponents/TeamFactionComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
 
-void ATankVehicle::SetRotationInput(FRotator Rotation)
+void ATankVehicle::SetRotationInput(FRotator InRotation)
 {
-	RotationInput = Rotation;
+	//RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + InRotation.Pitch, PitchMin, PitchMax);
+	//RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
+
+	//RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + InRotation.Yaw, YawMin, YawMax);
+	//RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
+
+	RotationInput = InRotation;
 }
 
 ATankVehicle::ATankVehicle()
@@ -29,12 +35,23 @@ void ATankVehicle::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SpawnWeapons();
+	SpawnVehicleWeapon(VehicleWeaponMain);
+
+	for (int i = 0; i < VehicleWeaponTurrets.Num(); i++)
+	{
+		SpawnVehicleWeapon(VehicleWeaponTurrets[i]);
+	}
+
+	if (WeaponsCollection.Num() > 0) {
+		CurrentWeapon = WeaponsCollection[0];
+		ShooterComponent->SetWeapon(CurrentWeapon);
+	}
+
 }
 
-void ATankVehicle::SpawnWeapons()
+void ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
 {
-	if (VehicleWeapons.Num() <= 0) {
+	if (!VehicleWeapon.WeaponClass) {
 		return;
 	}
 
@@ -44,34 +61,26 @@ void ATankVehicle::SpawnWeapons()
 	SpawnParams.Owner = MyOwner;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	for (int i = 0; i < VehicleWeapons.Num(); i++)
-	{
-		auto VehicleWeapon = VehicleWeapons[i];
+	auto Weapon = GetWorld()->SpawnActor<AMountedGun>(VehicleWeapon.WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-		auto Weapon = GetWorld()->SpawnActor<AMountedGun>(VehicleWeapon.WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-		if (!Weapon) {
-			continue;
-		}
-
-		Weapon->SetOwner(MyOwner);
-		Weapon->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
-		WeaponsCollection.Add(Weapon);
+	if (!Weapon) {
+		return;
 	}
 
-	CurrentWeapon = WeaponsCollection[0];
-	ShooterComponent->SetWeapon(CurrentWeapon);
+	Weapon->SetOwner(MyOwner);
+	Weapon->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
+	WeaponsCollection.Add(Weapon);
 }
 
 void ATankVehicle::ChangeWeapon()
 {
-	if (VehicleWeapons.Num() <= 0) {
+	if (WeaponsCollection.Num() <= 0) {
 		return;
 	}
 
 	// increment the index if current index is less than the array of weapons
 	// otherwise go back to the first index
-	if (CurrentWeaponIndex < VehicleWeapons.Num() - 1)
+	if (CurrentWeaponIndex < WeaponsCollection.Num() - 1)
 	{
 		CurrentWeaponIndex++;
 	}
