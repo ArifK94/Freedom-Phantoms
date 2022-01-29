@@ -35,6 +35,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int FinderLimit;
 
+	/** Type of actors to accept. Empty list will return all actor classes */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<TSubclassOf<AActor>> ClassFilters;
+
 public:	
 	UTargetFinderComponent();
 
@@ -52,6 +56,10 @@ public:
 private:
 	void FindTargetUpdate();
 
+	bool GetTrace(FHitResult& OutHit, FVector Start, FVector End);
+
+	bool IsActorFiltered(AActor* Actor);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -60,5 +68,7 @@ public:
 		FOnTargetSearchSignature OnTargetSearch;
 
 	void SetFindTargetPerFrame(bool Value) { FindTargetPerFrame = Value; }
+
+	void AddClassFilter(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
 		
 };

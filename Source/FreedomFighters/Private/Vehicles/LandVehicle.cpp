@@ -15,6 +15,7 @@ ALandVehicle::ALandVehicle()
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	MeshComp->SetCollisionProfileName(TEXT("Vehicle"));
 	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
+	MeshComp->SetGenerateOverlapEvents(true);
 	RootComponent = MeshComp;
 
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));

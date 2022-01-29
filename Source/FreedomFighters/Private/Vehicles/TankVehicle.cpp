@@ -25,6 +25,7 @@ ATankVehicle::ATankVehicle()
 
 	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
 	TargetFinderComponent->SetFindTargetPerFrame(true);
+	TargetFinderComponent->AddClassFilter(ATankVehicle::StaticClass());
 
 	ShooterComponent = CreateDefaultSubobject<UShooterComponent>(TEXT("ShooterComponent"));
 

@@ -20,6 +20,8 @@ UTargetFinderComponent::UTargetFinderComponent()
 	FinderLimit = 5;
 
 	FindTargetPerFrame = false;
+
+	ClassFilters.Add(ACharacter::StaticClass());
 }
 
 
@@ -68,7 +70,7 @@ void UTargetFinderComponent::Init()
 
 	if (FindTargetPerFrame)
 	{
-		if (!THandler_TargetSearch.IsValid()) 
+		if (!THandler_TargetSearch.IsValid())
 		{
 			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 1.f, true);
 		}
@@ -80,8 +82,29 @@ void UTargetFinderComponent::FindTargetUpdate()
 	FindTarget();
 }
 
+bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner());
+	QueryParams.bTraceComplex = false;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+	return GetWorld()->LineTraceSingleByObjectType(
+		OutHit,
+		Start,
+		End,
+		ObjectParams,
+		QueryParams);
+}
+
 AActor* UTargetFinderComponent::FindTarget()
 {
+	if (!GetOwner()) {
+		return nullptr;
+	}
+
 	if (!TargetSightSphere) {
 		Init();
 
@@ -94,11 +117,10 @@ AActor* UTargetFinderComponent::FindTarget()
 	TArray<AActor*> ActorsInSight;
 	float TargetSightDistance = TargetSightRadius;
 
+	// Get all overlapped actors based that have team faction component attached
 	TargetSightSphere->GetOverlappingActors(ActorsInSight, UTeamFactionComponent::StaticClass());
 
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
-
-
 	FVector EyeLocation;
 	FRotator EyeRotation;
 	GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
@@ -114,58 +136,55 @@ AActor* UTargetFinderComponent::FindTarget()
 
 		AActor* PotentialEnemy = ActorsInSight[index];
 
+		if (!PotentialEnemy) {
+			continue;
+		}
+
+		// Filter the class
+		if (!IsActorFiltered(PotentialEnemy)) {
+			continue;
+		}
+
 		auto TeamFaction = Cast<UTeamFactionComponent>(PotentialEnemy->GetComponentByClass(UTeamFactionComponent::StaticClass()));
 
-		if (TeamFaction && TeamFaction->GetSelectedFaction() != TeamFaction::Neutral)
+		// Does not have a faction component or is neutral?
+		if (!TeamFaction || TeamFaction->GetSelectedFaction() == TeamFaction::Neutral) {
+			continue;
+		}
+
+		bool IsAlive = UHealthComponent::IsAlive(PotentialEnemy);
+		bool IsEnemy = !UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
+
+		// is target alive & an enemy
+		if (!IsAlive || !IsEnemy) {
+			continue;
+		}
+
+		FVector EnemyLocation = PotentialEnemy->GetActorLocation();
+
+		// check if can see the target
+		FHitResult HitTargetResult;
+		auto Trace = GetTrace(HitTargetResult, EyeLocation, EnemyLocation);
+
+		if (!Trace) {
+			continue;
+		}
+
+
+		if (HitTargetResult.GetActor() == PotentialEnemy)
 		{
-			bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(PotentialEnemy);
-			bool IsEnemy = !UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
+			// get closest enemy
+			float DistanceDiff = FVector::Dist(OwnerLocation, EnemyLocation);
 
-			// is target alive & an enemy
-			if (IsFactionCompActive && IsEnemy)
+			if (DistanceDiff < TargetSightDistance)
 			{
-				FVector EnemyLocation = PotentialEnemy->GetActorLocation();
-
-
-				// check if can see the target
-				FHitResult HitTargetResult;
-
-				FCollisionQueryParams QueryParams;
-				QueryParams.AddIgnoredActor(GetOwner());
-				QueryParams.bTraceComplex = false;
-
-				FCollisionObjectQueryParams ObjectParams;
-				ObjectParams.AllObjects;
-
-				bool bTargetHit = GetWorld()->LineTraceSingleByObjectType(
-					HitTargetResult,
-					EyeLocation,
-					EnemyLocation,
-					ObjectParams,
-					QueryParams);
-
-				if (bTargetHit)
-				{
-					if (HitTargetResult.GetActor() == PotentialEnemy)
-					{
-						// get closest enemy
-						float DistanceDiff = FVector::Dist(OwnerLocation, EnemyLocation);
-
-						if (DistanceDiff < TargetSightDistance)
-						{
-							TargetSightDistance = DistanceDiff;
-							TargetActor = PotentialEnemy;
-						}
-					}
-
-					CurrentProcessedCharacters++;
-
-				}
-
-
+				TargetSightDistance = DistanceDiff;
+				TargetActor = PotentialEnemy;
 			}
 
+			CurrentProcessedCharacters++;
 		}
+
 	}
 
 	OnTargetSearch.Broadcast(TargetActor);
@@ -191,6 +210,34 @@ bool UTargetFinderComponent::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
 
 	return false;
 }
+
+bool UTargetFinderComponent::IsActorFiltered(AActor* Actor)
+{
+	if (ClassFilters.Num() <= 0) {
+		return true;
+	}
+
+	for (int i = 0; i < ClassFilters.Num(); i++)
+	{
+		if (Actor->IsA(ClassFilters[i])) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 //UAISenseConfig* UTargetFinderComponent::GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass)
 //{
