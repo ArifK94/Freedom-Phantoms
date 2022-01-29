@@ -2,11 +2,27 @@
 
 
 #include "Vehicles/TankVehicle.h"
+#include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
+#include "CustomComponents/ShooterComponent.h"
+#include "CustomComponents/TeamFactionComponent.h"
+#include "CustomComponents/TargetFinderComponent.h"
+
+void ATankVehicle::SetRotationInput(FRotator Rotation)
+{
+	RotationInput = Rotation;
+}
 
 ATankVehicle::ATankVehicle()
 {
+	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
 
+	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
+	TargetFinderComponent->SetFindTargetPerFrame(true);
+
+	ShooterComponent = CreateDefaultSubobject<UShooterComponent>(TEXT("ShooterComponent"));
+
+	CurrentWeaponIndex = 0;
 }
 
 void ATankVehicle::BeginPlay()
@@ -44,10 +60,29 @@ void ATankVehicle::SpawnWeapons()
 	}
 
 	CurrentWeapon = WeaponsCollection[0];
+	ShooterComponent->SetWeapon(CurrentWeapon);
 }
 
-
-void ATankVehicle::SetRotationInput(FRotator Rotation)
+void ATankVehicle::ChangeWeapon()
 {
-	RotationInput = Rotation;
+	if (VehicleWeapons.Num() <= 0) {
+		return;
+	}
+
+	// increment the index if current index is less than the array of weapons
+	// otherwise go back to the first index
+	if (CurrentWeaponIndex < VehicleWeapons.Num() - 1)
+	{
+		CurrentWeaponIndex++;
+	}
+	else
+	{
+		CurrentWeaponIndex = 0;
+	}
+
+	if (CurrentWeapon) {
+		CurrentWeapon->StopFire(); // stop firing current weapon before switching to another
+	}
+
+	ShooterComponent->SetWeapon(CurrentWeapon);
 }

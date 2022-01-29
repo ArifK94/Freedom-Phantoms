@@ -51,9 +51,33 @@ AWeaponBullet::AWeaponBullet()
 	DestroyOnDeactivate = false;
 }
 
+void AWeaponBullet::Init()
+{
+	if (GetOwner())
+	{
+		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
+
+		// The owner may not always be a character, can be a vehicle with the following components e.g. tank
+		auto HealthComp = GetOwner()->GetComponentByClass(UHealthComponent::StaticClass());
+		if (HealthComp)
+		{
+			OwnerHealth = Cast<UHealthComponent>(HealthComp);
+		}
+
+		auto FactionComp = GetOwner()->GetComponentByClass(UTeamFactionComponent::StaticClass());
+		if (FactionComp)
+		{
+			OwnerFaction = Cast<UTeamFactionComponent>(FactionComp);
+		}
+	}
+}
+
 void AWeaponBullet::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// if not being used as an object pool, then perform as standard actor
+	Init();
 
 	BulletMovementAudio->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 	BulletMovementAudio->SetRelativeLocation(FVector::ZeroVector);
@@ -149,22 +173,7 @@ void AWeaponBullet::Activate()
 	}
 
 	// The owner of this bullet can change if you swap weapons
-	if (GetOwner())
-	{
-		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
-
-		auto HealthComp = GetOwner()->GetComponentByClass(UHealthComponent::StaticClass());
-		if (HealthComp)
-		{
-			OwnerHealth = Cast<UHealthComponent>(HealthComp);
-		}
-
-		auto FactionComp = GetOwner()->GetComponentByClass(UTeamFactionComponent::StaticClass());
-		if (FactionComp)
-		{
-			OwnerFaction = Cast<UTeamFactionComponent>(FactionComp);
-		}
-	}
+	Init();
 }
 
 void AWeaponBullet::Deactivate()

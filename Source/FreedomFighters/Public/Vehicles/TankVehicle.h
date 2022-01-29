@@ -7,15 +7,27 @@
 #include "StructCollection.h"
 #include "TankVehicle.generated.h"
 
-/**
- * 
- */
+class UTeamFactionComponent;
+class UTargetFinderComponent;
+class UShooterComponent;
 UCLASS()
 class FREEDOMFIGHTERS_API ATankVehicle : public ALandVehicle
 {
 	GENERATED_BODY()
 
 private:
+	int CurrentWeaponIndex;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTeamFactionComponent* TeamFactionComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTargetFinderComponent* TargetFinderComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UShooterComponent* ShooterComponent;
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FRotator RotationInput;
 
@@ -46,6 +58,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void SetRotationInput(FRotator Rotation);
+
+	UFUNCTION(BlueprintCallable)
+		void ChangeWeapon();
 
 private:
 	void SpawnWeapons();

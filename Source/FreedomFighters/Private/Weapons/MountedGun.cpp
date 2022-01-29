@@ -50,6 +50,8 @@ AMountedGun::AMountedGun()
 	CanExit = true;
 
 	StepBackAmount = 50.0f;
+
+	weaponType = WeaponType::MountedGun;
 }
 
 void AMountedGun::BeginPlay()

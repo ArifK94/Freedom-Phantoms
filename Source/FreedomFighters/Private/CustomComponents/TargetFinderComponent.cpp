@@ -18,6 +18,8 @@ UTargetFinderComponent::UTargetFinderComponent()
 
 	TargetSightRadius = 7000.0f;
 	FinderLimit = 5;
+
+	FindTargetPerFrame = false;
 }
 
 
@@ -63,6 +65,19 @@ void UTargetFinderComponent::Init()
 		//	UE_LOG(LogTemp, Error, TEXT("SetSightRange: Config == nullptr"));
 		//}
 	}
+
+	if (FindTargetPerFrame)
+	{
+		if (!THandler_TargetSearch.IsValid()) 
+		{
+			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 1.f, true);
+		}
+	}
+}
+
+void UTargetFinderComponent::FindTargetUpdate()
+{
+	FindTarget();
 }
 
 AActor* UTargetFinderComponent::FindTarget()
@@ -153,6 +168,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		}
 	}
 
+	OnTargetSearch.Broadcast(TargetActor);
 	return TargetActor;
 }
 

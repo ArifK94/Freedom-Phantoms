@@ -117,6 +117,8 @@ private:
 	UTeamFactionComponent* OwnerFaction;
 
 private:
+	void Init();
+
 	virtual void Activate() override;
 
 	virtual void Deactivate() override;

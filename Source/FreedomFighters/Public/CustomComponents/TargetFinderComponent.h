@@ -12,6 +12,7 @@ class UAISenseConfig_Sight;
 class UAISense;
 class UAIPerceptionComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetSearchSignature, AActor*, TargetActor);
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UTargetFinderComponent : public UActorComponent
 {
@@ -22,6 +23,10 @@ private:
 	UAISenseConfig_Sight* AISightConfig;
 	UAIPerceptionComponent* PerceptionComp;
 
+	FTimerHandle THandler_TargetSearch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool FindTargetPerFrame;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TargetSightRadius;
@@ -44,8 +49,16 @@ public:
 
 	//void SetVisionAngle();
 
-protected:
-	virtual void BeginPlay() override;	
+private:
+	void FindTargetUpdate();
 
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnTargetSearchSignature OnTargetSearch;
+
+	bool SetFindTargetPerFrame(bool Value) { FindTargetPerFrame = Value; }
 		
 };
