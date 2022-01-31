@@ -7,6 +7,10 @@
 #include "CustomComponents/ShooterComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
+#include "CustomComponents/HealthComponent.h"
+
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 void ATankVehicle::SetRotationInput(FRotator InRotation)
 {
@@ -21,6 +25,8 @@ void ATankVehicle::SetRotationInput(FRotator InRotation)
 
 ATankVehicle::ATankVehicle()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
 
 	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
@@ -30,11 +36,16 @@ ATankVehicle::ATankVehicle()
 	ShooterComponent = CreateDefaultSubobject<UShooterComponent>(TEXT("ShooterComponent"));
 
 	CurrentWeaponIndex = 0;
+
+	TurretRotationFactor = 1.5f;
 }
 
 void ATankVehicle::BeginPlay()
 {
 	Super::BeginPlay();
+
+	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ATankVehicle::OnTargetSearchUpdate);
+
 
 	SpawnVehicleWeapon(VehicleWeaponMain);
 
@@ -48,6 +59,47 @@ void ATankVehicle::BeginPlay()
 		ShooterComponent->SetWeapon(CurrentWeapon);
 	}
 
+}
+
+void ATankVehicle::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	m_DeltaTime = DeltaTime;
+
+
+
+	auto TargetRotation = FaceTarget(TargetActor);
+	SetRotationInput(TargetRotation);
+
+	if (TargetActor && UKismetMathLibrary::EqualEqual_RotatorRotator(RotationInput, TargetRotation))
+	{
+		ShooterComponent->BeginFire();
+	}
+	else
+	{
+		ShooterComponent->EndFire();
+	}
+}
+
+void ATankVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+{
+	Super::OnHealthUpdate(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
+
+	if (!HealthComp->IsAlive())
+	{
+		ShooterComponent->EndFire();
+	}
+}
+
+void ATankVehicle::OnTargetSearchUpdate(AActor* Actor)
+{
+	TargetActor = Actor;
+
+	if (!Actor) {
+		ShooterComponent->EndFire();
+		return;
+	}
 }
 
 void ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
@@ -95,4 +147,21 @@ void ATankVehicle::ChangeWeapon()
 	}
 
 	ShooterComponent->SetWeapon(CurrentWeapon);
+}
+
+FRotator ATankVehicle::FaceTarget(AActor* Actor)
+{
+	if (!Actor) {
+		return  UKismetMathLibrary::RLerp(RotationInput, FRotator::ZeroRotator, m_DeltaTime * TurretRotationFactor, false);
+	}
+
+	auto StartLocation = GetActorLocation();
+	auto TargetLocation = Actor->GetActorLocation();
+
+	auto RootBone = MeshComp->GetBoneName(0);
+	auto TargetRotation = UKismetMathLibrary::FindLookAtRotation(StartLocation, TargetLocation);
+	auto TargetRotationInvert = UKismetMathLibrary::InverseTransformRotation(MeshComp->GetSocketTransform(RootBone), TargetRotation);
+
+	return UKismetMathLibrary::RLerp(RotationInput, TargetRotationInvert, m_DeltaTime * TurretRotationFactor, false);
+
 }

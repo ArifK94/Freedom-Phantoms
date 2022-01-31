@@ -16,10 +16,10 @@ ALandVehicle::ALandVehicle()
 	MeshComp->SetCollisionProfileName(TEXT("Vehicle"));
 	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
 	MeshComp->SetGenerateOverlapEvents(true);
+	MeshComp->SetNotifyRigidBodyCollision(true);
 	RootComponent = MeshComp;
 
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
-	HealthComp->OnHealthChanged.AddDynamic(this, &ALandVehicle::OnHealthChanged);
 
 	RadialForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComp"));
 	RadialForceComp->SetupAttachment(MeshComp);
@@ -38,9 +38,11 @@ void ALandVehicle::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	HealthComp->OnHealthChanged.AddDynamic(this, &ALandVehicle::OnHealthUpdate);
+
 }
 
-void ALandVehicle::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
 {
 	if (IsDestroyed) {
 		return;

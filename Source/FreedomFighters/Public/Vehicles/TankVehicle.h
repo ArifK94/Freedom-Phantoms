@@ -16,7 +16,9 @@ class FREEDOMFIGHTERS_API ATankVehicle : public ALandVehicle
 	GENERATED_BODY()
 
 private:
+	float m_DeltaTime;
 	int CurrentWeaponIndex;
+	AActor* TargetActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UTeamFactionComponent* TeamFactionComponent;
@@ -57,9 +59,17 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AMountedGun* CurrentWeapon;
 
+	/** The speed of the turret when turning */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float TurretRotationFactor;
 
 public:
 	ATankVehicle();
+
+	virtual void OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo) override;
+
+	UFUNCTION()
+		void OnTargetSearchUpdate(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable)
 		void SetRotationInput(FRotator InRotation);
@@ -70,7 +80,10 @@ public:
 private:
 	void SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
 
+	FRotator FaceTarget(AActor* Actor);
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 };

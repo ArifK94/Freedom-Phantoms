@@ -35,9 +35,15 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int FinderLimit;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool ShowDebugTrace;
+
 	/** Type of actors to accept. Empty list will return all actor classes */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<TSubclassOf<AActor>> ClassFilters;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<TEnumAsByte<EObjectTypeQuery>> CollisionChannels;
 
 public:	
 	UTargetFinderComponent();

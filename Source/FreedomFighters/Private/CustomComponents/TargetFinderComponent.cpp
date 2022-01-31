@@ -5,8 +5,10 @@
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
 
+#include "GameFramework/Character.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "DrawDebugHelpers.h"
 //#include "Perception/AIPerceptionComponent.h"
 //#include "Perception/AISenseConfig.h"
 //#include "Perception/AISenseConfig_Sight.h"
@@ -20,6 +22,7 @@ UTargetFinderComponent::UTargetFinderComponent()
 	FinderLimit = 5;
 
 	FindTargetPerFrame = false;
+	ShowDebugTrace = false;
 
 	ClassFilters.Add(ACharacter::StaticClass());
 }
@@ -82,23 +85,6 @@ void UTargetFinderComponent::FindTargetUpdate()
 	FindTarget();
 }
 
-bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
-{
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(GetOwner());
-	QueryParams.bTraceComplex = false;
-
-	FCollisionObjectQueryParams ObjectParams;
-	ObjectParams.AllObjects;
-
-	return GetWorld()->LineTraceSingleByObjectType(
-		OutHit,
-		Start,
-		End,
-		ObjectParams,
-		QueryParams);
-}
-
 AActor* UTargetFinderComponent::FindTarget()
 {
 	if (!GetOwner()) {
@@ -140,6 +126,11 @@ AActor* UTargetFinderComponent::FindTarget()
 			continue;
 		}
 
+		// is this the owner?
+		if (PotentialEnemy == GetOwner()) {
+			continue;
+		}
+
 		// Filter the class
 		if (!IsActorFiltered(PotentialEnemy)) {
 			continue;
@@ -153,10 +144,16 @@ AActor* UTargetFinderComponent::FindTarget()
 		}
 
 		bool IsAlive = UHealthComponent::IsAlive(PotentialEnemy);
-		bool IsEnemy = !UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
 
-		// is target alive & an enemy
-		if (!IsAlive || !IsEnemy) {
+		// is target alive
+		if (!IsAlive) {
+			continue;
+		}
+
+		bool IsFriendly = UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
+
+		// ignore if friendly
+		if (IsFriendly) {
 			continue;
 		}
 
@@ -185,6 +182,11 @@ AActor* UTargetFinderComponent::FindTarget()
 			CurrentProcessedCharacters++;
 		}
 
+	}
+
+	if (ShowDebugTrace && TargetActor)
+	{
+		DrawDebugLine(GetWorld(), EyeLocation, TargetActor->GetActorLocation(), FColor::Red, false, 2.f);
 	}
 
 	OnTargetSearch.Broadcast(TargetActor);
@@ -227,7 +229,30 @@ bool UTargetFinderComponent::IsActorFiltered(AActor* Actor)
 	return false;
 }
 
+bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner());
+	QueryParams.bTraceComplex = false;
 
+	FCollisionObjectQueryParams ObjectParams;
+	for (auto Iter = CollisionChannels.CreateConstIterator(); Iter; ++Iter)
+	{
+		ObjectParams.AddObjectTypesToQuery(UEngineTypes::ConvertToCollisionChannel((*Iter).GetValue()));
+	}
+
+	if (ShowDebugTrace)
+	{
+		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.f);
+	}
+
+	return GetWorld()->LineTraceSingleByObjectType(
+		OutHit,
+		Start,
+		End,
+		ObjectParams,
+		QueryParams);
+}
 
 
 
