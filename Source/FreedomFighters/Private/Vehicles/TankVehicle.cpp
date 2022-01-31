@@ -9,6 +9,7 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
 
+#include "Components/AudioComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -26,6 +27,9 @@ void ATankVehicle::SetRotationInput(FRotator InRotation)
 ATankVehicle::ATankVehicle()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	TurretAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("TurretAudio"));
+	TurretAudio->AttachToComponent(MeshComp, FAttachmentTransformRules::KeepRelativeTransform);
 
 	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
 
@@ -59,6 +63,7 @@ void ATankVehicle::BeginPlay()
 		ShooterComponent->SetWeapon(CurrentWeapon);
 	}
 
+	//GetWorldTimerManager().SetTimer(THandler_Shoot, this, &ATankVehicle::Shoot, .2f, true);
 }
 
 void ATankVehicle::Tick(float DeltaTime)
@@ -67,19 +72,7 @@ void ATankVehicle::Tick(float DeltaTime)
 
 	m_DeltaTime = DeltaTime;
 
-
-
-	auto TargetRotation = FaceTarget(TargetActor);
-	SetRotationInput(TargetRotation);
-
-	if (TargetActor && UKismetMathLibrary::EqualEqual_RotatorRotator(RotationInput, TargetRotation))
-	{
-		ShooterComponent->BeginFire();
-	}
-	else
-	{
-		ShooterComponent->EndFire();
-	}
+	Shoot();
 }
 
 void ATankVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
@@ -88,6 +81,8 @@ void ATankVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 
 	if (!HealthComp->IsAlive())
 	{
+		//PrimaryActorTick.bCanEverTick = false;
+		GetWorldTimerManager().ClearTimer(THandler_Shoot);
 		ShooterComponent->EndFire();
 	}
 }
@@ -155,13 +150,35 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor)
 		return  UKismetMathLibrary::RLerp(RotationInput, FRotator::ZeroRotator, m_DeltaTime * TurretRotationFactor, false);
 	}
 
-	auto StartLocation = GetActorLocation();
-	auto TargetLocation = Actor->GetActorLocation();
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	
+	auto TargetLocation = Actor->GetActorLocation() - EyeLocation;
 
 	auto RootBone = MeshComp->GetBoneName(0);
-	auto TargetRotation = UKismetMathLibrary::FindLookAtRotation(StartLocation, TargetLocation);
-	auto TargetRotationInvert = UKismetMathLibrary::InverseTransformRotation(MeshComp->GetSocketTransform(RootBone), TargetRotation);
+	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComp->GetSocketTransform(RootBone), TargetLocation);
+	auto TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
-	return UKismetMathLibrary::RLerp(RotationInput, TargetRotationInvert, m_DeltaTime * TurretRotationFactor, false);
+	return UKismetMathLibrary::RLerp(RotationInput, TargetRotation, m_DeltaTime * TurretRotationFactor, false);
 
+}
+
+void ATankVehicle::Shoot()
+{
+	if (!HealthComp->IsAlive()) {
+		return;
+	}
+
+	auto TargetRotation = FaceTarget(TargetActor);
+	SetRotationInput(TargetRotation);
+
+	if (TargetActor && UKismetMathLibrary::EqualEqual_RotatorRotator(RotationInput, TargetRotation))
+	{
+		ShooterComponent->BeginFire();
+	}
+	else
+	{
+		ShooterComponent->EndFire();
+	}
 }

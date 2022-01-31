@@ -5,6 +5,10 @@
 #include "CustomComponents/HealthComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/AudioComponent.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -18,6 +22,26 @@ ALandVehicle::ALandVehicle()
 	MeshComp->SetGenerateOverlapEvents(true);
 	MeshComp->SetNotifyRigidBodyCollision(true);
 	RootComponent = MeshComp;
+
+	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent")); // capsule component is used for line trace
+	CapsuleComponent->SetupAttachment(MeshComp);
+	CapsuleComponent->SetCollisionObjectType(ECC_Pawn); // line trace for objects only works with pawn object type for some reason,
+
+
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(MeshComp);
+	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	CameraBoom->bEnableCameraLag = true;
+	CameraBoom->bEnableCameraRotationLag = true;
+	CameraBoom->TargetArmLength = 0.f;
+	CameraBoom->SocketOffset.Set(.0f, .0f, .0f);
+
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->bUsePawnControlRotation = false;
+
+	EngineAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineAudio"));
+	EngineAudio->AttachToComponent(MeshComp, FAttachmentTransformRules::KeepRelativeTransform);
 
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 
@@ -34,11 +58,28 @@ ALandVehicle::ALandVehicle()
 	SimulateExplosionPhysics = false;
 }
 
+void ALandVehicle::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+	if (FollowCamera)
+	{
+		OutLocation = FollowCamera->GetComponentLocation();
+		OutRotation = FollowCamera->GetComponentRotation();
+	}
+	else
+	{
+		OutLocation = MeshComp->GetComponentLocation();
+		OutRotation = MeshComp->GetComponentRotation();
+	}
+}
+
+
 void ALandVehicle::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	HealthComp->OnHealthChanged.AddDynamic(this, &ALandVehicle::OnHealthUpdate);
+
+	CameraBoom->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraSocket);
+
+	HealthComp->OnHealthChanged.AddDynamic(this, &ALandVehicle::OnHealthUpdate); 
 
 }
 

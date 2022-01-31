@@ -20,6 +20,11 @@ private:
 	int CurrentWeaponIndex;
 	AActor* TargetActor;
 
+	FTimerHandle THandler_Shoot;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* TurretAudio;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UTeamFactionComponent* TeamFactionComponent;
 
@@ -48,6 +53,9 @@ private:
 	/** The main cannon */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FVehicleWeapon VehicleWeaponMain;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		AMountedGun* MainWeapon;
 
 	/** Turret weapons */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -81,6 +89,8 @@ private:
 	void SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
 
 	FRotator FaceTarget(AActor* Actor);
+
+	void Shoot();
 
 protected:
 	virtual void BeginPlay() override;

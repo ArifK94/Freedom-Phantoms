@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "LandVehicle.generated.h"
 
+class UCapsuleComponent;
+class UCameraComponent;
 class USkeletalMeshComponent;
 class USkeletalMesh;
 class UHealthComponent;
@@ -19,14 +21,33 @@ class FREEDOMFIGHTERS_API ALandVehicle : public AActor
 	GENERATED_BODY()
 
 protected:
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* MeshComp;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UCapsuleComponent* CapsuleComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		UCameraComponent* FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		URadialForceComponent* RadialForceComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* EngineAudio;
+
+
+	/** This needs to be set on the tank's barrel socket for turret to face target */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName CameraSocket;
+
 
 	/** Impulse applied to mesh when it explosed to boost up a little  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -69,6 +90,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 
 private:	
 	void ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet);
