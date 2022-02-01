@@ -21,6 +21,8 @@ private:
 	AActor* TargetActor;
 
 	FTimerHandle THandler_Shoot;
+	FTimerHandle THandler_RandomChangeWeapon;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* TurretAudio;
@@ -62,7 +64,7 @@ private:
 		TArray<FVehicleWeapon> VehicleWeaponTurrets;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TArray<AMountedGun*> WeaponsCollection;
+		TArray<AMountedGun*> SecondaryWeapons;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AMountedGun* CurrentWeapon;
@@ -83,10 +85,15 @@ public:
 		void SetRotationInput(FRotator InRotation);
 
 	UFUNCTION(BlueprintCallable)
-		void ChangeWeapon();
+		void ChangeSecondaryWeapon();
+
+	UFUNCTION(BlueprintCallable)
+		void RandomChangeWeapon();
+
+	void SetCurrentWeapon(AMountedGun* MountedGun);
 
 private:
-	void SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
+	AMountedGun* SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
 
 	FRotator FaceTarget(AActor* Actor);
 

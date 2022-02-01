@@ -24,6 +24,12 @@ void ATankVehicle::SetRotationInput(FRotator InRotation)
 	RotationInput = InRotation;
 }
 
+void ATankVehicle::SetCurrentWeapon(AMountedGun* MountedGun)
+{
+	CurrentWeapon = MountedGun;
+	ShooterComponent->SetWeapon(CurrentWeapon);
+}
+
 ATankVehicle::ATankVehicle()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -51,17 +57,29 @@ void ATankVehicle::BeginPlay()
 	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ATankVehicle::OnTargetSearchUpdate);
 
 
-	SpawnVehicleWeapon(VehicleWeaponMain);
+	MainWeapon = SpawnVehicleWeapon(VehicleWeaponMain);
 
 	for (int i = 0; i < VehicleWeaponTurrets.Num(); i++)
 	{
-		SpawnVehicleWeapon(VehicleWeaponTurrets[i]);
+		auto Weapon = SpawnVehicleWeapon(VehicleWeaponTurrets[i]);
+
+		if (Weapon) {
+			SecondaryWeapons.Add(Weapon);
+		}
 	}
 
-	if (WeaponsCollection.Num() > 0) {
-		CurrentWeapon = WeaponsCollection[0];
-		ShooterComponent->SetWeapon(CurrentWeapon);
+	if (MainWeapon)
+	{
+		SetCurrentWeapon(MainWeapon);
+
 	}
+	else if (SecondaryWeapons.Num() > 0)
+	{
+		SetCurrentWeapon(SecondaryWeapons[0]);
+	}
+
+
+
 
 	//GetWorldTimerManager().SetTimer(THandler_Shoot, this, &ATankVehicle::Shoot, .2f, true);
 }
@@ -93,14 +111,37 @@ void ATankVehicle::OnTargetSearchUpdate(AActor* Actor)
 
 	if (!Actor) {
 		ShooterComponent->EndFire();
+		GetWorldTimerManager().ClearTimer(THandler_RandomChangeWeapon);
 		return;
+	}
+
+	// Use main weapon on vehicles
+	if (Actor->IsA(ALandVehicle::StaticClass()))
+	{
+		if (CurrentWeapon != MainWeapon)
+		{
+			SetCurrentWeapon(MainWeapon);
+		}
+	}
+	else // else target is most likely infantry
+	{
+		// add more character to tank by radnomly changing weapons at random times
+		if (!THandler_RandomChangeWeapon.IsValid())
+		{
+			// Change to secondary weapons at first then randomly change the weapons a few x seconds later
+			ChangeSecondaryWeapon();
+
+			GetWorldTimerManager().SetTimer(THandler_RandomChangeWeapon, this, &ATankVehicle::RandomChangeWeapon, FMath::RandRange(5.f, 10.f), true);
+		}
+
+
 	}
 }
 
-void ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
+AMountedGun* ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
 {
 	if (!VehicleWeapon.WeaponClass) {
-		return;
+		return nullptr;
 	}
 
 	auto MyOwner = GetOwner() ? GetOwner() : this;
@@ -112,23 +153,23 @@ void ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
 	auto Weapon = GetWorld()->SpawnActor<AMountedGun>(VehicleWeapon.WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (!Weapon) {
-		return;
+		return nullptr;
 	}
 
 	Weapon->SetOwner(MyOwner);
 	Weapon->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
-	WeaponsCollection.Add(Weapon);
+	return Weapon;
 }
 
-void ATankVehicle::ChangeWeapon()
+void ATankVehicle::ChangeSecondaryWeapon()
 {
-	if (WeaponsCollection.Num() <= 0) {
+	if (SecondaryWeapons.Num() <= 0) {
 		return;
 	}
 
 	// increment the index if current index is less than the array of weapons
 	// otherwise go back to the first index
-	if (CurrentWeaponIndex < WeaponsCollection.Num() - 1)
+	if (CurrentWeaponIndex < SecondaryWeapons.Num() - 1)
 	{
 		CurrentWeaponIndex++;
 	}
@@ -141,7 +182,21 @@ void ATankVehicle::ChangeWeapon()
 		CurrentWeapon->StopFire(); // stop firing current weapon before switching to another
 	}
 
-	ShooterComponent->SetWeapon(CurrentWeapon);
+	SetCurrentWeapon(SecondaryWeapons[CurrentWeaponIndex]);
+}
+
+void ATankVehicle::RandomChangeWeapon()
+{
+	auto RandomBool = UKismetMathLibrary::RandomBool();
+
+	if (RandomBool)
+	{
+		SetCurrentWeapon(MainWeapon);
+	}
+	else
+	{
+		ChangeSecondaryWeapon();
+	}
 }
 
 FRotator ATankVehicle::FaceTarget(AActor* Actor)

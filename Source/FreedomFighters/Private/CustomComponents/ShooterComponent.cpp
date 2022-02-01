@@ -20,6 +20,11 @@ void UShooterComponent::BeginPlay()
 
 void UShooterComponent::SetWeapon(AWeapon* InWeapon)
 {
+	// Stop firing current weapon if already exists
+	if (m_Weapon) {
+		EndFire();
+	}
+
 	m_Weapon = InWeapon;
 }
 
