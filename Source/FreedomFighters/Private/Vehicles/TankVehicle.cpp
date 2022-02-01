@@ -2,6 +2,7 @@
 
 
 #include "Vehicles/TankVehicle.h"
+#include "Vehicles/LandVehicle.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
 #include "CustomComponents/ShooterComponent.h"
@@ -31,11 +32,34 @@ FVehicleWeapon ATankVehicle::GetCurrentVehicleWeapon()
 
 void ATankVehicle::SetRotationInput(FRotator InRotation)
 {
-	//RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + InRotation.Pitch, PitchMin, PitchMax);
-	//RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
+	//auto CurrentRotation = RotationInput;
+	//auto TotalPitch = RotationInput.Pitch + InRotation.Pitch;
+	//auto TotalYaw = RotationInput.Yaw + InRotation.Yaw;
 
-	//RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + InRotation.Yaw, YawMin, YawMax);
-	//RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
+	//ChangePitchValue(TotalYaw);
+
+	//if (TotalPitch >= PitchMax) {
+	//	TotalPitch = PitchMax;
+	//}
+	//else if (TotalPitch <= PitchMin) {
+	//	TotalPitch = PitchMin;
+	//}
+	//else {
+	//	TotalPitch = InRotation.Pitch;
+	//}
+
+	//if (TotalYaw >= YawMax) {
+	//	TotalYaw = YawMax;
+	//}
+	//else if (TotalYaw <= YawMin) {
+	//	TotalYaw = YawMin;
+	//}
+	//else {
+	//	TotalYaw = InRotation.Yaw;
+	//}
+
+	//RotationInput.Pitch = TotalPitch;
+	//RotationInput.Yaw = TotalYaw;
 
 	RotationInput = InRotation;
 }
@@ -72,7 +96,10 @@ void ATankVehicle::BeginPlay()
 	Super::BeginPlay();
 
 	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ATankVehicle::OnTargetSearchUpdate);
-
+	DefaultPitchMin = PitchMin;
+	DefaultPitchMax = PitchMax;
+	DefaultYawMin = YawMin;
+	DefaultYawMax = YawMax;
 
 	MainWeapon = SpawnVehicleWeapon(VehicleWeaponMain);
 
@@ -276,4 +303,34 @@ void ATankVehicle::Shoot()
 
 		ShooterComponent->EndFire();
 	}
+}
+
+void ATankVehicle::ChangePitchValue(float InYawValue)
+{
+	if (ClampChangePitchValues.Num() <= 0) {
+		return;
+	}
+
+	auto NewPitchMin = DefaultPitchMin;
+	auto NewPitchMax = DefaultPitchMax;
+
+	for (int i = 0; i < ClampChangePitchValues.Num(); i++)
+	{
+		auto NewClampVal = ClampChangePitchValues[i];
+
+		if (InYawValue >= NewClampVal.YawValueMin && InYawValue <= NewClampVal.YawValueMax)
+		{
+			if (!NewClampVal.UseMinDefault) {
+				NewPitchMin = NewClampVal.NewPitchMin;
+			}
+
+			if (!NewClampVal.UseMaxDefault) {
+				NewPitchMax = NewClampVal.NewPitchMax;
+			}
+			break;
+		}
+	}
+
+	PitchMin = NewPitchMin;
+	PitchMax = NewPitchMax;
 }

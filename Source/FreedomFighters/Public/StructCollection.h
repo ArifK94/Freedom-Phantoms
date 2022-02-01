@@ -484,6 +484,39 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FClampChangePitch
+{
+	GENERATED_BODY()
+
+public:
+	/** Change pitch min & max value when minimum Yaw value is...? */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawValueMin;
+
+	/** Change pitch min & max value when maximum Yaw value is...? */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawValueMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float NewPitchMin;
+
+	/** If no change needed, then this check this to true */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool UseMinDefault;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float NewPitchMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool UseMaxDefault;
+
+	FClampChangePitch()
+	{
+
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FTargetSystemNode
 {
 	GENERATED_BODY()

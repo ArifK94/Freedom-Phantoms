@@ -42,15 +42,27 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float PitchMin;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float DefaultPitchMin;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float PitchMax;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float DefaultPitchMax;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float YawMin;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float DefaultYawMin;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float YawMax;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float DefaultYawMax;
+
+	/** Pitch clamped values can change depending on the Yaw value of the turret eg. turret will aim at the vehicle body when turning to 180 degrees meaning it will shoot through itself. This means the pitch min. value needs to change */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<FClampChangePitch> ClampChangePitchValues;
 
 	/** The main cannon */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -108,9 +120,11 @@ private:
 
 	FRotator FaceTarget(AActor* Actor, FRotator& TargetRotation);
 
+	FVehicleWeapon GetCurrentVehicleWeapon();
+
 	void Shoot();
 
-	FVehicleWeapon GetCurrentVehicleWeapon();
+	void ChangePitchValue(float InYawValue);
 
 protected:
 	virtual void BeginPlay() override;
