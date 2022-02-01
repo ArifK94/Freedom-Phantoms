@@ -10,6 +10,7 @@
 class UTeamFactionComponent;
 class UTargetFinderComponent;
 class UShooterComponent;
+class USoundBase;
 UCLASS()
 class FREEDOMFIGHTERS_API ATankVehicle : public ALandVehicle
 {
@@ -22,7 +23,7 @@ private:
 
 	FTimerHandle THandler_RandomChangeWeapon;
 
-
+	/** The audio to play when main turret is turning */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* TurretAudio;
 
@@ -75,6 +76,13 @@ private:
 	/** How far off the turret rotation can determine to fire before reaching matching target rotation */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TurretRotationErrorTolerance;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* TurretTurnSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USoundBase* TurretTurnStopSound;
 
 public:
 	ATankVehicle();

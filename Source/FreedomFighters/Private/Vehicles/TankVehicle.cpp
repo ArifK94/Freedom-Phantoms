@@ -10,6 +10,7 @@
 #include "CustomComponents/HealthComponent.h"
 
 #include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -43,9 +44,6 @@ void ATankVehicle::SetCurrentWeapon(AMountedGun* InMountedGun, FVehicleWeapon In
 {
 	CurrentWeapon = InMountedGun;
 	ShooterComponent->SetWeapon(CurrentWeapon);
-
-	// To allow weapon to point towards target as the camera will need to be placed where the weapon socket is
-	//CameraBoom->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, InVehicleWeapon.WeaponSocketName);
 }
 
 ATankVehicle::ATankVehicle()
@@ -228,7 +226,7 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 	{
 		EyeLocation = MeshComp->GetSocketLocation(VehicleWeapon.WeaponSocketName);
 	}
-	
+
 	auto TargetLocation = Actor->GetActorLocation() - EyeLocation;
 	auto RootBone = MeshComp->GetBoneName(0);
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComp->GetSocketTransform(RootBone), TargetLocation);
@@ -253,6 +251,7 @@ void ATankVehicle::Shoot()
 	auto NearlyEqualRoll = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Roll, TargetRotation.Roll, TurretRotationErrorTolerance);
 	auto NearlyEqual = NearlyEqualPitch && NearlyEqualYaw && NearlyEqualRoll;
 
+	// Rotation nearly turned to target rotation, can be considered as reaching target rotation
 	if (NearlyEqual)
 	{
 		if (TargetActor)
@@ -263,10 +262,18 @@ void ATankVehicle::Shoot()
 		{
 			ShooterComponent->EndFire();
 		}
-	}
-	else
-	{
-		ShooterComponent->EndFire();
 
+		TurretAudio->Sound = TurretTurnStopSound;
+		TurretAudio->Play();
+
+	}
+	else // is turning to target rotation
+	{
+		TurretAudio->Sound = TurretTurnSound;
+		if (!TurretAudio->IsPlaying()) {
+			TurretAudio->Play();
+		}
+
+		ShooterComponent->EndFire();
 	}
 }
