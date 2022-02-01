@@ -352,6 +352,8 @@ public:
 
 	virtual void SetIsAiming(bool isAiming);
 
+	void SetWeaponProfile(FName InCollisionProfileName);
+
 	/** Called when owning character has died or picking up another weapon */
 	virtual void DropWeapon(bool RemoveOwner = true, bool SimulatePhysics = false);
 

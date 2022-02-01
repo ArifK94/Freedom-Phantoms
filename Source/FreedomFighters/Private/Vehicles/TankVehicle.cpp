@@ -10,8 +10,23 @@
 #include "CustomComponents/HealthComponent.h"
 
 #include "Components/AudioComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+
+
+FVehicleWeapon ATankVehicle::GetCurrentVehicleWeapon()
+{
+	if (CurrentWeapon == MainWeapon)
+	{
+		return VehicleWeaponMain;
+	}
+	else if (CurrentWeapon == SecondaryWeapons[CurrentWeaponIndex])
+	{
+		return VehicleWeaponTurrets[CurrentWeaponIndex];
+	}
+	return FVehicleWeapon();
+}
 
 void ATankVehicle::SetRotationInput(FRotator InRotation)
 {
@@ -24,10 +39,13 @@ void ATankVehicle::SetRotationInput(FRotator InRotation)
 	RotationInput = InRotation;
 }
 
-void ATankVehicle::SetCurrentWeapon(AMountedGun* MountedGun)
+void ATankVehicle::SetCurrentWeapon(AMountedGun* InMountedGun, FVehicleWeapon InVehicleWeapon)
 {
-	CurrentWeapon = MountedGun;
+	CurrentWeapon = InMountedGun;
 	ShooterComponent->SetWeapon(CurrentWeapon);
+
+	// To allow weapon to point towards target as the camera will need to be placed where the weapon socket is
+	//CameraBoom->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, InVehicleWeapon.WeaponSocketName);
 }
 
 ATankVehicle::ATankVehicle()
@@ -70,18 +88,12 @@ void ATankVehicle::BeginPlay()
 
 	if (MainWeapon)
 	{
-		SetCurrentWeapon(MainWeapon);
-
+		SetCurrentWeapon(MainWeapon, VehicleWeaponMain);
 	}
 	else if (SecondaryWeapons.Num() > 0)
 	{
-		SetCurrentWeapon(SecondaryWeapons[0]);
+		SetCurrentWeapon(SecondaryWeapons[CurrentWeaponIndex], VehicleWeaponTurrets[CurrentWeaponIndex]);
 	}
-
-
-
-
-	//GetWorldTimerManager().SetTimer(THandler_Shoot, this, &ATankVehicle::Shoot, .2f, true);
 }
 
 void ATankVehicle::Tick(float DeltaTime)
@@ -100,7 +112,6 @@ void ATankVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 	if (!HealthComp->IsAlive())
 	{
 		//PrimaryActorTick.bCanEverTick = false;
-		GetWorldTimerManager().ClearTimer(THandler_Shoot);
 		ShooterComponent->EndFire();
 	}
 }
@@ -120,7 +131,7 @@ void ATankVehicle::OnTargetSearchUpdate(AActor* Actor)
 	{
 		if (CurrentWeapon != MainWeapon)
 		{
-			SetCurrentWeapon(MainWeapon);
+			SetCurrentWeapon(MainWeapon, VehicleWeaponMain);
 		}
 	}
 	else // else target is most likely infantry
@@ -158,6 +169,7 @@ AMountedGun* ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
 
 	Weapon->SetOwner(MyOwner);
 	Weapon->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
+	Weapon->SetWeaponProfile(TEXT("NoCollision"));
 	return Weapon;
 }
 
@@ -182,7 +194,8 @@ void ATankVehicle::ChangeSecondaryWeapon()
 		CurrentWeapon->StopFire(); // stop firing current weapon before switching to another
 	}
 
-	SetCurrentWeapon(SecondaryWeapons[CurrentWeaponIndex]);
+	SetCurrentWeapon(SecondaryWeapons[CurrentWeaponIndex], VehicleWeaponTurrets[CurrentWeaponIndex]);
+
 }
 
 void ATankVehicle::RandomChangeWeapon()
@@ -191,7 +204,7 @@ void ATankVehicle::RandomChangeWeapon()
 
 	if (RandomBool)
 	{
-		SetCurrentWeapon(MainWeapon);
+		SetCurrentWeapon(MainWeapon, VehicleWeaponMain);
 	}
 	else
 	{
@@ -207,7 +220,18 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor)
 
 	FVector EyeLocation;
 	FRotator EyeRotation;
-	GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	GetActorEyesViewPoint(EyeLocation, EyeRotation); // Grab the camera view points, this is a fail safe if vehicle weapons do not exist for some reason
+
+	auto VehicleWeapon = GetCurrentVehicleWeapon();
+
+	// eye location should be retrieved from weapon socket location as the follow camera shouldn't change as it can be used by another mechanic such as orbiting around the vehicle
+	// check if weapon class was provided as we cannot access the weapon object pointer when it has UPROPERTY attribute
+	if (VehicleWeapon.WeaponClass)
+	{
+		EyeLocation = MeshComp->GetSocketLocation(VehicleWeapon.WeaponSocketName);
+	}
+
+
 	
 	auto TargetLocation = Actor->GetActorLocation() - EyeLocation;
 

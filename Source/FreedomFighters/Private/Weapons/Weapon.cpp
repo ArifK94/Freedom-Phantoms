@@ -874,6 +874,12 @@ bool AWeapon::ReplenishAmmo(int Amount)
 	return false;
 }
 
+
+void AWeapon::SetWeaponProfile(FName InCollisionProfileName)
+{
+	MeshComp->SetCollisionProfileName(InCollisionProfileName);
+}
+
 void AWeapon::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 {
 	if (RemoveOwner)

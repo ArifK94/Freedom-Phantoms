@@ -20,7 +20,6 @@ private:
 	int CurrentWeaponIndex;
 	AActor* TargetActor;
 
-	FTimerHandle THandler_Shoot;
 	FTimerHandle THandler_RandomChangeWeapon;
 
 
@@ -90,7 +89,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void RandomChangeWeapon();
 
-	void SetCurrentWeapon(AMountedGun* MountedGun);
+	void SetCurrentWeapon(AMountedGun* InMountedGun, FVehicleWeapon InVehicleWeapon);
 
 private:
 	AMountedGun* SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
@@ -98,6 +97,8 @@ private:
 	FRotator FaceTarget(AActor* Actor);
 
 	void Shoot();
+
+	FVehicleWeapon GetCurrentVehicleWeapon();
 
 protected:
 	virtual void BeginPlay() override;
