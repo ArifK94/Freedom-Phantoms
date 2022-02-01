@@ -137,8 +137,22 @@ void ATankVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 
 	if (!HealthComp->IsAlive())
 	{
-		//PrimaryActorTick.bCanEverTick = false;
+		PrimaryActorTick.bCanEverTick = false;
 		ShooterComponent->EndFire();
+
+		// Destroy all weapons
+		if (MainWeapon) {
+			MainWeapon->Destroy();
+		}
+
+		for (int i = 0; i < SecondaryWeapons.Num(); i++)
+		{
+			auto Weapon = SecondaryWeapons[i];
+
+			if (Weapon) {
+				Weapon->Destroy();
+			}
+		}
 	}
 }
 
@@ -290,6 +304,7 @@ void ATankVehicle::Shoot()
 			ShooterComponent->EndFire();
 		}
 
+		TurretAudio->Stop();
 		TurretAudio->Sound = TurretTurnStopSound;
 		TurretAudio->Play();
 

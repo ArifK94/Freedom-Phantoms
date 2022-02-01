@@ -21,6 +21,8 @@ class FREEDOMFIGHTERS_API ALandVehicle : public AActor
 	GENERATED_BODY()
 
 protected:
+	FTimerHandle THandler_Update;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* MeshComp;
@@ -42,6 +44,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* EngineAudio;
+
+	/** Paramater name for the crossfade by param in the engine sound cue assigned to the engine audio component */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FName EngineSoundParamName;
 
 
 	/** This needs to be set on the tank's barrel socket for turret to face target */
@@ -92,6 +98,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
+
+	void Update();
 
 private:	
 	void ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet);

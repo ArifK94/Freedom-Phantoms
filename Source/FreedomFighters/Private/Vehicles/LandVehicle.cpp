@@ -56,6 +56,8 @@ ALandVehicle::ALandVehicle()
 	ExplosionDamage = 30.0f;
 
 	SimulateExplosionPhysics = false;
+
+	EngineSoundParamName = "Speed";
 }
 
 void ALandVehicle::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
@@ -72,7 +74,6 @@ void ALandVehicle::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRota
 	}
 }
 
-
 void ALandVehicle::BeginPlay()
 {
 	Super::BeginPlay();
@@ -81,6 +82,13 @@ void ALandVehicle::BeginPlay()
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ALandVehicle::OnHealthUpdate); 
 
+	GetWorldTimerManager().SetTimer(THandler_Update, this, &ALandVehicle::Update,.2f, true);
+}
+
+void ALandVehicle::Update()
+{
+	// Set the engine sound based on actor velocity
+	EngineAudio->SetFloatParameter(EngineSoundParamName, GetVelocity().Size());
 }
 
 void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
@@ -91,6 +99,19 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 
 	if (Health <= 0.0f)
 	{
+		GetWorldTimerManager().ClearTimer(THandler_Update);
+
+		// Stop playing all audio components
+		auto AudioActorComps = GetComponentsByClass(UAudioComponent::StaticClass());
+		for (int i = 0; i < AudioActorComps.Num(); i++)
+		{
+			auto AudioComp = Cast<UAudioComponent>(AudioActorComps[i]);
+			if (AudioComp)
+			{
+				AudioComp->Stop();
+			}
+		}
+
 		// Explode!
 		IsDestroyed = true;
 
