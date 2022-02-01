@@ -72,6 +72,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TurretRotationFactor;
 
+	/** How far off the turret rotation can determine to fire before reaching matching target rotation */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float TurretRotationErrorTolerance;
+
 public:
 	ATankVehicle();
 
@@ -94,7 +98,7 @@ public:
 private:
 	AMountedGun* SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
 
-	FRotator FaceTarget(AActor* Actor);
+	FRotator FaceTarget(AActor* Actor, FRotator& TargetRotation);
 
 	void Shoot();
 

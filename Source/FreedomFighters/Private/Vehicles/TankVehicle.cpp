@@ -66,6 +66,7 @@ ATankVehicle::ATankVehicle()
 	CurrentWeaponIndex = 0;
 
 	TurretRotationFactor = 1.5f;
+	TurretRotationErrorTolerance = 5.f;
 }
 
 void ATankVehicle::BeginPlay()
@@ -190,10 +191,6 @@ void ATankVehicle::ChangeSecondaryWeapon()
 		CurrentWeaponIndex = 0;
 	}
 
-	if (CurrentWeapon) {
-		CurrentWeapon->StopFire(); // stop firing current weapon before switching to another
-	}
-
 	SetCurrentWeapon(SecondaryWeapons[CurrentWeaponIndex], VehicleWeaponTurrets[CurrentWeaponIndex]);
 
 }
@@ -212,10 +209,11 @@ void ATankVehicle::RandomChangeWeapon()
 	}
 }
 
-FRotator ATankVehicle::FaceTarget(AActor* Actor)
+FRotator ATankVehicle::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 {
 	if (!Actor) {
-		return  UKismetMathLibrary::RLerp(RotationInput, FRotator::ZeroRotator, m_DeltaTime * TurretRotationFactor, false);
+		TargetRotation = FRotator::ZeroRotator;
+		return  UKismetMathLibrary::RLerp(RotationInput, TargetRotation, m_DeltaTime * TurretRotationFactor, false);
 	}
 
 	FVector EyeLocation;
@@ -230,16 +228,13 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor)
 	{
 		EyeLocation = MeshComp->GetSocketLocation(VehicleWeapon.WeaponSocketName);
 	}
-
-
 	
 	auto TargetLocation = Actor->GetActorLocation() - EyeLocation;
-
 	auto RootBone = MeshComp->GetBoneName(0);
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComp->GetSocketTransform(RootBone), TargetLocation);
-	auto TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
+	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
-	return UKismetMathLibrary::RLerp(RotationInput, TargetRotation, m_DeltaTime * TurretRotationFactor, false);
+	return UKismetMathLibrary::RInterpTo(RotationInput, TargetRotation, GetWorld()->DeltaTimeSeconds, TurretRotationFactor);
 
 }
 
@@ -249,15 +244,29 @@ void ATankVehicle::Shoot()
 		return;
 	}
 
-	auto TargetRotation = FaceTarget(TargetActor);
-	SetRotationInput(TargetRotation);
+	auto TargetRotation = FRotator::ZeroRotator;
+	auto NewRotationInput = FaceTarget(TargetActor, TargetRotation);
+	SetRotationInput(NewRotationInput);
 
-	if (TargetActor && UKismetMathLibrary::EqualEqual_RotatorRotator(RotationInput, TargetRotation))
+	auto NearlyEqualPitch = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Pitch, TargetRotation.Pitch, TurretRotationErrorTolerance);
+	auto NearlyEqualYaw = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Yaw, TargetRotation.Yaw, TurretRotationErrorTolerance);
+	auto NearlyEqualRoll = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Roll, TargetRotation.Roll, TurretRotationErrorTolerance);
+	auto NearlyEqual = NearlyEqualPitch && NearlyEqualYaw && NearlyEqualRoll;
+
+	if (NearlyEqual)
 	{
-		ShooterComponent->BeginFire();
+		if (TargetActor)
+		{
+			ShooterComponent->BeginFire();
+		}
+		else
+		{
+			ShooterComponent->EndFire();
+		}
 	}
 	else
 	{
 		ShooterComponent->EndFire();
+
 	}
 }
