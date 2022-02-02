@@ -2,6 +2,10 @@
 
 
 #include "Vehicles/LandVehicle.h"
+#include "Weapons/Weapon.h"
+#include "Weapons/MountedGun.h"
+#include "Characters/BaseCharacter.h"
+#include "Characters/CombatCharacter.h"
 #include "CustomComponents/HealthComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
@@ -80,9 +84,11 @@ void ALandVehicle::BeginPlay()
 
 	CameraBoom->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraSocket);
 
-	HealthComp->OnHealthChanged.AddDynamic(this, &ALandVehicle::OnHealthUpdate); 
+	HealthComp->OnHealthChanged.AddDynamic(this, &ALandVehicle::OnHealthUpdate);
 
-	GetWorldTimerManager().SetTimer(THandler_Update, this, &ALandVehicle::Update,.2f, true);
+	GetWorldTimerManager().SetTimer(THandler_Update, this, &ALandVehicle::Update, .2f, true);
+
+	SpawnVehicleWeapons();
 }
 
 void ALandVehicle::Update()
@@ -100,6 +106,7 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 	if (Health <= 0.0f)
 	{
 		GetWorldTimerManager().ClearTimer(THandler_Update);
+
 
 		// Stop playing all audio components
 		auto AudioActorComps = GetComponentsByClass(UAudioComponent::StaticClass());
@@ -149,7 +156,88 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 
 		// Apply health damage
 		ApplyExplosionDamage(GetActorLocation(), InstigatedBy, DamageCauser, WeaponCauser, Bullet);
+
+
+		for (int i = 0; i < VehicleWeaponsPtr.Num(); i++)
+		{
+			auto Weapon = VehicleWeaponsPtr[i];
+
+			if (Weapon)
+			{
+				Weapon->Destroy();
+			}
+		}
 	}
+}
+
+void ALandVehicle::SpawnVehicleSeatings()
+{
+	if (VehicletSeating.Num() <= 0) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	for (int i = 0; i < VehicletSeating.Num(); i++)
+	{
+		auto VehicleSeat = VehicletSeating[i];
+		VehicleSeat.OwningVehicle = this;
+
+		if (VehicleSeat.Character)
+		{
+			VehicleSeat.CharacterObj = GetWorld()->SpawnActor<ABaseCharacter>(VehicleSeat.Character, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+			if (VehicleSeat.CharacterObj)
+			{
+				ABaseCharacter* Character = VehicleSeat.CharacterObj;
+
+				// Set to use weapon, usually a mounted gun would be used
+				if (VehicleSeat.AssociatedWeapon > -1)
+				{
+					ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
+					CombatCharacter->SetMountedGun(VehicleWeaponsPtr[VehicleSeat.AssociatedWeapon]);
+					CombatCharacter->UseMountedGun();
+				}
+
+				Character->SetVehicleSeat(VehicleSeat);
+				// Attach to vehicle socket after setting vehicle seat to character as the capsule component will need to ignore the vehicle collision
+				Character->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
+
+				//OccupiedSeats.Add(VehicleSeat);
+
+			}
+		}
+	}
+}
+
+void ALandVehicle::SpawnVehicleWeapons()
+{
+	for (int i = 0; i < VehicleWeapons.Num(); i++)
+	{
+		auto VehicleWeapon = VehicleWeapons[i];
+		auto MyOwner = GetOwner() ? GetOwner() : this;
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = MyOwner;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		auto Weapon = GetWorld()->SpawnActor<AMountedGun>(VehicleWeapon.WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+		if (Weapon)
+		{
+			Weapon->SetOwner(MyOwner);
+			Weapon->SetWeaponProfile(TEXT("NoCollision"));
+			Weapon->SetAdjustBehindMG(false);
+			Weapon->SetCanTraceInteraction(false);
+			Weapon->SetCanExit(false);
+			Weapon->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
+			VehicleWeaponsPtr.Add(Weapon);
+		}
+	}
+
+	// We need to spawn the weapons before any characters in case any associated weapons have assigned for certain seats like turrets
+	SpawnVehicleSeatings();
 }
 
 void ALandVehicle::ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet)

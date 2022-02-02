@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "StructCollection.h"
 #include "LandVehicle.generated.h"
 
 class UCapsuleComponent;
@@ -48,6 +49,16 @@ protected:
 	/** Paramater name for the crossfade by param in the engine sound cue assigned to the engine audio component */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FName EngineSoundParamName;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<FVehicletSeating> VehicletSeating;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<FVehicleWeapon> VehicleWeapons;
+
+
+	TArray<AMountedGun*> VehicleWeaponsPtr;
 
 
 	/** This needs to be set on the tank's barrel socket for turret to face target */
@@ -100,6 +111,11 @@ protected:
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 
 	void Update();
+
+	void SpawnVehicleWeapons();
+
+	void SpawnVehicleSeatings();
+
 
 private:	
 	void ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet);

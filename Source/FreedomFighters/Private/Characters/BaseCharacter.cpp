@@ -6,7 +6,6 @@
 
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
-
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -14,18 +13,30 @@
 #include "Components/AudioComponent.h"
 #include "Components/SplineComponent.h"
 #include "Components/PostProcessComponent.h"
-
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-
 #include "Animation/AnimInstance.h"
-
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
-
 #include "Engine.h"
+
+
+void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
+{
+	if (Seat.OwningVehicle)
+	{
+		//GetCapsuleComponent()->IgnoreActorWhenMoving(Seat.OwningVehicle, Ignore);
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
+	}
+	else
+	{
+		GetCapsuleComponent()->SetCollisionProfileName(DefaultCapsuleCollisionName);
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
+	}
+}
 
 void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
 {
@@ -170,6 +181,7 @@ void ABaseCharacter::BeginPlay()
 	RetrieveAccessoryDataSet();
 	RetrieveDeathAnimDataSet();
 
+	DefaultCapsuleCollisionName = GetCapsuleComponent()->GetCollisionProfileName();
 	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	SprintSpeed = DefaultMaxWalkSpeed * 2.0f;
 

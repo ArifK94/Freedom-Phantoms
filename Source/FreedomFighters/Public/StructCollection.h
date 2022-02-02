@@ -451,6 +451,50 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FVehicletSeating
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		EAircraftRole Role;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FName SeatingSocketName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		int32 SeatPosition;
+
+	/** FVehicleWeapon list index, leave as -1 meaning it does have a weapon */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		int32 AssociatedWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float PitchMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float PitchMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float YawMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<ABaseCharacter> Character;
+	ABaseCharacter* CharacterObj;
+
+	AActor* OwningVehicle;
+
+	FVehicletSeating()
+	{
+		OwningVehicle = nullptr;
+		AssociatedWeapon = -1;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FVehicleWeapon
 {
 	GENERATED_USTRUCT_BODY()

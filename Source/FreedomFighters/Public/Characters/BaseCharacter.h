@@ -189,6 +189,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FAircraftSeating CurrentAircraftSeat;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FVehicletSeating CurrentVehicletSeat;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
 
@@ -205,6 +208,7 @@ protected:
 	UAnimInstance* AnimInstance;
 
 private:
+	FName DefaultCapsuleCollisionName;
 	FRotator RotationInput; // input for controller when looking around while taking cover and aiming
 
 	float LastCharDirection;
@@ -277,6 +281,7 @@ public:
 	void CoverMovement(float Value);
 	virtual void StopCover();
 
+	void SetVehicleSeat(FVehicletSeating Seat);
 	void SetAircraftSeat(FAircraftSeating Seating);
 	virtual void SetIsRepellingDown(bool IsRappelling);
 

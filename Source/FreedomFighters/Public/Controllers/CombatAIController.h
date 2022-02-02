@@ -29,13 +29,6 @@ class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
 
 private:
 	ACombatCharacter* OwningCombatCharacter;
-
-	UAIMovementComponent* AIMovementComponent;
-	UPatrolFollowerComponent* PatrolFollowerComponent;
-	UCoverFinderComponent* CoverFinderComponent;
-	UTargetFinderComponent* TargetFinderComponent;
-	UMountedGunFinderComponent* MountedGunFinderComponent;
-
 	APumpActionWeapon* PumpActionWeapon;
 	AActor* LastSeenEnemyActor;
 
@@ -51,6 +44,22 @@ private:
 
 	FVector ChosenCoverPoint;
 	FVector LastSeenPosition;
+
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UAIMovementComponent* AIMovementComponent;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UPatrolFollowerComponent* PatrolFollowerComponent;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UCoverFinderComponent* CoverFinderComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTargetFinderComponent* TargetFinderComponent;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UMountedGunFinderComponent* MountedGunFinderComponent;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
