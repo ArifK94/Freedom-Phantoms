@@ -170,10 +170,15 @@ void ACustomPlayerController::InitBeginPlayCommon()
 
 		OnCombatModeUpdated(OwningCombatCharacter);
 
-		if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+		if (OwningCombatCharacter->GetMountedGun())
+		{
+			OwningCombatCharacter->GetMountedGun()->SetPlayerControl(this, OwningCombatCharacter);
+		}
+		else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
 		{
 			SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
 		}
+	 
 
 		// Character can be spawned in to use MG such as helicopter gunner
 		UseMountedGun();
@@ -671,7 +676,7 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 	// else if in an aircraft
 	// mounted gun has its own control input so use that  in the next condition
 	// allow player to rotate around character when repelling
-	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown())
+	else if (OwningCombatCharacter && OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown())
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
@@ -683,11 +688,11 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, true); // Roam around aircraft view
 		}
 	}
-	else if (OwningCombatCharacter->IsUsingMountedWeapon())	// When using MG
+	else if (OwningCombatCharacter && OwningCombatCharacter->IsUsingMountedWeapon())	// When using MG
 	{
 		OwningCombatCharacter->GetMountedGun()->AddControllerPitchInput(Val);
 	}
-	else if (OwningCombatCharacter->IsTakingCover() && OwningCombatCharacter->IsAtCoverCorner())
+	else if (OwningCombatCharacter && OwningCombatCharacter->IsTakingCover() && OwningCombatCharacter->IsAtCoverCorner())
 	{
 		OwningCombatCharacter->AddControllerPitchInput(Val);
 	}
@@ -709,7 +714,7 @@ void ACustomPlayerController::AddControllerYawInput(float Val)
 	{
 		ControlledAircraft->AddControllerYawInput(Val);
 	}
-	else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown())
+	else if (OwningCombatCharacter && OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown())
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
@@ -721,11 +726,11 @@ void ACustomPlayerController::AddControllerYawInput(float Val)
 			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, true);
 		}
 	}
-	else if (OwningCombatCharacter->IsUsingMountedWeapon())
+	else if (OwningCombatCharacter && OwningCombatCharacter->IsUsingMountedWeapon())
 	{
 		OwningCombatCharacter->GetMountedGun()->AddControllerYawInput(Val);
 	}
-	else if (OwningCombatCharacter->IsTakingCover() && OwningCombatCharacter->IsAtCoverCorner())
+	else if (OwningCombatCharacter && OwningCombatCharacter->IsTakingCover() && OwningCombatCharacter->IsAtCoverCorner())
 	{
 		OwningCombatCharacter->AddControllerYawInput(Val);
 	}

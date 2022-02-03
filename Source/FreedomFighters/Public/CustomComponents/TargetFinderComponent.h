@@ -42,6 +42,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<TSubclassOf<AActor>> ClassFilters;
 
+	/** Type of actors to ignore for the line trace for objects */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<TSubclassOf<AActor>> IgnoreActorClasses;
+
+	/** Type of actors to ignore for the line trace for objects */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<AActor*> IgnoreActors;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<TEnumAsByte<EObjectTypeQuery>> CollisionChannels;
 
@@ -66,6 +74,8 @@ private:
 
 	bool IsActorFiltered(AActor* Actor);
 
+	bool IsActorToIgnore(AActor* Actor);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -76,5 +86,17 @@ public:
 	void SetFindTargetPerFrame(bool Value) { FindTargetPerFrame = Value; }
 
 	void AddClassFilter(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
+	
+	void AddIgnoreClass(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
+
+	void AddIgnoreActor(AActor* Actor) { IgnoreActors.Add(Actor); }
+
+
+	UFUNCTION(BlueprintCallable)
+		static void AddIgnoreClass(AActor* InOwner, TSubclassOf<AActor> InClass);
+
+	UFUNCTION(BlueprintCallable)
+		static void AddIgnoreActor(AActor* InOwner, AActor* InActorIgnore);
+
 		
 };

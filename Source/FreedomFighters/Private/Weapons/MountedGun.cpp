@@ -48,6 +48,7 @@ AMountedGun::AMountedGun()
 	AdjustBehindMG = true;
 	CanTraceInteraction = true;
 	CanExit = true;
+	UseControllerRotationYaw = false;
 
 	StepBackAmount = 50.0f;
 
@@ -62,7 +63,7 @@ void AMountedGun::BeginPlay()
 	TargetFOV = 0.0f;
 
 	FollowCamera->AttachToComponent(getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraPositionSocket);
-	
+
 	// So that the weapon fires from the FollowCamera view
 	SetComponentEyeViewPoint(FollowCamera);
 
@@ -126,25 +127,20 @@ AActor* AMountedGun::OnPickup_Implementation(APawn* InPawn, AController* InContr
 
 void AMountedGun::AddControllerPitchInput(float Val)
 {
-	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, PitchMin, PitchMax);
-	RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
-	
-	FollowCamera->SetRelativeRotation(RotationInput);
+	RotationInput.Pitch = FMath::Clamp(RotationInput.Pitch + Val, PitchMin, PitchMax);
 }
 
 void AMountedGun::AddControllerYawInput(float Val)
 {
-	RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, YawMin, YawMax);
-	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
-
-	FollowCamera->SetRelativeRotation(RotationInput);
+	RotationInput.Yaw = FMath::Clamp(RotationInput.Yaw + Val, YawMin, YawMax);
 }
 
 void AMountedGun::SetRotatioInput(FRotator Rotation)
 {
-	RotationInput = Rotation;
+	RotationInput.Pitch = FMath::Clamp(RotationInput.Pitch + Rotation.Pitch, PitchMin, PitchMax);
+	RotationInput.Yaw = FMath::Clamp(RotationInput.Yaw + Rotation.Yaw, YawMin, YawMax);
 
-	FollowCamera->SetWorldRotation(RotationInput);
+	//RotationInput = Rotation;
 }
 
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character)
@@ -168,7 +164,7 @@ void AMountedGun::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 	// Get owner to step back behind the mounted gun
 	if (MyOwner)
 	{
-		FVector NegativeVector =  UKismetMathLibrary::NegateVector(MyOwner->GetActorForwardVector());
+		FVector NegativeVector = UKismetMathLibrary::NegateVector(MyOwner->GetActorForwardVector());
 		FVector TargetLocation = (NegativeVector * StepBackAmount) + MyOwner->GetActorLocation();
 		MyOwner->SetActorLocation(TargetLocation);
 	}

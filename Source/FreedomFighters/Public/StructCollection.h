@@ -518,12 +518,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float YawMax;
 
+	/** Allow the character to rotate in the Yaw direction with the MG */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool AttachCharacterToWeapon;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;
 
 	FVehicleWeapon()
 	{
-
+		AttachCharacterToWeapon = false;
 	}
 };
 

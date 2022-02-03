@@ -7,6 +7,7 @@
 #include "Characters/BaseCharacter.h"
 #include "Characters/CombatCharacter.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/TargetFinderComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -107,6 +108,27 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 	{
 		GetWorldTimerManager().ClearTimer(THandler_Update);
 
+		for (int i = 0; i < VehicleWeaponsPtr.Num(); i++)
+		{
+			auto Weapon = VehicleWeaponsPtr[i];
+
+			if (Weapon)
+			{
+				Weapon->Destroy();
+			}
+		}
+
+		// Remove all passengers
+		for (int i = 0; i < VehicletSeating.Num(); i++)
+		{
+			auto Seat = VehicletSeating[i];
+
+			if (Seat.CharacterObj)
+			{
+				Seat.CharacterObj->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			}
+		}
+
 
 		// Stop playing all audio components
 		auto AudioActorComps = GetComponentsByClass(UAudioComponent::StaticClass());
@@ -156,17 +178,6 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 
 		// Apply health damage
 		ApplyExplosionDamage(GetActorLocation(), InstigatedBy, DamageCauser, WeaponCauser, Bullet);
-
-
-		for (int i = 0; i < VehicleWeaponsPtr.Num(); i++)
-		{
-			auto Weapon = VehicleWeaponsPtr[i];
-
-			if (Weapon)
-			{
-				Weapon->Destroy();
-			}
-		}
 	}
 }
 
@@ -192,17 +203,22 @@ void ALandVehicle::SpawnVehicleSeatings()
 			{
 				ABaseCharacter* Character = VehicleSeat.CharacterObj;
 
+				Character->SetVehicleSeat(VehicleSeat);
+				// Attach to vehicle socket after setting vehicle seat to character as the capsule component will need to ignore the vehicle collision
+				Character->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
+
 				// Set to use weapon, usually a mounted gun would be used
 				if (VehicleSeat.AssociatedWeapon > -1)
 				{
 					ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
 					CombatCharacter->SetMountedGun(VehicleWeaponsPtr[VehicleSeat.AssociatedWeapon]);
 					CombatCharacter->UseMountedGun();
-				}
+					CombatCharacter->AttachToComponent(VehicleWeaponsPtr[VehicleSeat.AssociatedWeapon]->getMeshComp(), FAttachmentTransformRules::KeepWorldTransform);
 
-				Character->SetVehicleSeat(VehicleSeat);
-				// Attach to vehicle socket after setting vehicle seat to character as the capsule component will need to ignore the vehicle collision
-				Character->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
+
+					// Ignore this vehicle when using target finder component
+					UTargetFinderComponent::AddIgnoreActor(CombatCharacter, this);
+				}
 
 				//OccupiedSeats.Add(VehicleSeat);
 
@@ -231,6 +247,14 @@ void ALandVehicle::SpawnVehicleWeapons()
 			Weapon->SetAdjustBehindMG(false);
 			Weapon->SetCanTraceInteraction(false);
 			Weapon->SetCanExit(false);
+			Weapon->SetControllerRotationYaw(VehicleWeapon.UseControllerRotationYaw);
+
+			Weapon->SetPitchMin(VehicleWeapon.PitchMin);
+			Weapon->SetPitchMax(VehicleWeapon.PitchMax);
+			Weapon->SetYawMin(VehicleWeapon.YawMin);
+			Weapon->SetYawMax(VehicleWeapon.YawMax);
+
+
 			Weapon->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
 			VehicleWeaponsPtr.Add(Weapon);
 		}

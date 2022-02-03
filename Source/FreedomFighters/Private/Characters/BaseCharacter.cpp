@@ -27,7 +27,6 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 {
 	if (Seat.OwningVehicle)
 	{
-		//GetCapsuleComponent()->IgnoreActorWhenMoving(Seat.OwningVehicle, Ignore);
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
 	}

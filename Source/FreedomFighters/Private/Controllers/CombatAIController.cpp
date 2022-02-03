@@ -426,7 +426,7 @@ void ACombatAIController::FindEnemy()
 		}
 
 
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetUseControllerRotationYaw())
 		{
 			FVector Start = ChosenTarget->GetActorLocation() - OwningCombatCharacter->GetActorLocation();
 			Start = UKismetMathLibrary::InverseTransformDirection(OwningCombatCharacter->FollowCamera->GetComponentTransform(), Start);

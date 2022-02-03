@@ -54,6 +54,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		bool CanExit;
 
+	/** Rotate the character as the MG rotates */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+		bool UseControllerRotationYaw;
+
 	/** Make owner step back after dropping the MG, how much of a step back should they take? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		float StepBackAmount;
@@ -153,6 +157,10 @@ public:
 		return CanExit;
 	}
 
+	bool GetUseControllerRotationYaw() {
+		return UseControllerRotationYaw;
+	}
+
 	void SetPotentialOwner(AActor* PotOwner) {
 		PotentialOwner = PotOwner;
 	}
@@ -164,9 +172,13 @@ public:
 	void SetCanTraceInteraction(bool CanLineTrace) {
 		CanTraceInteraction = CanLineTrace;
 	}
-
+	
 	void SetCanExit(bool HasExit) {
 		CanExit = HasExit;
+	}
+
+	void SetControllerRotationYaw(bool Value) {
+		UseControllerRotationYaw = Value;
 	}
 
 	void SetPitchMin(float Value) {
