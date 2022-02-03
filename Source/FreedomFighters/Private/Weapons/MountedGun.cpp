@@ -48,6 +48,8 @@ AMountedGun::AMountedGun()
 	AdjustBehindMG = true;
 	CanTraceInteraction = true;
 	CanExit = true;
+	ClampPitch = true;
+	ClampYaw = true;
 
 	StepBackAmount = 50.0f;
 
@@ -126,20 +128,28 @@ AActor* AMountedGun::OnPickup_Implementation(APawn* InPawn, AController* InContr
 
 void AMountedGun::AddControllerPitchInput(float Val)
 {
-	RotationInput.Pitch = FMath::Clamp(RotationInput.Pitch + Val, PitchMin, PitchMax);
+	if (ClampPitch) {
+		RotationInput.Pitch = FMath::Clamp(RotationInput.Pitch + Val, PitchMin, PitchMax);
+	}
+	else {
+		RotationInput.Pitch += Val;
+	}
 }
 
 void AMountedGun::AddControllerYawInput(float Val)
 {
-	RotationInput.Yaw = FMath::Clamp(RotationInput.Yaw + Val, YawMin, YawMax);
+	if (ClampYaw) {
+		RotationInput.Yaw = FMath::Clamp(RotationInput.Yaw + Val, YawMin, YawMax);
+	}
+	else {
+		RotationInput.Yaw += Val;
+	}
 }
 
 void AMountedGun::SetRotatioInput(FRotator Rotation)
 {
-	RotationInput.Pitch = FMath::Clamp(RotationInput.Pitch + Rotation.Pitch, PitchMin, PitchMax);
-	RotationInput.Yaw = FMath::Clamp(RotationInput.Yaw + Rotation.Yaw, YawMin, YawMax);
-
-	//RotationInput = Rotation;
+	AddControllerPitchInput(Rotation.Pitch);
+	AddControllerYawInput(Rotation.Yaw);
 }
 
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character)

@@ -32,14 +32,22 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		float YawMax;
 
+	/** Might want to allow an infinite Pitch rotation */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+		bool ClampPitch;
+
+	/** Might want to allow an infinite Yaw rotation */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+		bool ClampYaw;
+
 	/** Message to be displayed on the UI */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		FName StopUsingMessage;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		FName CameraPositionSocket;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		FName CharacterPositionSocket;
 
 	/** True sets character to stand behind MG, false does not set it as this can be used when character was spawned to use the mounted gun in a helicopter as a mounted gunner */
