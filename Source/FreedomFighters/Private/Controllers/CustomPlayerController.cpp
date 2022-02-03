@@ -151,6 +151,10 @@ void ACustomPlayerController::BeginPlay()
 
 void ACustomPlayerController::InitBeginPlayCommon()
 {
+	if (!OwningCombatCharacter) {
+		return;
+	}
+
 	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
 
 	if (GameStateBaseCustom)

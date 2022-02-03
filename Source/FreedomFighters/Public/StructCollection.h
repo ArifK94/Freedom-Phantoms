@@ -520,7 +520,19 @@ public:
 
 	/** Allow the character to rotate in the Yaw direction with the MG */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool ClampPitch;
+
+	/** Might want to allow an infinite orbit */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool ClampYaw;
+
+	/** Allow the character to rotate in the Yaw direction with the MG */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		bool AttachCharacterToWeapon;
+
+	/** The socket name on the weapon which will allow the character to rotate with the turret, this is usually the socket that get rotated on the Yaw direction when moving th turret */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FName WeaponAttachmentName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;

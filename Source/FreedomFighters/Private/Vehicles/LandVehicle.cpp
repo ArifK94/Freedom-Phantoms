@@ -210,14 +210,24 @@ void ALandVehicle::SpawnVehicleSeatings()
 				// Set to use weapon, usually a mounted gun would be used
 				if (VehicleSeat.AssociatedWeapon > -1)
 				{
-					ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
-					CombatCharacter->SetMountedGun(VehicleWeaponsPtr[VehicleSeat.AssociatedWeapon]);
-					CombatCharacter->UseMountedGun();
-					CombatCharacter->AttachToComponent(VehicleWeaponsPtr[VehicleSeat.AssociatedWeapon]->getMeshComp(), FAttachmentTransformRules::KeepWorldTransform);
+					auto Index = VehicleSeat.AssociatedWeapon;
+					auto Weapon = VehicleWeaponsPtr[Index];
 
+					if (Weapon)
+					{
+						ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
+						CombatCharacter->SetMountedGun(Weapon);
+						CombatCharacter->UseMountedGun();
 
-					// Ignore this vehicle when using target finder component
-					UTargetFinderComponent::AddIgnoreActor(CombatCharacter, this);
+						if (VehicleWeapons[Index].AttachCharacterToWeapon)
+						{
+							CombatCharacter->AttachToActor(Weapon, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapons[Index].WeaponAttachmentName);
+						}
+
+						// Ignore this vehicle when using target finder component
+						UTargetFinderComponent::AddIgnoreActor(CombatCharacter, this);
+					}
+
 				}
 
 				//OccupiedSeats.Add(VehicleSeat);
@@ -243,11 +253,9 @@ void ALandVehicle::SpawnVehicleWeapons()
 		if (Weapon)
 		{
 			Weapon->SetOwner(MyOwner);
-			Weapon->SetWeaponProfile(TEXT("NoCollision"));
 			Weapon->SetAdjustBehindMG(false);
 			Weapon->SetCanTraceInteraction(false);
 			Weapon->SetCanExit(false);
-			Weapon->SetControllerRotationYaw(VehicleWeapon.UseControllerRotationYaw);
 
 			Weapon->SetPitchMin(VehicleWeapon.PitchMin);
 			Weapon->SetPitchMax(VehicleWeapon.PitchMax);

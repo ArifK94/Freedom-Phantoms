@@ -48,7 +48,6 @@ AMountedGun::AMountedGun()
 	AdjustBehindMG = true;
 	CanTraceInteraction = true;
 	CanExit = true;
-	UseControllerRotationYaw = false;
 
 	StepBackAmount = 50.0f;
 
