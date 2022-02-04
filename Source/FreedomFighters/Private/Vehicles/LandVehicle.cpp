@@ -4,6 +4,7 @@
 #include "Vehicles/LandVehicle.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
+#include "Weapons/WeaponBullet.h"
 #include "Characters/BaseCharacter.h"
 #include "Characters/CombatCharacter.h"
 #include "CustomComponents/HealthComponent.h"
@@ -108,6 +109,17 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 	{
 		GetWorldTimerManager().ClearTimer(THandler_Update);
 
+		// Remove all passengers
+		for (int i = 0; i < VehicleCharactersPtr.Num(); i++)
+		{
+			auto Character = VehicleCharactersPtr[i];
+
+			if (Character)
+			{
+				Character->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			}
+		}
+
 		for (int i = 0; i < VehicleWeaponsPtr.Num(); i++)
 		{
 			auto Weapon = VehicleWeaponsPtr[i];
@@ -118,25 +130,17 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 			}
 		}
 
-		// Remove all passengers
-		for (int i = 0; i < VehicletSeating.Num(); i++)
-		{
-			auto Seat = VehicletSeating[i];
 
-			if (Seat.CharacterObj)
-			{
-				Seat.CharacterObj->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			}
-		}
 
 
 		// Stop playing all audio components
-		auto AudioActorComps = GetComponentsByClass(UAudioComponent::StaticClass());
-		for (int i = 0; i < AudioActorComps.Num(); i++)
+		auto AudioActorComps = GetComponents();
+		for (auto& Elem : AudioActorComps)
 		{
-			auto AudioComp = Cast<UAudioComponent>(AudioActorComps[i]);
+			auto AudioComp = Cast<UAudioComponent>(Elem);
 			if (AudioComp)
 			{
+				AudioComp->Sound = nullptr;
 				AudioComp->Stop();
 			}
 		}
@@ -174,7 +178,6 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 
 		// Blast away nearby physics actors
 		RadialForceComp->FireImpulse();
-
 
 		// Apply health damage
 		ApplyExplosionDamage(GetActorLocation(), InstigatedBy, DamageCauser, WeaponCauser, Bullet);
@@ -229,6 +232,8 @@ void ALandVehicle::SpawnVehicleSeatings()
 					}
 
 				}
+
+				VehicleCharactersPtr.Add(Character);
 
 				//OccupiedSeats.Add(VehicleSeat);
 

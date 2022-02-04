@@ -158,6 +158,25 @@ bool AWeapon::CanInteract_Implementation(APawn* InPawn, AController* InControlle
 
 void AWeapon::OnDestroyWeapon(AActor* Actor)
 {
+	StopFire();
+	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
+	GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
+
+	CurrentChargeUpTime = 0.f;
+	ChargingAudioComponent->SetFloatParameter(ChargeSoundParamName, CurrentChargeUpTime);
+
+	// Stop playing all audio components
+	auto AudioActorComps = GetComponents();
+	for (auto& Elem : AudioActorComps)
+	{
+		auto AudioComp = Cast<UAudioComponent>(Elem);
+		if (AudioComp)
+		{
+			AudioComp->Sound = nullptr;
+			AudioComp->Stop();
+		}
+	}
+
 	TArray<AActor*> AttachedActors;
 	GetAttachedActors(AttachedActors);
 

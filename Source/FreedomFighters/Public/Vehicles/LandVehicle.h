@@ -57,7 +57,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FVehicleWeapon> VehicleWeapons;
 
-
+	TArray<ABaseCharacter*> VehicleCharactersPtr;
 	TArray<AMountedGun*> VehicleWeaponsPtr;
 
 

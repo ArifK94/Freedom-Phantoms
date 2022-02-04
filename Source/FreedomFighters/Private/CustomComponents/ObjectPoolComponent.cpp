@@ -33,7 +33,7 @@ void UObjectPoolComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 
 		if (PoolableActor)
 		{
-			PoolableActor->Destroy();
+			//PoolableActor->Destroy();
 		}
 	}
 }
