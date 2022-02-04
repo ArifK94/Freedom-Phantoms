@@ -45,6 +45,7 @@ private:
 	FVector ChosenCoverPoint;
 	FVector LastSeenPosition;
 
+	float m_DelaTime;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UAIMovementComponent* AIMovementComponent;
@@ -196,6 +197,7 @@ private:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;

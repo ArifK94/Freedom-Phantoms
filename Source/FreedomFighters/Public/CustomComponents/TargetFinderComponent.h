@@ -61,6 +61,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		AActor* FindTarget();
 
+	FRotator RotateTowardsTarget(AActor* OwnerActor, AActor* TargetActor, FRotator CurrentRotation, FRotator& TargetRotation, float DeltaTime, float LerpSpeed);
+
 	bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
 
 	//UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);

@@ -290,6 +290,40 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	}
 }
 
+void ACombatAIController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	m_DelaTime = DeltaTime;
+
+	if (OwningCombatCharacter->GetHealthComp()->IsAlive())
+	{
+		if (EnemyActor)
+		{
+			// if using a mounted gun
+			if (OwningCombatCharacter->GetMountedGun())
+			{
+				auto TargetRotation = FRotator::ZeroRotator;
+
+				FVector EyeLocation;
+				FRotator EyeRotation;
+				GetActorEyesViewPoint(EyeLocation, EyeRotation); // Grab the camera view points, this is a fail safe if vehicle weapons do not exist for some reason
+
+				auto TargetLocation = EnemyActor->GetActorLocation() - EyeLocation;
+				auto RootBone = OwningCombatCharacter->GetMountedGun()->getMeshComp()->GetBoneName(0);
+				auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(OwningCombatCharacter->GetMountedGun()->getMeshComp()->GetSocketTransform(RootBone), TargetLocation);
+				TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
+
+				auto TargetRot = UKismetMathLibrary::RInterpTo(OwningCombatCharacter->GetMountedGun()->GetRotationInput(), TargetRotation, GetWorld()->DeltaTimeSeconds, 1.5f);
+				OwningCombatCharacter->GetMountedGun()->SetRotationInput(TargetRot);
+			}
+			else
+			{
+				SetFocus(EnemyActor);
+			}
+		}
+	}
+}
+
 void ACombatAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
@@ -452,16 +486,11 @@ void ACombatAIController::FindEnemy()
 
 		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 		EnemyActor = ChosenTarget;
-		SetFocus(ChosenTarget); // face in the direction of the enemy
 
 		// Being firing at enemy
 		if (!THandler_ShootEnemy.IsValid()) {
 			GetWorldTimerManager().SetTimer(THandler_ShootEnemy, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
 		}
-
-		//if (!THandler_FindCover.IsValid()) {
-		//	GetWorldTimerManager().SetTimer(THandler_FindCover, this, &ACombatAIController::MoveToCover, FMath::RandRange(2.f, 5.f), true);
-		//}
 
 		// Do find a random point if current command is defend
 		// & is set to use the mounted gun
@@ -578,13 +607,6 @@ void ACombatAIController::ShootAtEnemy()
 			OwningCombatCharacter->BeginAim();
 		}
 
-		// if using a mounted gun
-		if (OwningCombatCharacter->GetMountedGun())
-		{
-			FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
-			OwningCombatCharacter->GetMountedGun()->SetRotatioInput(TargetRot);
-		}
-
 		if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
 		{
 			ReloadWeapon();
@@ -629,37 +651,48 @@ void ACombatAIController::ShootAtEnemy()
 	else
 	{
 		OwningCombatCharacter->EndFire();
-		GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
 
-		// Focus on the last seen enemy
-		if (LastSeenEnemyActor) 
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
 		{
-			OwningCombatCharacter->BeginAim();
-
-			// Move near nearest enemy last seen
-			if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander ||
-				CurrentBehaviourState != AIBehaviourState::PriorityDestination ||
-				CurrentBehaviourState != AIBehaviourState::MovingToLastSeenEnemy)
+			OwningCombatCharacter->EndAim();
+		}
+		else
+		{
+			// Focus on the last seen enemy
+			if (LastSeenEnemyActor)
 			{
-				SetBehaviourState(AIBehaviourState::MovingToLastSeenEnemy);
+				OwningCombatCharacter->BeginAim();
 
-
-				if (CurrentBehaviourState == AIBehaviourState::MovingToLastSeenEnemy && MoveToLastSeenEnemy)
+				// Move near nearest enemy last seen
+				if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander ||
+					CurrentBehaviourState != AIBehaviourState::PriorityDestination ||
+					CurrentBehaviourState != AIBehaviourState::MovingToLastSeenEnemy)
 				{
-					if (OwningCombatCharacter->GetMountedGun())
-					{
-						OwningCombatCharacter->DropMountedGun();
-					}
+					SetBehaviourState(AIBehaviourState::MovingToLastSeenEnemy);
 
-					// Go near the last seen postion on a random radius
-					float Radius = FMath::RandRange(500.f, 1000.f);
-					TArray<AActor*> IgnoreActors;
-					TargetDestination = AIMovementComponent->FindNearbyDestinationPoint(LastSeenPosition, Radius, IgnoreActors);
-					AIMovementComponent->MoveToDestination(TargetDestination, Radius, CurrentBehaviourState, false, true);
-					SetFocalPoint(LastSeenPosition);
+
+					if (CurrentBehaviourState == AIBehaviourState::MovingToLastSeenEnemy && MoveToLastSeenEnemy)
+					{
+						if (OwningCombatCharacter->GetMountedGun())
+						{
+							OwningCombatCharacter->DropMountedGun();
+						}
+
+						// Go near the last seen postion on a random radius
+						float Radius = FMath::RandRange(500.f, 1000.f);
+						TArray<AActor*> IgnoreActors;
+						TargetDestination = AIMovementComponent->FindNearbyDestinationPoint(LastSeenPosition, Radius, IgnoreActors);
+						AIMovementComponent->MoveToDestination(TargetDestination, Radius, CurrentBehaviourState, false, true);
+						SetFocalPoint(LastSeenPosition);
+					}
 				}
 			}
 		}
+
+
+
+		GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
+
 	}
 
 }

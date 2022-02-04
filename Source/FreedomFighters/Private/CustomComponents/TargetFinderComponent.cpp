@@ -5,6 +5,7 @@
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
 #include "Weapons/Weapon.h"
+#include "FreedomFighters/FreedomFighters.h"
 
 #include "GameFramework/Character.h"
 #include "Components/SphereComponent.h"
@@ -187,34 +188,10 @@ AActor* UTargetFinderComponent::FindTarget()
 
 	}
 
-	if (ShowDebugTrace && TargetActor)
-	{
-		DrawDebugLine(GetWorld(), EyeLocation, TargetActor->GetActorLocation(), FColor::Red, false, 2.f);
-	}
-
 	OnTargetSearch.Broadcast(TargetActor);
 	return TargetActor;
 }
 
-
-bool UTargetFinderComponent::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
-{
-	if (ActorA == nullptr || TargetActor == nullptr) {
-		return false;
-	}
-
-	FVector MGForwardPos = UKismetMathLibrary::GetForwardVector(ActorA->GetActorRotation());
-	FVector Normalised = TargetActor->GetActorLocation() - ActorA->GetActorLocation();
-	UKismetMathLibrary::Vector_Normalize(Normalised);
-	float Angle = UKismetMathLibrary::Dot_VectorVector(MGForwardPos, Normalised);
-
-	if (Angle < -0.7f)
-	{
-		return true;
-	}
-
-	return false;
-}
 
 bool UTargetFinderComponent::IsActorFiltered(AActor* Actor)
 {
@@ -250,9 +227,10 @@ bool UTargetFinderComponent::IsActorToIgnore(AActor* Actor)
 
 bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
 {
+	auto Owner = GetOwner();
 	FCollisionQueryParams QueryParams;
 	QueryParams.bTraceComplex = false;
-	QueryParams.AddIgnoredActor(GetOwner());
+	QueryParams.AddIgnoredActor(Owner);
 
 	// Ignore specified actors
 	for (int i = 0; i < IgnoreActors.Num(); i++)
@@ -269,7 +247,6 @@ bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector
 	{
 		ObjectParams.AddObjectTypesToQuery(UEngineTypes::ConvertToCollisionChannel((*Iter).GetValue()));
 	}
-
 	if (ShowDebugTrace)
 	{
 		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.f);
@@ -285,30 +262,26 @@ bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector
 		QueryParams
 	);
 
-
 	for (auto HitData : OutHits)
 	{
 		auto HitActor = HitData.GetActor();
-		if (HitActor) // pointer check
+		if (HitActor)
 		{
 			// If actor hit is not to be ignored then return this hit data
-			if (!IsActorToIgnore(HitActor))
+			if (!IsActorToIgnore(HitActor) && HitActor != Owner)
 			{
 				OutHit = HitData;
-				break;
+
+				if (ShowDebugTrace)
+				{
+					DrawDebugLine(GetWorld(), OutHit.ImpactPoint, End, FColor::Red, false, 2.f);
+				}
 			}
 		}
 	}
 
 
 	return IsHit;
-
-	//return GetWorld()->LineTraceSingleByObjectType(
-	//	OutHit,
-	//	Start,
-	//	End,
-	//	ObjectParams,
-	//	QueryParams);
 }
 
 
@@ -348,8 +321,46 @@ void UTargetFinderComponent::AddIgnoreActor(AActor* InOwner, AActor* InActorIgno
 	}
 }
 
+FRotator UTargetFinderComponent::RotateTowardsTarget(AActor* OwnerActor, AActor* TargetActor, FRotator CurrentRotation, FRotator& TargetRotation, float DeltaTime, float LerpSpeed)
+{
+	if (!TargetActor) 
+	{
+		TargetRotation = FRotator::ZeroRotator;
+	}
+	else
+	{
+		FVector EyeLocation;
+		FRotator EyeRotation;
+		OwnerActor->GetActorEyesViewPoint(EyeLocation, EyeRotation); // Grab actor eye viewpoint
+
+		auto TargetLocation = TargetActor->GetActorLocation() - EyeLocation;
+		//auto RootBone = MeshComp->GetBoneName(0);
+		//auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComp->GetSocketTransform(RootBone), TargetLocation);
+		TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetLocation);
+	}
+
+	return UKismetMathLibrary::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, LerpSpeed);
+}
 
 
+bool UTargetFinderComponent::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
+{
+	if (ActorA == nullptr || TargetActor == nullptr) {
+		return false;
+	}
+
+	FVector MGForwardPos = UKismetMathLibrary::GetForwardVector(ActorA->GetActorRotation());
+	FVector Normalised = TargetActor->GetActorLocation() - ActorA->GetActorLocation();
+	UKismetMathLibrary::Vector_Normalize(Normalised);
+	float Angle = UKismetMathLibrary::Dot_VectorVector(MGForwardPos, Normalised);
+
+	if (Angle < -0.7f)
+	{
+		return true;
+	}
+
+	return false;
+}
 
 
 

@@ -146,10 +146,21 @@ void AMountedGun::AddControllerYawInput(float Val)
 	}
 }
 
-void AMountedGun::SetRotatioInput(FRotator Rotation)
+void AMountedGun::SetRotationInput(FRotator Rotation)
 {
-	AddControllerPitchInput(Rotation.Pitch);
-	AddControllerYawInput(Rotation.Yaw);
+	if (ClampPitch) {
+		RotationInput.Pitch = FMath::Clamp(Rotation.Pitch, PitchMin, PitchMax);
+	}
+	else {
+		RotationInput.Pitch = Rotation.Pitch;
+	}
+
+	if (ClampYaw) {
+		RotationInput.Yaw = FMath::Clamp(Rotation.Yaw, YawMin, YawMax);
+	}
+	else {
+		RotationInput.Yaw = Rotation.Yaw;
+	}
 }
 
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character)

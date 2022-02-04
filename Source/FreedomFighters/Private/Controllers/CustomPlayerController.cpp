@@ -760,6 +760,10 @@ void ACustomPlayerController::LookUpAtRate(float Rate)
 
 void ACustomPlayerController::MoveForward(float Value)
 {
+	if (!OwningCombatCharacter) {
+		return;
+	}
+
 	if (Value == 0.0f) {
 		return;
 	}
@@ -797,6 +801,10 @@ void ACustomPlayerController::MoveForward(float Value)
 
 void ACustomPlayerController::MoveRight(float Value)
 {
+	if (!OwningCombatCharacter) {
+		return;
+	}
+
 	OwningCombatCharacter->SetRightInputValue(Value);
 
 	if (Value == 0.0f) {
