@@ -384,7 +384,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 					FHealthParameters HealthParameters;
 					HealthParameters.DamagedActor = DamagedActor;
 					HealthParameters.DamageCauser = MyOwner;
-					HealthParameters.DamageCauser = MyOwner->GetInstigatorController();
+					HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
 					HealthParameters.WeaponCauser = WeaponParent;
 					HealthParameters.Bullet = this;
 					HealthParameters.HitInfo = Hit;
