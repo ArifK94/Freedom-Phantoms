@@ -103,7 +103,7 @@ public:
 	ALandVehicle();
 
 	UFUNCTION(BlueprintCallable)
-		virtual void OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
+		virtual void OnHealthUpdate(FHealthParameters InHealthParameters);
 
 protected:
 	virtual void BeginPlay() override;
@@ -118,6 +118,6 @@ protected:
 
 
 private:	
-	void ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet);
+	void ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters InHealthParams);
 	//void AddKill(UHealthComponent* DamagedActorHealth, UHealthComponent* OwnerHealth);
 };

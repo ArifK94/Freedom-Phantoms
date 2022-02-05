@@ -33,7 +33,7 @@ public:
 
 private:
 	UFUNCTION(BlueprintCallable)
-		void OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
+		void OnHealthChanged(FHealthParameters InHealthParameters);
 
 protected:
 	virtual void BeginPlay() override;

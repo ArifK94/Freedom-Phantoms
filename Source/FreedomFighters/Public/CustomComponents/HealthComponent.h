@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "EnumCollection.h"
+#include "StructCollection.h"
 #include "HealthComponent.generated.h"
 
 // OnHealthChanged Event
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_NineParams(FOnHealthChangedSignature, UHealthComponent*, HealthComp, float, Health, float, HealthDelta, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser, AWeapon*, WeaponCauser, AWeaponBullet*, Bullet, FHitResult, HitInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, FHealthParameters, HealthParameters);
 
 class AWeapon;
 class AWeaponBullet;
@@ -75,9 +76,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	static bool IsAlive(AActor* Owner);
 
-	void OnDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
+	void OnDamage(FHealthParameters HealthParameters);
 
-	float getCurrentHealth() {
+	float GetCurrentHealth() {
 		return Health;
 	}
 
@@ -88,6 +89,10 @@ public:
 	void SetDeathType(DeathType type)
 	{
 		deathType = type;
+	}
+
+	void SetHealth(float Value) {
+		Health = Value;
 	}
 
 	void SetRegenerateHealth(bool Value) {

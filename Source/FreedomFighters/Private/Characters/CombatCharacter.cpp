@@ -164,9 +164,9 @@ void ACombatCharacter::BeginPlay()
 	}
 }
 
-void ACombatCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
-	Super::OnHealthUpdate(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
+	Super::OnHealthUpdate(InHealthParameters);
 
 	if (!HealthComp->IsAlive())
 	{
@@ -995,14 +995,14 @@ void ACombatCharacter::SetIsRepellingDown(bool IsRappelling)
 	UpdateCombatMode();
 }
 
-void ACombatCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ACombatCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 {
-	if (isUsingMountedWeapon && !Bullet->IsExplosive())
+	if (isUsingMountedWeapon && !InHealthParameters.IsExplosive)
 	{
 		DeathAnimationAsset = DeathAnimation->MountedGuns[rand() % DeathAnimation->MountedGuns.Num()];
 	}
 	else
 	{
-		Super::PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
+		Super::PlayDeathAnim(InHealthParameters);
 	}
 }

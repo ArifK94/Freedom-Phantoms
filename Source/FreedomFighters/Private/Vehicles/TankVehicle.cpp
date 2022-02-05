@@ -131,9 +131,9 @@ void ATankVehicle::Tick(float DeltaTime)
 	Shoot();
 }
 
-void ATankVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
-	Super::OnHealthUpdate(OwningHealthComp, Health, HealthDelta, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
+	Super::OnHealthUpdate(InHealthParameters);
 
 	if (!HealthComp->IsAlive())
 	{

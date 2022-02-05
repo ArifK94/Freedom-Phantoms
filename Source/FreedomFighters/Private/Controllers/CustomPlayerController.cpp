@@ -462,13 +462,13 @@ void ACustomPlayerController::AddUIWidgets()
 	}
 }
 
-void ACustomPlayerController::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ACustomPlayerController::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (HasGameEnded) {
 		return;
 	}
 
-	if (Health <= 0.0f)
+	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
 		GameStateBaseCustom->EndGame(false);
 		DisplayEndGameUMG();

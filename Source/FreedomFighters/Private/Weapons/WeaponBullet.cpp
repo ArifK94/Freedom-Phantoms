@@ -281,7 +281,15 @@ void AWeaponBullet::DetectHit()
 
 			if (HealthComponent && HealthComponent->IsAlive())
 			{
-				HealthComponent->OnDamage(OtherActor, ActualDamage, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, OutHit);
+				FHealthParameters HealthParameters;
+				HealthParameters.DamagedActor = OtherActor;
+				HealthParameters.DamageCauser = MyOwner;
+				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
+				HealthParameters.WeaponCauser = WeaponParent;
+				HealthParameters.Bullet = this;
+				HealthParameters.HitInfo = OutHit;
+				HealthParameters.Damage = ActualDamage;
+				HealthComponent->OnDamage(HealthParameters);
 
 				auto FactionComp = Cast<UTeamFactionComponent>(OtherActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
 				AddKill(HealthComponent, FactionComp);
@@ -373,7 +381,16 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 
 				if (HealthComponent && HealthComponent->IsAlive())
 				{
-					HealthComponent->OnDamage(DamagedActor, DamageAmount, NULL, MyOwner->GetInstigatorController(), MyOwner, WeaponParent, this, Hit);
+					FHealthParameters HealthParameters;
+					HealthParameters.DamagedActor = DamagedActor;
+					HealthParameters.DamageCauser = MyOwner;
+					HealthParameters.DamageCauser = MyOwner->GetInstigatorController();
+					HealthParameters.WeaponCauser = WeaponParent;
+					HealthParameters.Bullet = this;
+					HealthParameters.HitInfo = Hit;
+					HealthParameters.Damage = DamageAmount;
+					HealthParameters.IsExplosive = isAnExplosive;
+					HealthComponent->OnDamage(HealthParameters);
 
 					auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
 					AddKill(HealthComponent, FactionComp);

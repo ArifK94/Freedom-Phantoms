@@ -350,9 +350,9 @@ void ACombatAIController::OnUnPossess()
 	ClearTimers();
 }
 
-void ACombatAIController::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
-	if (Health <= 0.0f)
+	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
 		ClearTimers();
 

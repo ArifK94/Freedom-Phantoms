@@ -205,8 +205,8 @@ private:
 protected:
 	virtual void BeginPlay() override;
 
-	virtual void OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo) override;
-	virtual void PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo) override;
+	virtual void OnHealthUpdate(FHealthParameters InHealthParameters) override;
+	virtual void PlayDeathAnim(FHealthParameters InHealthParameters) override;
 
 public:
 	UTeamFactionComponent* GetTeamFactionComponent() { return TeamFactionComponent; }

@@ -8,6 +8,7 @@
 #include "StructCollection.generated.h"
 
 class AObjectPoolActor;
+class UHealthComponent;
 class ABaseCharacter;
 class ACombatCharacter;
 class ACommanderCharacter;
@@ -15,6 +16,7 @@ class AAircraft;
 class ATargetSystemMarker;
 class AWeapon;
 class AMountedGun;
+class AWeaponBullet;
 class UUserWidget;
 class USoundBase;
 class AHeadgear;
@@ -78,6 +80,68 @@ public:
 
 	UPROPERTY()
 		int PoolSize;
+};
+
+USTRUCT(BlueprintType)
+struct FREEDOMFIGHTERS_API FHealthParameters
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UHealthComponent* AffectedHealthComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AActor* DamagedActor;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AActor* DamageCauser;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		const class UDamageType* DamageType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		class AController* InstigatedBy;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AWeapon* WeaponCauser;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AWeaponBullet* Bullet;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FHitResult HitInfo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float Damage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool IsExplosive;
+
+
+	FHealthParameters()
+	{
+		DamagedActor = nullptr;
+
+		DamageCauser = nullptr;
+
+		DamageType = nullptr;
+
+		InstigatedBy = nullptr;
+
+		WeaponCauser = nullptr;
+
+		Bullet = nullptr;
+
+		Damage = .0f;
+
+		IsExplosive = false;
+	}
+
+	void SetHealthComponent(UHealthComponent* InHealthComponent)
+	{
+		AffectedHealthComponent = InHealthComponent;
+	}
 };
 
 USTRUCT(BlueprintType)

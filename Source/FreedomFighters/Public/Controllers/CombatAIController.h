@@ -145,7 +145,7 @@ private:
 	void ClearTimers();
 
 	UFUNCTION()
-		void OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
+		void OnHealthUpdate(FHealthParameters InHealthParameters);
 
 	UFUNCTION()
 		void OnMovementDestinationSet(AIBehaviourState BehaviourState);

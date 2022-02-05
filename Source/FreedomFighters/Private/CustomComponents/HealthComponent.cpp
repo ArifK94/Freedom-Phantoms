@@ -52,19 +52,19 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 }
 
-void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 {
 	if (HasUnlimitedHealth) return;
 
 	if (!isAlive) return;
 
-	if (Damage <= 0.0f) return;
+	if (HealthParameters.Damage <= 0.0f) return;
 
 	if (IgnoreFriendlyFire)
 	{
-		if (DamageCauser != DamagedActor)
+		if (HealthParameters.DamageCauser != HealthParameters.DamagedActor)
 		{
-			if (UTeamFactionComponent::IsFriendly(DamagedActor, DamageCauser)) {
+			if (UTeamFactionComponent::IsFriendly(HealthParameters.DamagedActor, HealthParameters.DamageCauser)) {
 				return;
 			}
 		}
@@ -72,14 +72,14 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 
 	if (AcceptOnlyExplosions)
 	{
-		if (!Bullet->IsExplosive())
+		if (!HealthParameters.IsExplosive)
 		{
 			return;
 		}
 	}
 
 
-	auto DamageReduction = Damage - DamageReduceFactor;
+	auto DamageReduction = HealthParameters.Damage - DamageReduceFactor;
 
 	// Update health clamp
 	Health = FMath::Clamp(Health - DamageReduction, 0.0f, MaxHealth);
@@ -97,8 +97,11 @@ void UHealthComponent::OnDamage(AActor* DamagedActor, float Damage, const UDamag
 		isAlive = false;
 	}
 
-	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser, WeaponCauser, Bullet, HitInfo);
+
+	HealthParameters.SetHealthComponent(this);
+	OnHealthChanged.Broadcast(HealthParameters);
 }
+
 
 void UHealthComponent::RegenerateHealth()
 {
@@ -125,8 +128,9 @@ void UHealthComponent::RegenerateHealth()
 		{
 			Health = FMath::Clamp(Health + RegenPerSecond * mDeltaTime, 0.0f, MaxHealth);
 
-			FHitResult HitInfo;
-			OnHealthChanged.Broadcast(this, Health, 0, 0, 0, 0, nullptr, nullptr, HitInfo);
+			FHealthParameters HealthParameters;
+			HealthParameters.SetHealthComponent(this);
+			OnHealthChanged.Broadcast(HealthParameters);
 		}
 	}
 }

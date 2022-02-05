@@ -241,7 +241,7 @@ FRotator ABaseCharacter::GetViewRotation() const
 	return Super::GetViewRotation();
 }
 
-void ABaseCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (!HealthComp->IsAlive())
 	{
@@ -253,7 +253,7 @@ void ABaseCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float He
 
 		GetCharacterMovement()->StopMovementImmediately();
 
-		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
+		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(InHealthParameters.HitInfo.PhysMaterial.Get());
 
 		// Play death sound if not recieved a headshot
 		if (SurfaceType != SURFACE_HEAD)
@@ -267,7 +267,7 @@ void ABaseCharacter::OnHealthUpdate(UHealthComponent* OwningHealthComp, float He
 
 
 
-		PlayDeathAnim(WeaponCauser, Bullet, HitInfo);
+		PlayDeathAnim(InHealthParameters);
 
 		// In case death anim asset is empty
 		if (!DeathAnimationAsset) {
@@ -306,7 +306,12 @@ void ABaseCharacter::Landed(const FHitResult& Hit)
 
 	auto ClampVelo = UKismetMathLibrary::ClampAngle(NormalizedVelo, .0f, 1.f);
 
-	HealthComp->OnDamage(this, ClampVelo * 100.f, NULL, GetInstigatorController(), this, nullptr, nullptr, Hit);
+
+	FHealthParameters HealthParameters;
+	HealthParameters.Damage = ClampVelo * 100.f;
+	HealthParameters.InstigatedBy = GetInstigatorController();
+	HealthParameters.HitInfo = Hit;
+	HealthComp->OnDamage(HealthParameters);
 
 }
 
@@ -785,15 +790,15 @@ void ABaseCharacter::PlayVoiceSound(USoundBase* Sound)
 	VoiceAudioComponent->Play();
 }
 
-void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 {
-	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(InHealthParameters.HitInfo.PhysMaterial.Get());
 
 	// Use dot product to determine where the character stands based on the impact point.
 	// DotProduct > 0.0f Same direction
 	// DotProduct == 0.0f Perpendicular direction
 	// DotProduct < 0.0f Opposite direction
-	float DotProduct = FVector::DotProduct(HitInfo.ImpactNormal, GetActorForwardVector());
+	float DotProduct = FVector::DotProduct(InHealthParameters.HitInfo.ImpactNormal, GetActorForwardVector());
 
 	bool HasHitFront = false;
 	bool HasHitLeft = false;
@@ -816,7 +821,7 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 
 
 
-	if (Bullet && Bullet->IsExplosive())
+	if (InHealthParameters.IsExplosive)
 	{
 		if (isSprinting)
 		{
@@ -855,7 +860,7 @@ void ABaseCharacter::PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet,
 		return;
 	}
 
-	if (WeaponCauser && WeaponCauser->GetWeaponType() == WeaponType::Shotgun)
+	if (InHealthParameters.WeaponCauser && InHealthParameters.WeaponCauser->GetWeaponType() == WeaponType::Shotgun)
 	{
 		if (SurfaceType == SURFACE_LEGS)
 		{

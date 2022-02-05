@@ -99,7 +99,7 @@ private:
 public:
 	ATankVehicle();
 
-	virtual void OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo) override;
+	virtual void OnHealthUpdate(FHealthParameters InHealthParameters) override;
 
 	UFUNCTION()
 		void OnTargetSearchUpdate(AActor* Actor);

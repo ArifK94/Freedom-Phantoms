@@ -99,13 +99,13 @@ void ALandVehicle::Update()
 	EngineAudio->SetFloatParameter(EngineSoundParamName, GetVelocity().Size());
 }
 
-void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void ALandVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (IsDestroyed) {
 		return;
 	}
 
-	if (Health <= 0.0f)
+	if (!HealthComp->IsAlive())
 	{
 		GetWorldTimerManager().ClearTimer(THandler_Update);
 
@@ -180,7 +180,7 @@ void ALandVehicle::OnHealthUpdate(UHealthComponent* OwningHealthComp, float Heal
 		RadialForceComp->FireImpulse();
 
 		// Apply health damage
-		ApplyExplosionDamage(GetActorLocation(), InstigatedBy, DamageCauser, WeaponCauser, Bullet);
+		ApplyExplosionDamage(GetActorLocation(), InHealthParameters);
 	}
 }
 
@@ -277,7 +277,7 @@ void ALandVehicle::SpawnVehicleWeapons()
 	SpawnVehicleSeatings();
 }
 
-void ALandVehicle::ApplyExplosionDamage(FVector ImpactPoint, AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet)
+void ALandVehicle::ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters InHealthParams)
 {
 	// create a collision sphere
 	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(RadialForceComp->Radius);
@@ -301,7 +301,16 @@ void ALandVehicle::ApplyExplosionDamage(FVector ImpactPoint, AController* Instig
 
 				if (HealthComponent && HealthComponent->IsAlive())
 				{
-					HealthComponent->OnDamage(DamagedActor, ExplosionDamage, NULL, InstigatedBy, DamageCauser, WeaponCauser, Bullet, Hit);
+					FHealthParameters HealthParameters;
+					HealthParameters.Damage = ExplosionDamage;
+					HealthParameters.DamagedActor = DamagedActor;
+					HealthParameters.DamageCauser = InHealthParams.DamageCauser;
+					HealthParameters.InstigatedBy = InHealthParams.InstigatedBy;
+					HealthParameters.WeaponCauser = InHealthParams.WeaponCauser;
+					HealthParameters.Bullet = InHealthParams.Bullet;
+					HealthParameters.HitInfo = InHealthParams.HitInfo;
+					HealthParameters.IsExplosive = true;
+					HealthComponent->OnDamage(HealthParameters);
 				}
 			}
 		}

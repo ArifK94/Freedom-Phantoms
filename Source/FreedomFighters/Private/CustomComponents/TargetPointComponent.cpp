@@ -15,9 +15,9 @@ void UTargetPointComponent::BeginPlay()
 	Super::BeginPlay();	
 }
 
-void UTargetPointComponent::OnHealthChanged(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo)
+void UTargetPointComponent::OnHealthChanged(FHealthParameters InHealthParameters)
 {
-	if (Health <= 0.f)
+	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
 		HealthComp->OnHealthChanged.RemoveDynamic(this, &UTargetPointComponent::OnHealthChanged);
 		IsPointTaken = false;

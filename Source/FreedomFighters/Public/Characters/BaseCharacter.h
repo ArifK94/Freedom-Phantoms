@@ -242,8 +242,8 @@ protected:
 	virtual	void UpdateCharacterMovement();
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
-		virtual void OnHealthUpdate(UHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser, AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
-	virtual void PlayDeathAnim(AWeapon* WeaponCauser, AWeaponBullet* Bullet, FHitResult HitInfo);
+		virtual void OnHealthUpdate(FHealthParameters InHealthParameters);
+	virtual void PlayDeathAnim(FHealthParameters InHealthParameters);
 
 	UFUNCTION()
 		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
