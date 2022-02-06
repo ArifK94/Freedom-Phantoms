@@ -76,10 +76,6 @@ void ACommanderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//if (CanRecruit && ActiveRecruits.Num() < MaxRecruits) {
-	//	CheckRecruit();
-	//}
-
 	UpdateActiveRecruits();
 }
 

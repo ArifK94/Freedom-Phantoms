@@ -7,10 +7,6 @@
 #include "TargetFinderComponent.generated.h"
 
 class USphereComponent;
-class UAISenseConfig;
-class UAISenseConfig_Sight;
-class UAISense;
-class UAIPerceptionComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetSearchSignature, AActor*, TargetActor);
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -20,8 +16,6 @@ class FREEDOMFIGHTERS_API UTargetFinderComponent : public UActorComponent
 
 private:
 	USphereComponent* TargetSightSphere;
-	UAISenseConfig_Sight* AISightConfig;
-	UAIPerceptionComponent* PerceptionComp;
 
 	FTimerHandle THandler_TargetSearch;
 
@@ -64,10 +58,6 @@ public:
 	FRotator RotateTowardsTarget(AActor* OwnerActor, AActor* TargetActor, FRotator CurrentRotation, FRotator& TargetRotation, float DeltaTime, float LerpSpeed);
 
 	bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
-
-	//UAISenseConfig* GetPerceptionSenseConfig(TSubclassOf<UAISense> SenseClass);
-
-	//void SetVisionAngle();
 
 private:
 	void FindTargetUpdate();
