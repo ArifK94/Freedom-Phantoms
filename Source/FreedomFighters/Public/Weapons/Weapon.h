@@ -22,6 +22,7 @@ class UTexture;
 class UPointLightComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEmptyAmmoClipSignature, AWeapon*, Weapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmedSignature, FProjectileImpactParameters, ProjectileImpactParameters);
 
 UCLASS()
 class FREEDOMFIGHTERS_API AWeapon : public AActor, public IInteractable
@@ -308,6 +309,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 		FOnEmptyAmmoClipSignature OnEmptyAmmoClip;
+
+	UPROPERTY(BlueprintAssignable)
+		FOnKillConfirmedSignature OnKillConfirmed;
+
+	UFUNCTION()
+		void OnProjectileImpacted(FProjectileImpactParameters ProjectileImpactParameters);
 
 	// Interactable interface methods
 	virtual FString GetKeyDisplayName_Implementation() override;

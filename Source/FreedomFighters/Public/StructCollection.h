@@ -339,6 +339,49 @@ public:
 	}
 };
 
+
+USTRUCT(BlueprintType)
+struct FREEDOMFIGHTERS_API FProjectileImpactParameters
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AWeaponBullet* ProjectileActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		int KillCount;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool IsSingleKill;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool IsDoubleKill;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool IsMultiKill;
+
+	FProjectileImpactParameters()
+	{
+		ProjectileActor = nullptr;
+
+		KillCount = 0;
+		
+		IsSingleKill = false;
+		
+		IsDoubleKill = false;
+		
+		IsMultiKill = false;
+	}
+
+	void SetProjectileActor(AWeaponBullet* InProjectileActor)
+	{
+		ProjectileActor = InProjectileActor;
+	}
+};
+
+
 USTRUCT(BlueprintType)
 struct FWeaponAnimSet : public FTableRowBase
 {

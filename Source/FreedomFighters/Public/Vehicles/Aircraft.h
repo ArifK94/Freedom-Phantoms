@@ -265,7 +265,7 @@ private:
 		void MoveToLocation(float Value);
 
 	UFUNCTION()
-		void OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill);
+		void OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters);
 
 	void SpawnPassenger();
 

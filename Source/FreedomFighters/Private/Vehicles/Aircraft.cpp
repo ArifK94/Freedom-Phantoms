@@ -308,8 +308,12 @@ void AAircraft::MoveToLocation(float Value)
 	}
 }
 
-void AAircraft::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
+void AAircraft::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters)
 {
+	if (ProjectileImpactParameters.KillCount <= 0) {
+		return;
+	}
+
 	// Prioritise the kill confirmed sounds over random voice sounds
 	if (RandomPilotSound && PilotAudio->Sound == RandomPilotSound)
 	{
@@ -321,15 +325,15 @@ void AAircraft::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDou
 	{
 		PilotAudio->Sound = KillConfirmedSound;
 
-		if (IsSingleKill)
+		if (ProjectileImpactParameters.IsSingleKill)
 		{
 			PilotAudio->SetIntParameter(KillConfirmedParamName, SingleKillIndex);
 		}
-		else if (IsDoubleKill)
+		else if (ProjectileImpactParameters.IsDoubleKill)
 		{
 			PilotAudio->SetIntParameter(KillConfirmedParamName, DoubleKillIndex);
 		}
-		else if (IsMultiKill)
+		else if (ProjectileImpactParameters.IsMultiKill)
 		{
 			PilotAudio->SetIntParameter(KillConfirmedParamName, MultiKillIndex);
 		}
@@ -446,18 +450,7 @@ void AAircraft::SpawnWeapon()
 			MG->SetYawMin(AircraftWeapon.YawMin);
 			MG->SetYawMax(AircraftWeapon.YawMax);
 
-
-			// register bullet kill confirms for pilot reaction in an AC130 for instance
-			for (int i = 0; i < MG->GetObjectPoolComponent()->GetActorsInObjectPool().Num(); i++)
-			{
-				FObjectPoolParameters* ObjectPool = MG->GetObjectPoolComponent()->GetActorsInObjectPool()[i];
-				AWeaponBullet* Bullet = Cast<AWeaponBullet>(ObjectPool->PoolableActor);
-
-				if (Bullet)
-				{
-					Bullet->OnKillConfirmed.AddDynamic(this, &AAircraft::OnWeaponKillConfirm);
-				}
-			}
+			MG->OnKillConfirmed.AddDynamic(this, &AAircraft::OnWeaponKillConfirm);
 
 			WeaponObjs.Add(MG);
 		}

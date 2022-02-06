@@ -129,6 +129,9 @@ public:
 	FOnCombatUpdatedignature OnCombatUpdated;
 	FOnKillConfirmSignature OnKillConfirm; // to be triggered for commander to recieve when an operative gets a kill
 
+	void SetPrimaryWeapon(AWeapon* Weapon);
+	void SetSecondaryWeapon(AWeapon* Weapon);
+
 	virtual void BeginSprint() override;
 	virtual void EndSprint() override;
 
@@ -161,7 +164,7 @@ public:
 		void BeginWeaponSwap();
 
 	UFUNCTION()
-		void OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill);
+		void OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters);
 	void RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent);
 
 	void BeginEquipWeapon();
@@ -264,9 +267,6 @@ public:
 		return CommandingOfficer;
 	}
 
-
-	void SetPrimaryWeapon(AWeapon* Weapon);
-	void SetSecondaryWeapon(AWeapon* Weapon);
 
 	void SetKillCount(int Amount) {
 		KillCounter += Amount;

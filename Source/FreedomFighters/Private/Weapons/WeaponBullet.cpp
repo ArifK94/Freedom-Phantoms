@@ -3,8 +3,8 @@
 #include "Weapons/Weapon.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
-#include "Characters/CombatCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
+#include "Characters/CombatCharacter.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -219,15 +219,6 @@ void AWeaponBullet::DetectHit()
 
 
 	FHitResult OutHit;
-	//bool SphereTrace = GetWorld()->SweepSingleByObjectType(
-	//	OutHit,
-	//	PreviousPosition,
-	//	NextPosition,
-	//	FQuat(),
-	//	ObjectParams,
-	//	FCollisionShape::MakeSphere(CapsuleComponent->GetScaledSphereRadius()),
-	//	QueryParams
-	//);
 
 	// Use line trace by channelto allow trace to hit on surfaces such as water where characters can move through
 	// charactermesh collision profile needs to have visibility on block
@@ -314,34 +305,33 @@ void AWeaponBullet::DetectHit()
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, OutHit.ImpactPoint);
 	}
 
+	FProjectileImpactParameters ProjectileImpactParameters;
 
 	if (KillCount > 0)
 	{
-		bool IsSingleKill = false;
-		bool IsDoubleKill = false;
-		bool IsMultiKill = false;
-
 		if (KillCount == 1)
 		{
-			IsSingleKill = true;
+			ProjectileImpactParameters.IsSingleKill = true;
 		}
 		else if (KillCount == 2)
 		{
-			IsDoubleKill = true;
+			ProjectileImpactParameters.IsDoubleKill = true;
 		}
 		else if (KillCount > 2)
 		{
-			IsMultiKill = true;
+			ProjectileImpactParameters.IsMultiKill = true;
 		}
 
-		if (OwningCombatCharacter) 
+		ProjectileImpactParameters.KillCount = KillCount;
+		ProjectileImpactParameters.SetProjectileActor(this);
+
+		if (OwningCombatCharacter)
 		{
 			OwningCombatCharacter->SetKillCount(KillCount);
 		}
-
-		OnKillConfirmed.Broadcast(KillCount, IsSingleKill, IsDoubleKill, IsMultiKill);
 	}
 
+	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
 	Deactivate();
 }
 
@@ -375,29 +365,30 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 		for (auto& Hit : OutHits)
 		{
 			AActor* DamagedActor = Hit.GetActor();
-			if (DamagedActor)
+
+			if (!DamagedActor) {
+				continue;
+			}
+			UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			if (HealthComponent && HealthComponent->IsAlive())
 			{
-				UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+				FHealthParameters HealthParameters;
+				HealthParameters.DamagedActor = DamagedActor;
+				HealthParameters.DamageCauser = MyOwner;
+				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
+				HealthParameters.WeaponCauser = WeaponParent;
+				HealthParameters.Bullet = this;
+				HealthParameters.HitInfo = Hit;
+				HealthParameters.Damage = DamageAmount;
+				HealthParameters.IsExplosive = isAnExplosive;
+				HealthComponent->OnDamage(HealthParameters);
 
-				if (HealthComponent && HealthComponent->IsAlive())
-				{
-					FHealthParameters HealthParameters;
-					HealthParameters.DamagedActor = DamagedActor;
-					HealthParameters.DamageCauser = MyOwner;
-					HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
-					HealthParameters.WeaponCauser = WeaponParent;
-					HealthParameters.Bullet = this;
-					HealthParameters.HitInfo = Hit;
-					HealthParameters.Damage = DamageAmount;
-					HealthParameters.IsExplosive = isAnExplosive;
-					HealthComponent->OnDamage(HealthParameters);
-
-					auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
-					AddKill(HealthComponent, FactionComp);
-				}
+				auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+				AddKill(HealthComponent, FactionComp);
 			}
 
-			UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>((Hit.GetActor())->GetRootComponent());
+			auto MeshComp = Cast<UStaticMeshComponent>(DamagedActor->GetRootComponent());
 
 			if (MeshComp)
 			{

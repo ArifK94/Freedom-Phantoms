@@ -481,6 +481,11 @@ void AWeapon::CreateBullet()
 			if (Bullet)
 			{
 				Bullet->SetWeaponParent(this);
+
+				if (!Bullet->OnProjectileImpact.IsBound())
+				{
+					Bullet->OnProjectileImpact.AddDynamic(this, &AWeapon::OnProjectileImpacted);
+				}
 			}
 		}
 
@@ -526,6 +531,18 @@ void AWeapon::PlayShotEffect(FVector EyeLocation)
 
 	// to get a blinking muzzle flash, delay rate needs to be very low
 	GetWorldTimerManager().SetTimer(THandler_MuzzleLight, this, &AWeapon::DisableMuzzleLight, .01f, false);
+}
+
+void AWeapon::OnProjectileImpacted(FProjectileImpactParameters ProjectileImpactParameters)
+{
+	OnKillConfirmed.Broadcast(ProjectileImpactParameters);
+
+	// As the projectile owner can change, we do not want this event being fired again if the projectile was shot by another character,
+	// but first check if the projectile exists, since some weapons may not be using object pooling to respawn the projectile
+	if (ProjectileImpactParameters.ProjectileActor)
+	{
+		ProjectileImpactParameters.ProjectileActor->OnProjectileImpact.Clear();
+	}
 }
 
 // Bullet spread random point

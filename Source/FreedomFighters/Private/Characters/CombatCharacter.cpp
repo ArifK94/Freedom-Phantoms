@@ -75,7 +75,7 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 
 	// respawn loadout to match weapon type
 	SpawnLoadout(LoadoutType, true);
-
+	RegisterWeaponEvents(primaryWeaponObj, true);
 	RetrieveWeaponAnimDataSet();
 }
 
@@ -92,6 +92,8 @@ void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 	{
 		Loadout->HolsterWeapon(secondaryWeaponObj);
 	}
+
+	RegisterWeaponEvents(secondaryWeaponObj, true);
 }
 
 ACombatCharacter::ACombatCharacter()
@@ -195,10 +197,13 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 	}
 }
 
-void ACombatCharacter::OnWeaponKillConfirm(int KillCount, bool IsSingleKill, bool IsDoubleKill, bool IsMultiKill)
+void ACombatCharacter::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters)
 {
 	EnemyKilled();
-	OnKillConfirm.Broadcast(KillCount);
+
+	//KillCounter += ProjectileImpactParameters.KillCount;
+
+	OnKillConfirm.Broadcast(ProjectileImpactParameters.KillCount);
 }
 
 // Begin Auto Reload
@@ -214,32 +219,24 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 		return;
 	}
 
-	for (int i = 0; i < Weapon->GetObjectPoolComponent()->GetActorsInObjectPool().Num(); i++)
-	{
-		FObjectPoolParameters* ObjectPool = Weapon->GetObjectPoolComponent()->GetActorsInObjectPool()[i];
-		AWeaponBullet* Bullet = Cast<AWeaponBullet>(ObjectPool->PoolableActor);
-
-		if (Bullet)
-		{
-			if (BindEvent)
-			{
-				Bullet->OnKillConfirmed.AddDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
-			}
-			else
-			{
-				Bullet->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
-			}
-		}
-	}
-
 	if (BindEvent)
 	{
-		if (CanAutoReloadWeapon) {
-			Weapon->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
+		if (!Weapon->OnKillConfirmed.IsBound())
+		{
+			Weapon->OnKillConfirmed.AddDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
+		}
+
+		if (CanAutoReloadWeapon) 
+		{
+			if (!Weapon->OnEmptyAmmoClip.IsBound())
+			{
+				Weapon->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
+			}
 		}
 	}
 	else
 	{
+		Weapon->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
 		Weapon->OnEmptyAmmoClip.RemoveDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 	}
 }
