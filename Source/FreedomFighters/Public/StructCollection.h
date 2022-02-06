@@ -682,14 +682,14 @@ struct FTargetSystemNode
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		ABaseCharacter* Character;
+		AActor* Actor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		ATargetSystemMarker* Marker; // the marker object containing the widget component
 
 	FTargetSystemNode()
 	{
-		Character = nullptr;
+		Actor = nullptr;
 		Marker = nullptr;
 	}
 };

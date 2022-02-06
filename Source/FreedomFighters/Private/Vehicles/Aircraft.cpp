@@ -675,29 +675,27 @@ void AAircraft::SetTargetSystem()
 	// adding characters to targetting
 	for (AActor* Actor : Actors)
 	{
-		ABaseCharacter* Character = Cast<ABaseCharacter>(Actor);
-
-		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
+		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Actor);
 
 		if (IsFactionCompActive)
 		{
-			bool isFriendly = UTeamFactionComponent::IsFriendly(MyOwner, Character);
+			bool isFriendly = UTeamFactionComponent::IsFriendly(MyOwner, Actor);
 
 			if (isFriendly)
 			{
-				if (!DoesFriendlyNodeExists(Character))
+				if (!DoesFriendlyNodeExists(Actor))
 				{
 					FTargetSystemNode* TargetNode = new FTargetSystemNode;
-					TargetNode->Character = Character;
+					TargetNode->Actor = Actor;
 					FriendlyMarkerNodes.Add(TargetNode);
 				}
 			}
 			else
 			{
-				if (!DoesEnemyNodeExists(Character))
+				if (!DoesEnemyNodeExists(Actor))
 				{
 					FTargetSystemNode* TargetNode = new FTargetSystemNode;
-					TargetNode->Character = Character;
+					TargetNode->Actor = Actor;
 					EnemySystemNodes.Add(TargetNode);
 				}
 			}
@@ -727,20 +725,20 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 	for (int i = 0; i < TargetSystemNodes.Num(); i++)
 	{
 		auto TargetNode = TargetSystemNodes[i];
-		auto Character = TargetNode->Character;
+		auto Actor = TargetNode->Actor;
 
 		// if the target is not active
-		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Character);
+		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Actor);
 
 		if (IsFactionCompActive)
 		{
 			if (TargetNode->Marker) // marker to follow the actor location
 			{
-				TargetNode->Marker->SetActorLocation(Character->GetActorLocation());
+				TargetNode->Marker->SetActorLocation(Actor->GetActorLocation());
 			}
 			else // otherwise create a marker if does not exist 
 			{
-				TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, Character->GetActorLocation(), FRotator::ZeroRotator);
+				TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, Actor->GetActorLocation(), FRotator::ZeroRotator);
 			}
 		}
 		else
@@ -762,7 +760,7 @@ bool AAircraft::DoesFriendlyNodeExists(AActor* TargetActor)
 {
 	for (FTargetSystemNode* node : FriendlyMarkerNodes)
 	{
-		if (node->Character == TargetActor)
+		if (node->Actor == TargetActor)
 			return true;
 	}
 
@@ -773,7 +771,7 @@ bool AAircraft::DoesEnemyNodeExists(AActor* TargetActor)
 {
 	for (FTargetSystemNode* node : EnemySystemNodes)
 	{
-		if (node->Character == TargetActor)
+		if (node->Actor == TargetActor)
 			return true;
 	}
 
