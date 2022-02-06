@@ -20,6 +20,7 @@ UTargetFinderComponent::UTargetFinderComponent()
 	FinderLimit = 5;
 
 	FindTargetPerFrame = false;
+	CreateTargetSphere = true;
 	ShowDebugTrace = false;
 
 	ClassFilters.Add(ACharacter::StaticClass());
@@ -42,7 +43,7 @@ void UTargetFinderComponent::Init()
 	}
 
 	// Alternative to AI Sight Perception in case 360 sight is wanted
-	if (TargetSightSphere == nullptr)
+	if (CreateTargetSphere && TargetSightSphere == nullptr)
 	{
 		TargetSightSphere = NewObject<USphereComponent>(GetOwner());
 

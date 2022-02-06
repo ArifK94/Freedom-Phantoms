@@ -12,6 +12,7 @@ class ABaseCharacter;
 class ACombatCharacter;
 class AOrderIcon;
 class UUserWidget;
+class UTargetFinderComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRemoveRecruitSignature, ACommanderCharacter*, Commander, int, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOrderSentSignature, UCommanderRecruit*, RecruitInfo);
@@ -66,6 +67,10 @@ class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter, public 
 	GENERATED_BODY()
 
 private:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTargetFinderComponent* TargetSeekerComponent;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		TArray<UCommanderRecruit*> ActiveRecruits;
 

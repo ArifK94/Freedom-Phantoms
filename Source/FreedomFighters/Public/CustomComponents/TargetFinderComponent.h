@@ -22,6 +22,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool FindTargetPerFrame;
 
+	/** Enable to search for all overlapped targets in sphere radius */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool CreateTargetSphere;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TargetSightRadius;
 
@@ -55,14 +59,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 		AActor* FindTarget();
 
+	bool GetTrace(FHitResult& OutHit, FVector Start, FVector End);
+
 	FRotator RotateTowardsTarget(AActor* OwnerActor, AActor* TargetActor, FRotator CurrentRotation, FRotator& TargetRotation, float DeltaTime, float LerpSpeed);
 
 	bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
 
 private:
 	void FindTargetUpdate();
-
-	bool GetTrace(FHitResult& OutHit, FVector Start, FVector End);
 
 	bool IsActorFiltered(AActor* Actor);
 
@@ -76,6 +80,8 @@ public:
 		FOnTargetSearchSignature OnTargetSearch;
 
 	void SetFindTargetPerFrame(bool Value) { FindTargetPerFrame = Value; }
+
+	void SetCreateTargetSphere(bool Value) { CreateTargetSphere = Value; }
 
 	void AddClassFilter(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
 	

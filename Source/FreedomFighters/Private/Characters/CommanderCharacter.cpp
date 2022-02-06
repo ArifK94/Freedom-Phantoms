@@ -2,6 +2,7 @@
 #include "GUI/OrderIcon.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
+#include "CustomComponents/TargetFinderComponent.h"
 
 #include "Containers/Array.h"
 #include "Engine.h"
@@ -11,6 +12,9 @@
 
 ACommanderCharacter::ACommanderCharacter()
 {
+	TargetSeekerComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetSeekerComponent"));
+	TargetSeekerComponent->SetCreateTargetSphere(false);
+
 	CurrentRecruitIndex = 0;
 	MaxRecruits = 12;
 
@@ -117,10 +121,21 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 
 void ACommanderCharacter::CheckRecruit()
 {
-	FHitResult HitResult = GetCurrentTraceHit();
+	//FHitResult HitResult = GetCurrentTraceHit();
+
+
+	FHitResult HitResult;
+	FVector Start = GetActorLocation();
+
+	FVector ForwardVector = FollowCamera->GetForwardVector();
+	FVector End = ((ForwardVector * 200.f) + Start);
+
+	TargetSeekerComponent->GetTrace(HitResult, Start, End);
+
+	ResetTargetActor();
+
 	if (HitResult.GetActor())
 	{
-		ResetTargetActor();
 
 		AActor* CurrentTargetActor = HitResult.GetActor();
 
@@ -141,10 +156,6 @@ void ACommanderCharacter::CheckRecruit()
 				PotentialRecruit->ShowCharacterOutline(true);
 			}
 		}
-	}
-	else
-	{
-		ResetTargetActor();
 	}
 }
 
