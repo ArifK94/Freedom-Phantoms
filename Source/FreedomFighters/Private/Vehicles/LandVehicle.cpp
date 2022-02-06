@@ -130,7 +130,14 @@ void ALandVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 			}
 		}
 
-
+		auto Components = GetComponents();
+		for (auto& Elem : Components)
+		{
+			if (Elem != MeshComp)
+			{
+				Elem->DestroyComponent();
+			}
+		}
 
 
 		// Stop playing all audio components
