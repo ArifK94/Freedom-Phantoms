@@ -141,18 +141,18 @@ void AWeaponBullet::Movement()
 
 void AWeaponBullet::FollowEyePoint()
 {
-	if (WeaponParent == nullptr) {
-		return;
-	}
+	//if (WeaponParent == nullptr) {
+	//	return;
+	//}
 
-	auto EyeLocation = WeaponParent->GetEyeViewPointComponent()->GetComponentLocation();
-	auto EyeRotation = WeaponParent->GetEyeViewPointComponent()->GetComponentRotation();
+	//auto EyeLocation = WeaponParent->GetEyeViewPointComponent()->GetComponentLocation();
+	//auto EyeRotation = WeaponParent->GetEyeViewPointComponent()->GetComponentRotation();
 
-	float TraceLength = 10000.0f;
-	FVector TraceEnd = EyeLocation + (UKismetMathLibrary::GetForwardVector(EyeRotation) * TraceLength);
+	//float TraceLength = 10000.0f;
+	//FVector TraceEnd = EyeLocation + (UKismetMathLibrary::GetForwardVector(EyeRotation) * TraceLength);
 
-	FVector TargetLocation = UKismetMathLibrary::VLerp(GetActorLocation(), TraceEnd, CurrentDeltaTime * HomingFollowFactor);
-	auto target = TargetLocation;
+	//FVector TargetLocation = UKismetMathLibrary::VLerp(GetActorLocation(), TraceEnd, CurrentDeltaTime * HomingFollowFactor);
+	//auto target = TargetLocation;
 
 	//SetActorLocation(target);
 
@@ -201,21 +201,6 @@ void AWeaponBullet::RetrieveSurfaceImpactSet()
 
 void AWeaponBullet::DetectHit()
 {
-	FCollisionQueryParams QueryParams;
-	QueryParams.bReturnPhysicalMaterial = true;
-	QueryParams.AddIgnoredActor(this);
-
-	// weapon bullets can often collide with owning character, 
-	// but explosion may set ignore owner to false
-	if (IgnoreOwner)
-	{
-		if (GetOwner()) {
-			QueryParams.AddIgnoredActor(GetOwner());
-		}
-	}
-
-	FCollisionObjectQueryParams ObjectParams;
-	ObjectParams.AllObjects;
 
 
 	FHitResult OutHit;
@@ -229,7 +214,7 @@ void AWeaponBullet::DetectHit()
 		FQuat::Identity,
 		ECC_Visibility,
 		FCollisionShape::MakeSphere(CapsuleComponent->GetScaledSphereRadius()),
-		QueryParams);
+		GetQueryParams());
 
 
 	if (!SphereTrace)
@@ -352,7 +337,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 	TArray<FHitResult> OutHits;
 
 	// check if something got hit in the sweep
-	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, ImpactPoint, ImpactPoint, FQuat::Identity, ECC_Visibility, MyColSphere);
+	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, ImpactPoint, ImpactPoint, FQuat::Identity, ECC_Visibility, MyColSphere, GetQueryParams());
 
 	if (ShowExplosionRadius)
 	{
@@ -455,4 +440,26 @@ void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionCo
 	{
 		KillCount++;
 	}
+}
+
+FCollisionQueryParams AWeaponBullet::GetQueryParams()
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.bReturnPhysicalMaterial = true;
+	QueryParams.AddIgnoredActor(this);
+
+	if (WeaponParent) {
+		QueryParams.AddIgnoredActor(WeaponParent);
+	}
+
+	// weapon bullets can often collide with owning character, 
+	// but explosion may set ignore owner to false
+	if (IgnoreOwner)
+	{
+		if (GetOwner()) {
+			QueryParams.AddIgnoredActor(GetOwner());
+		}
+	}
+
+	return QueryParams;
 }

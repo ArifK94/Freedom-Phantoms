@@ -65,7 +65,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		float ExplosiveRadius;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		bool IgnoreOwner;
 
 
@@ -137,6 +137,7 @@ private:
 
 	void AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction);
 
+	FCollisionQueryParams GetQueryParams();
 
 protected:
 	virtual void BeginPlay() override;
