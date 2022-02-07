@@ -675,7 +675,7 @@ void AAircraft::SetTargetSystem()
 	// adding characters to targetting
 	for (AActor* Actor : Actors)
 	{
-		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Actor);
+		bool IsFactionCompActive = UHealthComponent::IsAlive(Actor);
 
 		if (IsFactionCompActive)
 		{
@@ -728,7 +728,7 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 		auto Actor = TargetNode->Actor;
 
 		// if the target is not active
-		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Actor);
+		bool IsFactionCompActive = UHealthComponent::IsAlive(Actor);
 
 		if (IsFactionCompActive)
 		{
