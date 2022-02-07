@@ -80,6 +80,15 @@ void ALandVehicle::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRota
 	}
 }
 
+void ALandVehicle::AddComponentToDestroyList(UActorComponent* ActorComponent)
+{
+	if (ActorComponent)
+	{
+		ActorComponentsToDestroy.Add(ActorComponent);
+	}
+}
+
+
 void ALandVehicle::BeginPlay()
 {
 	Super::BeginPlay();
@@ -107,6 +116,7 @@ void ALandVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 	if (!HealthComp->IsAlive())
 	{
+		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 		GetWorldTimerManager().ClearTimer(THandler_Update);
 
 		// Remove all passengers
@@ -120,6 +130,17 @@ void ALandVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 			}
 		}
 
+		// Destroy specified components
+		for (int i = 0; i < ActorComponentsToDestroy.Num(); i++)
+		{
+			auto Component = ActorComponentsToDestroy[i];
+
+			if (Component)
+			{
+				Component->DestroyComponent();
+			}
+		}
+
 		for (int i = 0; i < VehicleWeaponsPtr.Num(); i++)
 		{
 			auto Weapon = VehicleWeaponsPtr[i];
@@ -129,16 +150,6 @@ void ALandVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 				Weapon->Destroy();
 			}
 		}
-
-		auto Components = GetComponents();
-		for (auto& Elem : Components)
-		{
-			if (Elem != MeshComp)
-			{
-				Elem->DestroyComponent();
-			}
-		}
-
 
 		// Stop playing all audio components
 		auto AudioActorComps = GetComponents();

@@ -46,6 +46,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* EngineAudio;
 
+	/** List containing all actor components to destroy when health reached zero eg. light components */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TArray<UActorComponent*> ActorComponentsToDestroy;
+
 	/** Paramater name for the crossfade by param in the engine sound cue assigned to the engine audio component */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FName EngineSoundParamName;
@@ -104,6 +108,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		virtual void OnHealthUpdate(FHealthParameters InHealthParameters);
+
+	UFUNCTION(BlueprintCallable)
+		void AddComponentToDestroyList(UActorComponent* ActorComponent);
 
 protected:
 	virtual void BeginPlay() override;
