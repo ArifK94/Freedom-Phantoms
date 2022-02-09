@@ -80,7 +80,6 @@ ATankVehicle::ATankVehicle()
 	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
 
 	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
-	TargetFinderComponent->SetFindTargetPerFrame(true);
 	TargetFinderComponent->AddClassFilter(ATankVehicle::StaticClass());
 
 	ShooterComponent = CreateDefaultSubobject<UShooterComponent>(TEXT("ShooterComponent"));
@@ -96,6 +95,8 @@ void ATankVehicle::BeginPlay()
 	Super::BeginPlay();
 
 	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ATankVehicle::OnTargetSearchUpdate);
+	TargetFinderComponent->SetFindTargetPerFrame(true);
+
 	DefaultPitchMin = PitchMin;
 	DefaultPitchMax = PitchMax;
 	DefaultYawMin = YawMin;
@@ -137,6 +138,7 @@ void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 	if (!HealthComp->IsAlive())
 	{
+		TargetFinderComponent->SetFindTargetPerFrame(false);
 		PrimaryActorTick.bCanEverTick = false;
 		ShooterComponent->EndFire();
 

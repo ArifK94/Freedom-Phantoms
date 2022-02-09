@@ -245,8 +245,6 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (!HealthComp->IsAlive())
 	{
-		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-
 		VoiceAudioComponent->Stop();
 
 		ClearTimeHandlers();

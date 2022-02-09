@@ -24,6 +24,7 @@ UHealthComponent::UHealthComponent()
 	HasTakenDamage = false;
 	IgnoreFriendlyFire = true;
 	AcceptOnlyExplosions = false;
+	ClearAllActorTimers = true;
 
 	RegenerationDelayAmount = 5.0f;
 }
@@ -95,6 +96,12 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 	if (Health <= 0.0f)
 	{
 		isAlive = false;
+
+		if (ClearAllActorTimers)
+		{
+			GetWorld()->GetTimerManager().ClearAllTimersForObject(GetOwner());
+		}
+
 	}
 
 

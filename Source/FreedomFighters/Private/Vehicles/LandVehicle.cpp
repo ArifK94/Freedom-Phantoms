@@ -116,8 +116,7 @@ void ALandVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 	if (!HealthComp->IsAlive())
 	{
-		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-		GetWorldTimerManager().ClearTimer(THandler_Update);
+		PrimaryActorTick.bCanEverTick = false;
 
 		// Remove all passengers
 		for (int i = 0; i < VehicleCharactersPtr.Num(); i++)

@@ -12,6 +12,26 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
 
+void UTargetFinderComponent::SetFindTargetPerFrame(bool Value)
+{
+	if (Value)
+	{
+		if (!THandler_TargetSearch.IsValid())
+		{
+			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 1.f, true);
+		}
+	}
+	else
+	{
+		if (THandler_TargetSearch.IsValid())
+		{
+			GetOwner()->GetWorldTimerManager().ClearTimer(THandler_TargetSearch);
+		}
+	}
+
+	FindTargetPerFrame = Value;
+}
+
 UTargetFinderComponent::UTargetFinderComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
