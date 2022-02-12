@@ -31,6 +31,10 @@ public:
 
 	AMountedGun* FindMG();
 
+	void FocusTarget(AMountedGun* MG, FVector Location);
+
+	bool IsInTargetRange(AMountedGun* MG, FVector StartLocation, FVector TargetLocation);
+
 protected:
 	virtual void BeginPlay() override;
 

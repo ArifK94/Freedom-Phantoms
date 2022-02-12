@@ -5,6 +5,7 @@
 #include "Weapons/MountedGun.h"
 
 #include "Components/SphereComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 UMountedGunFinderComponent::UMountedGunFinderComponent()
@@ -96,47 +97,39 @@ AMountedGun* UMountedGunFinderComponent::FindMG()
 	return SelectedMG;
 }
 
+bool UMountedGunFinderComponent::IsInTargetRange(AMountedGun* MG, FVector StartLocation, FVector TargetLocation)
+{
+	FVector Start = StartLocation - TargetLocation;
+	//Start = UKismetMathLibrary::InverseTransformDirection(OwningCombatCharacter->FollowCamera->GetComponentTransform(), Start);
+	FRotator TargetRot = UKismetMathLibrary::MakeRotFromX(Start);
 
-// create a collision sphere
-//FCollisionShape MyColSphere = FCollisionShape::MakeSphere(SearchRadius);
+	TargetRot = UKismetMathLibrary::FindLookAtRotation(StartLocation, TargetLocation);
 
-////create tarray for hit results
-//TArray<FHitResult> OutHits;
+	bool YawRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Yaw, MG->GetYawMin(), MG->GetYawMax(), false, false);
+	bool PitchRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Pitch, MG->GetPitchMin(), MG->GetPitchMax(), false, false);
 
-////check if something got hit in the sweep
-//bool isHit = GetWorld()->SweepMultiByChannel(OutHits, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation(), FQuat::Identity, ECC_Visibility, MyColSphere);
+	if (YawRange && PitchRange)
+	{
+		return true;
+	}
 
-//if (isHit)
-//{
-//	//loop through TArray
-//	for (auto& Hit : OutHits)
-//	{
-//		AActor* HitActor = Hit.GetActor();
+	return true;
+}
 
-//		if (HitActor)
-//		{
-//			AMountedGun* PotentialMG = Cast<AMountedGun>(HitActor);
+void UMountedGunFinderComponent::FocusTarget(AMountedGun* MG, FVector Location)
+{
+	auto TargetRotation = FRotator::ZeroRotator;
 
-//			if (PotentialMG)
-//			{
-//				//check if mounted gun is present in the stronghold and has no owner as well as no potential owner in case another AI wishes to use it
-//				bool HasNoOwner = PotentialMG->GetOwner() == nullptr && PotentialMG->GetPotentialOwner() == nullptr;
-//				bool IsSamePotentialOwner = PotentialMG->GetPotentialOwner() == GetOwner();
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
-//				if (HasNoOwner || IsSamePotentialOwner && PotentialMG->GetCanTraceInteraction())
-//				{
-//					FVector MGLocation = PotentialMG->GetActorLocation();
+	auto TargetLocation = Location - EyeLocation;
+	auto RootBone = MG->getMeshComp()->GetBoneName(0);
+	auto T = MG->getMeshComp()->GetSocketTransform(RootBone);
+	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(T, TargetLocation);
+	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
-//					float DistanceDiff = FVector::Dist(GetOwner()->GetActorLocation(), MGLocation);
-
-//					if (DistanceDiff < TargetSightDistance)
-//					{
-//						TargetSightDistance = DistanceDiff;
-//						SelectedMG = PotentialMG;
-//					}
-//				}
-//			}
-//		}
-
-//	}
-//}
+	auto TargetRot = UKismetMathLibrary::RInterpTo(MG->GetRotationInput(), TargetRotation, GetWorld()->DeltaTimeSeconds, 1.5f);
+	MG->SetRotationInput(TargetRot);
+}

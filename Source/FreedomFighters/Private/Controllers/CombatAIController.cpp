@@ -300,21 +300,9 @@ void ACombatAIController::Tick(float DeltaTime)
 		if (EnemyActor)
 		{
 			// if using a mounted gun
-			if (OwningCombatCharacter->GetMountedGun())
+			if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
 			{
-				auto TargetRotation = FRotator::ZeroRotator;
-
-				FVector EyeLocation;
-				FRotator EyeRotation;
-				GetActorEyesViewPoint(EyeLocation, EyeRotation); // Grab the camera view points, this is a fail safe if vehicle weapons do not exist for some reason
-
-				auto TargetLocation = EnemyActor->GetActorLocation() - EyeLocation;
-				auto RootBone = OwningCombatCharacter->GetMountedGun()->getMeshComp()->GetBoneName(0);
-				auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(OwningCombatCharacter->GetMountedGun()->getMeshComp()->GetSocketTransform(RootBone), TargetLocation);
-				TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
-
-				auto TargetRot = UKismetMathLibrary::RInterpTo(OwningCombatCharacter->GetMountedGun()->GetRotationInput(), TargetRotation, GetWorld()->DeltaTimeSeconds, 1.5f);
-				OwningCombatCharacter->GetMountedGun()->SetRotationInput(TargetRot);
+				MountedGunFinderComponent->FocusTarget(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation());
 			}
 			else
 			{
@@ -751,6 +739,11 @@ void ACombatAIController::ReloadWeapon()
 
 void ACombatAIController::FindMountedGun()
 {
+	// TODO: REMOVE RETURN STATEMENT IN ORDER TO FIX ROTATION TO FIX TARGET & CHECK IF TARGET IS WITHIN RANGE OF MG ROTATION INPUTS
+	return;
+
+
+
 	// if already using an MG
 	// if using an aircraft MG for instance, which should not be exited, no need to run this method
 	if (OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
@@ -773,7 +766,11 @@ void ACombatAIController::FindMountedGun()
 	// If an MG has been assigned
 	if (OwningCombatCharacter->GetMountedGun())
 	{
-		if (!OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsUsingMountedWeapon())
+		if (!OwningCombatCharacter->IsReloading() 
+			&& !OwningCombatCharacter->IsUsingMountedWeapon() 
+			&& !TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, EnemyActor)
+			&& MountedGunFinderComponent->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation(), OwningCombatCharacter->GetActorLocation())
+			)
 		{
 			// Don't want AI to teleport to the MG, needs to be close enough to use it
 			auto DistanceToMG = FVector::Distance(OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos());
@@ -787,7 +784,9 @@ void ACombatAIController::FindMountedGun()
 		}
 
 		// in case player or another NPC has reached the MG before AI
-		if (OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter)
+		if (OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter ||
+			!MountedGunFinderComponent->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation(), OwningCombatCharacter->GetActorLocation())
+			)
 		{
 			OwningCombatCharacter->DropMountedGun();
 			CanFindCover = true;
@@ -825,7 +824,21 @@ void ACombatAIController::FindMountedGun()
 				IsMGValid = false;
 			}
 
-			if (!TargetFinderComponent->IsTargetBehind(SelectedMG, EnemyActor) && IsMGValid)
+			if (EnemyActor && IsMGValid)
+			{
+				bool IsInRange = MountedGunFinderComponent->IsInTargetRange(SelectedMG, EnemyActor->GetActorLocation(), OwningCombatCharacter->GetActorLocation());
+
+				if (!IsInRange)
+				{
+					IsMGValid = false;
+				}
+				else if (TargetFinderComponent->IsTargetBehind(SelectedMG, EnemyActor))
+				{
+					IsMGValid = false;
+				}
+			}
+
+			if (IsMGValid)
 			{
 				SelectedMG->SetPotentialOwner(OwningCombatCharacter);
 				OwningCombatCharacter->SetMountedGun(SelectedMG);
