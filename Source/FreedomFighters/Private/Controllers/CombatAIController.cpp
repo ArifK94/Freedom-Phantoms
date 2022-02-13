@@ -252,12 +252,11 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	if (OwningCombatCharacter)
 	{
 		// Attach Follow Camera to head socket
-		OwningCombatCharacter->FollowCamera->SetWorldLocation(OwningCombatCharacter->GetMesh()->GetSocketLocation(OwningCombatCharacter->GetHeadSocket()));
+		OwningCombatCharacter->SetFirstPersonView();
 
 		PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetPrimaryWeapon());
 
 		GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
 		GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true, 2.0f); // delay finding MG after checking if AI is set for patrol
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
@@ -472,6 +471,16 @@ void ACombatAIController::FindEnemy()
 			}
 		}
 
+		// if this is a new enemy then start end fire again so AI does not have wait to fire again when focusing on new enemy
+		if (EnemyActor != ChosenTarget)
+		{
+			GetWorldTimerManager().ClearTimer(THandler_EndFire);
+
+			if (!THandler_EndFire.IsValid()) {
+				GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
+			}
+		}
+
 		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 		EnemyActor = ChosenTarget;
 
@@ -680,7 +689,7 @@ void ACombatAIController::ShootAtEnemy()
 
 
 		GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
-
+		GetWorldTimerManager().ClearTimer(THandler_EndFire);
 	}
 
 }

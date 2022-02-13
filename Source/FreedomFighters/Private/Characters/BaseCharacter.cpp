@@ -133,11 +133,20 @@ ABaseCharacter::ABaseCharacter()
 	AimCameraSpring->bEnableCameraLag = false;
 	AimCameraSpring->bEnableCameraRotationLag = false;
 
+	FirstPersonCameraSpring = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCameraSpring"));
+	FirstPersonCameraSpring->bUsePawnControlRotation = true;
+	FirstPersonCameraSpring->SetupAttachment(GetMesh());
+	FirstPersonCameraSpring->TargetArmLength = 0.f;
+	FirstPersonCameraSpring->SocketOffset.Set(0.f, 0.f, 0.f);
+	FirstPersonCameraSpring->bEnableCameraLag = false;
+	FirstPersonCameraSpring->bEnableCameraRotationLag = false;
+
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera->SetHiddenInGame(false);
 
 	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
 	VoiceAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -156,6 +165,7 @@ ABaseCharacter::ABaseCharacter()
 
 	DestroyDelayTime = 10.f;
 
+	IsFirstPersonView = false;
 	IsSprintDefault = true;
 	isSprinting = false;
 	UseRootMotion = false;
@@ -176,6 +186,7 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+
 	RetrieveVoiceDataSet();
 	RetrieveAccessoryDataSet();
 	RetrieveDeathAnimDataSet();
@@ -190,6 +201,7 @@ void ABaseCharacter::BeginPlay()
 	DefaultCameraFOV = FollowCamera->FieldOfView;
 
 	AimCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderRightSocket);
+	FirstPersonCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeadSocket);
 
 	// Create Animation Instance Object
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
@@ -350,6 +362,10 @@ void ABaseCharacter::RetrieveDeathAnimDataSet()
 
 void ABaseCharacter::UpdateCameraView()
 {
+	if (IsFirstPersonView) {
+		return;
+	}
+
 	// Set Camera Fix Position when taking cover
 	float TargetX = DefaultCamSocketOffset.X;
 	float TargetY = DefaultCamSocketOffset.Y;
@@ -379,7 +395,6 @@ void ABaseCharacter::UpdateCameraView()
 	float ZInterp = FMath::FInterpTo(CameraBoom->SocketOffset.Z, TargetZ, CurrentDeltaTime, Speed);
 
 	CameraBoom->SocketOffset.Set(XInterp, YInterp, ZInterp);
-
 
 	// Camera Zooming
 	float TargetFOV = isAiming ? AimCameraFOV : DefaultCameraFOV;
@@ -503,6 +518,12 @@ bool ABaseCharacter::IsCharacterMoving()
 	auto Velocity = GetCharacterMovement()->Velocity.Size();
 
 	return Velocity > UKismetMathLibrary::Abs(1.f);
+}
+
+void ABaseCharacter::SetFirstPersonView()
+{
+	IsFirstPersonView = true;
+	FollowCamera->AttachToComponent(FirstPersonCameraSpring, FAttachmentTransformRules::SnapToTargetNotIncludingScale, USpringArmComponent::SocketName);
 }
 
 void ABaseCharacter::ShowCharacterOutline(bool CanShow, bool IgnoreDeath)

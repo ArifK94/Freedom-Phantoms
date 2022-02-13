@@ -36,6 +36,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		USpringArmComponent* AimCameraSpring;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		USpringArmComponent* FirstPersonCameraSpring;
+
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* FollowCamera;
@@ -94,6 +97,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool UseAimCameraSpring;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool IsFirstPersonView;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float CharacterSpeed;
@@ -261,10 +267,13 @@ private:
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
 
+	void SetFirstPersonView();
+
 	// Ignoring death allows to call this function and display outline after character death.
 	void ShowCharacterOutline(bool CanShow, bool IgnoreDeath = false);
 	void ShowActorOutlineRecursive(TArray<AActor*> ParentActor, bool CanShow);
 	void SetActorOutline(AActor* Actor, bool CanShow);
+
 
 	void ToggleCrouch();
 
