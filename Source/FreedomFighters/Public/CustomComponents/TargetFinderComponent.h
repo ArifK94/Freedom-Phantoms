@@ -68,6 +68,9 @@ public:
 private:
 	void FindTargetUpdate();
 
+	/** Some actors such as vehicles may have enemy characters attached as children, so would need check if any enemy children exist if parent actor is not an enemy */
+	AActor* GetChildrenTargets(AActor* ParentTarget);
+
 	bool IsActorFiltered(AActor* Actor);
 
 	bool IsActorToIgnore(AActor* Actor);
@@ -88,7 +91,6 @@ public:
 	void AddIgnoreClass(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
 
 	void AddIgnoreActor(AActor* Actor) { IgnoreActors.Add(Actor); }
-
 
 	UFUNCTION(BlueprintCallable)
 		static void AddIgnoreClass(AActor* InOwner, TSubclassOf<AActor> InClass);

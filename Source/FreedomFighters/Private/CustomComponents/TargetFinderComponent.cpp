@@ -109,7 +109,7 @@ AActor* UTargetFinderComponent::FindTarget()
 	float TargetSightDistance = TargetSightRadius;
 
 	// Get all overlapped actors based that have team faction component attached
-	TargetSightSphere->GetOverlappingActors(ActorsInSight, UTeamFactionComponent::StaticClass());
+	TargetSightSphere->GetOverlappingActors(ActorsInSight, AActor::StaticClass());
 
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
 	FVector EyeLocation;
@@ -138,7 +138,15 @@ AActor* UTargetFinderComponent::FindTarget()
 
 		// Filter the class
 		if (!IsActorFiltered(PotentialEnemy)) {
-			continue;
+
+			// If the actor has children, then the children maybe potential targets such as enemy characters attached to vehicle actors
+			PotentialEnemy = GetChildrenTargets(PotentialEnemy);
+
+			// If no children actors are potential targets then skip 
+			if (!PotentialEnemy) {
+				continue;
+			}
+
 		}
 
 		auto TeamFaction = Cast<UTeamFactionComponent>(PotentialEnemy->GetComponentByClass(UTeamFactionComponent::StaticClass()));
@@ -194,6 +202,43 @@ AActor* UTargetFinderComponent::FindTarget()
 }
 
 
+AActor* UTargetFinderComponent::GetChildrenTargets(AActor* ParentTarget)
+{
+	AActor* PotentialTarget = nullptr;
+
+	if (!ParentTarget) {
+		return PotentialTarget;
+	}
+
+	TArray<AActor*> ChildAttachedActors;
+	ParentTarget->GetAttachedActors(ChildAttachedActors);
+
+
+	if (ChildAttachedActors.Num() <= 0) {
+		return nullptr;
+	}
+
+	for (int i = 0; i < ChildAttachedActors.Num(); i++)
+	{
+		auto Actor = ChildAttachedActors[i];
+
+		if (Actor == GetOwner()) {
+			continue;
+		}
+
+		if (IsActorFiltered(Actor))
+		{
+			return Actor;
+		}
+		else // keep looking at children actors recursively
+		{
+			PotentialTarget = GetChildrenTargets(Actor);
+		}
+	}
+
+	return PotentialTarget;
+}
+
 bool UTargetFinderComponent::IsActorFiltered(AActor* Actor)
 {
 	if (ClassFilters.Num() <= 0 || !Actor) {
@@ -248,6 +293,7 @@ bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector
 	{
 		ObjectParams.AddObjectTypesToQuery(UEngineTypes::ConvertToCollisionChannel((*Iter).GetValue()));
 	}
+
 	if (ShowDebugTrace)
 	{
 		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.f);
