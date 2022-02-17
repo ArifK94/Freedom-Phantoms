@@ -300,17 +300,15 @@ private:
 	/** Play aircraft crew random conversations at intervals */
 	void PlayRandomPilotSound();
 
-	void OnDestroy();
-
 	void DestroyChildActor(TArray<AActor*> ParentActor);
-
-	virtual void Destroyed() override;
 
 protected:
 	virtual void BeginPlay() override;
 
 public:
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void Destroyed() override;
 
 	USkeletalMeshComponent* GetMesh() {
 		return Mesh;

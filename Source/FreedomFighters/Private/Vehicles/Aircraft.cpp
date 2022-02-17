@@ -675,7 +675,7 @@ void AAircraft::SetTargetSystem()
 	// adding characters to targetting
 	for (AActor* Actor : Actors)
 	{
-		bool IsFactionCompActive = UHealthComponent::IsAlive(Actor);
+		bool IsFactionCompActive = UTeamFactionComponent::IsComponentActive(Actor);
 
 		if (IsFactionCompActive)
 		{
@@ -728,9 +728,9 @@ void AAircraft::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubc
 		auto Actor = TargetNode->Actor;
 
 		// if the target is not active
-		bool IsFactionCompActive = UHealthComponent::IsAlive(Actor);
+		bool IsAlive = UHealthComponent::IsAlive(Actor);
 
-		if (IsFactionCompActive)
+		if (IsAlive)
 		{
 			if (TargetNode->Marker) // marker to follow the actor location
 			{
@@ -1002,9 +1002,30 @@ void AAircraft::UpdateOccupiedSeats()
 	}
 }
 
-
-void AAircraft::OnDestroy()
+// Recursively destroy children actors
+void AAircraft::DestroyChildActor(TArray<AActor*> ParentActor)
 {
+	for (int i = 0; i < ParentActor.Num(); i++)
+	{
+		AActor* ChildActor = ParentActor[i];
+
+		// ignore the aircraft actor
+		if (ChildActor == this) {
+			continue;
+		}
+
+		TArray<AActor*> ChildAttachedActors;
+		ChildActor->GetAttachedActors(ChildAttachedActors);
+		DestroyChildActor(ChildAttachedActors);
+
+		ChildActor->Destroy();
+	}
+}
+
+void AAircraft::Destroyed()
+{
+	Super::Destroyed();
+
 	RemoveUIWidget();
 
 	if (HighlightCharacters)
@@ -1050,33 +1071,4 @@ void AAircraft::OnDestroy()
 	GetAttachedActors(AttachedActors);
 	DestroyChildActor(AttachedActors);
 
-	// destroy the aircraft
-	Destroy();
-}
-
-// Recursively destroy children actors
-void AAircraft::DestroyChildActor(TArray<AActor*> ParentActor)
-{
-	for (int i = 0; i < ParentActor.Num(); i++)
-	{
-		AActor* ChildActor = ParentActor[i];
-
-		// ignore the aircraft actor
-		if (ChildActor == this) {
-			continue;
-		}
-
-		TArray<AActor*> ChildAttachedActors;
-		ChildActor->GetAttachedActors(ChildAttachedActors);
-		DestroyChildActor(ChildAttachedActors);
-
-		ChildActor->Destroy();
-	}
-}
-
-void AAircraft::Destroyed()
-{
-	OnDestroy();
-
-	Super::Destroyed();
 }
