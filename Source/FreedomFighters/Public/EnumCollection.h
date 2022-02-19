@@ -58,15 +58,6 @@ enum class LoadoutType : uint8
 	LMG		UMETA(DisplayName = "LMG")
 };
 
-UENUM(BlueprintType)
-enum class EAircraftMovement : uint8
-{
-	Grounded		UMETA(DisplayName = "Grounded"),
-	Hovering		UMETA(DisplayName = "Hovering"),
-	Rappel			UMETA(DisplayName = "Rappel"),
-	Stopping 		UMETA(DisplayName = "Stopping"),
-	MovingForward	UMETA(DisplayName = "MovingForward")
-};
 
 UENUM(BlueprintType)
 enum class EVehicleMovement : uint8
@@ -88,22 +79,6 @@ enum class EVehicleSpeedType : uint8
 
 UENUM(BlueprintType)
 enum class EVehicleRole : uint8
-{
-	Pilot				UMETA(DisplayName = "Pilot"),
-	SideGunner 			UMETA(DisplayName = "SideGunner"),
-	MountedGunnner		UMETA(DisplayName = "MountedGunnner")
-};
-
-UENUM(BlueprintType)
-enum class AircraftSpeedType : uint8
-{
-	Normal		UMETA(DisplayName = "Normal"),
-	Specified	UMETA(DisplayName = "Specified")
-};
-
-
-UENUM(BlueprintType)
-enum class EAircraftRole : uint8
 {
 	Pilot				UMETA(DisplayName = "Pilot"),
 	SideGunner 			UMETA(DisplayName = "SideGunner"),

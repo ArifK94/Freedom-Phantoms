@@ -459,16 +459,13 @@ public:
 		FVector PointLocation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		AircraftSpeedType AffectSpeedType;
+		EVehicleSpeedType AffectSpeedType;
 
 	/** Aircraft path durations to be affected if AffectSpeedType is set to specified,
 	* the higher the duration, the slower the aircraft speed (in seconds)
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float AircraftDuration;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		EAircraftMovement MovementTypeOld;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EVehicleMovement MovementType;
@@ -486,11 +483,11 @@ public:
 	UPROPERTY()
 		class USphereComponent* CollisionSphere;
 
-	//UPROPERTY()
-	//	class UArrowComponent* ArrowComponent;
+	UPROPERTY()
+		class UArrowComponent* ArrowComponent;
 
-	//UPROPERTY()
-	//	class UTextRenderComponent* TextRenderComponent;
+	UPROPERTY()
+		class UTextRenderComponent* TextRenderComponent;
 
 };
 
@@ -502,7 +499,7 @@ struct FAircraftSeating
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		EAircraftRole Role;
+		EVehicleRole Role;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		FName SeatingSocketName;
@@ -587,7 +584,7 @@ struct FVehicletSeating
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		EAircraftRole Role;
+		EVehicleRole Role;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		FName SeatingSocketName;

@@ -182,7 +182,7 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 		CurrentAircraftMovement = CurrentSplinePoint.MovementType;
 
 		// adjust path duration to change speed if specified
-		if (CurrentSplinePoint.AffectSpeedType == AircraftSpeedType::Specified)
+		if (CurrentSplinePoint.AffectSpeedType == EVehicleSpeedType::Specified)
 		{
 
 			CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.AircraftDuration);
@@ -920,7 +920,7 @@ void AAircraft::WaitForRapelling()
 
 	for (int i = 0; i < OccupiedSeats.Num(); i++)
 	{
-		if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
+		if (OccupiedSeats[i].Role == EVehicleRole::SideGunner)
 		{
 			FAircraftSeating Passenger = OccupiedSeats[i];
 			auto Character = Passenger.CharacterObj;
@@ -992,7 +992,7 @@ void AAircraft::UpdateOccupiedSeats()
 		{
 			OccupiedSeats.RemoveAt(i);
 		}
-		else if (OccupiedSeats[i].Role == EAircraftRole::SideGunner)
+		else if (OccupiedSeats[i].Role == EVehicleRole::SideGunner)
 		{
 			if (Character->GetHealthComp() && !Character->GetHealthComp()->IsAlive())
 			{

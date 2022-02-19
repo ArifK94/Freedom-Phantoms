@@ -124,33 +124,20 @@ void AVehicleSplinePath::UpdateCollisionBox()
 	{
 		const FVector StartPoint = SplinePathComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::World);
 		FVehicleSplinePoint VehicleSplinePoint = VehicleSplinePoints[i];
-		
-		
-
-		//if (VehicleSplinePoint.ArrowComponent == nullptr)
-		//{
-		//	VehicleSplinePoint.ArrowComponent = NewObject<UArrowComponent>(this);
-		//	VehicleSplinePoint.ArrowComponent->RegisterComponent();
-		//}
-		//if (VehicleSplinePoint.ArrowComponent)
-		//{
-		//	VehicleSplinePoint.ArrowComponent->SetWorldLocation(StartPoint);
-		//}
-
-		//if (VehicleSplinePoint.TextRenderComponent == nullptr)
-		//{
-		//	VehicleSplinePoint.TextRenderComponent = NewObject<UTextRenderComponent>(this);
-		//	VehicleSplinePoint.TextRenderComponent->RegisterComponent();
-		//	VehicleSplinePoint.TextRenderComponent->SetHiddenInGame(true);
-		//	VehicleSplinePoint.TextRenderComponent->SetWorldSize(100.f);
-		//}
-		//if (VehicleSplinePoint.TextRenderComponent)
-		//{
-		//	VehicleSplinePoint.TextRenderComponent->SetText(FString::FromInt(i));
-		//	VehicleSplinePoint.TextRenderComponent->SetWorldLocation(StartPoint);
-		//}
 
 		UpdatePointerPoints();
+
+		if (VehicleSplinePointsPtr[i]->ArrowComponent)
+		{
+			VehicleSplinePointsPtr[i]->ArrowComponent->SetWorldLocation(StartPoint);
+		}
+
+		if (VehicleSplinePointsPtr[i]->TextRenderComponent)
+		{
+			VehicleSplinePointsPtr[i]->TextRenderComponent->SetText(FString::FromInt(i));
+			VehicleSplinePointsPtr[i]->TextRenderComponent->SetWorldLocation(StartPoint);
+		}
+
 
 		if (VehicleSplinePointsPtr[i]->CollisionBox)
 		{
@@ -161,8 +148,6 @@ void AVehicleSplinePath::UpdateCollisionBox()
 		{
 			VehicleSplinePointsPtr[i]->CollisionSphere->SetWorldLocation(StartPoint);
 		}
-
-
 
 		FColor ColliderColour;
 		switch (VehicleSplinePoint.MovementType)
@@ -202,6 +187,20 @@ void AVehicleSplinePath::UpdatePointerPoints()
 		VehicleSplinePointPtr->CollisionSphere->RegisterComponent();
 		VehicleSplinePointPtr->CollisionSphere->SetSphereRadius(500.0f);
 		VehicleSplinePointPtr->CollisionSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+	}
+
+	if (VehicleSplinePointPtr->ArrowComponent == nullptr)
+	{
+		VehicleSplinePointPtr->ArrowComponent = NewObject<UArrowComponent>(this);
+		VehicleSplinePointPtr->ArrowComponent->RegisterComponent();
+	}
+
+	if (VehicleSplinePointPtr->TextRenderComponent == nullptr)
+	{
+		VehicleSplinePointPtr->TextRenderComponent = NewObject<UTextRenderComponent>(this);
+		VehicleSplinePointPtr->TextRenderComponent->RegisterComponent();
+		VehicleSplinePointPtr->TextRenderComponent->SetHiddenInGame(true);
+		VehicleSplinePointPtr->TextRenderComponent->SetWorldSize(100.f);
 	}
 
 	if (!VehicleSplinePointsPtr.Contains(VehicleSplinePointPtr))
