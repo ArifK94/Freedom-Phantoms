@@ -1,7 +1,7 @@
 #include "Vehicles/Aircraft.h"
 #include "Characters/BaseCharacter.h"
 #include "Characters/CombatCharacter.h"
-#include "Props/AircraftSplinePath.h"
+#include "Props/VehicleSplinePath.h"
 #include "Accessories/Rope.h"
 #include "Props/TargetSystemMarker.h"
 #include "Weapons/Weapon.h"
@@ -163,7 +163,7 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 	if (AircraftPath != nullptr)
 	{
 		FVector CollisionLocation = GetActorLocation();
-		AAircraftSplinePath* CollidedPath = Cast<AAircraftSplinePath>(OtherActor);
+		auto CollidedPath = Cast<AVehicleSplinePath>(OtherActor);
 
 		// if collided with another aircraft path then ignore then do not proceed
 		if (CollidedPath != AircraftPath) {
@@ -219,14 +219,14 @@ void AAircraft::FindPath()
 			return;
 		}
 
-		AAircraftSplinePath* ClosestPath = nullptr;
+		AVehicleSplinePath* ClosestPath = nullptr;
 		float ClosestDistance = 0.0f;
 		TArray<AActor*> TargetActor;
 		UGameplayStatics::GetAllActorsWithTag(GetWorld(), AircraftPathTagName, TargetActor);
 
 		for (AActor* Actor : TargetActor)
 		{
-			auto Path = Cast<AAircraftSplinePath>(Actor);
+			auto Path = Cast<AVehicleSplinePath>(Actor);
 
 			// check if path is not occupied
 			if (Path && !Path->GetOccupiedVehicle())
@@ -883,7 +883,7 @@ void AAircraft::PlayRandomPilotSound()
 
 void AAircraft::WaitForRapelling()
 {
-	if (CurrentAircraftMovement != EAircraftMovement::Rappel || OccupiedSeats.Num() <= 0) {
+	if (CurrentAircraftMovement != EVehicleMovement::Rappel || OccupiedSeats.Num() <= 0) {
 		return;
 	}
 
@@ -974,7 +974,7 @@ void AAircraft::WaitForRapelling()
 			RopeRight->DropRope();
 		}
 
-		CurrentAircraftMovement = EAircraftMovement::MovingForward;
+		CurrentAircraftMovement = EVehicleMovement::MovingForward;
 
 		CurveTimeline.Play();
 

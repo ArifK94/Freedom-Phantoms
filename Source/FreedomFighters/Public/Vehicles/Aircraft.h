@@ -9,7 +9,7 @@
 #include "Aircraft.generated.h"
 
 class AMountedGun;
-class AAircraftSplinePath;
+class AVehicleSplinePath;
 class UCurveFloat;
 class UCapsuleComponent;
 class UCameraComponent;
@@ -140,7 +140,7 @@ private:
 
 	/** Set the movement once is reaches the target, eg. hover over target location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Location", meta = (AllowPrivateAccess = "true"))
-		EAircraftMovement TargetLocReachedAircraftMovementType;
+		EVehicleMovement TargetLocReachedAircraftMovementType;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -155,7 +155,7 @@ private:
 	UUserWidget* HUDWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		AAircraftSplinePath* AircraftPath;
+		AVehicleSplinePath* AircraftPath;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName AircraftPathTagName;
@@ -216,7 +216,7 @@ private:
 		TArray<FAircraftSeating> OccupiedSeats;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		EAircraftMovement CurrentAircraftMovement;
+		EVehicleMovement CurrentAircraftMovement;
 
 	FTimeline CurveTimeline;
 public:

@@ -262,6 +262,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FSupportPackageVoiceOverSet> SupportSoundsSet;
 
+	/** The actor tag name of the path to follow */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName VehiclePathTagName;
+
 	FSupportPackageSet()
 	{
 
@@ -464,11 +468,30 @@ public:
 		float AircraftDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		EAircraftMovement MovementType;
+		EAircraftMovement MovementTypeOld;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		EVehicleMovement MovementType;
 	
 	/** Allow additional aircrafts to use the same spline path if current aircraft has finished its task rather than waiting for the current aircraft to reach its endpoint of the path  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool IsPathFreeToUse;
+
+
+	/** Allow vehicle to overlap the collision objects to indicate which point of the path they have reached  */
+	UPROPERTY()
+		class UBoxComponent* CollisionBox;
+
+	/** Collision designs to make it easy visualise in the editor  */
+	UPROPERTY()
+		class USphereComponent* CollisionSphere;
+
+	//UPROPERTY()
+	//	class UArrowComponent* ArrowComponent;
+
+	//UPROPERTY()
+	//	class UTextRenderComponent* TextRenderComponent;
+
 };
 
 
@@ -527,7 +550,7 @@ public:
 USTRUCT(BlueprintType)
 struct FAircraftWeapon
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
