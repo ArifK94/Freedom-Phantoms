@@ -176,12 +176,30 @@ AActor* UTargetFinderComponent::FindTarget()
 		FHitResult HitTargetResult;
 		auto Trace = GetTrace(HitTargetResult, EyeLocation, EnemyLocation);
 
-		if (!Trace) {
-			continue;
+		bool HasHitTarget = false;
+
+		if (Trace && HitTargetResult.GetActor() == PotentialEnemy)
+		{
+			HasHitTarget = true;
 		}
 
+		if (!HasHitTarget)
+		{
+			FVector EnemyEyeLocation;
+			FRotator EnemyEyeRotation;
+			PotentialEnemy->GetActorEyesViewPoint(EnemyEyeLocation, EnemyEyeRotation);
 
-		if (HitTargetResult.GetActor() == PotentialEnemy)
+			// check if can see the target
+			FHitResult OutHitHead;
+			auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation);
+
+			if (HeadTrace && OutHitHead.GetActor() == PotentialEnemy)
+			{
+				HasHitTarget = true;
+			}
+		}
+
+		if (HasHitTarget)
 		{
 			// get closest enemy
 			float DistanceDiff = FVector::Dist(OwnerLocation, EnemyLocation);
