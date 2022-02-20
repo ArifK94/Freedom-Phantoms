@@ -290,7 +290,7 @@ public:
 	void CoverMovement(float Value);
 	virtual void StopCover();
 
-	void SetVehicleSeat(FVehicletSeating Seat);
+	void SetVehicleSeat(FVehicletSeating* Seat);
 	void SetAircraftSeat(FAircraftSeating Seating);
 	virtual void SetIsRepellingDown(bool IsRappelling);
 

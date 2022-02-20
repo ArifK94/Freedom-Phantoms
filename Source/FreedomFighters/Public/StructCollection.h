@@ -609,10 +609,13 @@ public:
 		float YawMax;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TSubclassOf<ABaseCharacter> Character;
-	ABaseCharacter* CharacterObj;
+		TSubclassOf<ABaseCharacter> CharacterClass;
 
-	AActor* OwningVehicle;
+	UPROPERTY()
+		ABaseCharacter* Character;
+
+	UPROPERTY()
+		AActor* OwningVehicle;
 
 	FVehicletSeating()
 	{
@@ -655,6 +658,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;
+
+	UPROPERTY()
+		AMountedGun* Weapon;
 
 	FVehicleWeapon()
 	{

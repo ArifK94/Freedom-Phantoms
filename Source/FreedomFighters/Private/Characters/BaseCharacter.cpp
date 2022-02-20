@@ -23,11 +23,11 @@
 #include "Engine.h"
 
 
-void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
+void ABaseCharacter::SetVehicleSeat(FVehicletSeating* Seat)
 {
-	if (Seat.OwningVehicle)
+	if (Seat->OwningVehicle)
 	{
-		GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+		//GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
 	}
 	else

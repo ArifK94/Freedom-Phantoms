@@ -2,7 +2,6 @@
 
 
 #include "Vehicles/TankVehicle.h"
-#include "Vehicles/LandVehicle.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
 #include "CustomComponents/ShooterComponent.h"
@@ -30,39 +29,7 @@ FVehicleWeapon ATankVehicle::GetCurrentVehicleWeapon()
 	return FVehicleWeapon();
 }
 
-void ATankVehicle::SetRotationInput(FRotator InRotation)
-{
-	//auto CurrentRotation = RotationInput;
-	//auto TotalPitch = RotationInput.Pitch + InRotation.Pitch;
-	//auto TotalYaw = RotationInput.Yaw + InRotation.Yaw;
 
-	//ChangePitchValue(TotalYaw);
-
-	//if (TotalPitch >= PitchMax) {
-	//	TotalPitch = PitchMax;
-	//}
-	//else if (TotalPitch <= PitchMin) {
-	//	TotalPitch = PitchMin;
-	//}
-	//else {
-	//	TotalPitch = InRotation.Pitch;
-	//}
-
-	//if (TotalYaw >= YawMax) {
-	//	TotalYaw = YawMax;
-	//}
-	//else if (TotalYaw <= YawMin) {
-	//	TotalYaw = YawMin;
-	//}
-	//else {
-	//	TotalYaw = InRotation.Yaw;
-	//}
-
-	//RotationInput.Pitch = TotalPitch;
-	//RotationInput.Yaw = TotalYaw;
-
-	RotationInput = InRotation;
-}
 
 void ATankVehicle::SetCurrentWeapon(AMountedGun* InMountedGun, FVehicleWeapon InVehicleWeapon)
 {
@@ -75,7 +42,7 @@ ATankVehicle::ATankVehicle()
 	PrimaryActorTick.bCanEverTick = true;
 
 	TurretAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("TurretAudio"));
-	TurretAudio->AttachToComponent(MeshComp, FAttachmentTransformRules::KeepRelativeTransform);
+	TurretAudio->AttachToComponent(MeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
 
@@ -136,7 +103,7 @@ void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	Super::OnHealthUpdate(InHealthParameters);
 
-	if (!HealthComp->IsAlive())
+	if (!HealthComponent->IsAlive())
 	{
 		TargetFinderComponent->SetFindTargetPerFrame(false);
 		PrimaryActorTick.bCanEverTick = false;
@@ -169,7 +136,7 @@ void ATankVehicle::OnTargetSearchUpdate(AActor* Actor)
 	}
 
 	// Use main weapon on vehicles
-	if (Actor->IsA(ALandVehicle::StaticClass()))
+	if (Actor->IsA(AVehicleBase::StaticClass()))
 	{
 		if (CurrentWeapon != MainWeapon)
 		{
@@ -210,7 +177,7 @@ AMountedGun* ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
 	}
 
 	Weapon->SetOwner(MyOwner);
-	Weapon->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
+	Weapon->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
 	Weapon->SetWeaponProfile(TEXT("NoCollision"));
 	return Weapon;
 }
@@ -267,12 +234,12 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 	// check if weapon class was provided as we cannot access the weapon object pointer when it has UPROPERTY attribute
 	if (VehicleWeapon.WeaponClass)
 	{
-		EyeLocation = MeshComp->GetSocketLocation(VehicleWeapon.WeaponSocketName);
+		EyeLocation = MeshComponent->GetSocketLocation(VehicleWeapon.WeaponSocketName);
 	}
 
 	auto TargetLocation = Actor->GetActorLocation() - EyeLocation;
-	auto RootBone = MeshComp->GetBoneName(0);
-	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComp->GetSocketTransform(RootBone), TargetLocation);
+	auto RootBone = MeshComponent->GetBoneName(0);
+	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComponent->GetSocketTransform(RootBone), TargetLocation);
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
 	return UKismetMathLibrary::RInterpTo(RotationInput, TargetRotation, GetWorld()->DeltaTimeSeconds, TurretRotationFactor);
@@ -281,7 +248,7 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 
 void ATankVehicle::Shoot()
 {
-	if (!HealthComp->IsAlive()) {
+	if (!HealthComponent->IsAlive()) {
 		return;
 	}
 

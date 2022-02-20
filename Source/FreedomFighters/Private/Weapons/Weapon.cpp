@@ -535,7 +535,10 @@ void AWeapon::PlayShotEffect(FVector EyeLocation)
 
 void AWeapon::OnProjectileImpacted(FProjectileImpactParameters ProjectileImpactParameters)
 {
-	OnKillConfirmed.Broadcast(ProjectileImpactParameters);
+	if (ProjectileImpactParameters.KillCount > 0)
+	{
+		OnKillConfirmed.Broadcast(ProjectileImpactParameters);
+	}
 
 	// As the projectile owner can change, we do not want this event being fired again if the projectile was shot by another character,
 	// but first check if the projectile exists, since some weapons may not be using object pooling to respawn the projectile

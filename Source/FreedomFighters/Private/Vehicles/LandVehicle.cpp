@@ -203,60 +203,60 @@ void ALandVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 void ALandVehicle::SpawnVehicleSeatings()
 {
-	if (VehicletSeating.Num() <= 0) {
-		return;
-	}
+	//if (VehicletSeating.Num() <= 0) {
+	//	return;
+	//}
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	//FActorSpawnParameters SpawnParams;
+	//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	for (int i = 0; i < VehicletSeating.Num(); i++)
-	{
-		auto VehicleSeat = VehicletSeating[i];
-		VehicleSeat.OwningVehicle = this;
+	//for (int i = 0; i < VehicletSeating.Num(); i++)
+	//{
+	//	auto VehicleSeat = VehicletSeating[i];
+	//	VehicleSeat.OwningVehicle = this;
 
-		if (VehicleSeat.Character)
-		{
-			VehicleSeat.CharacterObj = GetWorld()->SpawnActor<ABaseCharacter>(VehicleSeat.Character, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	//	if (VehicleSeat.Character)
+	//	{
+	//		VehicleSeat.Character = GetWorld()->SpawnActor<ABaseCharacter>(VehicleSeat.Character, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-			if (VehicleSeat.CharacterObj)
-			{
-				ABaseCharacter* Character = VehicleSeat.CharacterObj;
+	//		if (VehicleSeat.Character)
+	//		{
+	//			ABaseCharacter* Character = VehicleSeat.Character;
 
-				Character->SetVehicleSeat(VehicleSeat);
-				// Attach to vehicle socket after setting vehicle seat to character as the capsule component will need to ignore the vehicle collision
-				Character->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
+	//			Character->SetVehicleSeat(VehicleSeat);
+	//			// Attach to vehicle socket after setting vehicle seat to character as the capsule component will need to ignore the vehicle collision
+	//			Character->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
 
-				// Set to use weapon, usually a mounted gun would be used
-				if (VehicleSeat.AssociatedWeapon > -1)
-				{
-					auto Index = VehicleSeat.AssociatedWeapon;
-					auto Weapon = VehicleWeaponsPtr[Index];
+	//			// Set to use weapon, usually a mounted gun would be used
+	//			if (VehicleSeat.AssociatedWeapon > -1)
+	//			{
+	//				auto Index = VehicleSeat.AssociatedWeapon;
+	//				auto Weapon = VehicleWeaponsPtr[Index];
 
-					if (Weapon)
-					{
-						ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
-						CombatCharacter->SetMountedGun(Weapon);
-						CombatCharacter->UseMountedGun();
+	//				if (Weapon)
+	//				{
+	//					ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
+	//					CombatCharacter->SetMountedGun(Weapon);
+	//					CombatCharacter->UseMountedGun();
 
-						if (VehicleWeapons[Index].AttachCharacterToWeapon)
-						{
-							CombatCharacter->AttachToActor(Weapon, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapons[Index].WeaponAttachmentName);
-						}
+	//					if (VehicleWeapons[Index].AttachCharacterToWeapon)
+	//					{
+	//						CombatCharacter->AttachToActor(Weapon, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapons[Index].WeaponAttachmentName);
+	//					}
 
-						// Ignore this vehicle when using target finder component
-						UTargetFinderComponent::AddIgnoreActor(CombatCharacter, this);
-					}
+	//					// Ignore this vehicle when using target finder component
+	//					UTargetFinderComponent::AddIgnoreActor(CombatCharacter, this);
+	//				}
 
-				}
+	//			}
 
-				VehicleCharactersPtr.Add(Character);
+	//			VehicleCharactersPtr.Add(Character);
 
-				//OccupiedSeats.Add(VehicleSeat);
+	//			//OccupiedSeats.Add(VehicleSeat);
 
-			}
-		}
-	}
+	//		}
+	//	}
+	//}
 }
 
 void ALandVehicle::SpawnVehicleWeapons()

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Vehicles/LandVehicle.h"
+#include "Vehicles/VehicleBase.h"
 #include "StructCollection.h"
 #include "TankVehicle.generated.h"
 
@@ -12,7 +12,7 @@ class UTargetFinderComponent;
 class UShooterComponent;
 class USoundBase;
 UCLASS()
-class FREEDOMFIGHTERS_API ATankVehicle : public ALandVehicle
+class FREEDOMFIGHTERS_API ATankVehicle : public AVehicleBase
 {
 	GENERATED_BODY()
 
@@ -36,9 +36,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UShooterComponent* ShooterComponent;
 
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FRotator RotationInput;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float PitchMin;
@@ -101,12 +98,6 @@ public:
 
 	virtual void OnHealthUpdate(FHealthParameters InHealthParameters) override;
 
-	UFUNCTION()
-		void OnTargetSearchUpdate(AActor* Actor);
-
-	UFUNCTION(BlueprintCallable)
-		void SetRotationInput(FRotator InRotation);
-
 	UFUNCTION(BlueprintCallable)
 		void ChangeSecondaryWeapon();
 
@@ -114,6 +105,11 @@ public:
 		void RandomChangeWeapon();
 
 	void SetCurrentWeapon(AMountedGun* InMountedGun, FVehicleWeapon InVehicleWeapon);
+
+	//Event Handlers
+public:
+	UFUNCTION()
+		void OnTargetSearchUpdate(AActor* Actor);
 
 private:
 	AMountedGun* SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
