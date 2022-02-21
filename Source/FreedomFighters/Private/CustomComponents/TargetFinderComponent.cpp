@@ -118,6 +118,7 @@ AActor* UTargetFinderComponent::FindTarget()
 
 	// The current limit of targets to process
 	int CurrentProcessedCharacters = 0;
+	auto TargetSearchParameters = FTargetSearchParameters();
 
 	for (int index = 0; index < ActorsInSight.Num(); index++)
 	{
@@ -181,6 +182,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		if (Trace && HitTargetResult.GetActor() == PotentialEnemy)
 		{
 			HasHitTarget = true;
+			TargetSearchParameters.TargetLocation = HitTargetResult.ImpactPoint;
 		}
 
 		if (!HasHitTarget)
@@ -196,6 +198,7 @@ AActor* UTargetFinderComponent::FindTarget()
 			if (HeadTrace && OutHitHead.GetActor() == PotentialEnemy)
 			{
 				HasHitTarget = true;
+				TargetSearchParameters.TargetLocation = OutHitHead.ImpactPoint;
 			}
 		}
 
@@ -215,7 +218,8 @@ AActor* UTargetFinderComponent::FindTarget()
 
 	}
 
-	OnTargetSearch.Broadcast(TargetActor);
+	TargetSearchParameters.TargetActor = TargetActor;
+	OnTargetSearch.Broadcast(TargetSearchParameters);
 	return TargetActor;
 }
 

@@ -109,7 +109,7 @@ public:
 	//Event Handlers
 public:
 	UFUNCTION()
-		void OnTargetSearchUpdate(AActor* Actor);
+		void OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters);
 
 private:
 	AMountedGun* SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);

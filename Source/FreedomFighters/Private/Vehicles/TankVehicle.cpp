@@ -125,18 +125,18 @@ void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 	}
 }
 
-void ATankVehicle::OnTargetSearchUpdate(AActor* Actor)
+void ATankVehicle::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters)
 {
-	TargetActor = Actor;
+	TargetActor = TargetSearchParameters.TargetActor;
 
-	if (!Actor) {
+	if (!TargetActor) {
 		ShooterComponent->EndFire();
 		GetWorldTimerManager().ClearTimer(THandler_RandomChangeWeapon);
 		return;
 	}
 
 	// Use main weapon on vehicles
-	if (Actor->IsA(AVehicleBase::StaticClass()))
+	if (TargetActor->IsA(AVehicleBase::StaticClass()))
 	{
 		if (CurrentWeapon != MainWeapon)
 		{

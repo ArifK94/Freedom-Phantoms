@@ -145,6 +145,25 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FREEDOMFIGHTERS_API FTargetSearchParameters
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AActor* TargetActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FVector TargetLocation;
+
+	FTargetSearchParameters()
+	{
+		TargetActor = nullptr;
+		TargetLocation = FVector::ZeroVector;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase
 {
 	GENERATED_BODY()
