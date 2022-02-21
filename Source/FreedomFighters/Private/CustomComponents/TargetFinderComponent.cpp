@@ -182,7 +182,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		if (Trace && HitTargetResult.GetActor() == PotentialEnemy)
 		{
 			HasHitTarget = true;
-			TargetSearchParameters.TargetLocation = HitTargetResult.ImpactPoint;
+			TargetSearchParameters.TargetLocation = EnemyLocation;
 		}
 
 		if (!HasHitTarget)
@@ -198,7 +198,7 @@ AActor* UTargetFinderComponent::FindTarget()
 			if (HeadTrace && OutHitHead.GetActor() == PotentialEnemy)
 			{
 				HasHitTarget = true;
-				TargetSearchParameters.TargetLocation = OutHitHead.ImpactPoint;
+				TargetSearchParameters.TargetLocation = EnemyEyeLocation;
 			}
 		}
 

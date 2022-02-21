@@ -45,6 +45,8 @@ private:
 	FVector ChosenCoverPoint;
 	FVector LastSeenPosition;
 
+	FTargetSearchParameters* TargetSearchParams;
+
 	float m_DelaTime;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -159,6 +161,9 @@ private:
 	UFUNCTION()
 		void OnOrderReceived(UCommanderRecruit* RecruitInfo);
 	bool HasAssignedOrderEvent;
+
+	UFUNCTION()
+		void OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters);
 
 	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
 

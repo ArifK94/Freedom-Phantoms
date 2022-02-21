@@ -169,6 +169,7 @@ void ACombatAIController::Init()
 		if (TargetFinderComponent)
 		{
 			TargetFinderComponent->RegisterComponent();
+			TargetFinderComponent->SetFindTargetPerFrame(true);
 		}
 	}
 
@@ -190,7 +191,6 @@ void ACombatAIController::Init()
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 	}
 }
-
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
@@ -231,13 +231,6 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 	return CurrentMovement;
 }
 
-void ACombatAIController::BeginPlay()
-{
-	Super::BeginPlay();
-
-	DefaultDestinationRadius = DestinationRadius;
-}
-
 void ACombatAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -256,7 +249,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 		PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetPrimaryWeapon());
 
-		GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
+		//GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true, 2.0f); // delay finding MG after checking if AI is set for patrol
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
@@ -264,7 +257,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 
 		// Events! DON'T FORGET TO REMOVE EVENTS ON THE UNPOSSESS() method to prevent a crash when switching between possess & unpossess
-
+		TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ACombatAIController::OnTargetSearchUpdate);
 		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACombatAIController::OnRappelUpdated);
 
 		if (AIMovementComponent)
@@ -289,6 +282,56 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	}
 }
 
+void ACombatAIController::OnUnPossess()
+{
+	Super::OnUnPossess();
+
+	if (OwningCombatCharacter)
+	{
+		TargetFinderComponent->OnTargetSearch.RemoveDynamic(this, &ACombatAIController::OnTargetSearchUpdate);
+		OwningCombatCharacter->OnRappelUpdate.RemoveDynamic(this, &ACombatAIController::OnRappelUpdated);
+
+		if (AIMovementComponent)
+		{
+			AIMovementComponent->OnDestinationSet.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationSet);
+			AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
+		}
+
+		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
+
+		if (HealthComp)
+		{
+			HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthUpdate);
+		}
+	}
+
+
+	ClearTimers();
+}
+
+void ACombatAIController::ClearTimers()
+{
+	TargetFinderComponent->SetFindTargetPerFrame(false);
+
+	GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
+	GetWorldTimerManager().ClearTimer(THandler_EndFire);
+	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
+	GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
+	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
+	GetWorldTimerManager().ClearTimer(THandler_FindCover);
+	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
+}
+
+
+void ACombatAIController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	DefaultDestinationRadius = DestinationRadius;
+
+	TargetSearchParams = new FTargetSearchParameters();
+}
+
 void ACombatAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -305,37 +348,14 @@ void ACombatAIController::Tick(float DeltaTime)
 			}
 			else
 			{
-				SetFocus(EnemyActor);
+				//SetFocus(EnemyActor);
+				SetFocalPoint(TargetSearchParams->TargetLocation);
 			}
 		}
 	}
 }
 
-void ACombatAIController::OnUnPossess()
-{
-	Super::OnUnPossess();
 
-	if (OwningCombatCharacter)
-	{
-		if (AIMovementComponent)
-		{
-			AIMovementComponent->OnDestinationSet.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationSet);
-			AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
-		}
-
-		OwningCombatCharacter->OnRappelUpdate.RemoveDynamic(this, &ACombatAIController::OnRappelUpdated);
-
-		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
-
-		if (HealthComp)
-		{
-			HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthUpdate);
-		}
-	}
-
-
-	ClearTimers();
-}
 
 void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
@@ -367,18 +387,100 @@ void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 			DestinationRadius = DefaultDestinationRadius;
 		}
 	}
-
 }
 
-void ACombatAIController::ClearTimers()
+void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters)
 {
-	GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
-	GetWorldTimerManager().ClearTimer(THandler_EndFire);
-	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
-	GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
-	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
-	GetWorldTimerManager().ClearTimer(THandler_FindCover);
-	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
+	AActor* ChosenTarget = TargetSearchParameters.TargetActor;
+
+	TargetSearchParams->TargetActor = TargetSearchParameters.TargetActor;
+	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
+
+
+	if (ChosenTarget) // found an enemy?
+	{
+		LastSeenEnemyActor = nullptr;
+
+		if (OwningCombatCharacter->IsTakingCover())
+		{
+			if (TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, ChosenTarget))
+			{
+				OwningCombatCharacter->StopCover();
+			}
+		}
+
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetUseControllerRotationYaw())
+		{
+			FVector Start = ChosenTarget->GetActorLocation() - OwningCombatCharacter->GetActorLocation();
+			Start = UKismetMathLibrary::InverseTransformDirection(OwningCombatCharacter->FollowCamera->GetComponentTransform(), Start);
+			FRotator TargetRot = UKismetMathLibrary::MakeRotFromX(Start);
+
+			bool YawRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Yaw, OwningCombatCharacter->GetMountedGun()->GetYawMin(), OwningCombatCharacter->GetMountedGun()->GetYawMax(), false, false);
+			bool PitchRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Pitch, OwningCombatCharacter->GetMountedGun()->GetPitchMin(), OwningCombatCharacter->GetMountedGun()->GetPitchMax(), false, false);
+
+			// check if enemy position is NOT within turret's pitch and yaw boundaries or is not behind the MG
+			if (!YawRange || !PitchRange || TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, ChosenTarget))
+			{
+				// for normal turrets on the ground
+				if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
+				{
+					OwningCombatCharacter->DropMountedGun(false);
+				}
+				else // for aircraft turrets which cannot be exited
+				{
+					ChosenTarget = nullptr;
+				}
+			}
+		}
+
+		// if this is a new enemy then start end fire again so AI does not have wait to fire again when focusing on new enemy
+		if (EnemyActor != ChosenTarget)
+		{
+			GetWorldTimerManager().ClearTimer(THandler_EndFire);
+
+			if (!THandler_EndFire.IsValid()) {
+				GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
+			}
+		}
+
+		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
+		EnemyActor = ChosenTarget;
+
+		// Being firing at enemy
+		if (!THandler_ShootEnemy.IsValid()) {
+			GetWorldTimerManager().SetTimer(THandler_ShootEnemy, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
+		}
+
+		// Do find a random point if current command is defend
+		// & is set to use the mounted gun
+		if (!THandler_MoveToNearbyDestination.IsValid()
+			&& CurrentCommand != CommanderOrders::Defend
+			&& CurrentBehaviourState != AIBehaviourState::PriorityDestination
+			&& !OwningCombatCharacter->GetMountedGun())
+		{
+			SetBehaviourState(AIBehaviourState::Normal);
+			HasChosenNearTargetDest = false;
+			TargetDestination = OwningCombatCharacter->GetActorLocation();
+			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, FMath::RandRange(.5f, 2.f), true);
+		}
+
+
+	}
+	else  // not found an enemy
+	{
+		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			OwningCombatCharacter->GetMountedGun()->ResetCamera();
+		}
+
+		if (EnemyActor) // if previous enemy still exists, look at the last location it was seen
+		{
+			LastSeenEnemyActor = EnemyActor;
+			LastSeenPosition = LastSeenEnemyActor->GetActorLocation();
+			EnemyActor = nullptr;
+			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
+		}
+	}
 }
 
 void ACombatAIController::UpdatCombatAlert()
@@ -680,7 +782,7 @@ void ACombatAIController::ShootAtEnemy()
 						TArray<AActor*> IgnoreActors;
 						TargetDestination = AIMovementComponent->FindNearbyDestinationPoint(LastSeenPosition, Radius, IgnoreActors);
 						AIMovementComponent->MoveToDestination(TargetDestination, Radius, CurrentBehaviourState, false, true);
-						SetFocalPoint(LastSeenPosition);
+						SetFocalPoint(TargetSearchParams->TargetLocation);
 					}
 				}
 			}
