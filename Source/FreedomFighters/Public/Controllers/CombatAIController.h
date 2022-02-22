@@ -120,7 +120,6 @@ private:
 
 	FTimerHandle THandler_ShootEnemy;
 	FTimerHandle THandler_EndFire;
-	FTimerHandle THandler_FindEnemy;
 	FTimerHandle THandler_CommanderOrders;
 	FTimerHandle THandler_MountedGun;
 	FTimerHandle THandler_FindCover;
@@ -138,8 +137,6 @@ private:
 
 public:
 	ACombatAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
-	void FindEnemy();
 
 private:
 	void Init();

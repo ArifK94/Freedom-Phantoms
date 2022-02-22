@@ -249,7 +249,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 		PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetPrimaryWeapon());
 
-		//GetWorldTimerManager().SetTimer(THandler_FindEnemy, this, &ACombatAIController::FindEnemy, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true, 2.0f); // delay finding MG after checking if AI is set for patrol
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
@@ -316,7 +315,6 @@ void ACombatAIController::ClearTimers()
 	GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
 	GetWorldTimerManager().ClearTimer(THandler_EndFire);
 	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
-	GetWorldTimerManager().ClearTimer(THandler_FindEnemy);
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 	GetWorldTimerManager().ClearTimer(THandler_FindCover);
 	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
@@ -350,6 +348,13 @@ void ACombatAIController::Tick(float DeltaTime)
 			{
 				//SetFocus(EnemyActor);
 				SetFocalPoint(TargetSearchParams->TargetLocation);
+			}
+		}
+		else
+		{
+			if (OwningCombatCharacter->IsUsingMountedWeapon())
+			{
+				OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
 			}
 		}
 	}
@@ -468,11 +473,6 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	}
 	else  // not found an enemy
 	{
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			OwningCombatCharacter->GetMountedGun()->ResetCamera();
-		}
-
 		if (EnemyActor) // if previous enemy still exists, look at the last location it was seen
 		{
 			LastSeenEnemyActor = EnemyActor;
@@ -524,105 +524,6 @@ void ACombatAIController::EndCoverPeak()
 	OwningCombatCharacter->SetRightInputValue(.0f);
 }
 
-/// <summary>
-/// TODO: Add limit to the number of characters to be processed so we do not have like 20 enemies to choose from
-/// </summary>
-void ACombatAIController::FindEnemy()
-{
-	if (TargetFinderComponent == nullptr) {
-		return;
-	}
-
-	AActor* ChosenTarget = TargetFinderComponent->FindTarget();
-
-
-	if (ChosenTarget) // found an enemy?
-	{
-		LastSeenEnemyActor = nullptr;
-
-		if (OwningCombatCharacter->IsTakingCover())
-		{
-			if (TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, ChosenTarget))
-			{
-				OwningCombatCharacter->StopCover();
-			}
-		}
-
-
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetUseControllerRotationYaw())
-		{
-			FVector Start = ChosenTarget->GetActorLocation() - OwningCombatCharacter->GetActorLocation();
-			Start = UKismetMathLibrary::InverseTransformDirection(OwningCombatCharacter->FollowCamera->GetComponentTransform(), Start);
-			FRotator TargetRot = UKismetMathLibrary::MakeRotFromX(Start);
-
-			bool YawRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Yaw, OwningCombatCharacter->GetMountedGun()->GetYawMin(), OwningCombatCharacter->GetMountedGun()->GetYawMax(), false, false);
-			bool PitchRange = UKismetMathLibrary::InRange_FloatFloat(TargetRot.Pitch, OwningCombatCharacter->GetMountedGun()->GetPitchMin(), OwningCombatCharacter->GetMountedGun()->GetPitchMax(), false, false);
-
-			// check if enemy position is NOT within turret's pitch and yaw boundaries or is not behind the MG
-			if (!YawRange || !PitchRange || TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, ChosenTarget))
-			{
-				// for normal turrets on the ground
-				if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
-				{
-					OwningCombatCharacter->DropMountedGun(false);
-				}
-				else // for aircraft turrets which cannot be exited
-				{
-					ChosenTarget = nullptr;
-				}
-			}
-		}
-
-		// if this is a new enemy then start end fire again so AI does not have wait to fire again when focusing on new enemy
-		if (EnemyActor != ChosenTarget)
-		{
-			GetWorldTimerManager().ClearTimer(THandler_EndFire);
-
-			if (!THandler_EndFire.IsValid()) {
-				GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
-			}
-		}
-
-		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
-		EnemyActor = ChosenTarget;
-
-		// Being firing at enemy
-		if (!THandler_ShootEnemy.IsValid()) {
-			GetWorldTimerManager().SetTimer(THandler_ShootEnemy, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
-		}
-
-		// Do find a random point if current command is defend
-		// & is set to use the mounted gun
-		if (!THandler_MoveToNearbyDestination.IsValid()
-			&& CurrentCommand != CommanderOrders::Defend
-			&& CurrentBehaviourState != AIBehaviourState::PriorityDestination
-			&& !OwningCombatCharacter->GetMountedGun())
-		{
-			SetBehaviourState(AIBehaviourState::Normal);
-			HasChosenNearTargetDest = false;
-			TargetDestination = OwningCombatCharacter->GetActorLocation();
-			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, FMath::RandRange(.5f, 2.f), true);
-		}
-
-
-	}
-	else  // not found an enemy
-	{
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			OwningCombatCharacter->GetMountedGun()->ResetCamera();
-		}
-
-		if (EnemyActor) // if previous enemy still exists, look at the last location it was seen
-		{
-			LastSeenEnemyActor = EnemyActor;
-			LastSeenPosition = LastSeenEnemyActor->GetActorLocation();
-			EnemyActor = nullptr;
-			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
-		}
-	}
-}
-
 void ACombatAIController::UpdateLastSeen()
 {
 	// look straight ahead with the MG direction
@@ -661,7 +562,6 @@ void ACombatAIController::UpdateLastSeen()
 		}
 	}
 
-
 	GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 }
 
@@ -683,7 +583,6 @@ void ACombatAIController::ShootAtEnemy()
 				OwningCombatCharacter->EndReload();
 			}
 		}
-
 
 		OwningCombatCharacter->EndFire();
 		OwningCombatCharacter->EndAim();

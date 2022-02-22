@@ -91,7 +91,8 @@ public:
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
 
-	void SetRotationInput(FRotator Rotation);
+	void SetRotationInput(FRotator TargetRotation);
+	void SetRotationInput(FRotator TargetRotation, float LerpSpeed);
 
 	void SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character);
 	void RemovePlayerControl(APlayerController* OurPlayerController, ACharacter* Character);

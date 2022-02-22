@@ -146,9 +146,9 @@ void AMountedGun::AddControllerYawInput(float Val)
 	}
 }
 
-void AMountedGun::SetRotationInput(FRotator Rotation)
+void AMountedGun::SetRotationInput(FRotator TargetRotation)
 {
-	RotationInput = Rotation;
+	RotationInput = TargetRotation;
 
 	//if (ClampPitch) {
 	//	RotationInput.Pitch = FMath::Clamp(Rotation.Pitch, PitchMin, PitchMax);
@@ -163,6 +163,11 @@ void AMountedGun::SetRotationInput(FRotator Rotation)
 	//else {
 	//	RotationInput.Yaw = Rotation.Yaw;
 	//}
+}
+
+void AMountedGun::SetRotationInput(FRotator TargetRotation, float LerpSpeed)
+{
+	RotationInput = UKismetMathLibrary::RInterpTo(RotationInput, TargetRotation, GetWorld()->DeltaTimeSeconds, LerpSpeed);
 }
 
 void AMountedGun::SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character)
@@ -206,7 +211,6 @@ void AMountedGun::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 void AMountedGun::ResetCamera()
 {
 	RotationInput = FRotator::ZeroRotator;
-	FollowCamera->SetRelativeRotation(RotationInput);
 }
 
 void AMountedGun::ZoomIn()
