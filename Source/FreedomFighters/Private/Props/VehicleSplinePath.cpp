@@ -134,7 +134,7 @@ void AVehicleSplinePath::UpdateCollisionBox()
 
 		if (VehicleSplinePointsPtr[i]->TextRenderComponent)
 		{
-			VehicleSplinePointsPtr[i]->TextRenderComponent->SetText(FString::FromInt(i));
+			VehicleSplinePointsPtr[i]->TextRenderComponent->SetText(FText::AsNumber(i));
 			VehicleSplinePointsPtr[i]->TextRenderComponent->SetWorldLocation(StartPoint);
 		}
 

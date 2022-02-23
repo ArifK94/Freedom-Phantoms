@@ -35,6 +35,8 @@ public:
 
 	bool IsInTargetRange(AMountedGun* MG, FVector StartLocation, FVector TargetLocation);
 
+	bool IsInTargetRange(AMountedGun* MG, AActor* StartActor, AActor* TargetActor);
+
 protected:
 	virtual void BeginPlay() override;
 

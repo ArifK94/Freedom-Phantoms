@@ -99,6 +99,10 @@ AMountedGun* UMountedGunFinderComponent::FindMG()
 
 bool UMountedGunFinderComponent::IsInTargetRange(AMountedGun* MG, FVector StartLocation, FVector TargetLocation)
 {
+	if (!MG) {
+		return true;
+	}
+
 	FVector Start = StartLocation - TargetLocation;
 	//Start = UKismetMathLibrary::InverseTransformDirection(OwningCombatCharacter->FollowCamera->GetComponentTransform(), Start);
 	FRotator TargetRot = UKismetMathLibrary::MakeRotFromX(Start);
@@ -114,6 +118,15 @@ bool UMountedGunFinderComponent::IsInTargetRange(AMountedGun* MG, FVector StartL
 	}
 
 	return true;
+}
+
+bool UMountedGunFinderComponent::IsInTargetRange(AMountedGun* MG, AActor* StartActor, AActor* TargetActor)
+{
+	if (!MG || !StartActor || !TargetActor) {
+		return true;
+	}
+
+	return IsInTargetRange(MG, StartActor->GetActorLocation(), TargetActor->GetActorLocation());
 }
 
 void UMountedGunFinderComponent::FocusTarget(AMountedGun* MG, FVector Location)
