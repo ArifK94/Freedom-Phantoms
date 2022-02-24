@@ -25,13 +25,6 @@
 #include "Engine.h"
 #include "UObject/UObjectGlobals.h"
 
-
-void AWeapon::SetIsAiming(bool isAiming)
-{
-	IsAiming = isAiming;
-}
-
-// Sets default values
 AWeapon::AWeapon()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -101,6 +94,11 @@ AWeapon::AWeapon()
 
 	DrawShotLine = false;
 	ShotLineDuration = 5.0f;
+}
+
+void AWeapon::SetIsAiming(bool isAiming)
+{
+	IsAiming = isAiming;
 }
 
 FString AWeapon::GetKeyDisplayName_Implementation()

@@ -11,28 +11,6 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-
-void AMountedGun::SetIsAiming(bool isAiming)
-{
-	Super::SetIsAiming(isAiming);
-
-	// clear Zoom timers if running
-	GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
-	GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
-
-	TargetFOV = isAiming ? ZoomFOV : DefaultFOV;
-
-	if (isAiming)
-	{
-		GetWorldTimerManager().SetTimer(THandler_ZoomFOVIn, this, &AMountedGun::ZoomIn, .01f, true);
-	}
-	else
-	{
-		GetWorldTimerManager().SetTimer(THandler_ZoomFOVOut, this, &AMountedGun::ZoomOut, .01f, true);
-	}
-
-}
-
 AMountedGun::AMountedGun()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -56,9 +34,33 @@ AMountedGun::AMountedGun()
 	weaponType = WeaponType::MountedGun;
 }
 
+void AMountedGun::SetIsAiming(bool isAiming)
+{
+	Super::SetIsAiming(isAiming);
+
+	// clear Zoom timers if running
+	GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
+	GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
+
+	TargetFOV = isAiming ? ZoomFOV : DefaultFOV;
+
+	if (isAiming)
+	{
+		GetWorldTimerManager().SetTimer(THandler_ZoomFOVIn, this, &AMountedGun::ZoomIn, .01f, true);
+	}
+	else
+	{
+		GetWorldTimerManager().SetTimer(THandler_ZoomFOVOut, this, &AMountedGun::ZoomOut, .01f, true);
+	}
+
+}
+
 void AMountedGun::BeginPlay()
 {
 	Super::BeginPlay();
+
+	MeshComp->SetGenerateOverlapEvents(true);
+	MeshComp->SetCollisionProfileName(TEXT("MountedWeapon"));
 
 	DefaultFOV = FollowCamera->FieldOfView;
 	TargetFOV = 0.0f;

@@ -201,8 +201,6 @@ void AWeaponBullet::RetrieveSurfaceImpactSet()
 
 void AWeaponBullet::DetectHit()
 {
-
-
 	FHitResult OutHit;
 
 	// Use line trace by channelto allow trace to hit on surfaces such as water where characters can move through

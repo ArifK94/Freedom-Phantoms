@@ -171,6 +171,9 @@ protected:
 		bool IsInAircraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool IsInVehicle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
 
 	/** Left cover corner camera constraint pitch (x => minimum, y => maximum)  */
@@ -348,6 +351,10 @@ public:
 
 	bool GetIsInAircraft() {
 		return IsInAircraft;
+	}
+
+	bool GetIsInVehicle() {
+		return IsInVehicle;
 	}
 
 	bool IsRepellingDown() {

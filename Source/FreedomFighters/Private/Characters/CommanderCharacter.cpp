@@ -121,9 +121,6 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 
 void ACommanderCharacter::CheckRecruit()
 {
-	//FHitResult HitResult = GetCurrentTraceHit();
-
-
 	FHitResult HitResult;
 	FVector Start = GetActorLocation();
 
@@ -150,7 +147,7 @@ void ACommanderCharacter::CheckRecruit()
 		{
 			auto Character = Cast<ACombatCharacter>(CurrentTargetActor);
 
-			if (Character && !Character->IsPlayerControlled() && !Character->GetIsInAircraft()) // if not controlled by player
+			if (Character && !Character->IsPlayerControlled() && !Character->GetIsInAircraft() && !Character->GetIsInVehicle()) // if not controlled by player
 			{
 				PotentialRecruit = Character;
 				PotentialRecruit->ShowCharacterOutline(true);

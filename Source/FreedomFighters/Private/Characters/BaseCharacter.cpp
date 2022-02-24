@@ -23,72 +23,6 @@
 #include "Engine.h"
 
 
-void ABaseCharacter::SetVehicleSeat(FVehicletSeating* Seat)
-{
-	if (Seat->OwningVehicle)
-	{
-		//GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
-		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
-	}
-	else
-	{
-		GetCapsuleComponent()->SetCollisionProfileName(DefaultCapsuleCollisionName);
-		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
-	}
-}
-
-void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
-{
-	CurrentAircraftSeat = Seating;
-	if (CurrentAircraftSeat.OwningAircraft != nullptr)
-	{
-		IsInAircraft = true;
-	}
-	else
-	{
-		IsInAircraft = false;
-	}
-
-	if (IsInAircraft)
-	{
-		GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
-		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
-
-		if (UseAimCameraSpring)
-		{
-			FollowCamera->AttachToComponent(CurrentAircraftSeat.OwningAircraft->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentAircraftSeat.SeatingSocketName);
-			UpdateAimCamera();
-		}
-	}
-	else
-	{
-		if (UseAimCameraSpring)
-		{
-			FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		}
-
-		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
-		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
-	}
-}
-
-void ABaseCharacter::SetIsRepellingDown(bool IsRappelling)
-{
-	isRepellingDown = IsRappelling;
-
-	if (IsRappelling)
-	{
-		EndAim();
-
-		if (UseAimCameraSpring)
-		{
-			FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		}
-	}
-
-	OnRappelUpdate.Broadcast(this);
-}
-
 ABaseCharacter::ABaseCharacter()
 {
 	// Set size for collision capsule
@@ -179,7 +113,74 @@ ABaseCharacter::ABaseCharacter()
 	CoverRotationLeftYaw = FVector2D(-20.0f, 0.0f);
 	CoverRotationRightPitch = FVector2D(-10.0f, 10.0f);
 	CoverRotationRightYaw = FVector2D(0.0f, 20.0f);
+}
 
+void ABaseCharacter::SetVehicleSeat(FVehicletSeating* Seat)
+{
+	if (Seat->OwningVehicle)
+	{
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
+		IsInVehicle = true;
+	}
+	else
+	{
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
+		IsInVehicle = false;
+	}
+}
+
+void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
+{
+	CurrentAircraftSeat = Seating;
+	if (CurrentAircraftSeat.OwningAircraft != nullptr)
+	{
+		IsInAircraft = true;
+		IsInVehicle = true;
+	}
+	else
+	{
+		IsInAircraft = false;
+		IsInVehicle = false;
+	}
+
+	if (IsInAircraft)
+	{
+		GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
+
+		if (UseAimCameraSpring)
+		{
+			FollowCamera->AttachToComponent(CurrentAircraftSeat.OwningAircraft->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentAircraftSeat.SeatingSocketName);
+			UpdateAimCamera();
+		}
+	}
+	else
+	{
+		if (UseAimCameraSpring)
+		{
+			FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
+
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
+		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
+	}
+}
+
+void ABaseCharacter::SetIsRepellingDown(bool IsRappelling)
+{
+	isRepellingDown = IsRappelling;
+
+	if (IsRappelling)
+	{
+		EndAim();
+
+		if (UseAimCameraSpring)
+		{
+			FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
+	}
+
+	OnRappelUpdate.Broadcast(this);
 }
 
 void ABaseCharacter::BeginPlay()
