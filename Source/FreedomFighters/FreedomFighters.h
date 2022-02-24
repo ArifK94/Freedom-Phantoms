@@ -17,3 +17,4 @@
 
 #define COLLISION_WEAPON			ECC_GameTraceChannel1
 #define COLLISION_COVER				ECC_GameTraceChannel2
+#define TRACE_SIGHT					ECC_GameTraceChannel3

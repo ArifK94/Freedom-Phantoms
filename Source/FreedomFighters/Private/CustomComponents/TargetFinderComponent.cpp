@@ -323,11 +323,19 @@ bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector
 
 	// Multi line trace is required as certain actor classes need to be ignored & single trace does not provide functionality to ignore actor classes
 	TArray<FHitResult> OutHits;
-	auto IsHit = GetWorld()->LineTraceMultiByObjectType(
+	//auto IsHit = GetWorld()->LineTraceMultiByObjectType(
+	//	OutHits,
+	//	Start,
+	//	End,
+	//	ObjectParams,
+	//	QueryParams
+	//);
+
+	auto IsHit = GetWorld()->LineTraceMultiByChannel(
 		OutHits,
 		Start,
 		End,
-		ObjectParams,
+		TRACE_SIGHT,
 		QueryParams
 	);
 
