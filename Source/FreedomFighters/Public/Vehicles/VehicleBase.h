@@ -4,10 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/TimelineComponent.h"
 #include "Engine/DataTable.h"
 #include "EnumCollection.h"
-#include "StructCollection.h"
 #include "VehicleBase.generated.h"
 
 class UCapsuleComponent;
@@ -15,14 +13,13 @@ class UArrowComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class UHealthComponent;
+class UVehiclePathFollowerComponent;
 class URadialForceComponent;
 class UUserWidget;
 class AVehicleSplinePath;
-class UCurveFloat;
 class UPostProcessComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponSwitchSignature, AVehicleBase*, Vehicle);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathCompleteSignature, AVehicleBase*, Vehicle);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestroySignature, AVehicleBase*, Vehicle);
 UCLASS()
 class FREEDOMFIGHTERS_API AVehicleBase : public AActor
@@ -33,10 +30,10 @@ protected:
 	FTimerHandle THandler_Update;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		USkeletalMeshComponent* MeshComponent;
+		UCapsuleComponent* CapsuleComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UCapsuleComponent* CollisionDetector;
+		USkeletalMeshComponent* MeshComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UArrowComponent* EyePointComponent;
@@ -68,7 +65,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComponent;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UVehiclePathFollowerComponent* VehiclePathFollowerComponent;
 
 
 
@@ -110,33 +108,6 @@ protected:
 		int MultiKillIndex;
 
 
-	/** Move to a target location if set true, eg. used when spawning nearest checkpoint to player. This is set in the blueprints */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-		bool FollowTargetLocation;
-
-	/** If follow target location, then it needs to randomly spawn from target location, MIN coords */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-		FVector SpawnLocationMin;
-
-	/** If follow target location, then it needs to randomly spawn from target location, MAX coords */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-		FVector SpawnLocationMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-		FVector TargetDestination;
-
-	/** The radius for random point on the navmesh when setting the target destination */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-		float RandomNavPointRadius;
-
-	/** Set the movement once is reaches the target, eg. hover over target location */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-		EVehicleMovement TargetLocReachedVehicleMovementType;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-		EVehicleMovement CurrentVehicleMovement;
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FVehicleWeapon> VehicleWeapons;
 	TArray<FVehicleWeapon*> VehicleWeaponPtrList;
@@ -152,27 +123,6 @@ protected:
 		TSubclassOf<UUserWidget> HUDWidgetClass;
 	UUserWidget* HUDWidget;
 	
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Path", meta = (AllowPrivateAccess = "true"))
-		UCurveFloat* CurveFloat;
-	FTimeline CurveTimeline;
-
-	/** The actor of the path to follow */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Path", meta = (AllowPrivateAccess = "true"))
-		AVehicleSplinePath* VehiclePath;
-
-	/** The actor tag name of the path to follow */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Path", meta = (AllowPrivateAccess = "true"))
-		FName VehiclePathTagName;
-
-	/** The speed of completing the path: Low duration is fast. High duration is slow */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Path", meta = (AllowPrivateAccess = "true"))
-		float PathFollowDuration;
-
-	/** How many laps until complete */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Path", meta = (AllowPrivateAccess = "true"))
-		uint8 TotalLaps;
-	uint8 CurrentLap;
 
 	/** Rotation speed for wheels, helicopter rotors etc. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -181,10 +131,6 @@ protected:
 	/** Current rotation speed for wheels, helicopter rotors etc. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CurrentRotationSpeed;
-
-	/** Might want to destroy after completing the path */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Path", meta = (AllowPrivateAccess = "true"))
-		float DestroyOnPathComplete;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -276,8 +222,6 @@ private:
 	void AddUIWidget();
 
 	void RemoveUIWidget();
-	
-	void FindPath();
 
 	void SpawnVehicleWeapons();
 
@@ -305,12 +249,6 @@ private:
 
 	void ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters InHealthParams);
 
-	UFUNCTION(BlueprintCallable)
-		void SpawnRandomLocation();
-
-	/** When target destination is given, the nearest navmesh should be found which allow AI to rappel for instance */
-	UFUNCTION(BlueprintCallable)
-		void FindNearestNav();
 
 	UFUNCTION(BlueprintCallable)
 		void AddComponentToDestroyList(UActorComponent* ActorComponent);
@@ -320,18 +258,8 @@ private:
 protected:
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 
-	//Event Handlers
+//Event Handlers
 public:
-	UFUNCTION()
-		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-		void FollowSplinePath(float Value);
-
-	/** Fly to random location, useful for transport aircrafts which would allow characters to rappel down */
-	UFUNCTION()
-		void MoveToLocation(float Value);
-
 	UFUNCTION(BlueprintCallable)
 		virtual void OnHealthUpdate(FHealthParameters InHealthParameters);
 
@@ -343,12 +271,7 @@ public:
 		FOnWeaponSwitchSignature OnWeaponSwitch;
 
 	UPROPERTY(BlueprintAssignable)
-		FOnPathCompleteSignature OnPathComplete;
-
-	UPROPERTY(BlueprintAssignable)
 		FOnDestroySignature OnVehicleDestroy;
-
-
 
 
 

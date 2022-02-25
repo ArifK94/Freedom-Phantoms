@@ -480,15 +480,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EVehicleSpeedType AffectSpeedType;
 
-	/** Aircraft path durations to be affected if AffectSpeedType is set to specified,
-	* the higher the duration, the slower the aircraft speed (in seconds)
+	/** 
+		Vehicle path durations to be affected if AffectSpeedType enum is set to specified,
+		the higher the duration, the slower the aircraft speed (in seconds)
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float AircraftDuration;
+		float PathDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EVehicleMovement MovementType;
 	
+	/**
+		Waiting on a path point. Affected when MovementType is set to Waiting.
+		When duraction is over,  MovementType is set to MovementForward to continue the path
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float WaitingDuration;
+
 	/** Allow additional aircrafts to use the same spline path if current aircraft has finished its task rather than waiting for the current aircraft to reach its endpoint of the path  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool IsPathFreeToUse;

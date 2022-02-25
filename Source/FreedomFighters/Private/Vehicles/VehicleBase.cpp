@@ -3,7 +3,6 @@
 #include "Vehicles/VehicleBase.h"
 #include "Characters/BaseCharacter.h"
 #include "Characters/CombatCharacter.h"
-#include "Props/VehicleSplinePath.h"
 #include "Props/TargetSystemMarker.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
@@ -12,12 +11,12 @@
 #include "CustomComponents/TeamFactionComponent.h"
 #include "CustomComponents/ObjectPoolComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
+#include "CustomComponents/VehiclePathFollowerComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/AudioComponent.h"
-#include "Components/SplineComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/WidgetComponent.h"
@@ -30,23 +29,23 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AIController.h"
-#include "NavigationSystem.h"
 
 AVehicleBase::AVehicleBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
+	CapsuleComponent->SetCollisionProfileName(TEXT("OverlapAll"));
+	CapsuleComponent->SetCanEverAffectNavigation(false);
+	CapsuleComponent->bDynamicObstacle = true;
+	CapsuleComponent->CanCharacterStepUpOn = ECB_No;
+	RootComponent = CapsuleComponent;
+
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	MeshComponent->SetCollisionProfileName(TEXT("Vehicle"));
-	//MeshComponent->SetCollisionObjectType(ECC_Pawn);
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->SetNotifyRigidBodyCollision(true);
-	RootComponent = MeshComponent;
-
-	CollisionDetector = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionDetector"));
-	CollisionDetector->SetupAttachment(RootComponent);
-	CollisionDetector->SetCollisionProfileName(TEXT("OverlapAll"));
-	//CollisionDetector->SetCollisionObjectType(ECC_Pawn); // line trace for objects only works with pawn object type for some reason,
+	MeshComponent->SetupAttachment(RootComponent);
 
 	EyePointComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("EyePointComponent"));
 	EyePointComponent->SetupAttachment(RootComponent);
@@ -89,31 +88,25 @@ AVehicleBase::AVehicleBase()
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	HealthComponent->SetRegenerateHealth(false);
 
+	VehiclePathFollowerComponent = CreateDefaultSubobject<UVehiclePathFollowerComponent>(TEXT("VehiclePathFollowerComponent"));
 
 	EngineSoundParamName = "Speed";
 
 	RotationSpeed = 100000.0;
-	PathFollowDuration = 10.0f;
-	TotalLaps = 0;
+
 	CurrentWeaponIndex = 0;
 	CameraSwitchDelay = .5f;
-	RandomNavPointRadius = 1000.f;
 	ExplosionImpulse = 400.0f;
 	ExplosionDamage = 30.0f;
 
 	UseFollowCamNavigation = false;
 	HighlightCharacters = false;
-	FollowTargetLocation = false;
-	DestroyOnPathComplete = true;
 	SimulateExplosionPhysics = false;
 
 	KillConfirmedParamName = "KillConfirmed";
 	SingleKillIndex = 0;
 	DoubleKillIndex = 1;
 	MultiKillIndex = 2;
-
-	SpawnLocationMin = FVector(-10.f, -10.f, 10.f);
-	SpawnLocationMax = FVector(10.f, 10.f, 10.f);
 }
 
 void AVehicleBase::BeginPlay()
@@ -122,27 +115,18 @@ void AVehicleBase::BeginPlay()
 
 	ThermalVisionPPComp->bEnabled = false;
 
-
-	CollisionDetector->OnComponentBeginOverlap.AddDynamic(this, &AVehicleBase::OnOverlapBegin);
-	MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &AVehicleBase::OnOverlapBegin);
 	HealthComponent->OnHealthChanged.AddDynamic(this, &AVehicleBase::OnHealthUpdate);
 
 	CameraBoom->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraSocket);
-
+	
 	GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::Update, .2f, true);
 
-	FindPath();
-
 	SpawnVehicleWeapons();
-
-	// Call after spawning passengers, otherwise character movement component will force characters to be on the ground
-	SpawnRandomLocation();
 }
 
 void AVehicleBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	CurveTimeline.TickTimeline(DeltaTime);
 }
 
 void AVehicleBase::Update()
@@ -194,49 +178,6 @@ void AVehicleBase::RemoveUIWidget()
 	{
 		UWidgetLayoutLibrary::RemoveAllWidgets(World);
 		HUDWidget = nullptr;
-	}
-}
-
-void AVehicleBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (VehiclePath == nullptr) {
-		return;
-	}
-
-
-	FVector CollisionLocation = GetActorLocation();
-	auto CollidedPath = Cast<AVehicleSplinePath>(OtherActor);
-
-	// if collided with another aircraft path then ignore then do not proceed
-	if (CollidedPath != VehiclePath) {
-		return;
-	}
-
-	// find current spline point
-	FVehicleSplinePoint CurrentSplinePoint = CollidedPath->GetVehicleSplinePoint(CollisionLocation);
-
-	// if current spline point not found 
-	if (CurrentSplinePoint.PointIndex == -1) {
-		return;
-	}
-
-	// update the aircraft movement type
-	CurrentVehicleMovement = CurrentSplinePoint.MovementType;
-
-	// adjust path duration to change speed if specified
-	if (CurrentSplinePoint.AffectSpeedType == EVehicleSpeedType::Specified)
-	{
-
-		CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.AircraftDuration);
-	}
-	else
-	{
-		CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
-	}
-
-	if (CurrentSplinePoint.IsPathFreeToUse)
-	{
-		VehiclePath->SetOccupantVehicle(nullptr);
 	}
 }
 
@@ -328,113 +269,6 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 	}
 }
 
-void AVehicleBase::FindPath()
-{
-	if (FollowTargetLocation)
-	{
-		FOnTimelineFloat TimelineProgress;
-		TimelineProgress.BindUFunction(this, FName("MoveToLocation"));
-		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
-		CurveTimeline.SetLooping(false);
-		CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
-		CurveTimeline.PlayFromStart();
-	}
-	else
-	{
-		// if already assigned a path then return
-		if (VehiclePath != nullptr)
-		{
-			return;
-		}
-
-		AVehicleSplinePath* ClosestPath = nullptr;
-		float ClosestDistance = 0.0f;
-		TArray<AActor*> TargetActor;
-		UGameplayStatics::GetAllActorsWithTag(GetWorld(), VehiclePathTagName, TargetActor);
-
-		for (AActor* Actor : TargetActor)
-		{
-			auto Path = Cast<AVehicleSplinePath>(Actor);
-
-			// check if path is not occupied
-			if (Path && !Path->GetOccupiedVehicle())
-			{
-				float Distance = UKismetMathLibrary::Vector_Distance(TargetDestination, Path->GetActorLocation());
-
-				if (ClosestPath == nullptr)
-				{
-					ClosestPath = Path;
-					ClosestDistance = Distance;
-				}
-				else
-				{
-					if (Distance < ClosestDistance)
-					{
-						ClosestPath = Path;
-						ClosestDistance = Distance;
-					}
-				}
-			}
-
-		}
-
-		if (ClosestPath)
-		{
-			VehiclePath = ClosestPath;
-			VehiclePath->SetOccupantVehicle(this);
-
-			// setup time line for following the path
-			if (CurveFloat)
-			{
-				FOnTimelineFloat TimelineProgress;
-				TimelineProgress.BindUFunction(this, FName("FollowSplinePath"));
-				CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
-				CurveTimeline.SetLooping(false);
-				CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
-				CurveTimeline.PlayFromStart();
-			}
-		}
-	}
-
-}
-
-void AVehicleBase::FollowSplinePath(float Value)
-{
-	USplineComponent* SplinePathComp = VehiclePath->GetSplinePathComp();
-	float Alpha = UKismetMathLibrary::Lerp(0.0f, SplinePathComp->GetSplineLength(), Value);
-
-	FVector TargetLocation = SplinePathComp->GetLocationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
-	FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
-
-	SetActorLocationAndRotation(TargetLocation, TargetRotation);
-
-	// if reached the end
-	if (Alpha >= SplinePathComp->GetSplineLength())
-	{
-		if (CurrentLap < TotalLaps) // restart the lap if laps remaining
-		{
-			CurrentLap++;
-			CurveTimeline.PlayFromStart();
-		}
-		else
-		{
-			Destroy();
-		}
-	}
-}
-
-void AVehicleBase::MoveToLocation(float Value)
-{
-	float TargetX = UKismetMathLibrary::Lerp(GetActorLocation().X, TargetDestination.X, Value);
-	float TargetY = UKismetMathLibrary::Lerp(GetActorLocation().Y, TargetDestination.Y, Value);
-
-	SetActorLocation(FVector(TargetX, TargetY, GetActorLocation().Z));
-
-	if (Value >= 1.f)
-	{
-		CurrentVehicleMovement = TargetLocReachedVehicleMovementType;
-	}
-}
 
 void AVehicleBase::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters)
 {
@@ -557,40 +391,6 @@ void AVehicleBase::SpawnVehicleSeatings()
 			VehicleSeatPtrList.Add(VehicleSeatPtr);
 		}
 
-	}
-}
-
-
-void AVehicleBase::SpawnRandomLocation()
-{
-	FindNearestNav();
-
-	// Set for random spawn location from target location
-	if (FollowTargetLocation)
-	{
-		float X = UKismetMathLibrary::RandomFloatInRange(SpawnLocationMin.X * TargetDestination.X, SpawnLocationMax.X * TargetDestination.X);
-		float Y = UKismetMathLibrary::RandomFloatInRange(SpawnLocationMin.Y * TargetDestination.Y, SpawnLocationMax.Y * TargetDestination.Y);
-		float Z = UKismetMathLibrary::RandomFloatInRange(SpawnLocationMin.Z * TargetDestination.Z, SpawnLocationMax.Z * TargetDestination.Z);
-
-		SetActorLocation(FVector(X, Y, Z));
-
-		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetDestination);
-
-		// Look towards target location
-		SetActorRotation(TargetRot);
-	}
-}
-
-void AVehicleBase::FindNearestNav()
-{
-	FVector TargetDest = TargetDestination;
-	FNavLocation NavLocation;
-	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-	bool navResult = NavigationArea->GetRandomReachablePointInRadius(TargetDest, RandomNavPointRadius, NavLocation);
-
-	if (navResult)
-	{
-		TargetDestination = NavLocation.Location;
 	}
 }
 
@@ -1104,11 +904,7 @@ void AVehicleBase::Destroyed()
 		}
 	}
 
-	// Free up the path for another aircraft to use
-	if (VehiclePath && VehiclePath->GetOccupiedVehicle() == this)
-	{
-		VehiclePath->SetOccupantVehicle(nullptr);
-	}
+	VehiclePathFollowerComponent->ClearPath();
 
 
 	// destroy all attached actors to this aircraft

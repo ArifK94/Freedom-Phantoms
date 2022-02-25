@@ -185,7 +185,7 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 		if (CurrentSplinePoint.AffectSpeedType == EVehicleSpeedType::Specified)
 		{
 
-			CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.AircraftDuration);
+			CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.PathDuration);
 		}
 		else
 		{

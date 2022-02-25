@@ -66,7 +66,8 @@ enum class EVehicleMovement : uint8
 	Hovering		UMETA(DisplayName = "Hovering"),
 	Rappel			UMETA(DisplayName = "Rappel"),
 	Stopping 		UMETA(DisplayName = "Stopping"),
-	MovingForward	UMETA(DisplayName = "MovingForward")
+	MovingForward	UMETA(DisplayName = "MovingForward"),
+	Waiting			UMETA(DisplayName = "Waiting")
 };
 
 UENUM(BlueprintType)
