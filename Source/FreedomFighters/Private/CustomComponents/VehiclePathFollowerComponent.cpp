@@ -44,6 +44,11 @@ void UVehiclePathFollowerComponent::Init()
 		}
 	}
 
+	if (OwningVehicle == nullptr)
+	{
+		OwningVehicle = Cast<AVehicleBase>(GetOwner());
+	}
+
 
 	FindPath();
 }
@@ -52,7 +57,6 @@ void UVehiclePathFollowerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	GetOwner()->GetWorldTimerManager().SetTimer(THandler_Update, this, &UVehiclePathFollowerComponent::Update, 1.f, true);
-
 
 	Init();
 
@@ -65,7 +69,6 @@ void UVehiclePathFollowerComponent::TickComponent(float DeltaTime, ELevelTick Ti
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CurveTimeline.TickTimeline(DeltaTime);
-
 }
 
 void UVehiclePathFollowerComponent::Update()
@@ -88,12 +91,19 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 	}
 
 	// find current spline point
-	FVehicleSplinePoint CurrentSplinePoint = CollidedPath->GetVehicleSplinePoint(CollisionLocation);
+	FVehicleSplinePoint NewSplinePoint = CollidedPath->GetVehicleSplinePoint(CollisionLocation);
 
 	// if current spline point not found 
-	if (CurrentSplinePoint.PointIndex == -1) {
+	if (NewSplinePoint.PointIndex == -1) {
 		return;
 	}
+
+	// If you hit the same spline point then do not process this point again
+	if (NewSplinePoint.PointIndex == CurrentSplinePoint.PointIndex) {
+		return;
+	}
+
+	CurrentSplinePoint = NewSplinePoint;
 
 	// update the aircraft movement type
 	CurrentVehicleMovement = CurrentSplinePoint.MovementType;
@@ -219,6 +229,8 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 			{
 				GetOwner()->Destroy();
 			}
+
+			OnPathComplete.Broadcast(OwningVehicle);
 		}
 	}
 }

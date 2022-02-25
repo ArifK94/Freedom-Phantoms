@@ -27,6 +27,12 @@ private:
 	FTimerHandle THandler_WaitingMovment;
 
 
+	AVehicleBase* OwningVehicle;
+
+
+	FVehicleSplinePoint CurrentSplinePoint;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CollisionDetector;
 
