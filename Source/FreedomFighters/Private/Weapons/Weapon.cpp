@@ -262,15 +262,35 @@ void AWeapon::ConvertWeaponName()
 
 FVector AWeapon::getMuzzleLocation()
 {
+	return ParentMesh->GetSocketLocation(MuzzleSocket);
+}
+
+void AWeapon::LoadParentMesh()
+{
+	// Use weapon mesh comp by default
+	ParentMesh = MeshComp;
+
 	if (UseParentMuzzle) {
 		auto AttachedParent = GetAttachParentActor();
 
-		if (AttachedParent) {
-			return AttachedParent->GetRootComponent()->GetSocketLocation(MuzzleSocket);
+		if (!AttachedParent || AttachedParent->GetComponents().Num() <= 0) {
+			return;
+		}
+
+		for (auto ChildComponent : AttachedParent->GetComponents())
+		{
+			auto SceneComp = Cast<USceneComponent>(ChildComponent);
+
+			if (!SceneComp) {
+				continue;
+			}
+
+			if (SceneComp->DoesSocketExist(MuzzleSocket)) {
+				ParentMesh = SceneComp;
+				break;
+			}
 		}
 	}
-
-	return MeshComp->GetSocketLocation(MuzzleSocket);
 }
 
 void AWeapon::BeginPlay()
@@ -289,14 +309,11 @@ void AWeapon::BeginPlay()
 
 void AWeapon::DelayedInit()
 {
-	auto AttachedParent = GetAttachParentActor();
-	if (UseParentMuzzle && AttachedParent)
-	{
-		MuzzleLightComponent->AttachToComponent(AttachedParent->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-		ShotAudioComponent->AttachToComponent(AttachedParent->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-		ClipAudioComponent->AttachToComponent(AttachedParent->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
-	}
+	LoadParentMesh();
 
+	MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
 	GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
 }

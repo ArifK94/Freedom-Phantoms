@@ -53,6 +53,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* MeshComp;
 
+	/** The Parent mesh by default is the MeshComp, but if chosen to use attached parent actor mesh such as tank cannon, then this would use the tank's mesh cannon's sockets to shoot from */
+	USceneComponent* ParentMesh;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* HandguardMesh;
 
@@ -71,9 +74,6 @@ protected:
 		TArray<TSubclassOf<AWeaponAttachment>> ScopeAttachmentClasses;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attachments", meta = (AllowPrivateAccess = "true"))
 		AWeaponAttachment* ScopeAttachment;
-
-
-
 
 
 
@@ -365,6 +365,8 @@ public:
 	virtual void DropWeapon(bool RemoveOwner = true, bool SimulatePhysics = false);
 
 private:
+	void LoadParentMesh();
+
 	void ConvertWeaponName();
 
 	void AutoReloadBegin();
