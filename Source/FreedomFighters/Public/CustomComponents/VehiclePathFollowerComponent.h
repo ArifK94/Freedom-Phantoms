@@ -32,6 +32,8 @@ private:
 
 	FVehicleSplinePoint CurrentSplinePoint;
 
+	FVector PreviousActorLocation;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CollisionDetector;

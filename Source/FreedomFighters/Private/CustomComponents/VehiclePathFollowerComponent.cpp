@@ -62,6 +62,8 @@ void UVehiclePathFollowerComponent::BeginPlay()
 
 	// Call after spawning passengers, otherwise character movement component will force characters to be on the ground
 	SpawnRandomLocation();
+
+	PreviousActorLocation = GetOwner()->GetActorLocation();
 }
 
 
@@ -69,6 +71,11 @@ void UVehiclePathFollowerComponent::TickComponent(float DeltaTime, ELevelTick Ti
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CurveTimeline.TickTimeline(DeltaTime);
+
+	auto Distance = GetOwner()->GetActorLocation() - PreviousActorLocation;
+	auto Velocity = UKismetMathLibrary::Divide_VectorFloat(Distance, DeltaTime);
+	GetOwner()->GetRootComponent()->ComponentVelocity = Velocity + CurveTimeline.GetPlayRate();
+	PreviousActorLocation = GetOwner()->GetActorLocation();
 }
 
 void UVehiclePathFollowerComponent::Update()
