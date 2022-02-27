@@ -204,6 +204,8 @@ protected:
 public:	
 	AVehicleBase();
 
+	void RemovePassenger(class ABaseCharacter* Character);
+
 	void ChangeThermalVision();
 
 	void SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP = true, bool ShowOutline = true);
@@ -219,7 +221,9 @@ public:
 		void SetRotationInput(FRotator InRotation);
 
 private:
-	void Update();
+	void TimerTick();
+
+	void UpdatePassengerSeats();
 
 	void AddUIWidget();
 
@@ -250,7 +254,6 @@ private:
 	void PlayRandomPilotSound();
 
 	void ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters InHealthParams);
-
 
 	UFUNCTION(BlueprintCallable)
 		void AddComponentToDestroyList(UActorComponent* ActorComponent);
@@ -284,4 +287,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void Destroyed() override;
+
+	TArray<FVehicletSeating*> GetVehicleSeatPtrList() { return VehicleSeatPtrList; }
 };

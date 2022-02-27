@@ -120,7 +120,7 @@ void AVehicleBase::BeginPlay()
 
 	CameraBoom->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraSocket);
 	
-	GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::Update, .2f, true);
+	GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::TimerTick, .2f, true);
 
 	SpawnVehicleWeapons();
 }
@@ -135,9 +135,25 @@ void AVehicleBase::Tick(float DeltaTime)
 	WheelRPM = (GetVelocity().Size() * 360.f) / 60.f;
 }
 
-void AVehicleBase::Update()
+void AVehicleBase::TimerTick()
 {
+	UpdatePassengerSeats();
+}
 
+void AVehicleBase::UpdatePassengerSeats()
+{
+	auto PassengerList = VehicleSeatPtrList;
+
+	// Remove passengers if not alive
+	for (int i = 0; i < PassengerList.Num(); i++)
+	{
+		auto Character = PassengerList[i]->Character;
+
+		if (Character == nullptr || Character->GetName() == "None" || !UHealthComponent::IsAlive(Character))
+		{
+			VehicleSeatPtrList.RemoveAt(i);
+		}
+	}
 }
 
 void AVehicleBase::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
@@ -396,6 +412,21 @@ void AVehicleBase::SpawnVehicleSeatings()
 			VehicleSeatPtrList.Add(VehicleSeatPtr);
 		}
 
+	}
+}
+
+void AVehicleBase::RemovePassenger(ABaseCharacter* Character)
+{
+	if (!Character) {
+		return;
+	}
+
+	if (VehicleSeatPtrList.Contains(Character->GetVehicletSeat()))
+	{
+		Character->SetVehicleSeat(nullptr);
+
+		auto Index = VehicleSeatPtrList.Find(Character->GetVehicletSeat());
+		VehicleSeatPtrList.RemoveAt(Index);
 	}
 }
 

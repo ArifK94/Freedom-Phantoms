@@ -198,8 +198,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FAircraftSeating CurrentAircraftSeat;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FVehicletSeating CurrentVehicletSeat;
+		FVehicletSeating* CurrentVehicletSeat;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
@@ -424,4 +423,5 @@ public:
 		return CurrentAircraftSeat;
 	}
 
+	FVehicletSeating* GetVehicletSeat() { return CurrentVehicletSeat; }
 };

@@ -11,6 +11,7 @@
 
 class UCurveFloat;
 class AVehicleSplinePath;
+class ABaseCharacter;
 
 class UCapsuleComponent;
 
@@ -95,6 +96,8 @@ public:
 
 	void ClearPath();
 
+	static void SetVehicleExit(ABaseCharacter* Character);
+
 private:
 	void Init();
 
@@ -103,6 +106,8 @@ private:
 	void FindPath();
 
 	void ResumePath();
+
+	void ExitPassengers();
 
 	UFUNCTION(BlueprintCallable)
 		void SpawnRandomLocation();

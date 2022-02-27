@@ -67,7 +67,8 @@ enum class EVehicleMovement : uint8
 	Rappel			UMETA(DisplayName = "Rappel"),
 	Stopping 		UMETA(DisplayName = "Stopping"),
 	MovingForward	UMETA(DisplayName = "MovingForward"),
-	Waiting			UMETA(DisplayName = "Waiting")
+	Waiting			UMETA(DisplayName = "Waiting"),
+	PassengerExit	UMETA(DisplayName = "PassengerExit")
 };
 
 UENUM(BlueprintType)

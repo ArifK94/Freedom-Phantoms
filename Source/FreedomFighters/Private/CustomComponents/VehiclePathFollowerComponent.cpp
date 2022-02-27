@@ -4,6 +4,8 @@
 #include "CustomComponents/VehiclePathFollowerComponent.h"
 #include "Components/SplineComponent.h"
 #include "Props/VehicleSplinePath.h"
+#include "Vehicles/VehicleBase.h"
+#include "Characters/BaseCharacter.h"
 
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -131,14 +133,24 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 		VehiclePath->SetOccupantVehicle(nullptr);
 	}
 
-	// Wait at current point
-	if (CurrentVehicleMovement == EVehicleMovement::Waiting)
+	switch (CurrentVehicleMovement)
 	{
+		// Wait at current point
+	case EVehicleMovement::Waiting:
 		// Stop moving
 		CurveTimeline.Stop();
 
 		// Start timer & set the delay based on the duration
 		GetOwner()->GetWorldTimerManager().SetTimer(THandler_WaitingMovment, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, CurrentSplinePoint.WaitingDuration);
+		break;
+		// Wait for passengers to leave
+	case EVehicleMovement::PassengerExit:
+		// Stop moving
+		CurveTimeline.Stop();
+
+		ExitPassengers();
+
+		break;
 	}
 }
 
@@ -302,5 +314,38 @@ void UVehiclePathFollowerComponent::ClearPath()
 	{
 		VehiclePath->SetOccupantVehicle(nullptr);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_WaitingMovment);
+	}
+}
+
+
+void UVehiclePathFollowerComponent::ExitPassengers()
+{
+	auto VehicleSeats = OwningVehicle->GetVehicleSeatPtrList();
+
+	if (VehicleSeats.Num() <= 0) {
+		return;
+	}
+
+	for (int i = 0; i < VehicleSeats.Num(); i++)
+	{
+		auto VehicleSeat = VehicleSeats[i];
+
+		if (!VehicleSeat->Character) {
+			continue;
+		}
+
+		if (VehicleSeat->ExitPassengerOnPoint)
+		{
+			// Exit from vehicle
+		}
+	}
+}
+
+void UVehiclePathFollowerComponent::SetVehicleExit(ABaseCharacter* Character)
+{
+	auto VehicleSeats = Character->GetVehicletSeat();
+
+	if (!VehicleSeats) {
+		return;
 	}
 }

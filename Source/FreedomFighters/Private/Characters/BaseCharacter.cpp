@@ -117,6 +117,8 @@ ABaseCharacter::ABaseCharacter()
 
 void ABaseCharacter::SetVehicleSeat(FVehicletSeating* Seat)
 {
+	CurrentVehicletSeat = Seat;
+
 	if (Seat->OwningVehicle)
 	{
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;

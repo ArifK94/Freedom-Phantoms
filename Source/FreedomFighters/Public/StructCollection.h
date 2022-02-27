@@ -619,9 +619,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		int32 SeatPosition;
 
-	/** FVehicleWeapon list index, leave as -1 meaning it does have a weapon */
+	/** FVehicleWeapon list index, leave as -1 meaning passenger seat does not have a weapon */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		int32 AssociatedWeapon;
+
+	/** The animation to play when exiting the vehicle, assigned in the character animation blueprint */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		int32 ExitAnimIndex;
+
+
+	/** Should the passenger exit when vehicle reaches the exit passenger point along the vehicle path? */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool ExitPassengerOnPoint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float PitchMin;
