@@ -198,6 +198,8 @@ protected:
 		TArray<UActorComponent*> DestroyableComponentList;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float WheelRPM;
 
 public:	
 	AVehicleBase();

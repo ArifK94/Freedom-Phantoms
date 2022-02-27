@@ -98,6 +98,7 @@ AVehicleBase::AVehicleBase()
 	CameraSwitchDelay = .5f;
 	ExplosionImpulse = 400.0f;
 	ExplosionDamage = 30.0f;
+	WheelRPM = 0.f;
 
 	UseFollowCamNavigation = false;
 	HighlightCharacters = false;
@@ -127,12 +128,16 @@ void AVehicleBase::BeginPlay()
 void AVehicleBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Set the engine sound based on actor's velocity
+	EngineAudio->SetFloatParameter(EngineSoundParamName, GetVelocity().Size());
+
+	WheelRPM = (GetVelocity().Size() * 360.f) / 60.f;
 }
 
 void AVehicleBase::Update()
 {
-	// Set the engine sound based on actor's velocity
-	EngineAudio->SetFloatParameter(EngineSoundParamName, GetVelocity().Size());
+
 }
 
 void AVehicleBase::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
