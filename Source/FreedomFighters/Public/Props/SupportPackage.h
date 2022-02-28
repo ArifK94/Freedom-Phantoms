@@ -11,6 +11,7 @@
 #include "SupportPackage.generated.h"
 
 class AAircraft;
+class AVehicleBase;
 class ABaseCharacter;
 class APlayerController;
 class UTexture;
@@ -44,6 +45,8 @@ public:
 	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 
 	AAircraft* SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController);
+	AVehicleBase* SpawnVehicle(ABaseCharacter* Character, APlayerController* PlayerController);
+
 
 	UFUNCTION(BlueprintCallable)
 		void PlayPickupSound();

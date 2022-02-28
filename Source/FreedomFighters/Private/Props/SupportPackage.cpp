@@ -171,6 +171,21 @@ AAircraft* ASupportPackage::SpawnAircraft(ABaseCharacter* Character, APlayerCont
 	return SupportPackageSet.Aircraft;
 }
 
+AVehicleBase* ASupportPackage::SpawnVehicle(ABaseCharacter* Character, APlayerController* PlayerController)
+{
+	if (SupportPackageSet.VehicleClass == nullptr) {
+		return nullptr;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = Character;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	SupportPackageSet.Vehicle = GetWorld()->SpawnActor<AVehicleBase>(SupportPackageSet.VehicleClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	return SupportPackageSet.Vehicle;
+}
+
 void ASupportPackage::PlayPickupSound()
 {
 	if (SupportPackageSet.PickupSound == nullptr) return;
