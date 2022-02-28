@@ -352,6 +352,7 @@ void AVehicleBase::SpawnVehicleWeapons()
 			Weapon->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
 		}
 
+		VehicleWeapon.Weapon = Weapon;
 		auto VehicleWeaponPtr = new FVehicleWeapon();
 		VehicleWeaponPtr->Weapon = Weapon;
 		VehicleWeaponPtrList.Add(VehicleWeaponPtr);
@@ -405,6 +406,9 @@ void AVehicleBase::SpawnVehicleSeatings()
 				}
 			}
 
+			VehicleSeat.Character = Character;
+			VehicleSeat.OwningVehicle = this;
+			
 			auto VehicleSeatPtr = new FVehicletSeating();
 			VehicleSeatPtr->Character = Character;
 			VehicleSeatPtr->OwningVehicle = this;

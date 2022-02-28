@@ -250,13 +250,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AAircraft> AircraftClass;
 
-	UPROPERTY()
-		AAircraft* Aircraft;;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AAircraft* Aircraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AVehicleBase> VehicleClass;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		AVehicleBase* Vehicle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -296,7 +296,8 @@ public:
 
 	FSupportPackageSet()
 	{
-
+		Aircraft = nullptr;
+		Vehicle = nullptr;
 	}
 };
 
@@ -654,14 +655,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ABaseCharacter> CharacterClass;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		ABaseCharacter* Character;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		AActor* OwningVehicle;
 
 	FVehicletSeating()
 	{
+		Character = nullptr;
 		OwningVehicle = nullptr;
 		AssociatedWeapon = -1;
 	}
@@ -675,6 +677,9 @@ struct FVehicleWeapon
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<AMountedGun> WeaponClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AMountedGun* Weapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		FName WeaponSocketName;
@@ -702,12 +707,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;
 
-	UPROPERTY()
-		AMountedGun* Weapon;
-
 	FVehicleWeapon()
 	{
 		AttachCharacterToWeapon = false;
+		Weapon = nullptr;
 	}
 };
 
