@@ -1119,7 +1119,7 @@ void ACustomPlayerController::UseInteractableActor()
 
 		if (Aircraft)
 		{
-			SetControlledAircraft(Aircraft, CurrentSupportPackage->GetIsControllable());
+			SetControlledAircraft(Aircraft, CurrentSupportPackage->GetSupportPackageSet().IsControllable);
 		}
 	}
 

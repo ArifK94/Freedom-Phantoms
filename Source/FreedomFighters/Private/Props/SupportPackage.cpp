@@ -12,6 +12,8 @@
 ASupportPackage::ASupportPackage()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	IsCollected = false;
 }
 
 FString ASupportPackage::GetKeyDisplayName_Implementation()
@@ -21,7 +23,7 @@ FString ASupportPackage::GetKeyDisplayName_Implementation()
 
 FString ASupportPackage::OnInteractionFound_Implementation(APawn* InPawn, AController* InController)
 {
-	return ActionMessage.ToString();
+	return SupportPackageSet.ActionMessage.ToString();
 }
 
 AActor* ASupportPackage::OnPickup_Implementation(APawn* InPawn, AController* InController)
@@ -29,6 +31,13 @@ AActor* ASupportPackage::OnPickup_Implementation(APawn* InPawn, AController* InC
 	if (!InController) {
 		return nullptr;
 	}
+
+	// Has it already has been picked up?
+	if (IsCollected) {
+		return nullptr;
+	}
+
+	IsCollected = true;
 
 	auto PlayerController = Cast<ACustomPlayerController>(InController);
 
@@ -73,7 +82,8 @@ bool ASupportPackage::OnUseInteraction_Implementation(APawn* InPawn, AController
 	if (PlayerController)
 	{
 		AAircraft* Aircraft = SpawnAircraft(Cast<ABaseCharacter>(InPawn), PlayerController);
-		PlayerController->SetControlledAircraft(Aircraft, IsControllable);
+		PlayerController->SetControlledAircraft(Aircraft, SupportPackageSet.IsControllable);
+		Destroy();
 		return true;
 	}
 
@@ -95,9 +105,60 @@ bool ASupportPackage::CanInteract_Implementation(APawn* InPawn, AController* InC
 	return false;
 }
 
+void ASupportPackage::BeginPlay()
+{
+	Super::BeginPlay();
+
+	LoadDataSet();
+}
+
+void ASupportPackage::LoadDataSet()
+{
+	if (SPSetDatatable == nullptr) {
+		Destroy(); // no point having this actor exist within the game as it will serve no purpose
+		return;
+	}
+
+	static const FString ContextString(TEXT("Support Package Set"));
+	auto SPSet = SPSetDatatable->FindRow<FSupportPackageSet>(RowName, ContextString, true);
+
+	if (SPSet == nullptr) {
+		Destroy(); // no point having this actor exist within the game as it will serve no purpose
+		return;
+	}
+
+
+	SupportPackageSet.SupportActorClass = SPSet->SupportActorClass;
+
+	SupportPackageSet.AircraftClass = SPSet->AircraftClass;
+
+	SupportPackageSet.VehicleClass = SPSet->VehicleClass;
+
+	SupportPackageSet.DisplayName = SPSet->DisplayName;
+
+	SupportPackageSet.Description = SPSet->Description;
+
+	SupportPackageSet.ActionMessage  = SPSet->ActionMessage;
+
+	SupportPackageSet.IsControllable = SPSet->IsControllable;
+
+	SupportPackageSet.Icon = SPSet->Icon;
+
+	SupportPackageSet.PreviewImage = SPSet->PreviewImage;
+
+	SupportPackageSet.PickupSound = SPSet->PickupSound;
+
+	SupportPackageSet.InteractSound = SPSet->InteractSound;
+
+	SupportPackageSet.SupportSoundsSet = SPSet->SupportSoundsSet;
+
+	SupportPackageSet.VehiclePathTagName = SPSet->VehiclePathTagName;
+
+}
+
 AAircraft* ASupportPackage::SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController)
 {
-	if (AircraftClass == nullptr) {
+	if (SupportPackageSet.AircraftClass == nullptr) {
 		return nullptr;
 	}
 
@@ -105,34 +166,34 @@ AAircraft* ASupportPackage::SpawnAircraft(ABaseCharacter* Character, APlayerCont
 	SpawnParams.Owner = Character;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AAircraft* Aircraft = GetWorld()->SpawnActor<AAircraft>(AircraftClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	SupportPackageSet.Aircraft = GetWorld()->SpawnActor<AAircraft>(SupportPackageSet.AircraftClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-	return Aircraft;
+	return SupportPackageSet.Aircraft;
 }
 
 void ASupportPackage::PlayPickupSound()
 {
-	if (PickupSound == nullptr) return;
+	if (SupportPackageSet.PickupSound == nullptr) return;
 
-	UGameplayStatics::PlaySound2D(GetWorld(), PickupSound);
+	UGameplayStatics::PlaySound2D(GetWorld(), SupportPackageSet.PickupSound);
 }
 
 void ASupportPackage::PlayInteractSound()
 {
-	if (InteractSound == nullptr) return;
+	if (SupportPackageSet.InteractSound == nullptr) return;
 
-	UGameplayStatics::PlaySound2D(GetWorld(), InteractSound);
+	UGameplayStatics::PlaySound2D(GetWorld(), SupportPackageSet.InteractSound);
 }
 
 void ASupportPackage::PlayVoiceOverSound(TeamFaction Faction)
 {
-	if (SupportSoundsSet.Num() <= 0) {
+	if (SupportPackageSet.SupportSoundsSet.Num() <= 0) {
 		return;
 	}
 
-	for (int i = 0; i < SupportSoundsSet.Num(); i++)
+	for (int i = 0; i < SupportPackageSet.SupportSoundsSet.Num(); i++)
 	{
-		FSupportPackageVoiceOverSet SupportPackageVoiceOverSet = SupportSoundsSet[i];
+		FSupportPackageVoiceOverSet SupportPackageVoiceOverSet = SupportPackageSet.SupportSoundsSet[i];
 
 		if (SupportPackageVoiceOverSet.Faction == Faction && SupportPackageVoiceOverSet.ReadyToUseSound)
 		{

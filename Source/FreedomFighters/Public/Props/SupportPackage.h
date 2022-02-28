@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/Interactable.h"
+#include "Engine/DataTable.h"
 #include "StructCollection.h"
 #include "EnumCollection.h"
 #include "SupportPackage.generated.h"
@@ -20,39 +21,17 @@ class FREEDOMFIGHTERS_API ASupportPackage : public AActor, public IInteractable
 	GENERATED_BODY()
 	
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<AAircraft> AircraftClass;
+	bool IsCollected;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FName DisplayName;
-
+		UDataTable* SPSetDatatable;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FName Description;
+		FName RowName;
 
-	/** Message to be displayed on the UI */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FName ActionMessage;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FSupportPackageSet SupportPackageSet;
 
-	/** Is the Spawned Actor Controllable such as aircrafts */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsControllable;
-
-	/** Icon displayed for UI */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UTexture* Icon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UTexture* PreviewImage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		USoundBase* PickupSound;
-
-	/** When user beings to interact with the object */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		USoundBase* InteractSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TArray<FSupportPackageVoiceOverSet> SupportSoundsSet;
 
 public:
 	ASupportPackage();
@@ -73,13 +52,14 @@ public:
 
 	void PlayVoiceOverSound(TeamFaction Faction);
 
-public:
-	FName GetActionMessage() {
-		return ActionMessage;
-	}
+private:
+	void LoadDataSet();
 
-	bool GetIsControllable() {
-		return IsControllable;
-	}
+
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	FSupportPackageSet GetSupportPackageSet() { return SupportPackageSet; }
 
 };

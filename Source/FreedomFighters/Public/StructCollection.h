@@ -13,6 +13,7 @@ class ABaseCharacter;
 class ACombatCharacter;
 class ACommanderCharacter;
 class AAircraft;
+class AVehicleBase;
 class ATargetSystemMarker;
 class AWeapon;
 class AMountedGun;
@@ -248,7 +249,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AAircraft> AircraftClass;
-	AAircraft* Aircraft;
+
+	UPROPERTY()
+		AAircraft* Aircraft;;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AVehicleBase> VehicleClass;
+
+	UPROPERTY()
+		AVehicleBase* Vehicle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName DisplayName;
@@ -290,10 +299,6 @@ public:
 
 	}
 };
-
-
-
-
 
 
 USTRUCT(BlueprintType)
@@ -559,10 +564,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ABaseCharacter> Character;
-	ABaseCharacter* CharacterObj;
 
+	UPROPERTY()
+		ABaseCharacter* CharacterObj;
 
-	AAircraft* OwningAircraft;
+	UPROPERTY()
+		AAircraft* OwningAircraft;
 
 	FAircraftSeating()
 	{
