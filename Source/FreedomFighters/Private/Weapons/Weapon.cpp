@@ -262,7 +262,10 @@ void AWeapon::ConvertWeaponName()
 
 FVector AWeapon::getMuzzleLocation()
 {
-	return ParentMesh->GetSocketLocation(MuzzleSocket);
+	if (ParentMesh) {
+		return ParentMesh->GetSocketLocation(MuzzleSocket);
+	}
+	return MeshComp->GetSocketLocation(MuzzleSocket);
 }
 
 void AWeapon::LoadParentMesh()
@@ -301,7 +304,7 @@ void AWeapon::BeginPlay()
 	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
-	GetWorldTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, true);
+	GetWorldTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, true, 1.f);
 
 	SpawnMagazine();
 	ConfigSetup();
