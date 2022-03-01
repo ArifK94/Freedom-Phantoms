@@ -158,12 +158,16 @@ void UVehiclePathFollowerComponent::FindPath()
 {
 	if (FollowTargetDestination)
 	{
-		FOnTimelineFloat TimelineProgress;
-		TimelineProgress.BindUFunction(this, FName("MoveToLocation"));
-		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
-		CurveTimeline.SetLooping(false);
-		CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
-		CurveTimeline.PlayFromStart();
+		if (CurveFloat)
+		{
+			FOnTimelineFloat TimelineProgress;
+			TimelineProgress.BindUFunction(this, FName("MoveToLocation"));
+			CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+			CurveTimeline.SetLooping(false);
+			CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+			CurveTimeline.PlayFromStart();
+		}
+
 	}
 	else
 	{
