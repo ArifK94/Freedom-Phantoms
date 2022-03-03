@@ -483,7 +483,7 @@ void ACombatCharacter::UpdateCombatMode()
 
 	if (isAiming || isFiring)
 	{
-		if (!isSprinting && !IsInAircraft && !isTakingCover && !isUsingMountedWeapon)
+		if (!isSprinting && !IsInVehicle && !isTakingCover && !isUsingMountedWeapon)
 		{
 			bUseControllerRotationYaw = true;
 			GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -758,7 +758,7 @@ void ACombatCharacter::EndAim()
 
 void ACombatCharacter::AimAutoRotation()
 {
-	if (isTakingCover || !IsInAircraft || !isInCombatMode) {
+	if (isTakingCover || !IsInVehicle || !isInCombatMode) {
 		return;
 	}
 

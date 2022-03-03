@@ -168,9 +168,6 @@ protected:
 		bool isAiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsInAircraft;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsInVehicle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -198,7 +195,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FAircraftSeating CurrentAircraftSeat;
 
-		FVehicletSeating* CurrentVehicletSeat;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FVehicletSeating CurrentVehicleSeat;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
@@ -292,7 +290,7 @@ public:
 	void CoverMovement(float Value);
 	virtual void StopCover();
 
-	void SetVehicleSeat(FVehicletSeating* Seat);
+	void SetVehicleSeat(FVehicletSeating Seat);
 	void SetAircraftSeat(FAircraftSeating Seating);
 	virtual void SetIsRepellingDown(bool IsRappelling);
 
@@ -346,10 +344,6 @@ public:
 
 	bool IsAiming() {
 		return isAiming;
-	}
-
-	bool GetIsInAircraft() {
-		return IsInAircraft;
 	}
 
 	bool GetIsInVehicle() {
@@ -423,5 +417,5 @@ public:
 		return CurrentAircraftSeat;
 	}
 
-	FVehicletSeating* GetVehicletSeat() { return CurrentVehicletSeat; }
+	FVehicletSeating GetVehicletSeat() { return CurrentVehicleSeat; }
 };

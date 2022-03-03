@@ -1,3 +1,4 @@
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
@@ -660,6 +661,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		AActor* OwningVehicle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimSequence* IdleAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimSequence* AimAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimSequence* FireAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimSequence* ExitAnimation;
 
 	FVehicletSeating()
 	{

@@ -119,7 +119,7 @@ void AVehicleBase::BeginPlay()
 	HealthComponent->OnHealthChanged.AddDynamic(this, &AVehicleBase::OnHealthUpdate);
 
 	CameraBoom->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraSocket);
-	
+
 	GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::TimerTick, .2f, true);
 
 	SpawnVehicleWeapons();
@@ -133,6 +133,8 @@ void AVehicleBase::Tick(float DeltaTime)
 	EngineAudio->SetFloatParameter(EngineSoundParamName, GetVelocity().Size());
 
 	WheelRPM = (GetVelocity().Size() * 360.f) / 60.f;
+
+	CurrentRotationSpeed = DeltaTime * RotationSpeed;
 }
 
 void AVehicleBase::TimerTick()
@@ -408,11 +410,11 @@ void AVehicleBase::SpawnVehicleSeatings()
 
 			VehicleSeat.Character = Character;
 			VehicleSeat.OwningVehicle = this;
-			
+
 			auto VehicleSeatPtr = new FVehicletSeating();
 			VehicleSeatPtr->Character = Character;
 			VehicleSeatPtr->OwningVehicle = this;
-			Character->SetVehicleSeat(VehicleSeatPtr);
+			Character->SetVehicleSeat(VehicleSeat);
 			VehicleSeatPtrList.Add(VehicleSeatPtr);
 		}
 
@@ -425,13 +427,14 @@ void AVehicleBase::RemovePassenger(ABaseCharacter* Character)
 		return;
 	}
 
-	if (VehicleSeatPtrList.Contains(Character->GetVehicletSeat()))
+	for (int i = 0; i < VehicleSeatPtrList.Num(); i++)
 	{
-		Character->SetVehicleSeat(nullptr);
-
-		auto Index = VehicleSeatPtrList.Find(Character->GetVehicletSeat());
-		VehicleSeatPtrList.RemoveAt(Index);
+		if (VehicleSeatPtrList[i]->Character == Character) {
+			Character->SetVehicleSeat(FVehicletSeating());
+			VehicleSeatPtrList.RemoveAt(i);
+		}
 	}
+
 }
 
 void AVehicleBase::ChangeThermalVision()
@@ -520,7 +523,7 @@ void AVehicleBase::UpdateWeaponView()
 		{
 			Seat->Character->GetDefaultAIController()->Possess(Seat->Character);
 		}
-		Seat->Character->SetVehicleSeat(Seat); // so AI does not fall to the ground when repossessed
+		Seat->Character->SetVehicleSeat(VehicleSeats[CurrentWeaponIndex - 1]); // so AI does not fall to the ground when repossessed
 	}
 
 	CurrentWeaponIndex = 0;// set the current weapon to first weapon by default
@@ -786,20 +789,20 @@ void AVehicleBase::AddControllerYawInput(float Val, bool IsCameraRoam)
 /// </summary>
 /// <param name="Val"></param>
 /// <param name="AircraftSeating"></param>
-void AVehicleBase::AddControllerPitchInput(float Val, FVehicletSeating* VehicletSeating)
+void AVehicleBase::AddControllerPitchInput(float Val, FVehicletSeating VehicletSeating)
 {
-	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, VehicletSeating->PitchMin, VehicletSeating->PitchMax);
+	RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, VehicletSeating.PitchMin, VehicletSeating.PitchMax);
 	RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
 
-	VehicletSeating->Character->FollowCamera->SetRelativeRotation(RotationInput);
+	VehicletSeating.Character->FollowCamera->SetRelativeRotation(RotationInput);
 }
 
-void AVehicleBase::AddControllerYawInput(float Val, FVehicletSeating* VehicletSeating)
+void AVehicleBase::AddControllerYawInput(float Val, FVehicletSeating VehicletSeating)
 {
-	RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, VehicletSeating->YawMin, VehicletSeating->YawMax);
+	RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, VehicletSeating.YawMin, VehicletSeating.YawMax);
 	RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
 
-	VehicletSeating->Character->FollowCamera->SetRelativeRotation(RotationInput);
+	VehicletSeating.Character->FollowCamera->SetRelativeRotation(RotationInput);
 }
 
 void AVehicleBase::SetRotationInput(FRotator InRotation)

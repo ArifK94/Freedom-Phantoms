@@ -214,8 +214,8 @@ public:
 	void AddControllerYawInput(float Val);
 	void AddControllerPitchInput(float Val, bool IsCameraRoam);
 	void AddControllerYawInput(float Val, bool IsCameraRoam);
-	void AddControllerPitchInput(float Val, FVehicletSeating* VehicletSeating);
-	void AddControllerYawInput(float Val, FVehicletSeating* VehicletSeating);
+	void AddControllerPitchInput(float Val, FVehicletSeating VehicletSeating);
+	void AddControllerYawInput(float Val, FVehicletSeating VehicletSeating);
 
 	UFUNCTION(BlueprintCallable)
 		void SetRotationInput(FRotator InRotation);

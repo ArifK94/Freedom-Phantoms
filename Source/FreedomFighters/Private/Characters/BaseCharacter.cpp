@@ -115,11 +115,11 @@ ABaseCharacter::ABaseCharacter()
 	CoverRotationRightYaw = FVector2D(0.0f, 20.0f);
 }
 
-void ABaseCharacter::SetVehicleSeat(FVehicletSeating* Seat)
+void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 {
-	CurrentVehicletSeat = Seat;
+	CurrentVehicleSeat = Seat;
 
-	if (Seat->OwningVehicle)
+	if (Seat.OwningVehicle)
 	{
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
 		IsInVehicle = true;
@@ -134,18 +134,8 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating* Seat)
 void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
 {
 	CurrentAircraftSeat = Seating;
-	if (CurrentAircraftSeat.OwningAircraft != nullptr)
-	{
-		IsInAircraft = true;
-		IsInVehicle = true;
-	}
-	else
-	{
-		IsInAircraft = false;
-		IsInVehicle = false;
-	}
 
-	if (IsInAircraft)
+	if (CurrentAircraftSeat.OwningAircraft != nullptr)
 	{
 		GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
@@ -155,6 +145,8 @@ void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
 			FollowCamera->AttachToComponent(CurrentAircraftSeat.OwningAircraft->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentAircraftSeat.SeatingSocketName);
 			UpdateAimCamera();
 		}
+
+		IsInVehicle = true;
 	}
 	else
 	{
@@ -165,6 +157,8 @@ void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
 
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
 		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
+
+		IsInVehicle = false;
 	}
 }
 
@@ -249,7 +243,7 @@ FVector ABaseCharacter::GetPawnViewLocation() const
 
 FRotator ABaseCharacter::GetViewRotation() const
 {
-	if (IsInAircraft && FollowCamera)
+	if (IsInVehicle && FollowCamera)
 	{
 		return FollowCamera->GetComponentRotation();
 	}
@@ -457,7 +451,7 @@ void ABaseCharacter::AimOffset()
 	float x = 0.0f;
 
 	FRotator InputRotation = GetControlRotation();
-	if (IsInAircraft || (isTakingCover && isAtCoverCorner))
+	if (IsInVehicle || (isTakingCover && isAtCoverCorner))
 	{
 		InputRotation = FollowCamera->GetComponentRotation();
 	}
@@ -774,7 +768,7 @@ void ABaseCharacter::BeginAim()
 		isAiming = true;
 	}
 
-	if (isAiming && UseAimCameraSpring && !IsInAircraft)
+	if (isAiming && UseAimCameraSpring && !IsInVehicle)
 	{
 		FollowCamera->AttachToComponent(AimCameraSpring, FAttachmentTransformRules::KeepWorldTransform);
 
@@ -788,7 +782,7 @@ void ABaseCharacter::EndAim()
 {
 	isAiming = false;
 
-	if (UseAimCameraSpring && !IsInAircraft)
+	if (UseAimCameraSpring && !IsInVehicle)
 	{
 		FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::KeepWorldTransform);
 

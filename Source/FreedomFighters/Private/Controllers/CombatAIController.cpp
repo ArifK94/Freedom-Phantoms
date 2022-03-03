@@ -194,7 +194,7 @@ void ACombatAIController::Init()
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
-	if (TargetDestination.IsZero() || OwningCombatCharacter->GetIsInAircraft() || OwningCombatCharacter->IsUsingMountedWeapon()) {
+	if (TargetDestination.IsZero() || OwningCombatCharacter->GetIsInVehicle() || OwningCombatCharacter->IsUsingMountedWeapon()) {
 		return EPathFollowingRequestResult::Failed;
 	}
 
@@ -611,7 +611,7 @@ void ACombatAIController::ShootAtEnemy()
 			bool IsTargetClose = DistanceDiff < randomDistanceLimit;
 
 			if (!IsTargetClose && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj() // if target is not close, then switch back to primary
-				&& !OwningCombatCharacter->GetIsInAircraft())
+				&& !OwningCombatCharacter->GetIsInVehicle())
 			{
 				OwningCombatCharacter->BeginWeaponSwap();
 			}
@@ -713,7 +713,7 @@ void ACombatAIController::ReloadWeapon()
 	{
 		if (IsTargetClose &&
 			OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetSecondaryWeaponObj() && // if using primary weapon & enemy is nearby, then swap to secondary
-			!OwningCombatCharacter->GetIsInAircraft())
+			!OwningCombatCharacter->GetIsInVehicle())
 		{
 			OwningCombatCharacter->BeginWeaponSwap();
 		}

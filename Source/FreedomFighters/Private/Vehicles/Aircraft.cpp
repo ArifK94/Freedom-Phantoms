@@ -928,7 +928,7 @@ void AAircraft::WaitForRapelling()
 			if (Character)
 			{
 				DoesSideGunnerRemain = true;
-				if (!Character->GetIsInAircraft())
+				if (!Character->GetIsInVehicle())
 				{
 					OccupiedSeats.RemoveAt(i);
 				}

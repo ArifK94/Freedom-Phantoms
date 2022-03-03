@@ -349,7 +349,4 @@ void UVehiclePathFollowerComponent::SetVehicleExit(ABaseCharacter* Character)
 {
 	auto VehicleSeats = Character->GetVehicletSeat();
 
-	if (!VehicleSeats) {
-		return;
-	}
 }
