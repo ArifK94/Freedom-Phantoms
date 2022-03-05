@@ -934,14 +934,14 @@ void AAircraft::WaitForRapelling()
 				}
 				else
 				{
-					if (!Character->IsRepellingDown())
+					if (!Character->GetIsExitingVehicle())
 					{
 						if (Passenger.isRopeLeftSide)
 						{
 							if (!isLeftRappelOccupied)
 							{
 								Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(LeftRopeSocket), FRotator::ZeroRotator);
-								Character->SetIsRepellingDown(true);
+								Character->SetIsExitingVehicle(true);
 								isLeftRappelOccupied = true;
 								DoesSideGunnerRemain = true;
 							}
@@ -951,7 +951,7 @@ void AAircraft::WaitForRapelling()
 							if (!isRightRappelOccupied)
 							{
 								Character->SetActorLocationAndRotation(Mesh->GetSocketLocation(RightRopeSocket), FRotator::ZeroRotator);
-								Character->SetIsRepellingDown(true);
+								Character->SetIsExitingVehicle(true);
 								isRightRappelOccupied = true;
 								DoesSideGunnerRemain = true;
 							}

@@ -4,6 +4,7 @@
 #include "CustomComponents/VehiclePathFollowerComponent.h"
 #include "Components/SplineComponent.h"
 #include "Props/VehicleSplinePath.h"
+#include "Accessories/Rope.h"
 #include "Vehicles/VehicleBase.h"
 #include "Characters/BaseCharacter.h"
 
@@ -148,7 +149,9 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 		// Stop moving
 		CurveTimeline.Stop();
 
-		ExitPassengers();
+		SpawnRope();
+
+		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ExitPassenger, this, &UVehiclePathFollowerComponent::ExitPassengers, 1.f, true);
 
 		break;
 	}
@@ -273,8 +276,12 @@ void UVehiclePathFollowerComponent::MoveToLocation(float Value)
 
 void UVehiclePathFollowerComponent::ResumePath()
 {
-	CurveTimeline.Play();
+	CurrentVehicleMovement = EVehicleMovement::MovingForward;
+
 	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_WaitingMovment);
+	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
+
+	CurveTimeline.Play();
 }
 
 void UVehiclePathFollowerComponent::SpawnRandomLocation()
@@ -318,6 +325,7 @@ void UVehiclePathFollowerComponent::ClearPath()
 	{
 		VehiclePath->SetOccupantVehicle(nullptr);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_WaitingMovment);
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
 	}
 }
 
@@ -330,23 +338,137 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 		return;
 	}
 
-	for (int i = 0; i < VehicleSeats.Num(); i++)
+	bool HasRemainingPassengers = false;
+
+	for (int i = VehicleSeats.Num() - 1; i >= 0; i--)
 	{
 		auto VehicleSeat = VehicleSeats[i];
 
-		if (!VehicleSeat->Character) {
+		auto Character = VehicleSeat->Character;
+
+		if (!Character) {
 			continue;
 		}
 
-		if (VehicleSeat->ExitPassengerOnPoint)
+		// Cannot exit from vehicle?
+		if (!VehicleSeat->ExitPassengerOnPoint) {
+			continue;
+		}
+
+
+		if (!Character->GetIsInVehicle())
 		{
-			// Exit from vehicle
+			VehicleSeats.RemoveAt(i);
+		}
+		else
+		{
+			HasRemainingPassengers = true;
+
+			if (!Character->GetIsExitingVehicle())
+			{
+				if (VehicleSeat->IsSeatLeftSide)
+				{
+					if (RopeLeft && !RopeLeft->GetIsRopeOccupied())
+					{
+						RopeLeft->SetRopeOccupied(true);
+						RopeLeft->AttachActorToRope(Character);
+						Character->SetIsExitingVehicle(true);
+					}
+				}
+				else
+				{
+					if (RopeRight && !RopeRight->GetIsRopeOccupied())
+					{
+						RopeRight->SetRopeOccupied(true);
+						RopeRight->AttachActorToRope(Character);
+						Character->SetIsExitingVehicle(true);
+					}
+				}
+			}
+		}
+
+	}
+
+	if (!HasRemainingPassengers)
+	{
+		if (RopeLeft) {
+			RopeLeft->ReleaseRope();
+		}
+
+		if (RopeRight) {
+			RopeRight->ReleaseRope();
+		}
+
+		ResumePath();
+	}
+
+}
+
+void UVehiclePathFollowerComponent::SpawnRope()
+{
+	if (!RopeClass) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = OwningVehicle;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	if (RopeLeft == nullptr)
+	{
+		RopeLeft = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+		if (RopeLeft) {
+			RopeLeft->AttachToComponent(OwningVehicle->GetMeshComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
+			RopeLeft->SetRopeLeft(true);
+			RopeLeft->DropRope();
+		}
+
+	}
+
+	if (RopeRight == nullptr)
+	{
+		RopeRight = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+		if (RopeRight) {
+			RopeRight->AttachToComponent(OwningVehicle->GetMeshComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
+			RopeRight->DropRope();
 		}
 	}
+
+
 }
 
 void UVehiclePathFollowerComponent::SetVehicleExit(ABaseCharacter* Character)
 {
 	auto VehicleSeats = Character->GetVehicletSeat();
+}
 
+void UVehiclePathFollowerComponent::SetRopeFree(FVehicletSeating VehicletSeat)
+{
+	if (!VehicletSeat.OwningVehicle) {
+		return;
+	}
+
+
+	auto ActorComponent = VehicletSeat.OwningVehicle->GetComponentByClass(UVehiclePathFollowerComponent::StaticClass());
+
+	if (!ActorComponent) {
+		return;
+	}
+
+	auto VehiclePathComp = Cast<UVehiclePathFollowerComponent>(ActorComponent);
+	if (!VehiclePathComp) {
+		return;
+	}
+
+
+	if (VehicletSeat.IsSeatLeftSide)
+	{
+		VehiclePathComp->GetRopeLeft()->SetRopeOccupied(false);
+	}
+	else
+	{
+		VehiclePathComp->GetRopeRight()->SetRopeOccupied(false);
+	}
 }

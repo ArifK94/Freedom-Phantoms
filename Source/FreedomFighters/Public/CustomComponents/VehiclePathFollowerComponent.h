@@ -12,6 +12,7 @@
 class UCurveFloat;
 class AVehicleSplinePath;
 class ABaseCharacter;
+class ARope;
 
 class UCapsuleComponent;
 
@@ -27,9 +28,11 @@ private:
 	/** Used when vehicle movement type is set to Waiting */
 	FTimerHandle THandler_WaitingMovment;
 
+	/** Used when passengers are leaving the vehicle */
+	FTimerHandle THandler_ExitPassenger;
+
 
 	AVehicleBase* OwningVehicle;
-
 
 	FVehicleSplinePoint CurrentSplinePoint;
 
@@ -87,6 +90,22 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Specified Target Destination", meta = (AllowPrivateAccess = "true"))
 		bool FollowTargetDestination;
 
+
+
+	/** Vehicle Mesh sockets */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passenger Exit", meta = (AllowPrivateAccess = "true"))
+		FName LeftRopeSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passenger Exit", meta = (AllowPrivateAccess = "true"))
+		FName RightRopeSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passenger Exit", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<ARope> RopeClass;
+	ARope* RopeLeft;
+	ARope* RopeRight;
+
+
+
 	/** Might want to destroy after completing the path */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool DestroyOnPathComplete;
@@ -98,6 +117,8 @@ public:
 
 	static void SetVehicleExit(ABaseCharacter* Character);
 
+	static void SetRopeFree(FVehicletSeating VehicletSeat);
+
 private:
 	void Init();
 
@@ -108,6 +129,8 @@ private:
 	void ResumePath();
 
 	void ExitPassengers();
+
+	void SpawnRope();
 
 	UFUNCTION(BlueprintCallable)
 		void SpawnRandomLocation();
@@ -137,5 +160,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 		FOnPathCompleteSignature OnPathComplete;
+
+	ARope* GetRopeLeft() { return RopeLeft; }
+	ARope* GetRopeRight() { return RopeRight; }
 
 };

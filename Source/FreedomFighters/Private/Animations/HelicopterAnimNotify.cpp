@@ -3,7 +3,8 @@
 
 #include "Animations/HelicopterAnimNotify.h"
 #include "Characters/BaseCharacter.h"
-#include "Vehicles/Aircraft.h"
+#include "Accessories/Rope.h"
+#include "CustomComponents/VehiclePathFollowerComponent.h"
 
 #include "Components/CapsuleComponent.h"
 
@@ -15,29 +16,15 @@ void UHelicopterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequen
 
 		if (Character)
 		{
-			FAircraftSeating MySeat = Character->GetAircraftSeat();
-			AAircraft* OwningAircraft = MySeat.OwningAircraft;
-
 			if (DetachFromHelicopter)
 			{
 				Character->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-				Character->SetAircraftSeat(FAircraftSeating());
-				Character->SetIsRepellingDown(false);
+				Character->SetVehicleSeat(FVehicletSeating());
 			}
 
 			if (IsRopeFreeToUse)
 			{
-				if (OwningAircraft)
-				{
-					if (MySeat.isRopeLeftSide)
-					{
-						OwningAircraft->IsLeftRappelOccupied(false);
-					}
-					else
-					{
-						OwningAircraft->IsRightRappelOccupied(false);
-					}
-				}
+				UVehiclePathFollowerComponent::SetRopeFree(Character->GetVehicletSeat());
 			}
 		}
 	}

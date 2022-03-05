@@ -375,7 +375,7 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 {
 	// Find a random point when landed after rappellinh so upcoming characters rapelling down do not stand in the same spot
-	if (!OwningCombatCharacter->IsRepellingDown())
+	if (!OwningCombatCharacter->GetIsExitingVehicle())
 	{
 		FNavLocation NavLocation;
 		UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
@@ -565,7 +565,7 @@ void ACombatAIController::ShootAtEnemy()
 		return;
 	}
 
-	if (OwningCombatCharacter->IsRepellingDown() || OwningCombatCharacter->IsSwappingWeapon() || OwningCombatCharacter->IsReloading())
+	if (OwningCombatCharacter->GetIsExitingVehicle() || OwningCombatCharacter->IsSwappingWeapon() || OwningCombatCharacter->IsReloading())
 	{
 		/**
 		* Remove this if statement when the end reload is triggered as soon as the capacity is reached. Problem arises when this function is returned because the reload was not being ended.

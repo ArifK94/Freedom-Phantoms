@@ -622,20 +622,38 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		EVehicleRole Role;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		FName SeatingSocketName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<ABaseCharacter> CharacterClass;
+
+	UPROPERTY()
+		ABaseCharacter* Character;
+
+	UPROPERTY()
+		AVehicleBase* OwningVehicle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimSequence* IdleAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimSequence* AimAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimSequence* FireAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimSequence* ExitAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		int32 SeatPosition;
+		FName SeatingSocketName;
 
 	/** FVehicleWeapon list index, leave as -1 meaning passenger seat does not have a weapon */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		int32 AssociatedWeapon;
 
-	/** The animation to play when exiting the vehicle, assigned in the character animation blueprint */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		int32 ExitAnimIndex;
 
+	/** Used when exiting vehicle */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool IsSeatLeftSide;
 
 	/** Should the passenger exit when vehicle reaches the exit passenger point along the vehicle path? */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -653,26 +671,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float YawMax;
 
+
+	/** Can passenger shoot from this seat? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TSubclassOf<ABaseCharacter> CharacterClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		ABaseCharacter* Character;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		AActor* OwningVehicle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UAnimSequence* IdleAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UAnimSequence* AimAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UAnimSequence* FireAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UAnimSequence* ExitAnimation;
+		bool CanCharacterShoot;
 
 	FVehicletSeating()
 	{

@@ -412,6 +412,9 @@ void AVehicleBase::SpawnVehicleSeatings()
 			VehicleSeat.OwningVehicle = this;
 
 			auto VehicleSeatPtr = new FVehicletSeating();
+			VehicleSeatPtr->IsSeatLeftSide = VehicleSeat.IsSeatLeftSide;
+			VehicleSeatPtr->ExitPassengerOnPoint = VehicleSeat.ExitPassengerOnPoint;
+			VehicleSeatPtr->CanCharacterShoot = VehicleSeat.CanCharacterShoot;
 			VehicleSeatPtr->Character = Character;
 			VehicleSeatPtr->OwningVehicle = this;
 			Character->SetVehicleSeat(VehicleSeat);

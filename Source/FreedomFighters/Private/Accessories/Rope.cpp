@@ -9,57 +9,45 @@ ARope::ARope()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	ropeMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RopeMeshComp"));
+	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RopeMeshComp"));
+
+	IsRopeOccupied = false;
+	IsRopeLeft = false;
+
+	TopAttachPointSocket = "AttachPoint_Top";
 }
 
 void ARope::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CreateCollisionPoints();
-	ropeMeshComp->PhysicsAssetOverride = RopeRappelPhysics;
-}
-
-
-void ARope::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, TEXT("Some debug message!"));
 }
 
 void ARope::DropRope()
 {
-	ropeMeshComp->PhysicsAssetOverride = RopeDropPhysics;
-	ropeMeshComp->SetSimulatePhysics(true);
-	SetLifeSpan(5);
+	//MeshComponent->PhysicsAssetOverride = RopeDropPhysics;
+	//MeshComponent->SetSimulatePhysics(true);
+	//SetLifeSpan(5);
+
+	IsRopeDropped = true;
 }
 
-void ARope::CreateCollisionPoints()
+
+void ARope::ReleaseRope()
 {
-	const int32 TotalBones = ropeMeshComp->GetNumBones();
+	IsRopeDropped = false;
+	IsRopeReleased = true;
 
-	for (int i = 0; i < TotalBones; i++)
-	{
-		//UCapsuleComponent* CollisionPoint = NewObject<UCapsuleComponent>(this, UCapsuleComponent::StaticClass());
-		//CollisionPoint->SetWorldLocation(ropeMeshComp->GetBoneLocation(ropeMeshComp->GetBoneName(i), EBoneSpaces::WorldSpace));
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 
-		//CollisionPoint->AttachToComponent(ropeMeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ropeMeshComp->GetBoneName(i));
-		//CollisionPoint->CapsuleRadius(220.0f);
+	GetOwner()->GetWorldTimerManager().SetTimer(THandler_Destroy, this, &ARope::DestroyRope, 1.f, false, 10.f);
+}
 
-		//CollisionPoint->ShapeColor = FColor(0, 0, 255, 255);
-		//CollisionPoint->OnComponentBeginOverlap.AddDynamic(this, &ARope::OnOverlapBegin);
+void ARope::DestroyRope()
+{
+	Destroy();
+}
 
-		//CollisionPoint->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
-		//CollisionPoint->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-
-
-		const FVector StartPoint = ropeMeshComp->GetBoneLocation(ropeMeshComp->GetBoneName(i), EBoneSpaces::WorldSpace);
-
-		UBoxComponent* CollisionBox = NewObject<UBoxComponent>(this, UBoxComponent::StaticClass());
-		CollisionBox->SetWorldLocation(StartPoint);
-		CollisionBox->ShapeColor = FColor(0, 0, 255, 255);
-
-
-
-
-	}
+void ARope::AttachActorToRope(AActor* Actor)
+{
+	Actor->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TopAttachPointSocket);
 }

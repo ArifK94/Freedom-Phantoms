@@ -583,7 +583,7 @@ void ACustomPlayerController::OnCombatModeUpdated(ACombatCharacter* CombatCharac
 
 void ACustomPlayerController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 {
-	if (BaseCharacter->IsRepellingDown())
+	if (BaseCharacter->GetIsExitingVehicle())
 	{
 		OwningCombatCharacter->DisableInput(this);
 		SetViewTargetWithBlend(OwningCombatCharacter, 0.2f);
@@ -678,7 +678,7 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 	// else if in an aircraft
 	// mounted gun has its own control input so use that  in the next condition
 	// allow player to rotate around character when repelling
-	else if (OwningCombatCharacter && OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown())
+	else if (OwningCombatCharacter && OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->GetIsExitingVehicle())
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
@@ -716,7 +716,7 @@ void ACustomPlayerController::AddControllerYawInput(float Val)
 	{
 		ControlledAircraft->AddControllerYawInput(Val);
 	}
-	else if (OwningCombatCharacter && OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->IsRepellingDown())
+	else if (OwningCombatCharacter && OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->GetIsExitingVehicle())
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
@@ -914,7 +914,7 @@ void ACustomPlayerController::EndAim()
 
 void ACustomPlayerController::TakeCover()
 {
-	if (OwningCombatCharacter->IsRepellingDown()) {
+	if (OwningCombatCharacter->GetIsExitingVehicle()) {
 		return;
 	}
 
@@ -923,7 +923,7 @@ void ACustomPlayerController::TakeCover()
 
 void ACustomPlayerController::BeginFire()
 {
-	if (OwningCombatCharacter->IsRepellingDown()) {
+	if (OwningCombatCharacter->GetIsExitingVehicle()) {
 		return;
 	}
 
@@ -1096,7 +1096,7 @@ void ACustomPlayerController::PickupInteractable()
 void ACustomPlayerController::UseInteractableActor()
 {
 	// only control one aircraft at a time
-	if (OwningCombatCharacter->IsRepellingDown() || ControlledAircraft != nullptr) {
+	if (OwningCombatCharacter->GetIsExitingVehicle() || ControlledAircraft != nullptr) {
 		return;
 	}
 

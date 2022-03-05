@@ -477,7 +477,7 @@ void ACombatCharacter::StopCover()
 
 void ACombatCharacter::UpdateCombatMode()
 {
-	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isRepellingDown) {
+	if (currentWeaponObj == nullptr || !hasEquippedWeapon || IsExitingVehicle) {
 		return;
 	}
 
@@ -983,9 +983,9 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 	GrabWeapon();
 }
 
-void ACombatCharacter::SetIsRepellingDown(bool IsRappelling)
+void ACombatCharacter::SetIsExitingVehicle(bool IsExiting)
 {
-	Super::SetIsRepellingDown(IsRappelling);
+	Super::SetIsExitingVehicle(IsExiting);
 
 	EndAim();
 	EndFire();

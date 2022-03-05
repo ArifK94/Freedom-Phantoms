@@ -197,7 +197,7 @@ public:
 
 	void DropMountedGun(bool ClearMG = true);
 
-	virtual void SetIsRepellingDown(bool IsRappelling) override;
+	virtual void SetIsExitingVehicle(bool IsExiting) override;
 
 private:
 	void SpawnHelmet();

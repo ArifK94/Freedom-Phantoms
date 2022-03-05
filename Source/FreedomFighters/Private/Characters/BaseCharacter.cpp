@@ -162,11 +162,11 @@ void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
 	}
 }
 
-void ABaseCharacter::SetIsRepellingDown(bool IsRappelling)
+void ABaseCharacter::SetIsExitingVehicle(bool IsExiting)
 {
-	isRepellingDown = IsRappelling;
+	IsExitingVehicle = IsExiting;
 
-	if (IsRappelling)
+	if (IsExiting)
 	{
 		EndAim();
 

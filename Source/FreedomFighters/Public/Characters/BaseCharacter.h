@@ -152,7 +152,7 @@ protected:
 		float CoverDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isRepellingDown;
+		bool IsExitingVehicle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isAtCoverCorner;
@@ -292,7 +292,7 @@ public:
 
 	void SetVehicleSeat(FVehicletSeating Seat);
 	void SetAircraftSeat(FAircraftSeating Seating);
-	virtual void SetIsRepellingDown(bool IsRappelling);
+	virtual void SetIsExitingVehicle(bool IsExiting);
 
 	void UpdateAimCamera();
 
@@ -350,8 +350,8 @@ public:
 		return IsInVehicle;
 	}
 
-	bool IsRepellingDown() {
-		return isRepellingDown;
+	bool GetIsExitingVehicle() {
+		return IsExitingVehicle;
 	}
 
 	bool IsTakingCover() {

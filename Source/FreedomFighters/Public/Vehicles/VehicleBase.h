@@ -288,5 +288,11 @@ public:
 
 	virtual void Destroyed() override;
 
+
+	USkeletalMeshComponent* GetMeshComponent() { return MeshComponent; }
+
 	TArray<FVehicletSeating*> GetVehicleSeatPtrList() { return VehicleSeatPtrList; }
+
+	TArray<FVehicletSeating> GetVehicleSeats() { return VehicleSeats; }
+
 };
