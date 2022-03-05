@@ -32,6 +32,10 @@ private:
 	FTimerHandle THandler_ExitPassenger;
 
 
+	/** Used when resuming vehicle path */
+	FTimerHandle THandler_ResumePath;
+
+
 	AVehicleBase* OwningVehicle;
 
 	FVehicleSplinePoint CurrentSplinePoint;

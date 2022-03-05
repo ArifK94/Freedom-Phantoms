@@ -278,10 +278,11 @@ void UVehiclePathFollowerComponent::ResumePath()
 {
 	CurrentVehicleMovement = EVehicleMovement::MovingForward;
 
+	CurveTimeline.Play();
+
 	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_WaitingMovment);
 	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
-
-	CurveTimeline.Play();
+	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
 }
 
 void UVehiclePathFollowerComponent::SpawnRandomLocation()
@@ -326,6 +327,7 @@ void UVehiclePathFollowerComponent::ClearPath()
 		VehiclePath->SetOccupantVehicle(nullptr);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_WaitingMovment);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
 	}
 }
 
@@ -399,7 +401,9 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 			RopeRight->ReleaseRope();
 		}
 
-		ResumePath();
+		// Let the ropes fall to the ground then resume path
+		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, true, 2.f);
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
 	}
 
 }
