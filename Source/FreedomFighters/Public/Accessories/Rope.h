@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "Rope.generated.h"
 
-class UPhysicsAsset;
 UCLASS()
 class FREEDOMFIGHTERS_API ARope : public AActor
 {
@@ -15,31 +14,23 @@ class FREEDOMFIGHTERS_API ARope : public AActor
 private:
 	FTimerHandle THandler_Destroy;
 
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* MeshComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UPhysicsAsset* RopeDropPhysics;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UPhysicsAsset* RopeRappelPhysics;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsRopeDropped;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsRopeReleased;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsRopeOccupied;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsRopeLeft;
 
-
 	/** The socket where characters will be holding onto the rope from the top part of the rope */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName TopAttachPointSocket;
 
 public:	
@@ -49,12 +40,10 @@ public:
 	void ReleaseRope();
 
 	void AttachActorToRope(AActor* Actor);
+	void DettachActorToRope();
 
 private:
 	void DestroyRope();
-
-protected:
-	virtual void BeginPlay() override;
 
 public:	
 	bool GetIsRopeOccupied() { return IsRopeOccupied; }

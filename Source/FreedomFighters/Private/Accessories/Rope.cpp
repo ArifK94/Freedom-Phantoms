@@ -1,9 +1,6 @@
 #include "Accessories/Rope.h"
 
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/BoxComponent.h"
-
-#include "PhysicsEngine/PhysicsAsset.h"
 
 ARope::ARope()
 {
@@ -17,17 +14,9 @@ ARope::ARope()
 	TopAttachPointSocket = "AttachPoint_Top";
 }
 
-void ARope::BeginPlay()
-{
-	Super::BeginPlay();
-}
 
 void ARope::DropRope()
 {
-	//MeshComponent->PhysicsAssetOverride = RopeDropPhysics;
-	//MeshComponent->SetSimulatePhysics(true);
-	//SetLifeSpan(5);
-
 	IsRopeDropped = true;
 }
 
@@ -49,5 +38,11 @@ void ARope::DestroyRope()
 
 void ARope::AttachActorToRope(AActor* Actor)
 {
-	Actor->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TopAttachPointSocket);
+	Actor->AttachToComponent(MeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TopAttachPointSocket);
+	IsRopeOccupied = true;
+}
+
+void ARope::DettachActorToRope()
+{
+	IsRopeOccupied = false;
 }

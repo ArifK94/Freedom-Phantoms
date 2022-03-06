@@ -372,7 +372,6 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 				{
 					if (RopeLeft && !RopeLeft->GetIsRopeOccupied())
 					{
-						RopeLeft->SetRopeOccupied(true);
 						RopeLeft->AttachActorToRope(Character);
 						Character->SetIsExitingVehicle(true);
 					}
@@ -381,7 +380,6 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 				{
 					if (RopeRight && !RopeRight->GetIsRopeOccupied())
 					{
-						RopeRight->SetRopeOccupied(true);
 						RopeRight->AttachActorToRope(Character);
 						Character->SetIsExitingVehicle(true);
 					}
@@ -469,10 +467,10 @@ void UVehiclePathFollowerComponent::SetRopeFree(FVehicletSeating VehicletSeat)
 
 	if (VehicletSeat.IsSeatLeftSide)
 	{
-		VehiclePathComp->GetRopeLeft()->SetRopeOccupied(false);
+		VehiclePathComp->GetRopeLeft()->DettachActorToRope();
 	}
 	else
 	{
-		VehiclePathComp->GetRopeRight()->SetRopeOccupied(false);
+		VehiclePathComp->GetRopeRight()->DettachActorToRope();
 	}
 }
