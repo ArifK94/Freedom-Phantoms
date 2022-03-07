@@ -140,6 +140,8 @@ void AVehicleBase::Tick(float DeltaTime)
 void AVehicleBase::TimerTick()
 {
 	UpdatePassengerSeats();
+
+	SetTargetSystem();
 }
 
 void AVehicleBase::UpdatePassengerSeats()
@@ -352,10 +354,17 @@ void AVehicleBase::SpawnVehicleWeapons()
 			Weapon->SetYawMax(VehicleWeapon.YawMax);
 
 			Weapon->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
+
+			Weapon->OnKillConfirmed.AddDynamic(this, &AVehicleBase::OnWeaponKillConfirm);
+
+			VehicleWeapon.Weapon = Weapon;
 		}
 
-		VehicleWeapon.Weapon = Weapon;
 		auto VehicleWeaponPtr = new FVehicleWeapon();
+		VehicleWeaponPtr->PitchMin = VehicleWeapon.PitchMin;
+		VehicleWeaponPtr->PitchMax = VehicleWeapon.PitchMax;
+		VehicleWeaponPtr->YawMin = VehicleWeapon.YawMin;
+		VehicleWeaponPtr->YawMax = VehicleWeapon.YawMax;
 		VehicleWeaponPtr->Weapon = Weapon;
 		VehicleWeaponPtrList.Add(VehicleWeaponPtr);
 	}
@@ -517,6 +526,10 @@ void AVehicleBase::ShowOutlines(bool CanShow)
 
 void AVehicleBase::UpdateWeaponView()
 {
+	if (VehicleWeaponPtrList.Num() <= 0) {
+		return;
+	}
+
 	// return previous characters back to AI posession
 	if (VehicleSeatPtrList.Num() > 0 && CurrentWeaponIndex - 1 >= 0)
 	{
@@ -529,8 +542,7 @@ void AVehicleBase::UpdateWeaponView()
 		Seat->Character->SetVehicleSeat(VehicleSeats[CurrentWeaponIndex - 1]); // so AI does not fall to the ground when repossessed
 	}
 
-	CurrentWeaponIndex = 0;// set the current weapon to first weapon by default
-
+	CurrentWeapon = VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon;
 	VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->StopFire();
 	VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->ChargeDown();
 
@@ -810,39 +822,44 @@ void AVehicleBase::AddControllerYawInput(float Val, FVehicletSeating VehicletSea
 
 void AVehicleBase::SetRotationInput(FRotator InRotation)
 {
-	//auto CurrentRotation = RotationInput;
-	//auto TotalPitch = RotationInput.Pitch + InRotation.Pitch;
-	//auto TotalYaw = RotationInput.Yaw + InRotation.Yaw;
-
-	//ChangePitchValue(TotalYaw);
-
-	//if (TotalPitch >= PitchMax) {
-	//	TotalPitch = PitchMax;
-	//}
-	//else if (TotalPitch <= PitchMin) {
-	//	TotalPitch = PitchMin;
-	//}
-	//else {
-	//	TotalPitch = InRotation.Pitch;
-	//}
-
-	//if (TotalYaw >= YawMax) {
-	//	TotalYaw = YawMax;
-	//}
-	//else if (TotalYaw <= YawMin) {
-	//	TotalYaw = YawMin;
-	//}
-	//else {
-	//	TotalYaw = InRotation.Yaw;
-	//}
-
-	//RotationInput.Pitch = TotalPitch;
-	//RotationInput.Yaw = TotalYaw;
-
 	RotationInput = InRotation;
 }
 
+void AVehicleBase::ChangeWeapon()
+{
+	if (VehicleWeapons.Num() <= 0) {
+		return;
+	}
 
+	// increment the index if current index is less than the array of weapons
+	// otherwise go back to the first index
+	if (CurrentWeaponIndex < VehicleWeapons.Num() - 1)
+	{
+		CurrentWeaponIndex++;
+	}
+	else
+	{
+		CurrentWeaponIndex = 0;
+	}
+
+	if (CurrentWeapon) {
+		CurrentWeapon->StopFire(); // stop firing current weapon before switching to another
+	}
+
+	UpdateWeaponView();
+	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeapon);
+
+}
+
+void AVehicleBase::BeginAim()
+{
+	CurrentWeapon->SetIsAiming(true);
+}
+
+void AVehicleBase::EndAim()
+{
+	CurrentWeapon->SetIsAiming(false);
+}
 
 void AVehicleBase::ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters InHealthParams)
 {
@@ -916,16 +933,12 @@ void AVehicleBase::Destroyed()
 {
 	Super::Destroyed();
 
-	OnVehicleDestroy.Broadcast(this);
-
 	RemoveUIWidget();
 
 	if (HighlightCharacters)
 	{
 		ShowOutlines(false);
 	}
-
-
 
 	// destroy markers
 	if (FriendlyMarkerNodes.Num() > 0)
@@ -958,4 +971,5 @@ void AVehicleBase::Destroyed()
 	GetAttachedActors(AttachedActors);
 	DestroyChildActor(AttachedActors);
 
+	OnVehicleDestroy.Broadcast(this);
 }

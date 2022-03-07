@@ -4,9 +4,10 @@
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
+#include "Weapons/MountedGun.h"
 #include "Weapons/WeaponBullet.h"
 #include "Weapons/AmmoCrate.h"
-#include "Vehicles/Aircraft.h"
+#include "Vehicles/VehicleBase.h"
 #include "Props/SupportPackage.h"
 #include "Props/MapCamera.h"
 #include "Objectives/BaseObjective.h"
@@ -176,7 +177,7 @@ void ACustomPlayerController::InitBeginPlayCommon()
 		{
 			OwningCombatCharacter->GetMountedGun()->SetPlayerControl(this, OwningCombatCharacter);
 		}
-		else if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+		else if (OwningCombatCharacter->GetVehicletSeat().OwningVehicle)
 		{
 			SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
 		}
@@ -555,14 +556,14 @@ void ACustomPlayerController::OnOverlapEnd(class UPrimitiveComponent* Overlapped
 	}
 }
 
-void ACustomPlayerController::OnAircraftDestroy(AAircraft* CurrentControlledAircraft)
+void ACustomPlayerController::OnVehicleDestroy(AVehicleBase* CurrentControlledVehicle)
 {
 	if (HasGameEnded) {
 		return;
 	}
 
 	AddUIWidgets();
-	ControlledAircraft = nullptr;
+	ControlledVehicle = nullptr;
 	OwningCombatCharacter->EnableInput(this);
 	BeginCheckInteractable();
 
@@ -638,9 +639,9 @@ void ACustomPlayerController::DisplayEndGameUMG()
 	SetViewTargetWithBlend(OwningCombatCharacter);
 	DisableInput(this);
 
-	if (ControlledAircraft)
+	if (ControlledVehicle)
 	{
-		ControlledAircraft->Destroy();
+		ControlledVehicle->Destroy();
 	}
 
 	UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
@@ -671,23 +672,23 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 		return;
 	}
 
-	if (ControlledAircraft) // if controlling an aircraft
+	if (ControlledVehicle) // if controlling an aircraft
 	{
-		ControlledAircraft->AddControllerPitchInput(Val);
+		ControlledVehicle->AddControllerPitchInput(Val);
 	}
 	// else if in an aircraft
 	// mounted gun has its own control input so use that  in the next condition
 	// allow player to rotate around character when repelling
-	else if (OwningCombatCharacter && OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->GetIsExitingVehicle())
+	else if (OwningCombatCharacter && OwningCombatCharacter->GetVehicletSeat().OwningVehicle && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->GetIsExitingVehicle())
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
-			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, OwningCombatCharacter->GetAircraftSeat());
+			OwningCombatCharacter->GetVehicletSeat().OwningVehicle->AddControllerPitchInput(Val, OwningCombatCharacter->GetVehicletSeat());
 			OwningCombatCharacter->UpdateAimCamera();
 		}
 		else
 		{
-			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerPitchInput(Val, true); // Roam around aircraft view
+			OwningCombatCharacter->GetVehicletSeat().OwningVehicle->AddControllerPitchInput(Val, true); // Roam around aircraft view
 		}
 	}
 	else if (OwningCombatCharacter && OwningCombatCharacter->IsUsingMountedWeapon())	// When using MG
@@ -712,20 +713,20 @@ void ACustomPlayerController::AddControllerYawInput(float Val)
 		return;
 	}
 
-	if (ControlledAircraft)
+	if (ControlledVehicle)
 	{
-		ControlledAircraft->AddControllerYawInput(Val);
+		ControlledVehicle->AddControllerYawInput(Val);
 	}
-	else if (OwningCombatCharacter && OwningCombatCharacter->GetAircraftSeat().OwningAircraft && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->GetIsExitingVehicle())
+	else if (OwningCombatCharacter && OwningCombatCharacter->GetVehicletSeat().OwningVehicle && !OwningCombatCharacter->IsUsingMountedWeapon() && !OwningCombatCharacter->GetIsExitingVehicle())
 	{
 		if (OwningCombatCharacter->IsInCombatMode())
 		{
-			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, OwningCombatCharacter->GetAircraftSeat());
+			OwningCombatCharacter->GetVehicletSeat().OwningVehicle->AddControllerYawInput(Val, OwningCombatCharacter->GetVehicletSeat());
 			OwningCombatCharacter->UpdateAimCamera();
 		}
 		else
 		{
-			OwningCombatCharacter->GetAircraftSeat().OwningAircraft->AddControllerYawInput(Val, true);
+			OwningCombatCharacter->GetVehicletSeat().OwningVehicle->AddControllerYawInput(Val, true);
 		}
 	}
 	else if (OwningCombatCharacter && OwningCombatCharacter->IsUsingMountedWeapon())
@@ -883,8 +884,8 @@ void ACustomPlayerController::ToggleSprint()
 
 void ACustomPlayerController::BeginAim()
 {
-	if (ControlledAircraft) {
-		ControlledAircraft->BeginAim();
+	if (ControlledVehicle) {
+		ControlledVehicle->BeginAim();
 	}
 	else
 	{
@@ -898,9 +899,9 @@ void ACustomPlayerController::BeginAim()
 
 void ACustomPlayerController::EndAim()
 {
-	if (ControlledAircraft)
+	if (ControlledVehicle)
 	{
-		ControlledAircraft->EndAim();
+		ControlledVehicle->EndAim();
 	}
 	else
 	{
@@ -927,9 +928,9 @@ void ACustomPlayerController::BeginFire()
 		return;
 	}
 
-	if (ControlledAircraft)
+	if (ControlledVehicle)
 	{
-		AWeapon* CurrentWeapon = ControlledAircraft->GetCurrentWeaponObj();
+		AWeapon* CurrentWeapon = ControlledVehicle->GetCurrentWeaponObj();
 		if (CurrentWeapon) {
 			CurrentWeapon->StartFire();
 		}
@@ -942,9 +943,9 @@ void ACustomPlayerController::BeginFire()
 
 void ACustomPlayerController::EndFire()
 {
-	if (ControlledAircraft)
+	if (ControlledVehicle)
 	{
-		AWeapon* CurrentWeapon = ControlledAircraft->GetCurrentWeaponObj();
+		AWeapon* CurrentWeapon = ControlledVehicle->GetCurrentWeaponObj();
 		if (CurrentWeapon) {
 			CurrentWeapon->StopFire();
 		}
@@ -969,9 +970,9 @@ void ACustomPlayerController::SwitchWeapon()
 		return;
 	}
 
-	if (ControlledAircraft)
+	if (ControlledVehicle)
 	{
-		ControlledAircraft->ChangeWeapon();
+		ControlledVehicle->ChangeWeapon();
 	}
 	else
 	{
@@ -982,9 +983,9 @@ void ACustomPlayerController::SwitchWeapon()
 
 void ACustomPlayerController::ToggleThermalVision()
 {
-	if (ControlledAircraft)
+	if (ControlledVehicle)
 	{
-		ControlledAircraft->ChangeThermalVision();
+		ControlledVehicle->ChangeThermalVision();
 	}
 }
 
@@ -1096,7 +1097,7 @@ void ACustomPlayerController::PickupInteractable()
 void ACustomPlayerController::UseInteractableActor()
 {
 	// only control one aircraft at a time
-	if (OwningCombatCharacter->GetIsExitingVehicle() || ControlledAircraft != nullptr) {
+	if (OwningCombatCharacter->GetIsExitingVehicle() || ControlledVehicle != nullptr) {
 		return;
 	}
 
@@ -1115,32 +1116,32 @@ void ACustomPlayerController::UseInteractableActor()
 
 	if (CurrentSupportPackage)
 	{
-		auto Aircraft = CurrentSupportPackage->SpawnAircraft(OwningCombatCharacter, this);
+		auto Vehicle = CurrentSupportPackage->SpawnVehicle(OwningCombatCharacter, this);
 
-		if (Aircraft)
+		if (Vehicle)
 		{
-			SetControlledAircraft(Aircraft, CurrentSupportPackage->GetSupportPackageSet().IsControllable);
+			SetControlledVehicle(Vehicle, CurrentSupportPackage->GetSupportPackageSet().IsControllable);
 		}
 	}
 
 	CollectedInteractableActor = nullptr;
 }
 
-void ACustomPlayerController::SetControlledAircraft(AAircraft* InAircraft, bool IsContolled)
+void ACustomPlayerController::SetControlledVehicle(AVehicleBase* InVehicle, bool IsContolled)
 {
-	if (!InAircraft) {
+	if (!InVehicle) {
 		return;
 	}
 
 	if (IsContolled)
 	{
-		ControlledAircraft = InAircraft;
+		ControlledVehicle = InVehicle;
 
 		// Remove inputs for this controller & character as we will be using aircraft inputs
 		OwningCombatCharacter->DisableInput(this);
 		AutoReceiveInput = EAutoReceiveInput::Disabled;
-		ControlledAircraft->SetPlayerControl(this);
-		ControlledAircraft->OnAircraftDestroy.AddDynamic(this, &ACustomPlayerController::OnAircraftDestroy);
+		ControlledVehicle->SetPlayerControl(this);
+		ControlledVehicle->OnVehicleDestroy.AddDynamic(this, &ACustomPlayerController::OnVehicleDestroy);
 
 		// drop the MG if using it so that the use of the interactable can be played with an animation
 		OwningCombatCharacter->DropMountedGun();
@@ -1219,14 +1220,14 @@ void ACustomPlayerController::DropMountedGun()
 
 void ACustomPlayerController::ShowAircraftView()
 {
-	if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft)
+	if (OwningCombatCharacter->GetVehicletSeat().OwningVehicle)
 	{
-		OwningCombatCharacter->GetAircraftSeat().OwningAircraft->SetPlayerControl(this, false, false);
+		OwningCombatCharacter->GetVehicletSeat().OwningVehicle->SetPlayerControl(this, false, false);
 	}
 }
 void ACustomPlayerController::HideAircraftView()
 {
-	if (OwningCombatCharacter->GetAircraftSeat().OwningAircraft == nullptr) {
+	if (OwningCombatCharacter->GetVehicletSeat().OwningVehicle == nullptr) {
 		return;
 	}
 

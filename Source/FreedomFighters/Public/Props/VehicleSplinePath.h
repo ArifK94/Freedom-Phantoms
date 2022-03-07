@@ -28,8 +28,13 @@ private:
 public:
 	AVehicleSplinePath();
 
+	static AVehicleSplinePath* FindVehiclePath(UWorld* World, FName TagName);
+
 	FVehicleSplinePoint GetVehicleSplinePoint(FVector TargetLocation);
 	FVehicleSplinePoint GetNextSplinePoint(int Index);
+
+	void GetFirstSplinePoint(FVector Location, FRotator Rotation);
+
 
 private:
 	void OnConstruction(const FTransform& Transform) override;

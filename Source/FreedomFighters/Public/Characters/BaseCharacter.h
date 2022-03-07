@@ -193,9 +193,6 @@ protected:
 		UPostProcessComponent* CharacterOutlinePPComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FAircraftSeating CurrentAircraftSeat;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FVehicletSeating CurrentVehicleSeat;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -291,7 +288,6 @@ public:
 	virtual void StopCover();
 
 	void SetVehicleSeat(FVehicletSeating Seat);
-	void SetAircraftSeat(FAircraftSeating Seating);
 	virtual void SetIsExitingVehicle(bool IsExiting);
 
 	void UpdateAimCamera();
@@ -410,11 +406,6 @@ public:
 
 	void SetCharacterDirection(float Value) {
 		CharacterDirection = Value;
-	}
-
-
-	FAircraftSeating GetAircraftSeat() {
-		return CurrentAircraftSeat;
 	}
 
 	FVehicletSeating GetVehicletSeat() { return CurrentVehicleSeat; }

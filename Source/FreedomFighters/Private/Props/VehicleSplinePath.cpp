@@ -9,6 +9,7 @@
 #include "Components/ArrowComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 AVehicleSplinePath::AVehicleSplinePath()
 {
@@ -22,6 +23,28 @@ void AVehicleSplinePath::BeginPlay()
 	Super::BeginPlay();
 
 	UpdateCollisionBox();
+}
+
+
+AVehicleSplinePath* AVehicleSplinePath::FindVehiclePath(UWorld* World, FName TagName)
+{
+	AVehicleSplinePath* ClosestPath = nullptr;
+	float ClosestDistance = 0.0f;
+	TArray<AActor*> TargetActor;
+	UGameplayStatics::GetAllActorsWithTag(World, TagName, TargetActor);
+
+	for (AActor* Actor : TargetActor)
+	{
+		auto Path = Cast<AVehicleSplinePath>(Actor);
+
+		// check if path is not occupied
+		if (Path && !Path->GetOccupiedVehicle())
+		{
+			ClosestPath = Path;
+		}
+	}
+
+	return ClosestPath;
 }
 
 FVehicleSplinePoint AVehicleSplinePath::GetVehicleSplinePoint(FVector TargetLocation)
@@ -50,6 +73,18 @@ FVehicleSplinePoint AVehicleSplinePath::GetNextSplinePoint(int Index)
 	FVehicleSplinePoint SplinePoint = FVehicleSplinePoint();
 	SplinePoint.PointIndex = -1;
 	return FVehicleSplinePoint();
+}
+
+void AVehicleSplinePath::GetFirstSplinePoint(FVector Location, FRotator Rotation)
+{
+	FVector Loc = FVector::ZeroVector;
+	FRotator Rot = FRotator::ZeroRotator;
+
+	Loc = SplinePathComp->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
+	Rot = SplinePathComp->GetRotationAtSplinePoint(0, ESplineCoordinateSpace::World);
+
+	Location = Loc;
+	Rotation = Rot;
 }
 
 void AVehicleSplinePath::OnConstruction(const FTransform& Transform)

@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
 #include "EnumCollection.h"
+#include "StructCollection.h"
 #include "VehicleBase.generated.h"
 
 class UCapsuleComponent;
@@ -20,7 +21,7 @@ class AVehicleSplinePath;
 class UPostProcessComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponSwitchSignature, AVehicleBase*, Vehicle);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestroySignature, AVehicleBase*, Vehicle);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVehicleDestroySignature, AVehicleBase*, Vehicle);
 UCLASS()
 class FREEDOMFIGHTERS_API AVehicleBase : public AActor
 {
@@ -111,7 +112,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FVehicleWeapon> VehicleWeapons;
 	TArray<FVehicleWeapon*> VehicleWeaponPtrList;
-	int CurrentWeaponIndex;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int CurrentWeaponIndex;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		AMountedGun* CurrentWeapon;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -217,6 +223,11 @@ public:
 	void AddControllerPitchInput(float Val, FVehicletSeating VehicletSeating);
 	void AddControllerYawInput(float Val, FVehicletSeating VehicletSeating);
 
+	void BeginAim();
+	void EndAim();
+
+	void ChangeWeapon();
+
 	UFUNCTION(BlueprintCallable)
 		void SetRotationInput(FRotator InRotation);
 
@@ -276,7 +287,7 @@ public:
 		FOnWeaponSwitchSignature OnWeaponSwitch;
 
 	UPROPERTY(BlueprintAssignable)
-		FOnDestroySignature OnVehicleDestroy;
+		FOnVehicleDestroySignature OnVehicleDestroy;
 
 
 
@@ -294,5 +305,7 @@ public:
 	TArray<FVehicletSeating*> GetVehicleSeatPtrList() { return VehicleSeatPtrList; }
 
 	TArray<FVehicletSeating> GetVehicleSeats() { return VehicleSeats; }
+
+	AMountedGun* GetCurrentWeaponObj() { return CurrentWeapon; }
 
 };

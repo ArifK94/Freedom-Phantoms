@@ -14,6 +14,7 @@ class ABaseObjective;
 class UHealthComponent;
 class AMapCamera;
 class USphereComponent;
+class AVehicleBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractiveFoundSignature, FString, ActionMessage, FString, KeyDisplay);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSupportPackageUpdateSignature, ASupportPackage*, SupportPackage, int32, ArrayPosition, bool, HasAddedItem);
@@ -58,7 +59,7 @@ private:
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		AAircraft* ControlledAircraft;
+		AVehicleBase* ControlledVehicle;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -184,7 +185,7 @@ public:
 		void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION(BlueprintCallable)
-		void OnAircraftDestroy(AAircraft* CurrentControlledAircraft);
+		void OnVehicleDestroy(AVehicleBase* CurrentControlledVehicle);
 
 	UFUNCTION()
 		void OnCombatModeUpdated(ACombatCharacter* CombatCharacter);
@@ -242,7 +243,7 @@ public:
 	AActor* DetectInteractableByOverlap();
 
 
-	void SetControlledAircraft(AAircraft* InAircraft, bool IsContolled);
+	void SetControlledVehicle(AVehicleBase* InVehicle, bool IsContolled);
 	void AddSupportPackage(ASupportPackage* InSupportPackage);
 	void SortSupportPackages();
 

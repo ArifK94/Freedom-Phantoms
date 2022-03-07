@@ -1,8 +1,9 @@
 #include "Characters/BaseCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
-#include "Vehicles/Aircraft.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponBullet.h"
+#include "Vehicles/VehicleBase.h"
+
 
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -121,30 +122,13 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 
 	if (Seat.OwningVehicle)
 	{
-		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
-		IsInVehicle = true;
-	}
-	else
-	{
-		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
-		IsInVehicle = false;
-	}
-}
-
-void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
-{
-	CurrentAircraftSeat = Seating;
-
-	if (CurrentAircraftSeat.OwningAircraft != nullptr)
-	{
-		GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
-		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
-
 		if (UseAimCameraSpring)
 		{
-			FollowCamera->AttachToComponent(CurrentAircraftSeat.OwningAircraft->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentAircraftSeat.SeatingSocketName);
+			FollowCamera->AttachToComponent(Seat.OwningVehicle->GetMeshComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Seat.SeatingSocketName);
 			UpdateAimCamera();
 		}
+
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
 
 		IsInVehicle = true;
 	}
@@ -157,7 +141,6 @@ void ABaseCharacter::SetAircraftSeat(FAircraftSeating Seating)
 
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
 		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
-
 		IsInVehicle = false;
 	}
 }

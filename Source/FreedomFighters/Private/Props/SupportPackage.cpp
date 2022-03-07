@@ -2,7 +2,8 @@
 
 
 #include "Props/SupportPackage.h"
-#include "Vehicles/Aircraft.h"
+#include "Vehicles/VehicleBase.h"
+#include "Props/VehicleSplinePath.h"
 #include "Characters/BaseCharacter.h"
 #include "Controllers/CustomPlayerController.h"
 #include "CustomComponents/TeamFactionComponent.h"
@@ -81,8 +82,8 @@ bool ASupportPackage::OnUseInteraction_Implementation(APawn* InPawn, AController
 
 	if (PlayerController)
 	{
-		AAircraft* Aircraft = SpawnAircraft(Cast<ABaseCharacter>(InPawn), PlayerController);
-		PlayerController->SetControlledAircraft(Aircraft, SupportPackageSet.IsControllable);
+		auto Vehicle = SpawnVehicle(Cast<ABaseCharacter>(InPawn), PlayerController);
+		PlayerController->SetControlledVehicle(Vehicle, SupportPackageSet.IsControllable);
 		Destroy();
 		return true;
 	}
@@ -130,8 +131,6 @@ void ASupportPackage::LoadDataSet()
 
 	SupportPackageSet.SupportActorClass = SPSet->SupportActorClass;
 
-	SupportPackageSet.AircraftClass = SPSet->AircraftClass;
-
 	SupportPackageSet.VehicleClass = SPSet->VehicleClass;
 
 	SupportPackageSet.DisplayName = SPSet->DisplayName;
@@ -156,32 +155,25 @@ void ASupportPackage::LoadDataSet()
 
 }
 
-AAircraft* ASupportPackage::SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController)
-{
-	if (SupportPackageSet.AircraftClass == nullptr) {
-		return nullptr;
-	}
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = Character;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	SupportPackageSet.Aircraft = GetWorld()->SpawnActor<AAircraft>(SupportPackageSet.AircraftClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-	return SupportPackageSet.Aircraft;
-}
-
 AVehicleBase* ASupportPackage::SpawnVehicle(ABaseCharacter* Character, APlayerController* PlayerController)
 {
 	if (SupportPackageSet.VehicleClass == nullptr) {
 		return nullptr;
 	}
 
+	FVector StartLoc = FVector::ZeroVector;
+	FRotator StartRot = FRotator::ZeroRotator;
+
+	auto VehiclePath = AVehicleSplinePath::FindVehiclePath(GetWorld(), SupportPackageSet.VehiclePathTagName);
+	if (VehiclePath) {
+		VehiclePath->GetFirstSplinePoint(StartLoc, StartRot);
+	}
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = Character;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	SupportPackageSet.Vehicle = GetWorld()->SpawnActor<AVehicleBase>(SupportPackageSet.VehicleClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	SupportPackageSet.Vehicle = GetWorld()->SpawnActor<AVehicleBase>(SupportPackageSet.VehicleClass, StartLoc, StartRot, SpawnParams);
 
 	return SupportPackageSet.Vehicle;
 }

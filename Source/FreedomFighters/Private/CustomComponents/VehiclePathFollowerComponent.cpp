@@ -88,12 +88,16 @@ void UVehiclePathFollowerComponent::Update()
 
 void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (VehiclePath == nullptr) {
+	if (VehiclePath == nullptr || OtherActor == nullptr) {
 		return;
 	}
 
 	FVector CollisionLocation = GetOwner()->GetActorLocation();
 	auto CollidedPath = Cast<AVehicleSplinePath>(OtherActor);
+
+	if (CollidedPath == nullptr) {
+		return;
+	}
 
 	// if collided with another aircraft path then ignore then do not proceed
 	if (CollidedPath != VehiclePath) {

@@ -364,7 +364,7 @@ void AAircraft::SpawnPassenger()
 
 				ABaseCharacter* Character = HeliSeat.CharacterObj;
 				Character->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeliSeat.SeatingSocketName);
-				Character->SetAircraftSeat(HeliSeat);
+				//Character->SetAircraftSeat(HeliSeat);
 
 				// Set to use weapon, usually a mounted gun would be used
 				if (HeliSeat.AssociatedWeapon > -1)
@@ -497,7 +497,7 @@ void AAircraft::UpdateWeaponView()
 		{
 			HeliSeat.CharacterObj->GetDefaultAIController()->Possess(HeliSeat.CharacterObj);
 		}
-		HeliSeat.CharacterObj->SetAircraftSeat(HeliSeat); // so AI does not fall to the ground when repossessed
+		//HeliSeat.CharacterObj->SetAircraftSeat(HeliSeat); // so AI does not fall to the ground when repossessed
 	}
 
 	CurrentAircraftWeapon = AircraftWeapons[CurrentWeaponIndex]; // set the current weapon to first weapon by default
