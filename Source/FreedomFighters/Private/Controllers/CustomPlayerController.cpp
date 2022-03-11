@@ -1105,18 +1105,6 @@ void ACustomPlayerController::UseInteractableActor()
 			return;
 		}
 	}
-
-	if (CurrentSupportPackage)
-	{
-		auto Vehicle = CurrentSupportPackage->SpawnVehicle(OwningCombatCharacter, this);
-
-		if (Vehicle)
-		{
-			SetControlledVehicle(Vehicle, CurrentSupportPackage->GetSupportPackageSet().IsControllable);
-		}
-	}
-
-	CollectedInteractableActor = nullptr;
 }
 
 void ACustomPlayerController::SetControlledVehicle(AVehicleBase* InVehicle, bool IsContolled)
