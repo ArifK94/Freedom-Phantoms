@@ -123,6 +123,8 @@ void AVehicleBase::BeginPlay()
 	GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::TimerTick, .2f, true);
 
 	SpawnVehicleWeapons();
+
+	CreateThermalMatInstances();
 }
 
 void AVehicleBase::Tick(float DeltaTime)
@@ -438,6 +440,20 @@ void AVehicleBase::RemovePassenger(int Index)
 	VehicleSeatPtrList.RemoveAt(Index);
 }
 
+void AVehicleBase::CreateThermalMatInstances()
+{
+	if (ThermalMaterials.Num() <= 0) {
+		return;
+	}
+
+	for (int i = 0; i < ThermalMaterials.Num(); i++)
+	{
+		UMaterialInstanceDynamic* MaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(GetWorld(), ThermalMaterials[i]);
+		ThermalVisionPPComp->AddOrUpdateBlendable(MaterialInstance, 0.0f); // set all to invisible
+		ThermalMaterialInstances.Add(MaterialInstance);
+	}
+}
+
 void AVehicleBase::ChangeThermalVision()
 {
 	if (ThermalMaterials.Num() <= 0) {
@@ -446,13 +462,13 @@ void AVehicleBase::ChangeThermalVision()
 
 	UpdateCurrentThermalVision(0.0f); // disable current material
 
-	if (CurrentThermalMatIndex < ThermalMaterialInstances.Num() - 1)
+	if (CurrentThermalMatIndex >= ThermalMaterialInstances.Num() - 1)
 	{
-		CurrentThermalMatIndex++;
+		CurrentThermalMatIndex = 0;
 	}
 	else
 	{
-		CurrentThermalMatIndex = 0;
+		CurrentThermalMatIndex++;
 	}
 
 	ThermalToggleAudio->Play();

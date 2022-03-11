@@ -248,6 +248,8 @@ private:
 	/** Called when taking control of aircraft */
 	void InitialContolSetup();
 
+	void CreateThermalMatInstances();
+
 	void UpdateCurrentThermalVision(float InWeight);
 
 	void ShowOutlines(bool CanShow);
