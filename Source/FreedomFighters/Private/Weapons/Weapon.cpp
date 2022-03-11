@@ -99,6 +99,15 @@ AWeapon::AWeapon()
 void AWeapon::SetIsAiming(bool isAiming)
 {
 	IsAiming = isAiming;
+
+	if (isAiming)
+	{
+		ChargeUp();
+	}
+	else
+	{
+		ChargeDown();
+	}
 }
 
 FString AWeapon::GetKeyDisplayName_Implementation()

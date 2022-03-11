@@ -504,7 +504,6 @@ void AAircraft::UpdateWeaponView()
 	CurrentWeaponObj = WeaponObjs[CurrentWeaponIndex];
 
 	CurrentWeaponObj->StopFire();
-	CurrentWeaponObj->ChargeDown();
 
 	// Player possessing is required if the character is posseseed by the AI controller
 	if (OccupiedSeats.Num() > 0)

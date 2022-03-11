@@ -118,10 +118,10 @@ ABaseCharacter::ABaseCharacter()
 
 void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 {
-	CurrentVehicleSeat = Seat;
-
 	if (Seat.OwningVehicle)
 	{
+		CurrentVehicleSeat = Seat;
+
 		if (UseAimCameraSpring)
 		{
 			FollowCamera->AttachToComponent(Seat.OwningVehicle->GetMeshComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Seat.SeatingSocketName);
@@ -143,6 +143,7 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
 		IsInVehicle = false;
 	}
+
 }
 
 void ABaseCharacter::SetIsExitingVehicle(bool IsExiting)

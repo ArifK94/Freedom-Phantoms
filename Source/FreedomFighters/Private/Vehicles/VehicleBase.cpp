@@ -433,20 +433,9 @@ void AVehicleBase::SpawnVehicleSeatings()
 	}
 }
 
-void AVehicleBase::RemovePassenger(ABaseCharacter* Character)
+void AVehicleBase::RemovePassenger(int Index)
 {
-	if (!Character) {
-		return;
-	}
-
-	for (int i = 0; i < VehicleSeatPtrList.Num(); i++)
-	{
-		if (VehicleSeatPtrList[i]->Character == Character) {
-			Character->SetVehicleSeat(FVehicletSeating());
-			VehicleSeatPtrList.RemoveAt(i);
-		}
-	}
-
+	VehicleSeatPtrList.RemoveAt(Index);
 }
 
 void AVehicleBase::ChangeThermalVision()
@@ -543,31 +532,72 @@ void AVehicleBase::UpdateWeaponView()
 	}
 
 	CurrentWeapon = VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon;
-	VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->StopFire();
-	VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->ChargeDown();
+	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeapon);
 
-	// Player possessing is required if the character is posseseed by the AI controller
+
 	if (VehicleSeatPtrList.Num() > 0)
 	{
+		// Player possessing is required if the character is posseseed by the AI controller
 		auto Seat = VehicleSeatPtrList[CurrentWeaponIndex];
-		Seat->Character->GetDefaultAIController()->UnPossess();
+
+		if (Seat->Character->GetDefaultAIController()) {
+			Seat->Character->GetDefaultAIController()->UnPossess();
+		}
+
 		Seat->Character->AutoPossessPlayer = EAutoReceiveInput::Player0;
-		Seat->Character->EndAim();
 	}
+
+
 
 	if (UseFollowCamNavigation)
 	{
-		FollowCamera->AttachToComponent(VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->GetCameraPositionSocket());
-		VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->GetFollowCamera()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		FollowCamera->AttachToComponent(CurrentWeapon->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeapon->GetCameraPositionSocket());
+		CurrentWeapon->GetFollowCamera()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		FollowCamera->SetRelativeRotation(RotationInput);
-		FollowCamera->SetFieldOfView(VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->GetFollowCamera()->FieldOfView);
+		FollowCamera->SetFieldOfView(CurrentWeapon->GetFollowCamera()->FieldOfView);
 	}
 	else
 	{
-		FollowCamera->AttachToComponent(VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->GetFollowCamera(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		FollowCamera->AttachToComponent(CurrentWeapon->GetFollowCamera(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
 
 	OnWeaponSwitch.Broadcast(this);
+}
+
+void AVehicleBase::ChangeWeapon()
+{
+	if (VehicleWeapons.Num() <= 0) {
+		return;
+	}
+
+	// increment the index if current index is less than the array of weapons
+	// otherwise go back to the first index
+	if (CurrentWeaponIndex >= VehicleWeapons.Num() - 1)
+	{
+		CurrentWeaponIndex = 0;
+	}
+	else
+	{
+		CurrentWeaponIndex++;
+	}
+
+	if (CurrentWeapon) {
+		CurrentWeapon->StopFire(); // stop firing current weapon before switching to another
+		EndAim();
+	}
+
+	UpdateWeaponView();
+	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeapon);
+}
+
+void AVehicleBase::BeginAim()
+{
+	CurrentWeapon->SetIsAiming(true);
+}
+
+void AVehicleBase::EndAim()
+{
+	CurrentWeapon->SetIsAiming(false);
 }
 
 void AVehicleBase::SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP, bool ShowOutline)
@@ -761,8 +791,8 @@ void AVehicleBase::AddControllerPitchInput(float Val)
 	}
 	else
 	{
-		VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->AddControllerPitchInput(Val);
-		RotationInput = VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->GetRotationInput();
+		CurrentWeapon->AddControllerPitchInput(Val);
+		RotationInput = CurrentWeapon->GetRotationInput();
 	}
 }
 void AVehicleBase::AddControllerYawInput(float Val)
@@ -776,8 +806,8 @@ void AVehicleBase::AddControllerYawInput(float Val)
 	}
 	else
 	{
-		VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->AddControllerYawInput(Val);
-		RotationInput = VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon->GetRotationInput();
+		CurrentWeapon->AddControllerYawInput(Val);
+		RotationInput = CurrentWeapon->GetRotationInput();
 	}
 }
 
@@ -823,42 +853,6 @@ void AVehicleBase::AddControllerYawInput(float Val, FVehicletSeating VehicletSea
 void AVehicleBase::SetRotationInput(FRotator InRotation)
 {
 	RotationInput = InRotation;
-}
-
-void AVehicleBase::ChangeWeapon()
-{
-	if (VehicleWeapons.Num() <= 0) {
-		return;
-	}
-
-	// increment the index if current index is less than the array of weapons
-	// otherwise go back to the first index
-	if (CurrentWeaponIndex < VehicleWeapons.Num() - 1)
-	{
-		CurrentWeaponIndex++;
-	}
-	else
-	{
-		CurrentWeaponIndex = 0;
-	}
-
-	if (CurrentWeapon) {
-		CurrentWeapon->StopFire(); // stop firing current weapon before switching to another
-	}
-
-	UpdateWeaponView();
-	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeapon);
-
-}
-
-void AVehicleBase::BeginAim()
-{
-	CurrentWeapon->SetIsAiming(true);
-}
-
-void AVehicleBase::EndAim()
-{
-	CurrentWeapon->SetIsAiming(false);
 }
 
 void AVehicleBase::ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters InHealthParams)

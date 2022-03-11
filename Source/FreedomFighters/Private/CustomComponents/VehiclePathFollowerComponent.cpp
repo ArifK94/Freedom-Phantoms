@@ -146,7 +146,7 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 		CurveTimeline.Stop();
 
 		// Start timer & set the delay based on the duration
-		GetOwner()->GetWorldTimerManager().SetTimer(THandler_WaitingMovment, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, CurrentSplinePoint.WaitingDuration);
+		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, CurrentSplinePoint.WaitingDuration);
 		break;
 		// Wait for passengers to leave
 	case EVehicleMovement::PassengerExit:
@@ -163,75 +163,76 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 
 void UVehiclePathFollowerComponent::FindPath()
 {
-	if (FollowTargetDestination)
+	//if (FollowTargetDestination)
+	//{
+	//	if (CurveFloat)
+	//	{
+	//		FOnTimelineFloat TimelineProgress;
+	//		TimelineProgress.BindUFunction(this, FName("MoveToLocation"));
+	//		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+	//		CurveTimeline.SetLooping(false);
+	//		CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+	//		CurveTimeline.PlayFromStart();
+	//	}
+
+	//	return;
+
+	//}
+
+	// if already assigned a path then return
+	if (VehiclePath != nullptr)
 	{
+		return;
+	}
+
+	AVehicleSplinePath* ClosestPath = nullptr;
+	float ClosestDistance = 0.0f;
+	TArray<AActor*> TargetActor;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), VehiclePathTagName, TargetActor);
+
+	for (AActor* Actor : TargetActor)
+	{
+		auto Path = Cast<AVehicleSplinePath>(Actor);
+
+		// check if path is not occupied
+		if (Path && !Path->GetOccupiedVehicle())
+		{
+			float Distance = UKismetMathLibrary::Vector_Distance(TargetDestination, Path->GetActorLocation());
+
+			if (ClosestPath == nullptr)
+			{
+				ClosestPath = Path;
+				ClosestDistance = Distance;
+			}
+			else
+			{
+				if (Distance < ClosestDistance)
+				{
+					ClosestPath = Path;
+					ClosestDistance = Distance;
+				}
+			}
+		}
+
+	}
+
+	if (ClosestPath)
+	{
+		VehiclePath = ClosestPath;
+		VehiclePath->SetOccupantVehicle(GetOwner());
+
+		// setup time line for following the path
 		if (CurveFloat)
 		{
 			FOnTimelineFloat TimelineProgress;
-			TimelineProgress.BindUFunction(this, FName("MoveToLocation"));
+			TimelineProgress.BindUFunction(this, FName("FollowSplinePath"));
 			CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
 			CurveTimeline.SetLooping(false);
 			CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
 			CurveTimeline.PlayFromStart();
 		}
-
 	}
-	else
-	{
-		// if already assigned a path then return
-		if (VehiclePath != nullptr)
-		{
-			return;
-		}
 
-		AVehicleSplinePath* ClosestPath = nullptr;
-		float ClosestDistance = 0.0f;
-		TArray<AActor*> TargetActor;
-		UGameplayStatics::GetAllActorsWithTag(GetWorld(), VehiclePathTagName, TargetActor);
-
-		for (AActor* Actor : TargetActor)
-		{
-			auto Path = Cast<AVehicleSplinePath>(Actor);
-
-			// check if path is not occupied
-			if (Path && !Path->GetOccupiedVehicle())
-			{
-				float Distance = UKismetMathLibrary::Vector_Distance(TargetDestination, Path->GetActorLocation());
-
-				if (ClosestPath == nullptr)
-				{
-					ClosestPath = Path;
-					ClosestDistance = Distance;
-				}
-				else
-				{
-					if (Distance < ClosestDistance)
-					{
-						ClosestPath = Path;
-						ClosestDistance = Distance;
-					}
-				}
-			}
-
-		}
-
-		if (ClosestPath)
-		{
-			VehiclePath = ClosestPath;
-			VehiclePath->SetOccupantVehicle(GetOwner());
-
-			// setup time line for following the path
-			if (CurveFloat)
-			{
-				FOnTimelineFloat TimelineProgress;
-				TimelineProgress.BindUFunction(this, FName("FollowSplinePath"));
-				CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
-				CurveTimeline.SetLooping(false);
-				CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
-				CurveTimeline.PlayFromStart();
-			}
-		}
-	}
 
 }
 
@@ -284,7 +285,6 @@ void UVehiclePathFollowerComponent::ResumePath()
 
 	CurveTimeline.Play();
 
-	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_WaitingMovment);
 	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
 	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
 }
@@ -329,7 +329,6 @@ void UVehiclePathFollowerComponent::ClearPath()
 	if (VehiclePath && VehiclePath->GetOccupiedVehicle() == GetOwner())
 	{
 		VehiclePath->SetOccupantVehicle(nullptr);
-		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_WaitingMovment);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
 	}
@@ -346,13 +345,18 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 
 	bool HasRemainingPassengers = false;
 
-	for (int i = VehicleSeats.Num() - 1; i >= 0; i--)
+	for (int i = 0; i < VehicleSeats.Num(); i++)
 	{
 		auto VehicleSeat = VehicleSeats[i];
-
 		auto Character = VehicleSeat->Character;
 
 		if (!Character) {
+			OwningVehicle->RemovePassenger(i);
+			continue;
+		}
+
+		if (!VehicleSeat->OwningVehicle) {
+			OwningVehicle->RemovePassenger(i);
 			continue;
 		}
 
@@ -364,7 +368,7 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 
 		if (!Character->GetIsInVehicle())
 		{
-			VehicleSeats.RemoveAt(i);
+			OwningVehicle->RemovePassenger(i);
 		}
 		else
 		{
@@ -404,7 +408,7 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 		}
 
 		// Let the ropes fall to the ground then resume path
-		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, true, 2.f);
+		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, 1.f);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
 	}
 

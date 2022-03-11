@@ -329,15 +329,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void StopFire();
 
-	// Charging the weapon before being able to fire or used when holding the aim button eg. minigun aiming
-	void ChargeUp();
-
-	void ChargeDown();
-
-	void IncreaseCharge();
-
-	void DecreaseCharge();
-
 	void BeginReload();
 
 	void EndReload();
@@ -371,6 +362,15 @@ private:
 
 	void AutoReloadBegin();
 	void AutoReloadEnd();
+
+	// Charging the weapon before being able to fire or used when holding the aim button eg. minigun aiming
+	void ChargeUp();
+
+	void ChargeDown();
+
+	void IncreaseCharge();
+
+	void DecreaseCharge();
 
 	FVector BulletSpread(FVector Spread);
 

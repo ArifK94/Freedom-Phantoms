@@ -179,7 +179,7 @@ void ACustomPlayerController::InitBeginPlayCommon()
 		}
 		else if (OwningCombatCharacter->GetVehicletSeat().OwningVehicle)
 		{
-			SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
+			SetViewTargetWithBlend(OwningCombatCharacter->GetVehicletSeat().OwningVehicle, 0.0f);
 		}
 	 
 
@@ -890,10 +890,6 @@ void ACustomPlayerController::BeginAim()
 	else
 	{
 		OwningCombatCharacter->BeginAim();
-
-		if (OwningCombatCharacter->GetCurrentWeapon()) {
-			OwningCombatCharacter->GetCurrentWeapon()->ChargeUp();
-		}
 	}
 }
 
@@ -906,10 +902,6 @@ void ACustomPlayerController::EndAim()
 	else
 	{
 		OwningCombatCharacter->EndAim();
-
-		if (OwningCombatCharacter->GetCurrentWeapon()) {
-			OwningCombatCharacter->GetCurrentWeapon()->ChargeDown();
-		}
 	}
 }
 

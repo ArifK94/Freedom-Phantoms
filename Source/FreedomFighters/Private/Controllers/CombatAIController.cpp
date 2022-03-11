@@ -256,21 +256,34 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 
 		// Events! DON'T FORGET TO REMOVE EVENTS ON THE UNPOSSESS() method to prevent a crash when switching between possess & unpossess
-		TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ACombatAIController::OnTargetSearchUpdate);
-		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACombatAIController::OnRappelUpdated);
+
+		if (!TargetFinderComponent->OnTargetSearch.IsBound()) {
+			TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ACombatAIController::OnTargetSearchUpdate);
+		}
+
+		if (!OwningCombatCharacter->OnRappelUpdate.IsBound()) {
+			OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACombatAIController::OnRappelUpdated);
+		}
+
 
 		if (AIMovementComponent)
 		{
-			AIMovementComponent->OnDestinationSet.AddDynamic(this, &ACombatAIController::OnMovementDestinationSet);
-			AIMovementComponent->OnDestinationReached.AddDynamic(this, &ACombatAIController::OnMovementDestinationReached);
-		}
+			if (!AIMovementComponent->OnDestinationSet.IsBound()) {
+				AIMovementComponent->OnDestinationSet.AddDynamic(this, &ACombatAIController::OnMovementDestinationSet);
+			}
 
+			if (!AIMovementComponent->OnDestinationReached.IsBound()) {
+				AIMovementComponent->OnDestinationReached.AddDynamic(this, &ACombatAIController::OnMovementDestinationReached);
+			}
+		}
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 
 		if (HealthComp)
 		{
-			HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthUpdate);
+			if (!HealthComp->OnHealthChanged.IsBound()) {
+				HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthUpdate);
+			}
 		}
 	}
 
@@ -287,20 +300,33 @@ void ACombatAIController::OnUnPossess()
 
 	if (OwningCombatCharacter)
 	{
-		TargetFinderComponent->OnTargetSearch.RemoveDynamic(this, &ACombatAIController::OnTargetSearchUpdate);
-		OwningCombatCharacter->OnRappelUpdate.RemoveDynamic(this, &ACombatAIController::OnRappelUpdated);
+		if (TargetFinderComponent->OnTargetSearch.IsBound()) {
+			TargetFinderComponent->OnTargetSearch.RemoveDynamic(this, &ACombatAIController::OnTargetSearchUpdate);
+		}
+
+		if (OwningCombatCharacter->OnRappelUpdate.IsBound()) {
+			OwningCombatCharacter->OnRappelUpdate.RemoveDynamic(this, &ACombatAIController::OnRappelUpdated);
+		}
+
 
 		if (AIMovementComponent)
 		{
-			AIMovementComponent->OnDestinationSet.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationSet);
-			AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
+			if (AIMovementComponent->OnDestinationSet.IsBound()) {
+				AIMovementComponent->OnDestinationSet.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationSet);
+			}
+
+			if (AIMovementComponent->OnDestinationReached.IsBound()) {
+				AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
+			}
 		}
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 
 		if (HealthComp)
 		{
-			HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthUpdate);
+			if (HealthComp->OnHealthChanged.IsBound()) {
+				HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthUpdate);
+			}
 		}
 	}
 
@@ -333,31 +359,38 @@ void ACombatAIController::BeginPlay()
 void ACombatAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (!GetPawn()) {
+		return;
+	}
+
 	m_DelaTime = DeltaTime;
 
-	if (OwningCombatCharacter->GetHealthComp()->IsAlive())
+	if (!OwningCombatCharacter->GetHealthComp()->IsAlive()) {
+		return;
+	}
+
+	if (EnemyActor)
 	{
-		if (EnemyActor)
+		// if using a mounted gun
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
 		{
-			// if using a mounted gun
-			if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
-			{
-				MountedGunFinderComponent->FocusTarget(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation());
-			}
-			else
-			{
-				//SetFocus(EnemyActor);
-				SetFocalPoint(TargetSearchParams->TargetLocation);
-			}
+			MountedGunFinderComponent->FocusTarget(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation());
 		}
 		else
 		{
-			if (OwningCombatCharacter->IsUsingMountedWeapon())
-			{
-				OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
-			}
+			//SetFocus(EnemyActor);
+			SetFocalPoint(TargetSearchParams->TargetLocation);
 		}
 	}
+	else
+	{
+		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
+		}
+	}
+
 }
 
 
@@ -765,8 +798,8 @@ void ACombatAIController::FindMountedGun()
 	// If an MG has been assigned
 	if (OwningCombatCharacter->GetMountedGun())
 	{
-		if (!OwningCombatCharacter->IsReloading() 
-			&& !OwningCombatCharacter->IsUsingMountedWeapon() 
+		if (!OwningCombatCharacter->IsReloading()
+			&& !OwningCombatCharacter->IsUsingMountedWeapon()
 			&& !TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, EnemyActor)
 			&& MountedGunFinderComponent->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, EnemyActor)
 			)

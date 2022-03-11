@@ -25,15 +25,12 @@ class FREEDOMFIGHTERS_API UVehiclePathFollowerComponent : public UActorComponent
 private:
 	FTimerHandle THandler_Update;
 
-	/** Used when vehicle movement type is set to Waiting */
-	FTimerHandle THandler_WaitingMovment;
+	/** Used when resuming vehicle path */
+	FTimerHandle THandler_ResumePath;
 
 	/** Used when passengers are leaving the vehicle */
 	FTimerHandle THandler_ExitPassenger;
 
-
-	/** Used when resuming vehicle path */
-	FTimerHandle THandler_ResumePath;
 
 
 	AVehicleBase* OwningVehicle;

@@ -210,7 +210,7 @@ protected:
 public:	
 	AVehicleBase();
 
-	void RemovePassenger(class ABaseCharacter* Character);
+	void RemovePassenger(int Index);
 
 	void ChangeThermalVision();
 
@@ -230,6 +230,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void SetRotationInput(FRotator InRotation);
+
 
 private:
 	void TimerTick();
