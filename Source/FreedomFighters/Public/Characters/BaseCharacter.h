@@ -17,6 +17,7 @@ class AAIController;
 class UDataTable;
 class AAircraft;
 class AWeapon;
+class AOrderIcon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRappelUpdateignature, ABaseCharacter*, BaseCharacter);
 UCLASS(config = Game)
@@ -201,6 +202,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAnimSequence* DeathAnimationAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AOrderIcon> OverheadIconClass;
+	AOrderIcon* OverheadIcon;
+
 protected:
 	float DefaultMaxWalkSpeed;
 
@@ -254,6 +259,8 @@ protected:
 	virtual void Landed(const FHitResult& Hit) override;
 
 private:
+	void SpawnOverheadIcon();
+
 	void UpdateDirection();
 
 	void StartCover(FHitResult OutHit);
@@ -409,4 +416,6 @@ public:
 	}
 
 	FVehicletSeating GetVehicletSeat() { return CurrentVehicleSeat; }
+
+	AOrderIcon* GetOverheadIcon() { return OverheadIcon; }
 };

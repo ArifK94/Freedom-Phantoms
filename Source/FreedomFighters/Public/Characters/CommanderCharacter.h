@@ -108,6 +108,25 @@ private:
 		TSubclassOf<AOrderIcon> DefendIconPositionClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		UMaterialInstance* AttackIconMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		UMaterialInstance* DefendIconMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		UMaterialInstance* FollowIconMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		UMaterialInstance* AttackShapeMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		UMaterialInstance* DefendShapeMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
+		UMaterialInstance* FollowShapeMaterial;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AOrderIcon> AttackOverheadClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
@@ -172,7 +191,6 @@ private:
 
 	void SpawnIcon(TSubclassOf<AOrderIcon> IconClass, AOrderIcon*& Icon);
 	void DisplayPositionIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons, FVector Location);
-	void DisplayOverheadIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons);
 	void HideAllIcons(TArray<AOrderIcon*> Icons);
 
 	void IncrementCurrentRecruit();

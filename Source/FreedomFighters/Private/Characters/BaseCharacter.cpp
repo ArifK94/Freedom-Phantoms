@@ -3,6 +3,7 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponBullet.h"
 #include "Vehicles/VehicleBase.h"
+#include "Visuals/OrderIcon.h"
 
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -167,7 +168,6 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-
 	RetrieveVoiceDataSet();
 	RetrieveAccessoryDataSet();
 	RetrieveDeathAnimDataSet();
@@ -188,6 +188,8 @@ void ABaseCharacter::BeginPlay()
 	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 
 	InitTimeHandlers();
+
+	SpawnOverheadIcon();
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthUpdate);
@@ -471,6 +473,33 @@ void ABaseCharacter::UpdateSpeed()
 {
 	auto TargetSpeed = GetVelocity().Size();
 	CharacterSpeed = TargetSpeed;
+}
+
+void ABaseCharacter::SpawnOverheadIcon()
+{
+	if (!OverheadIconClass) {
+		return;
+	}
+
+	UWorld* World = GetWorld();
+
+	if (!World) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	OverheadIcon = World->SpawnActor<AOrderIcon>(OverheadIconClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (OverheadIcon) {
+		OverheadIcon->HideIcon();
+		OverheadIcon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+
+		FVector HeadLocation = GetMesh()->GetSocketLocation(GetHeadSocket());
+		OverheadIcon->SetActorLocation(HeadLocation);
+	}
 }
 
 void ABaseCharacter::UpdateDirection()

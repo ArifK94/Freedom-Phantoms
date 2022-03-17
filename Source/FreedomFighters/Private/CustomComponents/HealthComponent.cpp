@@ -25,6 +25,7 @@ UHealthComponent::UHealthComponent()
 	IgnoreFriendlyFire = true;
 	AcceptOnlyExplosions = false;
 	ClearAllActorTimers = true;
+	CanBeWounded = false;
 
 	RegenerationDelayAmount = 5.0f;
 }
@@ -101,10 +102,9 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 		{
 			GetWorld()->GetTimerManager().ClearAllTimersForObject(GetOwner());
 		}
-
 	}
 
-
+	HealthParameters.IsWounded = CanBeWounded;
 	HealthParameters.SetHealthComponent(this);
 	OnHealthChanged.Broadcast(HealthParameters);
 }

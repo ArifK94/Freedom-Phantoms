@@ -1,5 +1,5 @@
 #include "Characters/CommanderCharacter.h"
-#include "GUI/OrderIcon.h"
+#include "Visuals/OrderIcon.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
@@ -186,22 +186,12 @@ void ACommanderCharacter::Recruit()
 	OverheadIconArray.Add(follower->DefendOverheadIcon);
 	OverheadIconArray.Add(follower->FollowOverheadIcon);
 
-	// set the overhead to attach to its head socket location
-	// so the position can follow the character without updating the position every frame
-	FVector HeadLocation = follower->Recruit->GetMesh()->GetSocketLocation(follower->Recruit->GetHeadSocket());
-
-	for (AOrderIcon* OverheadIcon : OverheadIconArray)
-	{
-		OverheadIcon->AttachToComponent(follower->Recruit->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
-		OverheadIcon->SetActorLocation(HeadLocation);
-	}
 
 	follower->OrderIconArray = OrderIconArray;
 	follower->OverheadIconArray = OverheadIconArray;
 
 	// display the follow overhead icon each time someone has been recruited
-	DisplayOverheadIcon(follower->FollowOverheadIcon, OverheadIconArray);
-
+	follower->Recruit->GetOverheadIcon()->ShowIcon(FollowIconMaterial, FollowShapeMaterial);
 
 	ActiveRecruits.Add(follower);
 
@@ -284,7 +274,7 @@ void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacte
 	}
 
 	Recruit->CurrentCommand = CommanderOrders::Attack;
-	DisplayOverheadIcon(Recruit->AttackOverheadIcon, Recruit->OverheadIconArray);
+	Recruit->Recruit->GetOverheadIcon()->ShowIcon(AttackIconMaterial, AttackShapeMaterial);
 
 	if (EnemyCharacter && UHealthComponent::IsAlive(EnemyCharacter) && !UTeamFactionComponent::IsFriendly(this, EnemyCharacter)) // if hit result is an enemy character
 	{
@@ -348,7 +338,7 @@ void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
 	}
 	Recruit->CurrentCommand = CommanderOrders::Defend;
 	DisplayPositionIcon(Recruit->DefendPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
-	DisplayOverheadIcon(Recruit->DefendOverheadIcon, Recruit->OverheadIconArray);
+	Recruit->Recruit->GetOverheadIcon()->ShowIcon(DefendIconMaterial, DefendShapeMaterial);
 
 	OnOrderSent.Broadcast(Recruit);
 }
@@ -383,7 +373,7 @@ void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit)
 
 	Recruit->TargetLocation = GetActorLocation();
 
-	DisplayOverheadIcon(Recruit->FollowOverheadIcon, Recruit->OverheadIconArray);
+	Recruit->Recruit->GetOverheadIcon()->ShowIcon(FollowIconMaterial, FollowShapeMaterial);
 
 	OnOrderSent.Broadcast(Recruit);
 }
@@ -546,21 +536,6 @@ void ACommanderCharacter::DisplayPositionIcon(AOrderIcon* SelectedIcon, TArray<A
 		if (Icon == SelectedIcon)
 		{
 			Icon->ShowIcon(Location);
-		}
-		else
-		{
-			Icon->HideIcon();
-		}
-	}
-}
-
-void ACommanderCharacter::DisplayOverheadIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons)
-{
-	for (AOrderIcon* Icon : Icons)
-	{
-		if (Icon == SelectedIcon)
-		{
-			Icon->ShowIcon();
 		}
 		else
 		{
