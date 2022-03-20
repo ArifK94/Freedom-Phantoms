@@ -49,6 +49,9 @@ private:
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isAlive;
 
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool isWounded;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IgnoreFriendlyFire;
 
@@ -81,7 +84,10 @@ public:
 		FOnHealthChangedSignature OnHealthChanged;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	static bool IsAlive(AActor* Owner);
+		static bool IsAlive(AActor* Owner);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		static bool IsWounded(AActor* Owner);
 
 	void OnDamage(FHealthParameters HealthParameters);
 
@@ -91,6 +97,11 @@ public:
 
 	bool IsAlive() {
 		return isAlive;
+	}
+
+	bool GetIsWounded() {
+		return isWounded;
+
 	}
 
 	void SetDeathType(DeathType type)

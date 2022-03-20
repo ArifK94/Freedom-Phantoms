@@ -26,6 +26,7 @@ UHealthComponent::UHealthComponent()
 	AcceptOnlyExplosions = false;
 	ClearAllActorTimers = true;
 	CanBeWounded = false;
+	isWounded = false;
 
 	RegenerationDelayAmount = 5.0f;
 }
@@ -53,6 +54,7 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		}
 	}
 }
+
 
 void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 {
@@ -102,9 +104,14 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 		{
 			GetWorld()->GetTimerManager().ClearAllTimersForObject(GetOwner());
 		}
+
+		if (CanBeWounded) {
+			isWounded = true;
+			HealthParameters.IsWounded = true;
+		}
 	}
 
-	HealthParameters.IsWounded = CanBeWounded;
+
 	HealthParameters.SetHealthComponent(this);
 	OnHealthChanged.Broadcast(HealthParameters);
 }
@@ -161,4 +168,25 @@ bool UHealthComponent::IsAlive(AActor* Owner)
 	}
 
 	return HealthComponent->IsAlive();
+}
+
+bool UHealthComponent::IsWounded(AActor* Owner)
+{
+	if (!Owner || Owner->GetName() == "None") {
+		return false;
+	}
+
+	auto ActorComponent = Owner->GetComponentByClass(UHealthComponent::StaticClass());
+
+	if (!ActorComponent) {
+		return false;
+	}
+
+	auto HealthComponent = Cast<UHealthComponent>(ActorComponent);
+
+	if (!HealthComponent) {
+		return false;
+	}
+
+	return HealthComponent->GetIsWounded();
 }
