@@ -276,6 +276,7 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 				OverheadIcon->ShowIcon(EIconType::Wounded, false);
 			}
 
+			GetController()->UnPossess();
 			GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 			GetMesh()->SetSimulatePhysics(true);
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);

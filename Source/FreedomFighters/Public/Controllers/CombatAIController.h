@@ -49,20 +49,16 @@ private:
 
 	float m_DelaTime;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UAIMovementComponent* AIMovementComponent;
+	UAIMovementComponent* AIMovementComponent;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UPatrolFollowerComponent* PatrolFollowerComponent;
+	UPatrolFollowerComponent* PatrolFollowerComponent;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UCoverFinderComponent* CoverFinderComponent;
+	UCoverFinderComponent* CoverFinderComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UTargetFinderComponent* TargetFinderComponent;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UMountedGunFinderComponent* MountedGunFinderComponent;
+	UMountedGunFinderComponent* MountedGunFinderComponent;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))

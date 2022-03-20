@@ -174,18 +174,25 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 	{
 		TeamFactionComponent->SetCompActive(false);
 
-		// check if not using mounted gun as the weapon will be dropped and simulating physics
-		if (currentWeaponObj && currentWeaponObj != MountedGun) {
+		if (currentWeaponObj) {
 			EndFire();
-			currentWeaponObj->DropWeapon(true, true);
 		}
 
-		DropMountedGun();
+		if (!InHealthParameters.AffectedHealthComponent->GetIsWounded())
+		{
+			// check if not using mounted gun as the weapon will be dropped and simulating physics
+			if (currentWeaponObj && currentWeaponObj != MountedGun) {
+				EndFire();
+				currentWeaponObj->DropWeapon(true, true);
+			}
+		}
 
 		// Unregister the weapon events
 		RegisterWeaponEvents(currentWeaponObj, false);
 		RegisterWeaponEvents(primaryWeaponObj, false);
 		RegisterWeaponEvents(secondaryWeaponObj, false);
+
+		DropMountedGun();
 
 		// Inform nearest ally of death
 		auto nearestFriendly = FindNearestFriendly();

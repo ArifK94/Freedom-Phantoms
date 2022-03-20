@@ -26,6 +26,22 @@
 #include "..\..\Public\Controllers\CombatAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+	PrimaryActorTick.bCanEverTick = true;
+
+	AcceptanceRadius = 300.0f;
+
+	TimeBetweenShotsMin = 2.0f;
+	TimeBetweenShotsMax = 3.0f;
+
+	DestinationRadius = 300.0f;
+
+	MoveToLastSeenEnemy = true;
+
+	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
+	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
+}
 
 void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
 {
@@ -90,23 +106,6 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	UpdatCombatAlert();
 
 	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius, AIBehaviourState::PriorityOrdersCommander);
-}
-
-ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
-{
-	PrimaryActorTick.bCanEverTick = true;
-
-	AcceptanceRadius = 300.0f;
-
-	TimeBetweenShotsMin = 2.0f;
-	TimeBetweenShotsMax = 3.0f;
-
-	DestinationRadius = 300.0f;
-
-	MoveToLastSeenEnemy = true;
-
-	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
-	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
 }
 
 void ACombatAIController::Init()
@@ -401,12 +400,8 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 	{
 		ClearTimers();
 
-		// Unpossess the controller if wounded
-		if (InHealthParameters.AffectedHealthComponent->GetIsWounded()) {
-			OnUnPossess();
-		}
-		// destroy the controller
-		else {
+		// destroy the controller if not wounded
+		if (!InHealthParameters.AffectedHealthComponent->GetIsWounded()) {
 			OwningCombatCharacter->DetachFromControllerPendingDestroy();
 		}
 	}
