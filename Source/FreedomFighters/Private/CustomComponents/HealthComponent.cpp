@@ -107,7 +107,6 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 
 		if (CanBeWounded) {
 			isWounded = true;
-			HealthParameters.IsWounded = true;
 		}
 	}
 

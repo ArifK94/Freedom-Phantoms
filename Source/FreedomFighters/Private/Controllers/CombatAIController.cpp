@@ -402,7 +402,7 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 		ClearTimers();
 
 		// Unpossess the controller if wounded
-		if (InHealthParameters.IsWounded) {
+		if (InHealthParameters.AffectedHealthComponent->GetIsWounded()) {
 			OnUnPossess();
 		}
 		// destroy the controller

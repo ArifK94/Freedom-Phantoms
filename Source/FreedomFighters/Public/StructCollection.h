@@ -121,7 +121,7 @@ public:
 		bool IsExplosive;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		bool IsWounded;
+		bool ShouldWound;
 
 	FHealthParameters()
 	{
@@ -141,7 +141,7 @@ public:
 
 		IsExplosive = false;
 
-		IsWounded = false;
+		ShouldWound = false;
 	}
 
 	void SetHealthComponent(UHealthComponent* InHealthComponent)

@@ -270,7 +270,7 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		}
 
 
-		if (InHealthParameters.IsWounded)
+		if (InHealthParameters.AffectedHealthComponent->GetIsWounded())
 		{
 			if (OverheadIcon) {
 				OverheadIcon->ShowIcon(EIconType::Wounded, false);
