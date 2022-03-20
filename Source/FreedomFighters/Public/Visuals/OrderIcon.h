@@ -2,12 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
-#include "Components/TimelineComponent.h"
-
+#include "EnumCollection.h"
 #include "OrderIcon.generated.h"
 
-class UCurveFloat;
+class UWidgetComponent;
 UCLASS()
 class FREEDOMFIGHTERS_API AOrderIcon : public AActor
 {
@@ -15,50 +13,49 @@ class FREEDOMFIGHTERS_API AOrderIcon : public AActor
 	
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		EIconType IconType;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* Root;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Floor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UWidgetComponent* WidgetComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Head;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> AttackWidgetClass;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Shape;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> DefendWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> FollowWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> HVTWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> WoundedWidgetClass;
+
 
 	/** Anything less or equal to 0.0f will be considered as unlimited */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float DisplayCountDown;
 
-	FTimeline CurveTimeline;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UCurveFloat* CurveFloat;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float TargetPosAmountZ;
 
 private:
 	FTimerHandle THandler_Countdown;
 
-	FVector OrginalPos;
-	FVector TargetPos;
-
 public:	
 	AOrderIcon();
 
-	void SetRotation(AActor* TargetActor);
-
-	void ShowIcon(UMaterialInstance* IconMaterial, UMaterialInstance* ShapeMaterial);
+	void ShowIcon(EIconType SelectedIconType, bool CountdownHideIcon = true);
 	void ShowIcon(FVector Location);
-	void ShowIcon();
+	void ShowIcon(bool CountdownHideIcon = true);
 	void HideIcon();
 
 private:
-	void BeginCountDown();
-
-	UFUNCTION()
-		void BeginAnimation(float Value);
+	void RotateToPlayer();
 
 protected:
 	virtual void BeginPlay() override;

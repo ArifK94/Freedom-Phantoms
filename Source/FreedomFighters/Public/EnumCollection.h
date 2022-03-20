@@ -96,6 +96,17 @@ enum class CommanderOrders : uint8
 };
 
 UENUM(BlueprintType)
+enum class EIconType : uint8
+{
+	Follow		UMETA(DisplayName = "Follow"),
+	Attack		UMETA(DisplayName = "Attack"),
+	Defend 		UMETA(DisplayName = "Defend"),
+	HVT 		UMETA(DisplayName = "HVT"),
+	Wounded 	UMETA(DisplayName = "Wounded")
+};
+
+
+UENUM(BlueprintType)
 enum class AIBehaviourState : uint8
 {
 	Normal					UMETA(DisplayName = "Normal"),
