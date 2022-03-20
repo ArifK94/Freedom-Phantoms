@@ -270,7 +270,21 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		}
 
 
-		GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, DestroyDelayTime, false);
+		if (InHealthParameters.IsWounded)
+		{
+			if (OverheadIcon) {
+				OverheadIcon->ShowIcon(EIconType::Wounded, false);
+			}
+
+			GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+			GetMesh()->SetSimulatePhysics(true);
+			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+		else
+		{
+			GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, DestroyDelayTime, false);
+		}
+
 	}
 }
 
@@ -495,7 +509,7 @@ void ABaseCharacter::SpawnOverheadIcon()
 
 	if (OverheadIcon) {
 		OverheadIcon->HideIcon();
-		OverheadIcon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+		OverheadIcon->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
 		FVector HeadLocation = GetMesh()->GetSocketLocation(GetHeadSocket());
 		OverheadIcon->SetActorLocation(HeadLocation);
