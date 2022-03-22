@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/TimelineComponent.h"
 #include "EnumCollection.h"
 #include "OrderIcon.generated.h"
 
@@ -19,8 +20,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* Root;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UWidgetComponent* WidgetComponent;
+	/** The root & its children components will be animated */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		USceneComponent* AnimationRoot;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	//	UWidgetComponent* WidgetComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> AttackWidgetClass;
@@ -32,10 +37,36 @@ private:
 		TSubclassOf<UUserWidget> FollowWidgetClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> HVTWidgetClass;
+		TSubclassOf<UUserWidget> WoundedWidgetClass;
+
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> WoundedWidgetClass;
+		TSubclassOf<AActor> AttackIconClass;
+	AActor* AttackIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AActor> DefendIconClass;
+	AActor* DefendIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AActor> FollowIconClass;
+	AActor* FollowIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AActor> WoundedIconClass;
+	AActor* WoundedIcon;
+
+	TArray<AActor*> Icons;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UCurveFloat* CurveFloat;
+	FTimeline CurveTimeline;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float TargetPosAmountZ;
 
 
 	/** Anything less or equal to 0.0f will be considered as unlimited */
@@ -46,6 +77,9 @@ private:
 private:
 	FTimerHandle THandler_Countdown;
 
+	FVector OrginalPos;
+	FVector TargetPos;
+
 public:	
 	AOrderIcon();
 
@@ -55,7 +89,13 @@ public:
 	void HideIcon();
 
 private:
-	void RotateToPlayer();
+	UFUNCTION()
+		void BeginAnimation(float Value);
+
+	void FacePlayer();
+	AActor* SpawnIcon(TSubclassOf<AActor> IconClass);
+	void DisplayIcon(AActor* SelectedIcon);
+
 
 protected:
 	virtual void BeginPlay() override;

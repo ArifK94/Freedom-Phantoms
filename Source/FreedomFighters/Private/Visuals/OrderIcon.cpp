@@ -1,9 +1,11 @@
 #include "Visuals/OrderIcon.h"
 #include "Characters/BaseCharacter.h"
 
-#include "Components/WidgetComponent.h"
+//#include "Components/WidgetComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Camera/PlayerCameraManager.h"
 #include "TimerManager.h"
 
 
@@ -14,27 +16,40 @@ AOrderIcon::AOrderIcon()
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
 
-	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
-	WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	WidgetComponent->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
+	AnimationRoot = CreateDefaultSubobject<USceneComponent>(TEXT("AnimationRoot"));
+	AnimationRoot->SetupAttachment(RootComponent);
+
+	//WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
+	//WidgetComponent->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 
 	DisplayCountDown = 5.0f;
+	TargetPosAmountZ = 50.0f;
 }
 
 
 void AOrderIcon::BeginPlay()
 {
 	Super::BeginPlay();
+
+	OrginalPos = AnimationRoot->GetRelativeLocation();
+	TargetPos = OrginalPos;
+	TargetPos.Z = OrginalPos.Z + TargetPosAmountZ; // animating only in the z axis
+
+	AttackIcon = SpawnIcon(AttackIconClass);
+	DefendIcon = SpawnIcon(DefendIconClass);
+	FollowIcon = SpawnIcon(FollowIconClass);
+	WoundedIcon = SpawnIcon(WoundedIconClass);
 }
 
 void AOrderIcon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	CurveTimeline.TickTimeline(DeltaTime);
 
-	RotateToPlayer();
+	FacePlayer();
 }
 
-void AOrderIcon::RotateToPlayer()
+void AOrderIcon::FacePlayer()
 {
 	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 
@@ -42,10 +57,81 @@ void AOrderIcon::RotateToPlayer()
 		return;
 	}
 
-	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(WidgetComponent->GetComponentLocation(), Player->GetActorLocation());
-	WidgetComponent->SetWorldRotation(TargetRotation);
+	auto PlayerCharacter = Cast<ABaseCharacter>(Player);
+
+	if (!PlayerCharacter) {
+		return;
+	}
+
+	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(AnimationRoot->GetComponentLocation(), PlayerCharacter->FollowCamera->GetComponentLocation());
+	AnimationRoot->SetWorldRotation(TargetRotation);
 }
 
+AActor* AOrderIcon::SpawnIcon(TSubclassOf<AActor> IconClass)
+{
+	UWorld* World = GetWorld();
+
+	if (!World) {
+		return nullptr;
+	}
+
+	if (!IconClass) {
+		return nullptr;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	auto Icon = World->SpawnActor<AActor>(IconClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (Icon)
+	{
+		Icon->SetActorHiddenInGame(true);
+		Icon->SetHidden(true);
+		Icon->SetActorEnableCollision(false);
+		Icon->SetActorTickEnabled(false);
+
+		Icon->AttachToComponent(AnimationRoot, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		Icons.Add(Icon);
+	}
+
+	return Icon;
+}
+
+void AOrderIcon::DisplayIcon(AActor* SelectedIcon)
+{
+	for (auto Icon : Icons)
+	{
+		if (Icon == SelectedIcon)
+		{
+			Icon->SetActorHiddenInGame(false);
+			Icon->SetHidden(false);
+		}
+		else
+		{
+			Icon->SetActorHiddenInGame(true);
+			Icon->SetHidden(true);
+		}
+	}
+}
+
+void AOrderIcon::BeginAnimation(float Value)
+{
+	AnimationRoot->SetRelativeLocation(UKismetMathLibrary::VLerp(OrginalPos, TargetPos, Value));
+
+	// if reached the end then reverse
+	if (Value >= .9f)
+	{
+		CurveTimeline.Reverse();
+	}
+
+	// if reached near the start again then start
+	if (Value <= .1f)
+	{
+		CurveTimeline.Play();
+	}
+}
 
 void AOrderIcon::ShowIcon(bool CountdownHideIcon)
 {
@@ -55,8 +141,19 @@ void AOrderIcon::ShowIcon(bool CountdownHideIcon)
 	Root->SetVisibility(true, true);
 
 	// set the visibility of the widget in order to trigger the visibility event used in the Widget blueprints
-	if (WidgetComponent->GetUserWidgetObject()) {
-		WidgetComponent->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+	//if (WidgetComponent->GetUserWidgetObject()) {
+	//	WidgetComponent->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+	//}
+
+	// start the animation if the curve float has been provided
+	if (CurveFloat)
+	{
+		FOnTimelineFloat TimelineProgress;
+		TimelineProgress.BindUFunction(this, FName("BeginAnimation"));
+		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+		CurveTimeline.SetLooping(true);
+		CurveTimeline.SetPlayRate(1.f);
+		CurveTimeline.PlayFromStart();
 	}
 
 	if (CountdownHideIcon) {
@@ -69,19 +166,20 @@ void AOrderIcon::ShowIcon(EIconType SelectedIconType, bool CountdownHideIcon)
 	switch (SelectedIconType)
 	{
 	case EIconType::Follow:
-		WidgetComponent->SetWidgetClass(FollowWidgetClass);
+		DisplayIcon(FollowIcon);
+		//WidgetComponent->SetWidgetClass(FollowWidgetClass);
 		break;
 	case EIconType::Attack:
-		WidgetComponent->SetWidgetClass(AttackWidgetClass);
+		DisplayIcon(AttackIcon);
+		//WidgetComponent->SetWidgetClass(AttackWidgetClass);
 		break;
 	case EIconType::Defend:
-		WidgetComponent->SetWidgetClass(DefendWidgetClass);
-		break;
-	case EIconType::HVT:
-		WidgetComponent->SetWidgetClass(HVTWidgetClass);
+		DisplayIcon(DefendIcon);
+		//WidgetComponent->SetWidgetClass(DefendWidgetClass);
 		break;
 	case EIconType::Wounded:
-		WidgetComponent->SetWidgetClass(WoundedWidgetClass);
+		DisplayIcon(WoundedIcon);
+		//WidgetComponent->SetWidgetClass(WoundedWidgetClass);
 		break;
 	default:
 		break;
@@ -100,9 +198,9 @@ void AOrderIcon::ShowIcon(FVector Location)
 void AOrderIcon::HideIcon()
 {
 	// set the visibility of the widget in order to trigger the visibility event used in the Widget blueprints
-	if (WidgetComponent->GetUserWidgetObject()) {
-		WidgetComponent->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Collapsed);
-	}
+	//if (WidgetComponent->GetUserWidgetObject()) {
+	//	WidgetComponent->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Collapsed);
+	//}
 
 	Root->SetVisibility(false, true);
 	GetWorldTimerManager().ClearTimer(THandler_Countdown);
