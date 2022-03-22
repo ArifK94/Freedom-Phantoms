@@ -1,4 +1,5 @@
 #include "Characters/CombatCharacter.h"
+#include "Characters/CommanderCharacter.h"
 #include "Accessories/Headgear.h"
 #include "Accessories/Loadout.h"
 #include "Accessories/NightVisionGoggle.h"
@@ -30,6 +31,87 @@
 #include "TimerManager.h"
 #include "Containers/Array.h"
 #include "GameFramework/Controller.h"
+
+ACombatCharacter::ACombatCharacter()
+{
+	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
+
+	currentWeaponObj = nullptr;
+	primaryWeaponObj = nullptr;
+	secondaryWeaponObj = nullptr;
+
+	isAiming = false;
+	isFiring = false;
+	isReloading = false;
+	isEquippingWeapon = false;
+	hasEquippedWeapon = false;
+	isSwappingWeapon = false;
+	CanAutoReloadWeapon = false;
+	isInCombatMode = false;
+	IsInAimOffSetRotation = false;
+	isUsingMountedWeapon = false;
+
+	MaxAimYawSprint = 180.0f;
+	HandGuardAlpha = 0.0f;
+
+	WeaponHandSocket = "weapon_hand";
+}
+
+FString ACombatCharacter::GetKeyDisplayName_Implementation()
+{
+	return FString();
+}
+
+FString ACombatCharacter::OnInteractionFound_Implementation(APawn* InPawn, AController* InController)
+{
+	auto Commander = Cast<ACommanderCharacter>(InPawn);
+
+	if (!Commander) {
+		return FString();
+	}
+
+	if (Commander == this) {
+		return FString();
+	}
+
+	if (Commander->GetPotentialRecruit()) {
+		return Commander->GetRecruitMessage().ToString();
+	}
+	return FString();
+}
+
+AActor* ACombatCharacter::OnPickup_Implementation(APawn* InPawn, AController* InController)
+{
+	auto Commander = Cast<ACommanderCharacter>(InPawn);
+
+	if (!Commander) {
+		return nullptr;
+	}
+
+	Commander->Recruit();
+
+	return nullptr;
+}
+
+bool ACombatCharacter::OnUseInteraction_Implementation(APawn* InPawn, AController* InController)
+{
+	return false;
+}
+
+bool ACombatCharacter::CanInteract_Implementation(APawn* InPawn, AController* InController)
+{
+	auto Commander = Cast<ACommanderCharacter>(InPawn);
+
+	if (!Commander) {
+		return false;
+	}
+
+	if (Commander == this) {
+		return false;
+	}
+
+	return Commander->GetCanRecruit();
+}
 
 
 void ACombatCharacter::SetMountedGun(AWeapon* Mount)
@@ -96,30 +178,6 @@ void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 	RegisterWeaponEvents(secondaryWeaponObj, true);
 }
 
-ACombatCharacter::ACombatCharacter()
-{
-	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
-
-	currentWeaponObj = nullptr;
-	primaryWeaponObj = nullptr;
-	secondaryWeaponObj = nullptr;
-
-	isAiming = false;
-	isFiring = false;
-	isReloading = false;
-	isEquippingWeapon = false;
-	hasEquippedWeapon = false;
-	isSwappingWeapon = false;
-	CanAutoReloadWeapon = false;
-	isInCombatMode = false;
-	IsInAimOffSetRotation = false;
-	isUsingMountedWeapon = false;
-
-	MaxAimYawSprint = 180.0f;
-	HandGuardAlpha = 0.0f;
-
-	WeaponHandSocket = "weapon_hand";
-}
 
 void ACombatCharacter::BeginPlay()
 {

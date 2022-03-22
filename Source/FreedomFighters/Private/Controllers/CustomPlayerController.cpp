@@ -1025,8 +1025,15 @@ void ACustomPlayerController::DetectInteractableByTrace()
 	FVector ForwardVector = OwningCombatCharacter->FollowCamera->GetForwardVector();
 	FVector End = ((ForwardVector * InteractionLength) + Start);
 
-	FCollisionQueryParams CollisionParams;
-	if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionParams))
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(OwningCombatCharacter);
+	QueryParams.bTraceComplex = false;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+	if (GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, ObjectParams, QueryParams))
 	{
 		if (OutHit.bBlockingHit)
 		{
@@ -1041,7 +1048,6 @@ void ACustomPlayerController::DetectInteractableByTrace()
 	}
 
 	DetectInteractable(HitActor);
-
 }
 
 AActor* ACustomPlayerController::DetectInteractableByOverlap()

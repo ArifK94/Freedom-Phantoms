@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/BaseCharacter.h"
+#include "Interfaces/Interactable.h"
 #include "CombatCharacter.generated.h"
 
 class AWeapon;
@@ -15,7 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCha
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
 
 UCLASS()
-class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter
+class FREEDOMFIGHTERS_API ACombatCharacter : public ABaseCharacter, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -210,6 +211,14 @@ protected:
 
 	virtual void OnHealthUpdate(FHealthParameters InHealthParameters) override;
 	virtual void PlayDeathAnim(FHealthParameters InHealthParameters) override;
+
+public:
+	// Interactable interface methods
+	virtual FString GetKeyDisplayName_Implementation() override;
+	virtual FString OnInteractionFound_Implementation(APawn* InPawn, AController* InController) override;
+	virtual AActor* OnPickup_Implementation(APawn* InPawn, AController* InController) override;
+	virtual bool OnUseInteraction_Implementation(APawn* InPawn, AController* InController) override;
+	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 
 public:
 	UTeamFactionComponent* GetTeamFactionComponent() { return TeamFactionComponent; }

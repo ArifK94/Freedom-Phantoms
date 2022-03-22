@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CombatCharacter.h"
-#include "Interfaces/Interactable.h"
 #include "EnumCollection.h"
 #include "Engine/DataTable.h"
 
@@ -62,7 +61,7 @@ public:
 };
 
 UCLASS()
-class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter, public IInteractable
+class FREEDOMFIGHTERS_API ACommanderCharacter : public ACombatCharacter
 {
 	GENERATED_BODY()
 
@@ -128,6 +127,8 @@ public:
 
 	void FollowCommander(bool CommandAll = false);
 
+	void CheckRecruit();
+
 private:
 
 	UFUNCTION()
@@ -135,7 +136,6 @@ private:
 
 	FHitResult GetCurrentTraceHit(float Length = 500.0f);
 
-	void CheckRecruit();
 
 
 	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult);
@@ -175,15 +175,13 @@ private:
 protected:
 	virtual void Tick(float DeltaTime) override;
 
-
-public:
-	// Interactable interface methods
-	virtual FString GetKeyDisplayName_Implementation() override;
-	virtual FString OnInteractionFound_Implementation(APawn* InPawn, AController* InController) override;
-	virtual AActor* OnPickup_Implementation(APawn* InPawn, AController* InController) override;
-	virtual bool OnUseInteraction_Implementation(APawn* InPawn, AController* InController) override;
-	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
-
 public:
 	void SetCanRecruit(bool Value) { CanRecruit = Value; }
+
+	bool GetCanRecruit();
+
+	ACombatCharacter* GetPotentialRecruit() { return PotentialRecruit; }
+
+	FName GetRecruitMessage() { return RecruitMessage; }
+
 };

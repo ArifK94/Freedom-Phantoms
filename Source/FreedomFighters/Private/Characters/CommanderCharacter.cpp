@@ -23,40 +23,9 @@ ACommanderCharacter::ACommanderCharacter()
 	RecruitMessage = "Recruit Operative";
 }
 
-FString ACommanderCharacter::GetKeyDisplayName_Implementation()
+bool ACommanderCharacter::GetCanRecruit()
 {
-	return FString();
-}
-
-FString ACommanderCharacter::OnInteractionFound_Implementation(APawn* InPawn, AController* InController)
-{
-	CheckRecruit();
-
-	if (PotentialRecruit) {
-		return RecruitMessage.ToString();
-	}
-
-	return FString();
-}
-
-AActor* ACommanderCharacter::OnPickup_Implementation(APawn* InPawn, AController* InController)
-{
-	Recruit();
-	return nullptr;
-}
-
-bool ACommanderCharacter::OnUseInteraction_Implementation(APawn* InPawn, AController* InController)
-{
-	return false;
-}
-
-bool ACommanderCharacter::CanInteract_Implementation(APawn* InPawn, AController* InController)
-{
-	if (CanRecruit && ActiveRecruits.Num() < MaxRecruits) {
-		return true;
-	}
-
-	return false;
+	return CanRecruit && ActiveRecruits.Num() < MaxRecruits;
 }
 
 void ACommanderCharacter::AddUIWidget()
@@ -80,6 +49,7 @@ void ACommanderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	CheckRecruit();
 	UpdateActiveRecruits();
 }
 
@@ -117,23 +87,14 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 	return FHitResult();
 }
 
-
-
 void ACommanderCharacter::CheckRecruit()
 {
-	FHitResult HitResult;
-	FVector Start = GetActorLocation();
-
-	FVector ForwardVector = FollowCamera->GetForwardVector();
-	FVector End = ((ForwardVector * 200.f) + Start);
-
-	TargetSeekerComponent->GetTrace(HitResult, Start, End);
+	FHitResult HitResult = GetCurrentTraceHit();
 
 	ResetTargetActor();
 
 	if (HitResult.GetActor())
 	{
-
 		AActor* CurrentTargetActor = HitResult.GetActor();
 
 		if (CurrentTargetActor == this) {
@@ -196,8 +157,6 @@ void ACommanderCharacter::Recruit()
 
 	ResetTargetActor();
 }
-
-
 
 bool ACommanderCharacter::IfAlreadyRecruited(AActor* TargetActor)
 {
