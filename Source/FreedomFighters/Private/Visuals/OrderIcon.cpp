@@ -188,11 +188,11 @@ void AOrderIcon::ShowIcon(EIconType SelectedIconType, bool CountdownHideIcon)
 	ShowIcon(CountdownHideIcon);
 }
 
-void AOrderIcon::ShowIcon(FVector Location)
+void AOrderIcon::ShowIcon(FVector Location, bool CountdownHideIcon)
 {
 	SetActorLocation(Location);
 
-	ShowIcon();
+	ShowIcon(CountdownHideIcon);
 }
 
 void AOrderIcon::HideIcon()

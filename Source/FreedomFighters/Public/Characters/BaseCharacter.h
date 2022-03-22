@@ -297,6 +297,8 @@ public:
 	void SetVehicleSeat(FVehicletSeating Seat);
 	virtual void SetIsExitingVehicle(bool IsExiting);
 
+	void AttachIconToHead(AActor* Icon);
+
 	void UpdateAimCamera();
 
 	void PlayVoiceSound(USoundBase* Sound);

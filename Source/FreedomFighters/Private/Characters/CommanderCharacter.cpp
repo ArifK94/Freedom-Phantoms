@@ -169,29 +169,19 @@ void ACommanderCharacter::Recruit()
 	follower->TargetLocation = GetActorLocation();
 	follower->Recruit->OnKillConfirm.AddDynamic(this, &ACommanderCharacter::OnOperativeKillConfirm);
 
-	SpawnIcon(AttackOverheadClass, follower->AttackOverheadIcon);
 	SpawnIcon(AttackPositionIconClass, follower->AttackPositionIcon);
-	SpawnIcon(HighValueTargetOverheadClass, follower->HighValueTargetOverheadIcon);
 	SpawnIcon(DefendIconPositionClass, follower->DefendPositionIcon);
-	SpawnIcon(DefendOverheadClass, follower->DefendOverheadIcon);
-	SpawnIcon(FollowOverheadClass, follower->FollowOverheadIcon);
+	SpawnIcon(HighValueTargetOverheadClass, follower->HighValueTargetOverheadIcon);
 
 	TArray<AOrderIcon*> OrderIconArray;
 	OrderIconArray.Add(follower->AttackPositionIcon);
-	OrderIconArray.Add(follower->HighValueTargetOverheadIcon);
 	OrderIconArray.Add(follower->DefendPositionIcon);
-
-	TArray<AOrderIcon*> OverheadIconArray;
-	OverheadIconArray.Add(follower->AttackOverheadIcon);
-	OverheadIconArray.Add(follower->DefendOverheadIcon);
-	OverheadIconArray.Add(follower->FollowOverheadIcon);
-
+	OrderIconArray.Add(follower->HighValueTargetOverheadIcon);
 
 	follower->OrderIconArray = OrderIconArray;
-	follower->OverheadIconArray = OverheadIconArray;
 
 	// display the follow overhead icon each time someone has been recruited
-	follower->Recruit->GetOverheadIcon()->ShowIcon(FollowIconMaterial, FollowShapeMaterial);
+	follower->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Follow);
 
 	ActiveRecruits.Add(follower);
 
@@ -274,17 +264,16 @@ void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacte
 	}
 
 	Recruit->CurrentCommand = CommanderOrders::Attack;
-	Recruit->Recruit->GetOverheadIcon()->ShowIcon(AttackIconMaterial, AttackShapeMaterial);
+	Recruit->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Attack);
 
 	if (EnemyCharacter && UHealthComponent::IsAlive(EnemyCharacter) && !UTeamFactionComponent::IsFriendly(this, EnemyCharacter)) // if hit result is an enemy character
 	{
 		Recruit->HighValueTarget = EnemyCharacter;
 		Recruit->TargetLocation = EnemyCharacter->GetActorLocation();
 
-		// attach the HVT overhead icon to the target head, rather than updating the location every frame of the enemy's head position
-		FVector HeadLocation = EnemyCharacter->GetMesh()->GetSocketLocation(EnemyCharacter->GetHeadSocket());
-		Recruit->HighValueTargetOverheadIcon->AttachToComponent(EnemyCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
-		DisplayPositionIcon(Recruit->HighValueTargetOverheadIcon, Recruit->OrderIconArray, HeadLocation);
+		EnemyCharacter->AttachIconToHead(Recruit->HighValueTargetOverheadIcon);
+		DisplayPositionIcon(Recruit->HighValueTargetOverheadIcon, Recruit->OrderIconArray, false);
+
 	}
 	else // show the attack position 
 	{
@@ -295,7 +284,6 @@ void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacte
 	}
 
 	OnOrderSent.Broadcast(Recruit);
-
 }
 
 void ACommanderCharacter::DefendArea(bool CommandAll)
@@ -338,7 +326,7 @@ void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
 	}
 	Recruit->CurrentCommand = CommanderOrders::Defend;
 	DisplayPositionIcon(Recruit->DefendPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
-	Recruit->Recruit->GetOverheadIcon()->ShowIcon(DefendIconMaterial, DefendShapeMaterial);
+	Recruit->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Defend);
 
 	OnOrderSent.Broadcast(Recruit);
 }
@@ -373,7 +361,7 @@ void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit)
 
 	Recruit->TargetLocation = GetActorLocation();
 
-	Recruit->Recruit->GetOverheadIcon()->ShowIcon(FollowIconMaterial, FollowShapeMaterial);
+	Recruit->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Follow);
 
 	OnOrderSent.Broadcast(Recruit);
 }
@@ -407,10 +395,7 @@ void ACommanderCharacter::UpdateActiveRecruits()
 		UCommanderRecruit* Recruit = ActiveRecruits[i];
 		ACombatCharacter* RecruitCharacter = Recruit->Recruit;
 
-
-		UHealthComponent* RecruitHealth = Cast<UHealthComponent>(RecruitCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
-
-		if (RecruitHealth->IsAlive())
+		if (UHealthComponent::IsAlive(RecruitCharacter) || UHealthComponent::IsWounded(RecruitCharacter))
 		{
 			ABaseCharacter* TargetCharacter = Recruit->HighValueTarget;
 
@@ -418,9 +403,7 @@ void ACommanderCharacter::UpdateActiveRecruits()
 			// if not, then remove the overhead icon
 			if (TargetCharacter != nullptr)
 			{
-				UHealthComponent* TargetHealth = Cast<UHealthComponent>(TargetCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
-
-				if (!TargetHealth->IsAlive())
+				if (!UHealthComponent::IsAlive(TargetCharacter))
 				{
 					// remove the HVT overhead icon from the target character's head position
 					Recruit->HighValueTargetOverheadIcon->HideIcon();
@@ -503,8 +486,6 @@ void ACommanderCharacter::SortActiveRecruits(int StartingPoint)
 	}
 
 	ActiveRecruits.RemoveAt(NewPosition);
-
-
 	OnRemoveRecruit.Broadcast(this, NewPosition);
 }
 
@@ -513,6 +494,10 @@ void ACommanderCharacter::SpawnIcon(TSubclassOf<AOrderIcon> IconClass, AOrderIco
 	UWorld* World = GetWorld();
 
 	if (!World) {
+		return;
+	}
+
+	if (!IconClass) {
 		return;
 	}
 
@@ -529,13 +514,28 @@ void ACommanderCharacter::SpawnIcon(TSubclassOf<AOrderIcon> IconClass, AOrderIco
 }
 
 
-void ACommanderCharacter::DisplayPositionIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons, FVector Location)
+void ACommanderCharacter::DisplayPositionIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons, FVector Location, bool CountdownHideIcon)
 {
 	for (AOrderIcon* Icon : Icons)
 	{
 		if (Icon == SelectedIcon)
 		{
-			Icon->ShowIcon(Location);
+			Icon->ShowIcon(Location, CountdownHideIcon);
+		}
+		else
+		{
+			Icon->HideIcon();
+		}
+	}
+}
+
+void ACommanderCharacter::DisplayPositionIcon(AOrderIcon* SelectedIcon, TArray<AOrderIcon*> Icons, bool CountdownHideIcon)
+{
+	for (AOrderIcon* Icon : Icons)
+	{
+		if (Icon == SelectedIcon)
+		{
+			Icon->ShowIcon(CountdownHideIcon);
 		}
 		else
 		{

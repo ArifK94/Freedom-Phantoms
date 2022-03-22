@@ -101,7 +101,6 @@ enum class EIconType : uint8
 	Follow		UMETA(DisplayName = "Follow"),
 	Attack		UMETA(DisplayName = "Attack"),
 	Defend 		UMETA(DisplayName = "Defend"),
-	HVT 		UMETA(DisplayName = "HVT"),
 	Wounded 	UMETA(DisplayName = "Wounded")
 };
 

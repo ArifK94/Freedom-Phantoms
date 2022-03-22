@@ -510,11 +510,16 @@ void ABaseCharacter::SpawnOverheadIcon()
 
 	if (OverheadIcon) {
 		OverheadIcon->HideIcon();
-		OverheadIcon->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-
-		FVector HeadLocation = GetMesh()->GetSocketLocation(GetHeadSocket());
-		OverheadIcon->SetActorLocation(HeadLocation);
+		AttachIconToHead(OverheadIcon);
 	}
+}
+
+void ABaseCharacter::AttachIconToHead(AActor* Icon)
+{
+	Icon->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	FVector HeadLocation = GetMesh()->GetSocketLocation(GetHeadSocket());
+	Icon->SetActorLocation(HeadLocation);
 }
 
 void ABaseCharacter::UpdateDirection()

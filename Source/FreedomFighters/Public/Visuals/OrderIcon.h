@@ -84,7 +84,7 @@ public:
 	AOrderIcon();
 
 	void ShowIcon(EIconType SelectedIconType, bool CountdownHideIcon = true);
-	void ShowIcon(FVector Location);
+	void ShowIcon(FVector Location, bool CountdownHideIcon = true);
 	void ShowIcon(bool CountdownHideIcon = true);
 	void HideIcon();
 
