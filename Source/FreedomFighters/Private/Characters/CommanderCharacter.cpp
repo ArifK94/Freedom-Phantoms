@@ -21,11 +21,12 @@ ACommanderCharacter::ACommanderCharacter()
 	CanRecruit = true;
 
 	RecruitMessage = "Recruit Operative";
+	ReviveMessage = "Revive Operative";
 }
 
 bool ACommanderCharacter::GetCanRecruit()
 {
-	return CanRecruit && ActiveRecruits.Num() < MaxRecruits;
+	return CanRecruit && (ActiveRecruits.Num() - WoundedCount) < MaxRecruits;
 }
 
 void ACommanderCharacter::AddUIWidget()
@@ -51,6 +52,26 @@ void ACommanderCharacter::Tick(float DeltaTime)
 
 	CheckRecruit();
 	UpdateActiveRecruits();
+}
+
+void ACommanderCharacter::OnRecruitHealthUpdate(FHealthParameters InHealthParameters)
+{
+	if (ActiveRecruits.Num() > 0 && !InHealthParameters.AffectedHealthComponent->GetIsWounded())
+	{
+		for (int i = 0; i < ActiveRecruits.Num(); i++)
+		{
+			auto Recruit = ActiveRecruits[i];
+			if (Recruit->Recruit == InHealthParameters.DamagedActor)
+			{
+				if (InHealthParameters.AffectedHealthComponent->GetIsWounded())
+				{
+					SortActiveRecruits(i, false);
+					WoundedCount++;
+				}
+				break;
+			}
+		}
+	}
 }
 
 void ACommanderCharacter::OnOperativeKillConfirm(int KillCount)
@@ -93,29 +114,76 @@ void ACommanderCharacter::CheckRecruit()
 
 	ResetTargetActor();
 
-	if (HitResult.GetActor())
+	AActor* CurrentTargetActor = HitResult.GetActor();
+
+	if (!CurrentTargetActor) {
+		return;
+	}
+
+
+	if (CurrentTargetActor == this) {
+		return;
+	}
+
+	// if not alive
+	if (!UHealthComponent::IsAlive(CurrentTargetActor) && !UHealthComponent::IsWounded(CurrentTargetActor)) {
+		return;
+	}
+
+	if (!UTeamFactionComponent::IsFriendly(this, CurrentTargetActor)) {
+		return;
+	}
+
+	auto Character = Cast<ACombatCharacter>(CurrentTargetActor);
+
+	if (!Character) {
+		return;
+	}
+
+	if (Character->IsPlayerControlled()) {
+		return;
+	}
+
+	// if controlled by player
+	if (Character->GetIsInVehicle()) {
+		return;
+	}
+
+	// check if wounded
+	if (UHealthComponent::IsWounded(CurrentTargetActor)) 
 	{
-		AActor* CurrentTargetActor = HitResult.GetActor();
-
-		if (CurrentTargetActor == this) {
-			return;
-		}
-
-		UHealthComponent* CurrentHealth = Cast<UHealthComponent>(CurrentTargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
-		bool isFriendly = UTeamFactionComponent::IsFriendly(this, CurrentTargetActor);
-
-		if (CurrentHealth && CurrentHealth->IsAlive() && UTeamFactionComponent::IsComponentActive(CurrentTargetActor) && isFriendly && !IfAlreadyRecruited(CurrentTargetActor))
+		CurrentMessage = ReviveMessage;
+		PotentialRecruit = Character;
+		PotentialRecruit->ShowCharacterOutline(true);
+	}
+	else
+	{
+		// if has not already been recruited
+		if (!IfAlreadyRecruited(CurrentTargetActor))
 		{
-			auto Character = Cast<ACombatCharacter>(CurrentTargetActor);
-
-			if (Character && !Character->IsPlayerControlled() && !Character->GetIsInVehicle()) // if not controlled by player
-			{
-				PotentialRecruit = Character;
-				PotentialRecruit->ShowCharacterOutline(true);
-			}
+			CurrentMessage = RecruitMessage;
+			PotentialRecruit = Character;
+			PotentialRecruit->ShowCharacterOutline(true);
 		}
 	}
 }
+
+void ACommanderCharacter::InteractWithOperative()
+{
+	if (PotentialRecruit == nullptr) {
+		return;
+	}
+
+	if (UHealthComponent::IsWounded(PotentialRecruit))
+	{
+		ReviveFriendly();
+	}
+	else
+	{
+		Recruit();
+	}
+}
+
 
 void ACommanderCharacter::Recruit()
 {
@@ -128,7 +196,7 @@ void ACommanderCharacter::Recruit()
 	follower->Recruit->setCommandingOfficer(this);
 	follower->CurrentCommand = CommanderOrders::Follow; // follow command by default
 	follower->TargetLocation = GetActorLocation();
-	follower->Recruit->OnKillConfirm.AddDynamic(this, &ACommanderCharacter::OnOperativeKillConfirm);
+
 
 	SpawnIcon(AttackPositionIconClass, follower->AttackPositionIcon);
 	SpawnIcon(DefendIconPositionClass, follower->DefendPositionIcon);
@@ -144,6 +212,14 @@ void ACommanderCharacter::Recruit()
 	// display the follow overhead icon each time someone has been recruited
 	follower->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Follow);
 
+	if (!follower->Recruit->GetHealthComp()->OnHealthChanged.IsBound()) {
+		follower->Recruit->GetHealthComp()->OnHealthChanged.AddDynamic(this, &ACommanderCharacter::OnRecruitHealthUpdate);
+	}
+
+	if (!follower->Recruit->OnKillConfirm.IsBound()) {
+		follower->Recruit->OnKillConfirm.AddDynamic(this, &ACommanderCharacter::OnOperativeKillConfirm);
+	}
+
 	ActiveRecruits.Add(follower);
 
 	// If only one recruit, then make this the current recruit to order around
@@ -156,6 +232,40 @@ void ACommanderCharacter::Recruit()
 	PlayCommunicationSound(GetVoiceClipsSet()->RecruitSound, follower);
 
 	ResetTargetActor();
+}
+
+void ACommanderCharacter::ReviveFriendly()
+{
+	if (PotentialRecruit == nullptr) {
+		return;
+	}
+
+	PotentialRecruit->SetIsReviving(true);
+
+	if (IfAlreadyRecruited(PotentialRecruit))
+	{
+		PotentialRecruit->GetOverheadIcon()->ShowIcon(EIconType::Follow);
+	}
+	else
+	{
+		if (ActiveRecruits.Num() - WoundedCount >= MaxRecruits) {
+
+			auto Index = ActiveRecruits.Num() - 1;
+
+			if (ActiveRecruits[Index]->Recruit->GetHealthComp()->OnHealthChanged.IsBound()) {
+				ActiveRecruits[Index]->Recruit->GetHealthComp()->OnHealthChanged.RemoveDynamic(this, &ACommanderCharacter::OnRecruitHealthUpdate);
+			}
+
+			if (!ActiveRecruits[Index]->Recruit->OnKillConfirm.IsBound()) {
+				ActiveRecruits[Index]->Recruit->OnKillConfirm.RemoveDynamic(this, &ACommanderCharacter::OnOperativeKillConfirm);
+			}
+
+			ActiveRecruits.RemoveAt(Index);
+			OnRemoveRecruit.Broadcast(this, Index);
+		}
+
+		Recruit();
+	}
 }
 
 bool ACommanderCharacter::IfAlreadyRecruited(AActor* TargetActor)
@@ -376,7 +486,6 @@ void ACommanderCharacter::UpdateActiveRecruits()
 		{
 			// remove all icons on display, if any
 			HideAllIcons(Recruit->OrderIconArray);
-			HideAllIcons(Recruit->OverheadIconArray);
 
 			// if the current recruit died,
 			if (CurrentRecruit == Recruit)
@@ -400,7 +509,7 @@ void ACommanderCharacter::UpdateActiveRecruits()
 				}
 			}
 
-			SortActiveRecruits(i);
+			SortActiveRecruits(i, true);
 		}
 	}
 }
@@ -410,7 +519,7 @@ void ACommanderCharacter::UpdateActiveRecruits()
 /// removing any dead/ empty UI recruit elements by shifting them to the right
 /// </summary>
 /// <param name="StartingPoint"></param>
-void ACommanderCharacter::SortActiveRecruits(int StartingPoint)
+void ACommanderCharacter::SortActiveRecruits(int StartingPoint, bool RemoveIndex)
 {
 	// NewPosition is used to send the new index for the OnRemoveRecruit event to be used in the UI Widget since Current index is used to mark the current recruit on the UI
 	int NewPosition = StartingPoint;
@@ -444,7 +553,9 @@ void ACommanderCharacter::SortActiveRecruits(int StartingPoint)
 
 	}
 
-	ActiveRecruits.RemoveAt(NewPosition);
+	if (RemoveIndex) {
+		ActiveRecruits.RemoveAt(NewPosition);
+	}
 	OnRemoveRecruit.Broadcast(this, NewPosition);
 }
 

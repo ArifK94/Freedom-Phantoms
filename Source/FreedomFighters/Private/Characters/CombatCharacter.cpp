@@ -57,6 +57,22 @@ ACombatCharacter::ACombatCharacter()
 	WeaponHandSocket = "weapon_hand";
 }
 
+void ACombatCharacter::Init()
+{
+	Super::Init();
+
+	isAiming = false;
+	isFiring = false;
+	isReloading = false;
+	isEquippingWeapon = false;
+	hasEquippedWeapon = false;
+	isSwappingWeapon = false;
+	CanAutoReloadWeapon = false;
+	isInCombatMode = false;
+	IsInAimOffSetRotation = false;
+	isUsingMountedWeapon = false;
+}
+
 FString ACombatCharacter::GetKeyDisplayName_Implementation()
 {
 	return FString();
@@ -75,7 +91,7 @@ FString ACombatCharacter::OnInteractionFound_Implementation(APawn* InPawn, ACont
 	}
 
 	if (Commander->GetPotentialRecruit()) {
-		return Commander->GetRecruitMessage().ToString();
+		return Commander->GetCurrentMessage().ToString();
 	}
 	return FString();
 }
@@ -88,7 +104,7 @@ AActor* ACombatCharacter::OnPickup_Implementation(APawn* InPawn, AController* In
 		return nullptr;
 	}
 
-	Commander->Recruit();
+	Commander->InteractWithOperative();
 
 	return nullptr;
 }
@@ -301,8 +317,16 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 	}
 	else
 	{
-		Weapon->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
-		Weapon->OnEmptyAmmoClip.RemoveDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
+		if (Weapon->OnKillConfirmed.IsBound())
+		{
+			Weapon->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
+		}
+
+		if (Weapon->OnEmptyAmmoClip.IsBound())
+		{
+			Weapon->OnEmptyAmmoClip.RemoveDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
+		}
+
 	}
 }
 

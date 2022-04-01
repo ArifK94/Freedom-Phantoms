@@ -47,17 +47,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		TArray<AOrderIcon*> OrderIconArray;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		TArray<AOrderIcon*> OverheadIconArray;
-
 
 	AOrderIcon* AttackPositionIcon;
 	AOrderIcon* HighValueTargetOverheadIcon; // this icon of HVT acts like a position icon overhead of an enemy
 	AOrderIcon* DefendPositionIcon;
-
-	AOrderIcon* AttackOverheadIcon;
-	AOrderIcon* DefendOverheadIcon;
-	AOrderIcon* FollowOverheadIcon;
 };
 
 UCLASS()
@@ -72,6 +65,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		TArray<UCommanderRecruit*> ActiveRecruits;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		int WoundedCount;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		UCommanderRecruit* CurrentRecruit;
@@ -91,6 +87,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		FName RecruitMessage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
+		FName ReviveMessage;
+	FName CurrentMessage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> CommanderHUDWidgetClass;
@@ -119,7 +119,7 @@ public:
 
 	void AddUIWidget();
 
-	void Recruit();
+	void InteractWithOperative();
 
 	void Attack(bool CommandAll = false);
 
@@ -134,9 +134,14 @@ private:
 	UFUNCTION()
 		void OnOperativeKillConfirm(int KillCount);
 
+	UFUNCTION(BlueprintCallable)
+		void OnRecruitHealthUpdate(FHealthParameters InHealthParameters);
+
 	FHitResult GetCurrentTraceHit(float Length = 500.0f);
 
+	void Recruit();
 
+	void ReviveFriendly();
 
 	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult);
 
@@ -156,7 +161,7 @@ private:
 	void UpdateActiveRecruits();
 
 	// Each time a recruit dies, the array needs to be sorted by shifting all elements to previous empty elements
-	void SortActiveRecruits(int StartingPoint);
+	void SortActiveRecruits(int StartingPoint, bool RemoveIndex);
 
 	// modify target position so it is placed on the nav bounds
 	FNavLocation GetPositionToNav(FVector Position);
@@ -183,5 +188,7 @@ public:
 	ACombatCharacter* GetPotentialRecruit() { return PotentialRecruit; }
 
 	FName GetRecruitMessage() { return RecruitMessage; }
+
+	FName GetCurrentMessage() { return CurrentMessage; }
 
 };

@@ -1241,7 +1241,7 @@ void ACustomPlayerController::Recruit()
 		return;
 	}
 
-	OwningCommander->Recruit();
+	OwningCommander->InteractWithOperative();
 }
 
 

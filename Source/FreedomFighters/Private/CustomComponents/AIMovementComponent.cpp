@@ -215,5 +215,8 @@ void UAIMovementComponent::CreateDestinationTrigger(FVector Location, float Radi
 	DestinationTrigger->SetWorldLocation(Location);
 	DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
 	DestinationTrigger->ShapeColor = FColor(0, 255, 0, 255);
-	DestinationTrigger->OnComponentBeginOverlap.AddDynamic(this, &UAIMovementComponent::OnOverlapBegin);
+
+	if (!DestinationTrigger->OnComponentBeginOverlap.IsBound()) {
+		DestinationTrigger->OnComponentBeginOverlap.AddDynamic(this, &UAIMovementComponent::OnOverlapBegin);
+	}
 }

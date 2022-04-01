@@ -45,6 +45,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool HasUnlimitedHealth;
+	bool DefaulUnlimitedHealth;
 
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isAlive;
@@ -91,6 +92,8 @@ public:
 
 	void OnDamage(FHealthParameters HealthParameters);
 
+	void Revive();
+
 	float GetCurrentHealth() {
 		return Health;
 	}
@@ -101,7 +104,10 @@ public:
 
 	bool GetIsWounded() {
 		return isWounded;
+	}
 
+	bool GetDefaulUnlimitedHealth() {
+		return DefaulUnlimitedHealth;
 	}
 
 	void SetDeathType(DeathType type)

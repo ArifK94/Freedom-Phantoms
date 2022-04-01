@@ -21,6 +21,7 @@ UHealthComponent::UHealthComponent()
 	isAlive = false;
 
 	HasUnlimitedHealth = false;
+	DefaulUnlimitedHealth = false;
 	HasTakenDamage = false;
 	IgnoreFriendlyFire = true;
 	AcceptOnlyExplosions = false;
@@ -35,6 +36,7 @@ void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	DefaulUnlimitedHealth = HasUnlimitedHealth;
 	Health = MaxHealth;
 	CurrentRegenerationDelay = RegenerationDelayAmount;
 	isAlive = true;
@@ -146,6 +148,16 @@ void UHealthComponent::RegenerateHealth()
 			OnHealthChanged.Broadcast(HealthParameters);
 		}
 	}
+}
+
+void UHealthComponent::Revive()
+{
+	isAlive = true;
+	isWounded = false;
+	Health = 100.f;
+	
+	// Go back to default flag if has unlimited health
+	HasUnlimitedHealth = DefaulUnlimitedHealth;
 }
 
 bool UHealthComponent::IsAlive(AActor* Owner)

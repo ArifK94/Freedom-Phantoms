@@ -171,6 +171,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsInVehicle;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool isReviving;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FRotator CoverRotation;
 
@@ -217,6 +220,10 @@ protected:
 
 private:
 	FName DefaultCapsuleCollisionName;
+	FName DefaultMeshCollisionName;
+	AController* DefaultController;
+	FVector DefaultMeshLocation;
+	FRotator DefaultMeshRotation;
 	FRotator RotationInput; // input for controller when looking around while taking cover and aiming
 
 	float LastCharDirection;
@@ -236,6 +243,7 @@ private:
 	AAIController* DefaultAIController;
 
 protected:
+	virtual void Init();
 
 	virtual void InitTimeHandlers();
 
@@ -277,7 +285,6 @@ public:
 	void ShowCharacterOutline(bool CanShow, bool IgnoreDeath = false);
 	void ShowActorOutlineRecursive(TArray<AActor*> ParentActor, bool CanShow);
 	void SetActorOutline(AActor* Actor, bool CanShow);
-
 
 	void ToggleCrouch();
 
@@ -395,6 +402,9 @@ public:
 	void IsAtCoverCorner(bool Value) {
 		isAtCoverCorner = Value;
 	}
+
+	void SetIsReviving(bool Value);
+
 
 	void SetRightInputValue(float Value) {
 		RightInputValue = Value;

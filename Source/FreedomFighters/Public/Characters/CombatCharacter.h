@@ -207,6 +207,7 @@ private:
 	void UpdateCombatMode();
 
 protected:
+	virtual void Init() override;
 	virtual void BeginPlay() override;
 
 	virtual void OnHealthUpdate(FHealthParameters InHealthParameters) override;

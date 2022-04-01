@@ -32,4 +32,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Notify", meta = (AllowPrivateAccess = "true"))
 		bool IsPostDeath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Notify", meta = (AllowPrivateAccess = "true"))
+		bool IsRevived;
 };

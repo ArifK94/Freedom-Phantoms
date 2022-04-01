@@ -117,6 +117,12 @@ ABaseCharacter::ABaseCharacter()
 	CoverRotationRightYaw = FVector2D(0.0f, 20.0f);
 }
 
+void ABaseCharacter::Init()
+{
+	isSprinting = false;
+	EndAim();
+}
+
 void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 {
 	if (Seat.OwningVehicle)
@@ -164,6 +170,30 @@ void ABaseCharacter::SetIsExitingVehicle(bool IsExiting)
 	OnRappelUpdate.Broadcast(this);
 }
 
+void ABaseCharacter::SetIsReviving(bool Value)
+{
+	isReviving = Value;
+
+	// is in state of being revived
+	if (isReviving)
+	{
+		Init(); // reset variables
+		HealthComp->SetUnlimitedHealth(true);
+		GetMesh()->SetSimulatePhysics(false);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		GetMesh()->SetCollisionProfileName(DefaultMeshCollisionName);
+		GetMesh()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		GetMesh()->SetRelativeLocationAndRotation(DefaultMeshLocation, DefaultMeshRotation);
+	}
+	else // has been revived
+	{
+		InitTimeHandlers();
+		HealthComp->Revive();
+		DefaultController->Possess(this);
+	}
+}
+
+
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -173,6 +203,11 @@ void ABaseCharacter::BeginPlay()
 	RetrieveDeathAnimDataSet();
 
 	DefaultCapsuleCollisionName = GetCapsuleComponent()->GetCollisionProfileName();
+	DefaultMeshCollisionName = GetMesh()->GetCollisionProfileName();
+	DefaultController = GetController();
+	DefaultMeshLocation = GetMesh()->GetRelativeLocation();
+	DefaultMeshRotation = GetMesh()->GetRelativeRotation();
+
 	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	SprintSpeed = DefaultMaxWalkSpeed * 2.0f;
 
@@ -260,8 +295,6 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 			}
 		}
 
-
-
 		PlayDeathAnim(InHealthParameters);
 
 		// In case death anim asset is empty
@@ -285,7 +318,7 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		{
 			GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, DestroyDelayTime, false);
 		}
-
+		IsInVehicle = false;
 	}
 }
 

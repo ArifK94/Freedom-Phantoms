@@ -168,7 +168,6 @@ void ACombatAIController::Init()
 		if (TargetFinderComponent)
 		{
 			TargetFinderComponent->RegisterComponent();
-			TargetFinderComponent->SetFindTargetPerFrame(true);
 		}
 	}
 
@@ -276,6 +275,11 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 			}
 		}
 
+		if (TargetFinderComponent)
+		{
+			TargetFinderComponent->SetFindTargetPerFrame(true);
+		}
+
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 
 		if (HealthComp)
@@ -317,6 +321,10 @@ void ACombatAIController::OnUnPossess()
 			if (AIMovementComponent->OnDestinationReached.IsBound()) {
 				AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
 			}
+		}
+
+		if (Commander && Commander->OnOrderSent.IsBound()) {
+			Commander->OnOrderSent.RemoveDynamic(this, &ACombatAIController::OnOrderReceived);
 		}
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
@@ -378,8 +386,8 @@ void ACombatAIController::Tick(float DeltaTime)
 		}
 		else
 		{
-			//SetFocus(EnemyActor);
-			SetFocalPoint(TargetSearchParams->TargetLocation);
+			SetFocus(EnemyActor);
+			//SetFocalPoint(TargetSearchParams->TargetLocation);
 		}
 	}
 	else
@@ -1046,9 +1054,13 @@ void ACombatAIController::CheckCommanderOrder()
 		return;
 	}
 
+	if (!Commander->OnOrderSent.IsBound()) {
+		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
+	}
+
 	// Assign Order Event
 	if (!HasAssignedOrderEvent) {
-		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
+
 		OwningCombatCharacter->DropMountedGun();
 		HasAssignedOrderEvent = true;
 		StayCombatAlert = false; // refresh state of behaviour
