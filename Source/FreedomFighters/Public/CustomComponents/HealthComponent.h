@@ -90,6 +90,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		static bool IsWounded(AActor* Owner);
 
+	static void SetIsReviving(AActor* Owner, bool Value);
+
+
 	void OnDamage(FHealthParameters HealthParameters);
 
 	void Revive();
@@ -100,6 +103,10 @@ public:
 
 	bool IsAlive() {
 		return isAlive;
+	}
+
+	void SetIsAlive(bool Value) {
+		isAlive = Value;
 	}
 
 	bool GetIsWounded() {

@@ -77,7 +77,7 @@ private:
 
 	/** Used to prevent recruiting while in HQ or other places */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
-		bool CanRecruit;
+		bool CanSearchRecruits;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Operatives", meta = (AllowPrivateAccess = "true"))
 		uint8 CurrentRecruitIndex;
@@ -139,19 +139,17 @@ private:
 
 	FHitResult GetCurrentTraceHit(float Length = 500.0f);
 
-	void Recruit();
+	void RecruitFollower();
 
 	void ReviveFriendly();
+
+	void RemoveWounded();
 
 	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult);
 
 	void DefendAreaSingle(UCommanderRecruit* Recruit);
 
 	void FollowSingle(UCommanderRecruit* Recruit);
-
-
-	UFUNCTION(BlueprintCallable, Category = "Commander")
-		bool IfAlreadyRecruited(AActor* TargetActor);
 
 	UPROPERTY(BlueprintAssignable, Category = "Commander")
 		FOnRemoveRecruitSignature OnRemoveRecruit;
@@ -162,6 +160,9 @@ private:
 
 	// Each time a recruit dies, the array needs to be sorted by shifting all elements to previous empty elements
 	void SortActiveRecruits(int StartingPoint, bool RemoveIndex);
+
+	/* Sort the list with the wounded recruit being positioned the last */
+	void SortRecruitList();
 
 	// modify target position so it is placed on the nav bounds
 	FNavLocation GetPositionToNav(FVector Position);
@@ -181,7 +182,9 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	void SetCanRecruit(bool Value) { CanRecruit = Value; }
+	void SetCanSearchRecruits(bool Value) { CanSearchRecruits = Value; }
+
+	bool GetCanSearchRecruits() { return CanSearchRecruits; }
 
 	bool GetCanRecruit();
 

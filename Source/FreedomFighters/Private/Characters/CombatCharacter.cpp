@@ -126,7 +126,14 @@ bool ACombatCharacter::CanInteract_Implementation(APawn* InPawn, AController* In
 		return false;
 	}
 
-	return Commander->GetCanRecruit();
+
+	// To allow commander to revive if max recruits reached
+	if (HealthComp->GetIsWounded()) {
+		return Commander->GetCanSearchRecruits();
+	}
+	else {
+		return Commander->GetCanRecruit();
+	}
 }
 
 

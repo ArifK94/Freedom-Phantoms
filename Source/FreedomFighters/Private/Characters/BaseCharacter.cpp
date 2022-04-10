@@ -173,22 +173,24 @@ void ABaseCharacter::SetIsExitingVehicle(bool IsExiting)
 void ABaseCharacter::SetIsReviving(bool Value)
 {
 	isReviving = Value;
-
+	UHealthComponent::SetIsReviving(this, Value);
 	// is in state of being revived
 	if (isReviving)
 	{
 		Init(); // reset variables
-		HealthComp->SetUnlimitedHealth(true);
 		GetMesh()->SetSimulatePhysics(false);
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		GetMesh()->SetCollisionProfileName(DefaultMeshCollisionName);
 		GetMesh()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		GetMesh()->SetRelativeLocationAndRotation(DefaultMeshLocation, DefaultMeshRotation);
+
+		if (OverheadIcon) {
+			OverheadIcon->HideIcon();
+		}
 	}
 	else // has been revived
 	{
 		InitTimeHandlers();
-		HealthComp->Revive();
 		DefaultController->Possess(this);
 	}
 }
@@ -309,10 +311,11 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 				OverheadIcon->ShowIcon(EIconType::Wounded, false);
 			}
 
-			GetController()->UnPossess();
-			GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-			GetMesh()->SetSimulatePhysics(true);
-			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			//GetController()->UnPossess();
+			GetCapsuleComponent()->SetEnableGravity(true);
+			//GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+			//GetMesh()->SetSimulatePhysics(true);
+			//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 		else
 		{
@@ -335,7 +338,9 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 
 	if (!HealthComp->IsAlive() && OtherActor != this)
 	{
-		PostDeath();
+		if (!HealthComp->GetIsWounded()) {
+			PostDeath();
+		}
 	}
 }
 
@@ -592,7 +597,9 @@ void ABaseCharacter::SetFirstPersonView()
 void ABaseCharacter::ShowCharacterOutline(bool CanShow, bool IgnoreDeath)
 {
 	if (!HealthComp->IsAlive() && !IgnoreDeath) {
-		return;
+		if (!HealthComp->GetIsWounded()) {
+			return;
+		}
 	}
 
 	SetActorOutline(this, CanShow);

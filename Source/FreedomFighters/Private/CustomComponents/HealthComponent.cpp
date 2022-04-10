@@ -201,3 +201,29 @@ bool UHealthComponent::IsWounded(AActor* Owner)
 
 	return HealthComponent->GetIsWounded();
 }
+
+void UHealthComponent::SetIsReviving(AActor* Owner, bool Value)
+{
+	auto ActorComponent = Owner->GetComponentByClass(UHealthComponent::StaticClass());
+
+	if (!ActorComponent) {
+		return;
+	}
+
+	auto HealthComponent = Cast<UHealthComponent>(ActorComponent);
+
+	if (!HealthComponent) {
+		return;
+	}
+
+	// is in state of being revived
+	if (Value) {
+		HealthComponent->SetUnlimitedHealth(true);
+		HealthComponent->SetIsAlive(true);
+	}
+	// has been revived
+	else {
+		HealthComponent->Revive();
+	}
+
+}

@@ -206,6 +206,12 @@ public:
 		USoundBase* DefendSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* RevivingSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* RevivedSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* DeathSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

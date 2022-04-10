@@ -62,8 +62,11 @@ void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedC
 	{
 		auto TriggerLocation = OtherActor->GetActorLocation();
 	//	DrawDebugSphere(GetWorld(), TriggerLocation, 30.f, 20, FColor::Red, false, 20.f, 0, 2);
-		DestinationTrigger->OnComponentBeginOverlap.RemoveDynamic(this, &UAIMovementComponent::OnOverlapBegin);
-		DestinationTrigger->DestroyComponent();
+		if (DestinationTrigger) {
+			DestinationTrigger->OnComponentBeginOverlap.RemoveDynamic(this, &UAIMovementComponent::OnOverlapBegin);
+			DestinationTrigger->DestroyComponent();
+		}
+
 		OnDestinationReached.Broadcast(TriggerLocation);
 	}
 }

@@ -33,7 +33,7 @@ void AUnarmedPlayerController::OnPossess(APawn* InPawn)
 
 	if (OwningCommander)
 	{
-		OwningCommander->SetCanRecruit(false);
+		OwningCommander->SetCanSearchRecruits(false);
 	}
 
 	BeginCheckInteractable();

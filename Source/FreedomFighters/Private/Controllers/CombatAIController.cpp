@@ -264,8 +264,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		}
 
 
-		if (AIMovementComponent)
-		{
+		if (AIMovementComponent) {
 			if (!AIMovementComponent->OnDestinationSet.IsBound()) {
 				AIMovementComponent->OnDestinationSet.AddDynamic(this, &ACombatAIController::OnMovementDestinationSet);
 			}
@@ -275,15 +274,13 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 			}
 		}
 
-		if (TargetFinderComponent)
-		{
+		if (TargetFinderComponent) {
 			TargetFinderComponent->SetFindTargetPerFrame(true);
 		}
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 
-		if (HealthComp)
-		{
+		if (HealthComp) {
 			if (!HealthComp->OnHealthChanged.IsBound()) {
 				HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthUpdate);
 			}
@@ -323,9 +320,10 @@ void ACombatAIController::OnUnPossess()
 			}
 		}
 
-		if (Commander && Commander->OnOrderSent.IsBound()) {
+		if (Commander) {
 			Commander->OnOrderSent.RemoveDynamic(this, &ACombatAIController::OnOrderReceived);
 		}
+		HasAssignedOrderEvent = false;
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 
@@ -409,7 +407,10 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 		ClearTimers();
 
 		// destroy the controller if not wounded
-		if (!InHealthParameters.AffectedHealthComponent->GetIsWounded()) {
+		if (InHealthParameters.AffectedHealthComponent->GetIsWounded()) {
+			OwningCombatCharacter->UnPossessed();
+		}
+		else {
 			OwningCombatCharacter->DetachFromControllerPendingDestroy();
 		}
 	}
@@ -1054,14 +1055,11 @@ void ACombatAIController::CheckCommanderOrder()
 		return;
 	}
 
-	if (!Commander->OnOrderSent.IsBound()) {
-		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
-	}
-
 	// Assign Order Event
 	if (!HasAssignedOrderEvent) {
 
 		OwningCombatCharacter->DropMountedGun();
+		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
 		HasAssignedOrderEvent = true;
 		StayCombatAlert = false; // refresh state of behaviour
 		SetBehaviourState(AIBehaviourState::PriorityOrdersCommander);
