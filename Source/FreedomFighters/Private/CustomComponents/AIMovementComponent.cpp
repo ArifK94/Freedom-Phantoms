@@ -61,10 +61,18 @@ void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedC
 	if (OtherActor == PawnOwner)
 	{
 		auto TriggerLocation = OtherActor->GetActorLocation();
+
 	//	DrawDebugSphere(GetWorld(), TriggerLocation, 30.f, 20, FColor::Red, false, 20.f, 0, 2);
+
 		if (DestinationTrigger) {
-			DestinationTrigger->OnComponentBeginOverlap.RemoveDynamic(this, &UAIMovementComponent::OnOverlapBegin);
-			DestinationTrigger->DestroyComponent();
+
+			DestinationTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+
+			//if (DestinationTrigger->OnComponentBeginOverlap.IsBound()) {
+			//	DestinationTrigger->OnComponentBeginOverlap.RemoveDynamic(this, &UAIMovementComponent::OnOverlapBegin);
+			//}
+
+			//DestinationTrigger->DestroyComponent();
 		}
 
 		OnDestinationReached.Broadcast(TriggerLocation);
@@ -97,6 +105,11 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 
 
 	CreateDestinationTrigger(TargetDestination, TargetRadius);
+
+	if (DestinationTrigger) {
+		DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
+	}
+
 	//DrawDebugSphere(GetWorld(), TargetDestination, TargetRadius, 20, FColor::Purple, false, 20.f, 0, 2);
 
 	if (Character && SprintToTarget)
@@ -212,6 +225,10 @@ FVector UAIMovementComponent::ValidateDestination(FVector Location, bool& IsLoca
 
 void UAIMovementComponent::CreateDestinationTrigger(FVector Location, float Radius)
 {
+	if (DestinationTrigger == nullptr) {
+		return;
+	}
+
 	DestinationTrigger = NewObject<USphereComponent>(this);
 	DestinationTrigger->RegisterComponent();
 	DestinationTrigger->SetSphereRadius(Radius);

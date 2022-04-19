@@ -285,6 +285,12 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 		GetCharacterMovement()->StopMovementImmediately();
 
+		// In case if died in vehicle.
+		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
+
+		// Custom collision profile to allow remove capsule collision but still run root motion
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Death"));
+
 		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(InHealthParameters.HitInfo.PhysMaterial.Get());
 
 		// Play death sound if not recieved a headshot
@@ -311,11 +317,7 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 				OverheadIcon->ShowIcon(EIconType::Wounded, false);
 			}
 
-			//GetController()->UnPossess();
-			GetCapsuleComponent()->SetEnableGravity(true);
-			//GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-			//GetMesh()->SetSimulatePhysics(true);
-			//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			GetController()->UnPossess();
 		}
 		else
 		{
@@ -498,8 +500,9 @@ void ABaseCharacter::AimOffset()
 	FRotator Current = UKismetMathLibrary::MakeRotator(x, aimPitch, aimYaw);
 	FRotator Target = UKismetMathLibrary::NormalizedDeltaRotator(InputRotation, GetActorRotation());
 	FRotator MoveToTarget = FMath::RInterpTo(Current, Target, CurrentDeltaTime, 15.0f);
+	float Roll = MoveToTarget.Roll;
 
-	UKismetMathLibrary::BreakRotator(MoveToTarget, MoveToTarget.Roll, aimPitch, aimYaw);
+	UKismetMathLibrary::BreakRotator(MoveToTarget, Roll, aimPitch, aimYaw);
 }
 
 void ABaseCharacter::UpdateCharacterMovement()
