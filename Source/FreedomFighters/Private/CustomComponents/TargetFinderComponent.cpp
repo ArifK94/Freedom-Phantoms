@@ -252,10 +252,6 @@ AActor* UTargetFinderComponent::GetChildrenTargets(AActor* ParentTarget)
 		{
 			return Actor;
 		}
-		else // keep looking at children actors recursively
-		{
-			PotentialTarget = GetChildrenTargets(Actor);
-		}
 	}
 
 	return PotentialTarget;
