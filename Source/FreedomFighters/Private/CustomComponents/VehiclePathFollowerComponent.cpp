@@ -125,7 +125,6 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 	// adjust path duration to change speed if specified
 	if (CurrentSplinePoint.AffectSpeedType == EVehicleSpeedType::Specified)
 	{
-
 		CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.PathDuration);
 	}
 	else

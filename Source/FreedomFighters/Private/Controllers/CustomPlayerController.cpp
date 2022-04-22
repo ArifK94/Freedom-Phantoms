@@ -1099,10 +1099,17 @@ void ACustomPlayerController::UseInteractableActor()
 		return;
 	}
 
-	if (CollectedInteractableActor)
+	auto Interactable = CollectedInteractableActor;
+
+	if (!Interactable)
+	{
+		Interactable = CurrentSupportPackage;
+	}
+
+	if (Interactable)
 	{
 		// Can use the interactable?
-		auto CanUseInteractable = IInteractable::Execute_OnUseInteraction(CollectedInteractableActor, OwningCombatCharacter, this);
+		auto CanUseInteractable = IInteractable::Execute_OnUseInteraction(Interactable, OwningCombatCharacter, this);
 
 		// Can use the interactable?
 		if (!CanUseInteractable)

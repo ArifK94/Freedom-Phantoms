@@ -258,11 +258,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<ASupportPackage> SupportActorClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<AAircraft> AircraftClass;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	//	TSubclassOf<AAircraft> AircraftClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		AAircraft* Aircraft;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//	AAircraft* Aircraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AVehicleBase> VehicleClass;
@@ -307,7 +307,6 @@ public:
 
 	FSupportPackageSet()
 	{
-		Aircraft = nullptr;
 		Vehicle = nullptr;
 	}
 };
@@ -802,9 +801,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ACommanderCharacter> CommanderCharacterClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<AAircraft> AC130Class;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UMaterialInterface* FlagMaterial;
