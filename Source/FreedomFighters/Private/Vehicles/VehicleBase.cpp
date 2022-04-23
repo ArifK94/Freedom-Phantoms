@@ -539,12 +539,16 @@ void AVehicleBase::UpdateWeaponView()
 	if (VehicleSeatPtrList.Num() > 0 && CurrentWeaponIndex - 1 >= 0)
 	{
 		auto Seat = VehicleSeatPtrList[CurrentWeaponIndex - 1];
-		Seat->Character->AutoPossessPlayer = EAutoReceiveInput::Disabled;
-		if (Seat->Character->GetDefaultAIController())
-		{
-			Seat->Character->GetDefaultAIController()->Possess(Seat->Character);
+
+		if (UHealthComponent::IsAlive(Seat->Character)) {
+
+			Seat->Character->AutoPossessPlayer = EAutoReceiveInput::Disabled;
+			if (Seat->Character->GetDefaultAIController())
+			{
+				Seat->Character->GetDefaultAIController()->Possess(Seat->Character);
+			}
+			Seat->Character->SetVehicleSeat(VehicleSeats[CurrentWeaponIndex - 1]); // so AI does not fall to the ground when repossessed
 		}
-		Seat->Character->SetVehicleSeat(VehicleSeats[CurrentWeaponIndex - 1]); // so AI does not fall to the ground when repossessed
 	}
 
 	CurrentWeapon = VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon;
@@ -556,11 +560,14 @@ void AVehicleBase::UpdateWeaponView()
 		// Player possessing is required if the character is posseseed by the AI controller
 		auto Seat = VehicleSeatPtrList[CurrentWeaponIndex];
 
-		if (Seat->Character->GetDefaultAIController()) {
-			Seat->Character->GetDefaultAIController()->UnPossess();
-		}
+		if (UHealthComponent::IsAlive(Seat->Character)) {
 
-		Seat->Character->AutoPossessPlayer = EAutoReceiveInput::Player0;
+			if (Seat->Character->GetDefaultAIController()) {
+				Seat->Character->GetDefaultAIController()->UnPossess();
+			}
+
+			Seat->Character->AutoPossessPlayer = EAutoReceiveInput::Player0;
+		}
 	}
 
 

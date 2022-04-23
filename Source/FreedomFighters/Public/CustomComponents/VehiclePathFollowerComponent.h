@@ -37,6 +37,9 @@ private:
 
 	FVehicleSplinePoint CurrentSplinePoint;
 
+	/** Stores spline points which have already been reached so that they are not processed again */
+	TArray<int32> ProcessedPoints;
+
 	FVector PreviousActorLocation;
 
 

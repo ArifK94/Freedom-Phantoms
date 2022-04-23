@@ -92,7 +92,6 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 		return;
 	}
 
-	FVector CollisionLocation = GetOwner()->GetActorLocation();
 	auto CollidedPath = Cast<AVehicleSplinePath>(OtherActor);
 
 	if (CollidedPath == nullptr) {
@@ -105,37 +104,35 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 	}
 
 	// find current spline point
-	FVehicleSplinePoint NewSplinePoint = CollidedPath->GetVehicleSplinePoint(CollisionLocation);
+	auto NewSplineIndex = CollidedPath->GetVehicleSplinePoint(GetOwner()->GetActorLocation());
 
 	// if current spline point not found 
-	if (NewSplinePoint.PointIndex == -1) {
+	if (NewSplineIndex == -1) {
 		return;
 	}
 
-	// If you hit the same spline point then do not process this point again
-	if (NewSplinePoint.PointIndex == CurrentSplinePoint.PointIndex) {
+	// If you reached the same spline point then do not process this point again
+	if (ProcessedPoints.Contains(NewSplineIndex)) {
 		return;
 	}
+	ProcessedPoints.Add(NewSplineIndex);
 
-	CurrentSplinePoint = NewSplinePoint;
-
-	// update the aircraft movement type
-	CurrentVehicleMovement = CurrentSplinePoint.MovementType;
+	CurrentSplinePoint = CollidedPath->GetVehicleSplinePoints()[NewSplineIndex];
 
 	// adjust path duration to change speed if specified
-	if (CurrentSplinePoint.AffectSpeedType == EVehicleSpeedType::Specified)
-	{
+	if (CurrentSplinePoint.AffectSpeedType == EVehicleSpeedType::Specified) {
 		CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.PathDuration);
 	}
-	else
-	{
+	else {
 		CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
 	}
 
-	if (CurrentSplinePoint.IsPathFreeToUse)
-	{
+	if (CurrentSplinePoint.IsPathFreeToUse) {
 		VehiclePath->SetOccupantVehicle(nullptr);
 	}
+
+	// update the aircraft movement type
+	CurrentVehicleMovement = CurrentSplinePoint.MovementType;
 
 	switch (CurrentVehicleMovement)
 	{
@@ -251,6 +248,10 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 		if (CurrentLap < TotalLaps) // restart the lap if laps remaining
 		{
 			CurrentLap++;
+
+			// reset the processed points
+			ProcessedPoints.Empty();
+
 			CurveTimeline.PlayFromStart();
 		}
 		else

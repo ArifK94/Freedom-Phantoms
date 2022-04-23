@@ -30,7 +30,7 @@ public:
 
 	static AVehicleSplinePath* FindVehiclePath(UWorld* World, FName TagName);
 
-	FVehicleSplinePoint GetVehicleSplinePoint(FVector TargetLocation);
+	int GetVehicleSplinePoint(FVector TargetLocation);
 	FVehicleSplinePoint GetNextSplinePoint(int Index);
 
 	void GetFirstSplinePoint(FVector Location, FRotator Rotation);
@@ -54,9 +54,9 @@ protected:
 
 public:
 
-	USplineComponent* GetSplinePathComp() {
-		return SplinePathComp;
-	}
+	USplineComponent* GetSplinePathComp() { return SplinePathComp; }
+
+	TArray<FVehicleSplinePoint> GetVehicleSplinePoints() { return VehicleSplinePoints; }
 
 	AActor* GetOccupiedVehicle() { return OccupiedVehicle; }
 

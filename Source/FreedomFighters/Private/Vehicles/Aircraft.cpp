@@ -171,7 +171,7 @@ void AAircraft::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 		}
 
 		// find current spline point
-		FVehicleSplinePoint CurrentSplinePoint = CollidedPath->GetVehicleSplinePoint(CollisionLocation);
+		FVehicleSplinePoint CurrentSplinePoint = FVehicleSplinePoint();
 
 		// if current spline point not found 
 		if (CurrentSplinePoint.PointIndex == -1) {

@@ -47,20 +47,17 @@ AVehicleSplinePath* AVehicleSplinePath::FindVehiclePath(UWorld* World, FName Tag
 	return ClosestPath;
 }
 
-FVehicleSplinePoint AVehicleSplinePath::GetVehicleSplinePoint(FVector TargetLocation)
+int AVehicleSplinePath::GetVehicleSplinePoint(FVector TargetLocation)
 {
 	for (int i = 0; i < SplinePathComp->GetNumberOfSplinePoints(); i++)
 	{
 		const FVector StartPoint = SplinePathComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::World);
 
-		if (UKismetMathLibrary::EqualEqual_VectorVector(StartPoint, TargetLocation, 1000.0f)) {
-			return VehicleSplinePoints[i];
+		if (UKismetMathLibrary::EqualEqual_VectorVector(StartPoint, TargetLocation, 500.0f)) {
+			return i;
 		}
 	}
-
-	FVehicleSplinePoint SplinePoint = FVehicleSplinePoint();
-	SplinePoint.PointIndex = -1;
-	return SplinePoint;
+	return -1;
 }
 
 FVehicleSplinePoint AVehicleSplinePath::GetNextSplinePoint(int Index)
