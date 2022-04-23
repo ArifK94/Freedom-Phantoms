@@ -23,7 +23,6 @@ class FREEDOMFIGHTERS_API UVehiclePathFollowerComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	FTimerHandle THandler_Update;
 
 	/** Used when resuming vehicle path */
 	FTimerHandle THandler_ResumePath;
@@ -125,8 +124,6 @@ public:
 
 private:
 	void Init();
-
-	void Update();
 
 	void FindPath();
 

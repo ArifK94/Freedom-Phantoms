@@ -59,7 +59,6 @@ void UVehiclePathFollowerComponent::Init()
 void UVehiclePathFollowerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	GetOwner()->GetWorldTimerManager().SetTimer(THandler_Update, this, &UVehiclePathFollowerComponent::Update, 1.f, true);
 
 	Init();
 
@@ -79,11 +78,6 @@ void UVehiclePathFollowerComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	auto Velocity = UKismetMathLibrary::Divide_VectorFloat(Distance, DeltaTime);
 	GetOwner()->GetRootComponent()->ComponentVelocity = Velocity + CurveTimeline.GetPlayRate();
 	PreviousActorLocation = GetOwner()->GetActorLocation();
-}
-
-void UVehiclePathFollowerComponent::Update()
-{
-	//CurveTimeline.TickTimeline(GetWorld()->TimeSeconds);
 }
 
 void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
