@@ -57,6 +57,52 @@ ACombatCharacter::ACombatCharacter()
 	WeaponHandSocket = "weapon_hand";
 }
 
+void ACombatCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	RetrieveFactionDataSet();
+	RetrieveWeaponDataSet();
+
+	SpawnHelmet();
+	SpawnLoadout();
+
+
+	if (Loadout && WeaponsDataSet)
+	{
+		// get random weapon if not selected from main menu, this is should be null for AI characters
+		if (primaryWeaponObj == nullptr)
+		{
+			primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
+		}
+
+		if (secondaryWeaponObj == nullptr)
+		{
+			secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
+		}
+	}
+
+	if (primaryWeaponObj)
+	{
+		currentWeaponObj = primaryWeaponObj;
+	}
+	else if (secondaryWeaponObj)
+	{
+		currentWeaponObj = secondaryWeaponObj;
+	}
+
+	RegisterWeaponEvents(primaryWeaponObj, true);
+	RegisterWeaponEvents(secondaryWeaponObj, true);
+
+
+	if (currentWeaponObj)
+	{
+		RetrieveWeaponAnimDataSet();
+		BeginEquipWeapon();
+	}
+}
+
+
 void ACombatCharacter::Init()
 {
 	Super::Init();
@@ -71,6 +117,22 @@ void ACombatCharacter::Init()
 	isInCombatMode = false;
 	IsInAimOffSetRotation = false;
 	isUsingMountedWeapon = false;
+}
+
+void ACombatCharacter::SetDefaultState()
+{
+	Super::SetDefaultState();
+
+	isAiming = false;
+	isFiring = false;
+	isReloading = false;
+	isEquippingWeapon = false;
+	hasEquippedWeapon = false;
+	isSwappingWeapon = false;
+	isInCombatMode = false;
+	isUsingMountedWeapon = false;
+
+	DropMountedGun();
 }
 
 FString ACombatCharacter::GetKeyDisplayName_Implementation()
@@ -199,52 +261,6 @@ void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 	}
 
 	RegisterWeaponEvents(secondaryWeaponObj, true);
-}
-
-
-void ACombatCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	RetrieveFactionDataSet();
-	RetrieveWeaponDataSet();
-
-	SpawnHelmet();
-	SpawnLoadout();
-
-
-	if (Loadout && WeaponsDataSet)
-	{
-		// get random weapon if not selected from main menu, this is should be null for AI characters
-		if (primaryWeaponObj == nullptr)
-		{
-			primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
-		}
-
-		if (secondaryWeaponObj == nullptr)
-		{
-			secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
-		}
-	}
-
-	if (primaryWeaponObj)
-	{
-		currentWeaponObj = primaryWeaponObj;
-	}
-	else if (secondaryWeaponObj)
-	{
-		currentWeaponObj = secondaryWeaponObj;
-	}
-
-	RegisterWeaponEvents(primaryWeaponObj, true);
-	RegisterWeaponEvents(secondaryWeaponObj, true);
-
-
-	if (currentWeaponObj)
-	{
-		RetrieveWeaponAnimDataSet();
-		BeginEquipWeapon();
-	}
 }
 
 void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)

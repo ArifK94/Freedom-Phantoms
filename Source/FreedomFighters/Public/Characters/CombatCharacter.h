@@ -127,6 +127,8 @@ private:
 public:
 	ACombatCharacter();
 
+	virtual void SetDefaultState() override;
+
 	FOnCombatUpdatedignature OnCombatUpdated;
 	FOnKillConfirmSignature OnKillConfirm; // to be triggered for commander to recieve when an operative gets a kill
 

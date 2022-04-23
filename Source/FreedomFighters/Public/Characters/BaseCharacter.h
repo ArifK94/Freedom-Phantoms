@@ -276,6 +276,9 @@ private:
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
 
+	/** Default is idle, no interaction, the point is to reach default idle animation state.  */
+	virtual void SetDefaultState();
+
 	void SetFirstPersonView();
 
 	// Ignoring death allows to call this function and display outline after character death.

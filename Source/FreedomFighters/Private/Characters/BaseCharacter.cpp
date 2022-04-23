@@ -117,11 +117,63 @@ ABaseCharacter::ABaseCharacter()
 	CoverRotationRightYaw = FVector2D(0.0f, 20.0f);
 }
 
+void ABaseCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	RetrieveVoiceDataSet();
+	RetrieveAccessoryDataSet();
+	RetrieveDeathAnimDataSet();
+
+	DefaultCapsuleCollisionName = GetCapsuleComponent()->GetCollisionProfileName();
+	DefaultMeshCollisionName = GetMesh()->GetCollisionProfileName();
+	DefaultController = GetController();
+	DefaultMeshLocation = GetMesh()->GetRelativeLocation();
+	DefaultMeshRotation = GetMesh()->GetRelativeRotation();
+
+	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	SprintSpeed = DefaultMaxWalkSpeed * 2.0f;
+
+	DefaultAIController = Cast<AAIController>(GetController());
+
+	DefaultCamSocketOffset = CameraBoom->SocketOffset;
+	DefaultCameraFOV = FollowCamera->FieldOfView;
+
+	AimCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderRightSocket);
+	FirstPersonCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeadSocket);
+
+	InitTimeHandlers();
+
+	SpawnOverheadIcon();
+
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
+	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthUpdate);
+}
+
+void ABaseCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	CurrentDeltaTime = DeltaTime;
+
+	UpdateCameraView();
+
+	AimOffset();
+}
+
 void ABaseCharacter::Init()
 {
 	isSprinting = false;
 	EndAim();
 }
+
+void ABaseCharacter::SetDefaultState()
+{
+	SetVehicleSeat(FVehicletSeating());
+	isSprinting = false;
+	EndAim();
+	UnCrouch();
+}
+
 
 void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 {
@@ -195,40 +247,6 @@ void ABaseCharacter::SetIsReviving(bool Value)
 	}
 }
 
-
-void ABaseCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	RetrieveVoiceDataSet();
-	RetrieveAccessoryDataSet();
-	RetrieveDeathAnimDataSet();
-
-	DefaultCapsuleCollisionName = GetCapsuleComponent()->GetCollisionProfileName();
-	DefaultMeshCollisionName = GetMesh()->GetCollisionProfileName();
-	DefaultController = GetController();
-	DefaultMeshLocation = GetMesh()->GetRelativeLocation();
-	DefaultMeshRotation = GetMesh()->GetRelativeRotation();
-
-	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	SprintSpeed = DefaultMaxWalkSpeed * 2.0f;
-
-	DefaultAIController = Cast<AAIController>(GetController());
-
-	DefaultCamSocketOffset = CameraBoom->SocketOffset;
-	DefaultCameraFOV = FollowCamera->FieldOfView;
-
-	AimCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderRightSocket);
-	FirstPersonCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeadSocket);
-
-	InitTimeHandlers();
-
-	SpawnOverheadIcon();
-
-	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
-	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthUpdate);
-}
-
 void ABaseCharacter::InitTimeHandlers()
 {
 	GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
@@ -239,16 +257,6 @@ void ABaseCharacter::ClearTimeHandlers()
 {
 	GetWorldTimerManager().ClearTimer(THandler_CharacterMovement);
 	GetWorldTimerManager().ClearTimer(THandler_CharacterDirection);
-}
-
-void ABaseCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	CurrentDeltaTime = DeltaTime;
-
-	UpdateCameraView();
-
-	AimOffset();
 }
 
 // Firing from the center of camera

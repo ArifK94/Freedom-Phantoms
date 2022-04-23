@@ -222,6 +222,7 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 			if (Character)
 			{
+				Character->SetDefaultState();
 				Character->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			}
 		}
