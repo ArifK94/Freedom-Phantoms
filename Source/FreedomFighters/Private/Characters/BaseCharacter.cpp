@@ -18,10 +18,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Animation/AnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "KismetAnimationLibrary.h"
 #include "Engine.h"
 
 
@@ -220,9 +220,6 @@ void ABaseCharacter::BeginPlay()
 
 	AimCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderRightSocket);
 	FirstPersonCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeadSocket);
-
-	// Create Animation Instance Object
-	AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 
 	InitTimeHandlers();
 
@@ -575,11 +572,7 @@ void ABaseCharacter::UpdateDirection()
 	}
 	else
 	{
-		// To be used for blendspaces
-		if (AnimInstance)
-		{
-			CharacterDirection = AnimInstance->CalculateDirection(GetVelocity(), GetActorRotation());
-		}
+		CharacterDirection = UKismetAnimationLibrary::CalculateDirection(GetVelocity(), GetActorRotation());
 	}
 }
 

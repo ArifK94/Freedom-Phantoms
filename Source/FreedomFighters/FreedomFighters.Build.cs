@@ -20,7 +20,8 @@ public class FreedomFighters : ModuleRules
             "NavigationSystem",
             "PhysicsCore",
             "MoviePlayer",
-            "Niagara"
+            "Niagara",
+            "AnimGraphRuntime"
         });
     }
 }

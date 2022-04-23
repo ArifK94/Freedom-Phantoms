@@ -62,17 +62,11 @@ void AWeaponClip::OnClipHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
-		UWorld* world = GetWorld();
-
-		float x = 0.0f, y = 0.0f, z = 0.0f;
-
-		UKismetMathLibrary::BreakVector(NormalImpulse, x, y, z);
-
-		if (z > 50)
+		if (NormalImpulse.Z > 50)
 		{
 			if (HighImpactSound != NULL)
 			{
-				UGameplayStatics::PlaySoundAtLocation(world, HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), .5f, 1.f,0.f, ClipAttenuationSettings);
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), .5f, 1.f, 0.f, ClipAttenuationSettings);
 			}
 		}
 

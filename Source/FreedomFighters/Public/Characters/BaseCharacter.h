@@ -15,7 +15,6 @@ class UPostProcessComponent;
 class APlayerCameraManager;
 class AAIController;
 class UDataTable;
-class AAircraft;
 class AWeapon;
 class AOrderIcon;
 
@@ -215,8 +214,6 @@ protected:
 	float CurrentDeltaTime;
 
 	FVector DefaultCamSocketOffset;
-
-	UAnimInstance* AnimInstance;
 
 private:
 	FName DefaultCapsuleCollisionName;

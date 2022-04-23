@@ -13,7 +13,6 @@ class UHealthComponent;
 class ABaseCharacter;
 class ACombatCharacter;
 class ACommanderCharacter;
-class AAircraft;
 class AVehicleBase;
 class ATargetSystemMarker;
 class AWeapon;
@@ -35,6 +34,7 @@ class UTexture2D;
 class ASupportPackage;
 class UParticleSystem;
 class UNiagaraSystem;
+
 
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FMapDetail : public FTableRowBase
@@ -257,12 +257,6 @@ struct FSupportPackageSet : public FTableRowBase
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<ASupportPackage> SupportActorClass;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//	TSubclassOf<AAircraft> AircraftClass;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	//	AAircraft* Aircraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AVehicleBase> VehicleClass;
@@ -532,61 +526,6 @@ public:
 	UPROPERTY()
 		class UTextRenderComponent* TextRenderComponent;
 
-};
-
-
-USTRUCT(BlueprintType)
-struct FAircraftSeating
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		EVehicleRole Role;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		FName SeatingSocketName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		int32 SeatPosition;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		int32 RappelAnimIndex;
-
-	/** FAircraftWeapon list index, leave as -1 meaning it does have a weapon */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		int32 AssociatedWeapon;
-
-	/** Check if rope is occupied */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		bool isRopeLeftSide;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float PitchMin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float PitchMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float YawMin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float YawMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TSubclassOf<ABaseCharacter> Character;
-
-	UPROPERTY()
-		ABaseCharacter* CharacterObj;
-
-	UPROPERTY()
-		AAircraft* OwningAircraft;
-
-	FAircraftSeating()
-	{
-		OwningAircraft = nullptr;
-		AssociatedWeapon = -1;
-	}
 };
 
 USTRUCT(BlueprintType)

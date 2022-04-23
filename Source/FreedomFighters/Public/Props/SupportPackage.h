@@ -10,7 +10,6 @@
 #include "EnumCollection.h"
 #include "SupportPackage.generated.h"
 
-class AAircraft;
 class AVehicleBase;
 class ABaseCharacter;
 class APlayerController;
@@ -44,7 +43,6 @@ public:
 	virtual bool OnUseInteraction_Implementation(APawn* InPawn, AController* InController) override;
 	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 
-	AAircraft* SpawnAircraft(ABaseCharacter* Character, APlayerController* PlayerController);
 	AVehicleBase* SpawnVehicle(ABaseCharacter* Character, APlayerController* PlayerController);
 
 

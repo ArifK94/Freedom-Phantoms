@@ -125,7 +125,7 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 		VehiclePath->SetOccupantVehicle(nullptr);
 	}
 
-	// update the aircraft movement type
+	// update the vehicle movement type
 	CurrentVehicleMovement = CurrentSplinePoint.MovementType;
 
 	switch (CurrentVehicleMovement)

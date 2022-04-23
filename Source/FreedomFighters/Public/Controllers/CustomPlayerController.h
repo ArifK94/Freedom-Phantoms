@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "EnumCollection.h"
+#include "StructCollection.h"
 #include "CustomPlayerController.generated.h"
 
 class UGameInstanceController;
