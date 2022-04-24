@@ -270,9 +270,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ChargingAudioComponent;
 
+	/** Starting from the low charge sound down to high charge sound */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		TArray<FCrossfadeAudio> ChargeUpSounds;
 
+	/** Starting from the high charge sound down to low charge sound */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		TArray<FCrossfadeAudio> ChargeDownSounds;
 
