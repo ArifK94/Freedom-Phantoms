@@ -110,6 +110,10 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 		DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
 	}
 
+	if (Character == nullptr) {
+		Init();
+	}
+
 	//DrawDebugSphere(GetWorld(), TargetDestination, TargetRadius, 20, FColor::Purple, false, 20.f, 0, 2);
 
 	if (Character && SprintToTarget)
