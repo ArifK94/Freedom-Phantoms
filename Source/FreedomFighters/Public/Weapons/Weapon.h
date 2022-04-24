@@ -270,22 +270,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ChargingAudioComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
-		USoundBase* ChargeUpSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
+		TArray<FCrossfadeAudio> ChargeUpSounds;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
-		USoundBase* ChargeDownSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
+		TArray<FCrossfadeAudio> ChargeDownSounds;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
-		FName ChargeSoundParamName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		float ChargeUpTime;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		bool IsChargingUp;
 
-	float CurrentChargeUpTime;
+	float CurrentChargeAmount;
 	FTimerHandle THandler_ChargeUp;
 	FTimerHandle THandler_ChargeDown;
 
