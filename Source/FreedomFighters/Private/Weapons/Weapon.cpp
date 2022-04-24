@@ -745,7 +745,6 @@ void AWeapon::DecreaseCharge()
 		if (CurrentChargeAmount >= Sound.StartAmount && !Sound.AudioComponent) {
 			Sound.AudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound.Audio, GetActorLocation(), FRotator::ZeroRotator, .5f, 1.f, 0.f, ChargingAudioComponent->AttenuationSettings);
 			ChargeDownSounds[i] = Sound;
-			GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::White, FString::Printf(TEXT("%d"), i));
 			break;
 		}
 	}
