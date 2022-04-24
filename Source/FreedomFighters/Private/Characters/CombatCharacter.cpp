@@ -123,15 +123,9 @@ void ACombatCharacter::SetDefaultState()
 {
 	Super::SetDefaultState();
 
-	isAiming = false;
-	isFiring = false;
-	isReloading = false;
-	isEquippingWeapon = false;
-	hasEquippedWeapon = false;
-	isSwappingWeapon = false;
-	isInCombatMode = false;
-	isUsingMountedWeapon = false;
-
+	EndFire();
+	EndReload();
+	EndEquipWeapon();
 	DropMountedGun();
 }
 

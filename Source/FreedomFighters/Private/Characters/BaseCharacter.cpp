@@ -169,7 +169,7 @@ void ABaseCharacter::Init()
 void ABaseCharacter::SetDefaultState()
 {
 	SetVehicleSeat(FVehicletSeating());
-	isSprinting = false;
+	EndSprint();
 	EndAim();
 	UnCrouch();
 }
@@ -321,14 +321,13 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 			if (OverheadIcon) {
 				OverheadIcon->ShowIcon(EIconType::Wounded, false);
 			}
-
-			GetController()->UnPossess();
 		}
 		else
 		{
 			GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, DestroyDelayTime, false);
 		}
 		IsInVehicle = false;
+		GetController()->UnPossess();
 	}
 }
 
