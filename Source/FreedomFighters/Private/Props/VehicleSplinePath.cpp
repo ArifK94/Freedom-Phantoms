@@ -22,7 +22,7 @@ void AVehicleSplinePath::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UpdateCollisionBox();
+	UpdatePoints();
 }
 
 
@@ -106,8 +106,7 @@ void AVehicleSplinePath::OnConstruction(const FTransform& Transform)
 
 
 
-	UpdateCollisionBox();
-	UpdatePointIndex();
+	UpdatePoints();
 
 	//updating the aircraft points if any are removed from the editor
 	//if (VehicleSplinePoints.Num() > TotalSplinePoints)
@@ -127,62 +126,49 @@ void AVehicleSplinePath::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	UpdateCollisionBox();
-	UpdatePointIndex();
+	UpdatePoints();
 }
 #endif
 
 
-void AVehicleSplinePath::UpdatePointIndex()
+void AVehicleSplinePath::UpdatePoints()
 {
-	for (int i = 0; i < SplinePathComp->GetNumberOfSplinePoints(); i++)
-	{
-		for (int j = 0; j < VehicleSplinePoints.Num(); j++)
-		{
-			FVehicleSplinePoint VehicleSplinePoint = VehicleSplinePoints[j];
-			VehicleSplinePoint.PointIndex = i;
-		}
-	}
-}
-
-void AVehicleSplinePath::UpdateCollisionBox()
-{
-	if (SplinePathComp->GetNumberOfSplinePoints() <= 0) {
+	if (VehicleSplinePoints.Num() <= 0) {
 		return;
 	}
 
 	// setting the collision boxes
-	for (int i = 0; i < SplinePathComp->GetNumberOfSplinePoints(); i++)
+	for (int i = 0; i < VehicleSplinePoints.Num(); i++)
 	{
 		const FVector StartPoint = SplinePathComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::World);
-		FVehicleSplinePoint VehicleSplinePoint = VehicleSplinePoints[i];
+		VehicleSplinePoints[i].PointIndex = i;
 
-		UpdatePointerPoints();
+		UpdatePointerPoints(i);
 
-		if (VehicleSplinePointsPtr[i]->ArrowComponent)
+		if (VehicleSplinePoints[i].ArrowComponent)
 		{
-			VehicleSplinePointsPtr[i]->ArrowComponent->SetWorldLocation(StartPoint);
+			VehicleSplinePoints[i].ArrowComponent->SetWorldLocation(StartPoint);
 		}
 
-		if (VehicleSplinePointsPtr[i]->TextRenderComponent)
+		if (VehicleSplinePoints[i].TextRenderComponent)
 		{
-			VehicleSplinePointsPtr[i]->TextRenderComponent->SetText(FText::AsNumber(i));
-			VehicleSplinePointsPtr[i]->TextRenderComponent->SetWorldLocation(StartPoint);
+			VehicleSplinePoints[i].TextRenderComponent->SetText(FText::AsNumber(i));
+			VehicleSplinePoints[i].TextRenderComponent->SetWorldLocation(StartPoint);
 		}
 
 
-		if (VehicleSplinePointsPtr[i]->CollisionBox)
+		if (VehicleSplinePoints[i].CollisionBox)
 		{
-			VehicleSplinePointsPtr[i]->CollisionBox->SetWorldLocation(StartPoint);
+			VehicleSplinePoints[i].CollisionBox->SetWorldLocation(StartPoint);
 		}
 
-		if (VehicleSplinePointsPtr[i]->CollisionSphere)
+		if (VehicleSplinePoints[i].CollisionSphere)
 		{
-			VehicleSplinePointsPtr[i]->CollisionSphere->SetWorldLocation(StartPoint);
+			VehicleSplinePoints[i].CollisionSphere->SetWorldLocation(StartPoint);
 		}
 
 		FColor ColliderColour;
-		switch (VehicleSplinePoint.MovementType)
+		switch (VehicleSplinePoints[i].MovementType)
 		{
 		case EVehicleMovement::MovingForward:
 			ColliderColour = FColor(0, 0, 255, 255);
@@ -195,49 +181,41 @@ void AVehicleSplinePath::UpdateCollisionBox()
 			break;
 		}
 
-		VehicleSplinePointsPtr[i]->CollisionBox->ShapeColor = ColliderColour;
-		VehicleSplinePointsPtr[i]->CollisionSphere->ShapeColor = ColliderColour;
+		VehicleSplinePoints[i].CollisionBox->ShapeColor = ColliderColour;
+		VehicleSplinePoints[i].CollisionSphere->ShapeColor = ColliderColour;
 	}
 
 }
 
 
-void AVehicleSplinePath::UpdatePointerPoints()
+void AVehicleSplinePath::UpdatePointerPoints(int Index)
 {
-	auto VehicleSplinePointPtr = new FVehicleSplinePoint();
-
-	if (VehicleSplinePointPtr->CollisionBox == nullptr)
+	if (VehicleSplinePoints[Index].CollisionBox == nullptr)
 	{
-		VehicleSplinePointPtr->CollisionBox = NewObject<UBoxComponent>(this);
-		VehicleSplinePointPtr->CollisionBox->RegisterComponent();
-		VehicleSplinePointPtr->CollisionBox->SetCollisionProfileName(TEXT("OverlapAll"));
+		VehicleSplinePoints[Index].CollisionBox = NewObject<UBoxComponent>(this);
+		VehicleSplinePoints[Index].CollisionBox->RegisterComponent();
+		VehicleSplinePoints[Index].CollisionBox->SetCollisionProfileName(TEXT("OverlapAll"));
 	}
 
-	if (VehicleSplinePointPtr->CollisionSphere == nullptr)
+	if (VehicleSplinePoints[Index].CollisionSphere == nullptr)
 	{
-		VehicleSplinePointPtr->CollisionSphere = NewObject<USphereComponent>(this);
-		VehicleSplinePointPtr->CollisionSphere->RegisterComponent();
-		VehicleSplinePointPtr->CollisionSphere->SetSphereRadius(500.0f);
-		VehicleSplinePointPtr->CollisionSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+		VehicleSplinePoints[Index].CollisionSphere = NewObject<USphereComponent>(this);
+		VehicleSplinePoints[Index].CollisionSphere->RegisterComponent();
+		VehicleSplinePoints[Index].CollisionSphere->SetSphereRadius(500.0f);
+		VehicleSplinePoints[Index].CollisionSphere->SetCollisionProfileName(TEXT("OverlapAll"));
 	}
 
-	if (VehicleSplinePointPtr->ArrowComponent == nullptr)
+	if (VehicleSplinePoints[Index].ArrowComponent == nullptr)
 	{
-		VehicleSplinePointPtr->ArrowComponent = NewObject<UArrowComponent>(this);
-		VehicleSplinePointPtr->ArrowComponent->RegisterComponent();
+		VehicleSplinePoints[Index].ArrowComponent = NewObject<UArrowComponent>(this);
+		VehicleSplinePoints[Index].ArrowComponent->RegisterComponent();
 	}
 
-	if (VehicleSplinePointPtr->TextRenderComponent == nullptr)
+	if (VehicleSplinePoints[Index].TextRenderComponent == nullptr)
 	{
-		VehicleSplinePointPtr->TextRenderComponent = NewObject<UTextRenderComponent>(this);
-		VehicleSplinePointPtr->TextRenderComponent->RegisterComponent();
-		VehicleSplinePointPtr->TextRenderComponent->SetHiddenInGame(true);
-		VehicleSplinePointPtr->TextRenderComponent->SetWorldSize(100.f);
+		VehicleSplinePoints[Index].TextRenderComponent = NewObject<UTextRenderComponent>(this);
+		VehicleSplinePoints[Index].TextRenderComponent->RegisterComponent();
+		VehicleSplinePoints[Index].TextRenderComponent->SetHiddenInGame(true);
+		VehicleSplinePoints[Index].TextRenderComponent->SetWorldSize(100.f);
 	}
-
-	if (!VehicleSplinePointsPtr.Contains(VehicleSplinePointPtr))
-	{
-		VehicleSplinePointsPtr.Add(VehicleSplinePointPtr);
-	}
-
 }

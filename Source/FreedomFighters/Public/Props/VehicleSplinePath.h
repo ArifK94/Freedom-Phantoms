@@ -20,7 +20,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FVehicleSplinePoint> VehicleSplinePoints;
-	TArray<FVehicleSplinePoint*> VehicleSplinePointsPtr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AActor* OccupiedVehicle;
@@ -44,10 +43,9 @@ private:
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
-	void UpdatePointIndex();
-	void UpdateCollisionBox();
+	void UpdatePoints();
 
-	void UpdatePointerPoints();
+	void UpdatePointerPoints(int Index);
 
 protected:
 	virtual void BeginPlay() override;
