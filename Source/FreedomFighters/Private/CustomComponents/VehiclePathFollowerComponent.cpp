@@ -481,4 +481,5 @@ void UVehiclePathFollowerComponent::ResumePath()
 void UVehiclePathFollowerComponent::Stop()
 {
 	CurveTimeline.Stop();
+	PrimaryComponentTick.bCanEverTick = false;
 }

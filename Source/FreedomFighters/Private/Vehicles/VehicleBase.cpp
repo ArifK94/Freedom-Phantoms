@@ -219,6 +219,8 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 			VehiclePathFollowerComponent->Stop();
 		}
 
+		EngineAudio->Stop();
+
 		// Remove all passengers
 		for (int i = 0; i < VehicleSeatPtrList.Num(); i++)
 		{

@@ -30,8 +30,6 @@ private:
 	/** Used when passengers are leaving the vehicle */
 	FTimerHandle THandler_ExitPassenger;
 
-
-
 	AVehicleBase* OwningVehicle;
 
 	FVehicleSplinePoint CurrentSplinePoint;
