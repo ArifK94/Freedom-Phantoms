@@ -215,6 +215,10 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 		PrimaryActorTick.bCanEverTick = false;
 		GetWorldTimerManager().ClearTimer(THandler_Update);
 
+		if (VehiclePathFollowerComponent) {
+			VehiclePathFollowerComponent->Stop();
+		}
+
 		// Remove all passengers
 		for (int i = 0; i < VehicleSeatPtrList.Num(); i++)
 		{

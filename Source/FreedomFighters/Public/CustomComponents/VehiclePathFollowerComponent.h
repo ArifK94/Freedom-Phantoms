@@ -120,6 +120,9 @@ private:
 public:
 	UVehiclePathFollowerComponent();
 
+	/** Stop following path */
+	void Stop();
+
 	void ClearPath();
 
 	static void SetVehicleExit(ABaseCharacter* Character);

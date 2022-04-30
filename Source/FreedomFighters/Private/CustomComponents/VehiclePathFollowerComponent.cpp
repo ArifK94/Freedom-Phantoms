@@ -274,16 +274,6 @@ void UVehiclePathFollowerComponent::MoveToLocation(float Value)
 	}
 }
 
-void UVehiclePathFollowerComponent::ResumePath()
-{
-	CurrentVehicleMovement = EVehicleMovement::MovingForward;
-
-	CurveTimeline.Play();
-
-	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
-	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
-}
-
 void UVehiclePathFollowerComponent::SpawnRandomLocation()
 {
 	FindNearestNav();
@@ -476,4 +466,19 @@ void UVehiclePathFollowerComponent::SetRopeFree(FVehicletSeating VehicletSeat)
 	{
 		VehiclePathComp->GetRopeRight()->DettachActorToRope();
 	}
+}
+
+void UVehiclePathFollowerComponent::ResumePath()
+{
+	CurrentVehicleMovement = EVehicleMovement::MovingForward;
+
+	CurveTimeline.Play();
+
+	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
+	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
+}
+
+void UVehiclePathFollowerComponent::Stop()
+{
+	CurveTimeline.Stop();
 }
