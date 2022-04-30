@@ -66,6 +66,10 @@ private:
 		uint8 TotalLaps;
 	uint8 CurrentLap;
 
+	/** Follow path forever */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool HasInifiteLaps;
+
 	/** Set the movement once is reaches the target, eg. hover over target location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		EVehicleMovement TargetLocReachedVehicleMovementType;

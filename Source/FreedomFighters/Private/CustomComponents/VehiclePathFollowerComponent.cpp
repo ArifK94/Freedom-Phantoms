@@ -23,6 +23,7 @@ UVehiclePathFollowerComponent::UVehiclePathFollowerComponent()
 	RandomNavPointRadius = 1000.f;
 
 	FollowTargetDestination = false;
+	HasInifiteLaps = false;
 	DestroyOnPathComplete = true;
 
 	SpawnLocationMin = FVector(-10.f, -10.f, 10.f);
@@ -239,7 +240,7 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 	// if reached the end
 	if (Alpha >= SplinePathComp->GetSplineLength())
 	{
-		if (CurrentLap < TotalLaps) // restart the lap if laps remaining
+		if (CurrentLap < TotalLaps || HasInifiteLaps) // restart the lap if laps remaining / infinite
 		{
 			CurrentLap++;
 
