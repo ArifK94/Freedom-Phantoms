@@ -574,7 +574,7 @@ void ACombatAIController::UpdateLastSeen()
 	else
 	{
 		// switch back to primary
-		if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj())
+		if (OwningCombatCharacter->CanSwapWeapon() && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj())
 		{
 			OwningCombatCharacter->BeginWeaponSwap();
 		}

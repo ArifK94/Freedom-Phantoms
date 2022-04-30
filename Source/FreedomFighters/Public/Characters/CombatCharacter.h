@@ -170,6 +170,9 @@ public:
 		void OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters);
 	void RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent);
 
+	/** In case a secondary weapon is not present or any weapons at all. */
+	bool CanSwapWeapon();
+
 	void BeginEquipWeapon();
 	void GrabWeapon();
 	void EndEquipWeapon();

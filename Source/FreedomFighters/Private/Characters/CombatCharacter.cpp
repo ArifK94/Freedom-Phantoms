@@ -324,7 +324,7 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 			Weapon->OnKillConfirmed.AddDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
 		}
 
-		if (CanAutoReloadWeapon) 
+		if (CanAutoReloadWeapon)
 		{
 			if (!Weapon->OnEmptyAmmoClip.IsBound())
 			{
@@ -614,8 +614,32 @@ void ACombatCharacter::UpdateCombatMode()
 	OnCombatUpdated.Broadcast(this);
 }
 
+bool ACombatCharacter::CanSwapWeapon()
+{
+	// if has no weapon.
+	if (currentWeaponObj == nullptr) {
+		return false;
+	}
+
+	// if currently using primary weapon.
+	if (currentWeaponObj == primaryWeaponObj) {
+		// can use secondary if exists
+		return secondaryWeaponObj != nullptr;
+	}
+	else {
+		// can use primary if exists
+		return primaryWeaponObj != nullptr;
+	}
+
+	return false;
+}
+
 void ACombatCharacter::BeginWeaponSwap()
 {
+	if (!CanSwapWeapon()) {
+		return;
+	}
+
 	if (hasEquippedWeapon)
 	{
 		isSwappingWeapon = true;
@@ -731,9 +755,38 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 	RegisterWeaponEvents(Weapon, true);
 
 	// update the primary or secondary weapon
-	// based on the current weapon being used
-	// unregister the weapon events
-	if (currentWeaponObj == primaryWeaponObj)
+	// unregister/ register the weapon events when swapped
+
+	// should the weapon be a primary, if false, then it will be assigned as a secondary weapon.
+	bool IsPrimary = false;
+
+	// should the current weapon be dropped after picking up another weapon?
+	bool CanDropWeapon = false;
+
+	// if no current weapon then this pickup weapon will be primary
+	if (currentWeaponObj == nullptr) {
+		IsPrimary = true;
+	}
+	
+	// if character is currently using a primary weapon then it should swap current with the pickup weapon.
+	else if (currentWeaponObj == primaryWeaponObj) {
+		IsPrimary = true;
+		CanDropWeapon = true;
+	}
+
+	// if there is no secondary weapon, then this pickup weapon will be a secondary
+	if (secondaryWeaponObj == nullptr) {
+		IsPrimary = false;
+		CanDropWeapon = false;
+	}
+
+	// if currently using secondary weapon.
+	else if (currentWeaponObj == secondaryWeaponObj) {
+		IsPrimary = false;
+		CanDropWeapon = true;
+	}
+
+	if (IsPrimary)
 	{
 		RegisterWeaponEvents(primaryWeaponObj, false);
 		primaryWeaponObj = Weapon;
@@ -750,17 +803,22 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 	EndAim();
 	UpdateCombatMode();
 
-	// drop the current weapon
-	currentWeaponObj->DropWeapon();
+	if (CanDropWeapon) {
+		// drop the current weapon
+		currentWeaponObj->DropWeapon();
 
-	// set the actor location of current to where the pickup weapon is
-	currentWeaponObj->SetActorLocationAndRotation(Weapon->GetActorLocation(), Weapon->GetActorRotation());
+		// set the actor location of current to where the pickup weapon is
+		currentWeaponObj->SetActorLocationAndRotation(Weapon->GetActorLocation(), Weapon->GetActorRotation());
 
-	// assign new weapon to current weapon
-	currentWeaponObj = Weapon;
-	currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		// assign new weapon to current weapon
+		currentWeaponObj = Weapon;
+		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
 
-	RetrieveWeaponAnimDataSet();
+		RetrieveWeaponAnimDataSet();
+	}
+	else {
+		Weapon->setWeaponSocket(Loadout->GetMesh(), Weapon->getHolsterSocket());
+	}
 }
 
 void ACombatCharacter::HolsterWeapon()

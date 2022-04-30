@@ -490,9 +490,9 @@ void ACustomPlayerController::OnCharacterHit(UPrimitiveComponent* HitComp, AActo
 	AAmmoCrate* AmmoCrate = Cast<AAmmoCrate>(OtherActor);
 	if (AmmoCrate)
 	{
-		bool HasPrimaryReplenished = OwningCombatCharacter->GetPrimaryWeapon()->ReplenishAmmo();
+		bool HasPrimaryReplenished = OwningCombatCharacter->GetPrimaryWeapon() && OwningCombatCharacter->GetPrimaryWeapon()->ReplenishAmmo();
 
-		bool HasSecondaryReplenished = OwningCombatCharacter->GetSecondaryWeaponObj()->ReplenishAmmo();
+		bool HasSecondaryReplenished = OwningCombatCharacter->GetSecondaryWeaponObj() && OwningCombatCharacter->GetSecondaryWeaponObj()->ReplenishAmmo();
 
 		bool SuccessfulReplenish = false;
 		if (HasPrimaryReplenished || HasSecondaryReplenished)
@@ -527,7 +527,7 @@ void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 	{
 		float Amount = Weapon->getCurrentAmmo();
 		// replenish ammo if same weapon based on weapon name
-		if (OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponName() == Weapon->GetWeaponName())
+		if (OwningCombatCharacter->GetPrimaryWeapon() && OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponName() == Weapon->GetWeaponName())
 		{
 			// if replenished then updated the scavenged flag
 			if (OwningCombatCharacter->GetPrimaryWeapon()->ReplenishAmmo(Amount))
@@ -536,7 +536,7 @@ void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 				Weapon->Destroy(); // destroy the same weapon
 			}
 		} // for secondary weapon
-		else if (OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponName() == Weapon->GetWeaponName())
+		else if (OwningCombatCharacter->GetSecondaryWeaponObj() && OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponName() == Weapon->GetWeaponName())
 		{
 			if (OwningCombatCharacter->GetSecondaryWeaponObj()->ReplenishAmmo(Amount))
 			{
