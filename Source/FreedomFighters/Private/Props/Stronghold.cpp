@@ -191,7 +191,7 @@ void AStronghold::SpawnDefender()
 	FNavLocation NavLocation;
 	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
 	//bool navResult = NavigationArea->ProjectPointToNavigation(Location, NavLocation);
-	bool navResult = NavigationArea->GetRandomReachablePointInRadius(Location, 1000.f, NavLocation);
+	bool navResult = NavigationArea->GetRandomReachablePointInRadius(Location, 500.f, NavLocation);
 
 	if (navResult)
 	{
@@ -331,13 +331,22 @@ void AStronghold::GetHighestFaction()
 		}
 	}
 
+	FOccupiedFaction OccupiedFaction = FOccupiedFaction();
+	OccupiedFaction.FactionCount = DominantFaction->FactionCount;
+	OccupiedFaction.Faction = DominantFaction->Faction;
+	OccupiedFaction.FlagMaterial = DominantFaction->FlagMaterial;
+	OccupiedFaction.FactionDataSet = DominantFaction->FactionDataSet;
+
 	// play the capture sound
 	if (DominantFaction->Faction == TeamFaction::Neutral) {
+
 		if (CaptureSound != NULL)
 		{
 			StrongholdAudio->Sound = CaptureSound;
 			StrongholdAudio->Play();
 		}
+
+		OnStrongholdCaptured.Broadcast(OccupiedFaction);
 	}
 	else
 	{
@@ -349,6 +358,8 @@ void AStronghold::GetHighestFaction()
 				StrongholdAudio->Sound = OverrunSound;
 				StrongholdAudio->Play();
 			}
+
+			OnStrongholdCaptured.Broadcast(OccupiedFaction);
 		}
 	}
 

@@ -919,3 +919,21 @@ public:
 	UPROPERTY()
 		FVector TargetPoint;
 };
+
+USTRUCT(BlueprintType)
+struct FOccupiedFaction
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		int FactionCount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TeamFaction Faction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UMaterialInterface* FlagMaterial;
+
+	FFaction* FactionDataSet;
+};

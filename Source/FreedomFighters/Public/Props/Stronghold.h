@@ -12,24 +12,10 @@ class UFactionManager;
 class UAudioComponent;
 class AAmmoCrate;
 class UCoverPointComponent;
-// dynamically add the dominant in case more factions are added in the future
-USTRUCT(BlueprintType)
-struct FOccupiedFaction
-{
-	GENERATED_USTRUCT_BODY()
 
-public:
-	UPROPERTY()
-		int FactionCount;
 
-	UPROPERTY()
-		TeamFaction Faction;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStrongholdCapturedSignature, FOccupiedFaction, OccupiedFaction);
 
-	UPROPERTY()
-		UMaterialInterface* FlagMaterial;
-
-		FFaction* FactionDataSet;
-};
 
 UCLASS()
 class FREEDOMFIGHTERS_API AStronghold : public AActor
@@ -117,6 +103,9 @@ private:
 	bool DoesOccupantExist(ACombatCharacter* Occupant);
 	
 	void GetHighestFaction();
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnStrongholdCapturedSignature OnStrongholdCaptured;
 
 protected:
 	virtual void BeginPlay() override;
