@@ -192,7 +192,7 @@ void ACombatAIController::Init()
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
-	if (TargetDestination.IsZero() || OwningCombatCharacter->GetIsInVehicle() || OwningCombatCharacter->IsUsingMountedWeapon()) {
+	if (!OwningCombatCharacter || TargetDestination.IsZero() || OwningCombatCharacter->GetIsInVehicle() || OwningCombatCharacter->IsUsingMountedWeapon()) {
 		return EPathFollowingRequestResult::Failed;
 	}
 
@@ -251,11 +251,13 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true, 2.0f); // delay finding MG after checking if AI is set for patrol
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
 		//GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
+		GetWorldTimerManager().SetTimer(THandler_StrongholdCoverPoint, this, &ACombatAIController::MoveToStrongholdPoint, 1.0f, true, 2.f);
+
 
 
 		// Events! DON'T FORGET TO REMOVE EVENTS ON THE UNPOSSESS() method to prevent a crash when switching between possess & unpossess
 
-		if (!TargetFinderComponent->OnTargetSearch.IsBound()) {
+		if (TargetFinderComponent && !TargetFinderComponent->OnTargetSearch.IsBound()) {
 			TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ACombatAIController::OnTargetSearchUpdate);
 		}
 
@@ -300,7 +302,7 @@ void ACombatAIController::OnUnPossess()
 
 	if (OwningCombatCharacter)
 	{
-		if (TargetFinderComponent->OnTargetSearch.IsBound()) {
+		if (TargetFinderComponent && TargetFinderComponent->OnTargetSearch.IsBound()) {
 			TargetFinderComponent->OnTargetSearch.RemoveDynamic(this, &ACombatAIController::OnTargetSearchUpdate);
 		}
 
@@ -341,7 +343,9 @@ void ACombatAIController::OnUnPossess()
 
 void ACombatAIController::ClearTimers()
 {
-	TargetFinderComponent->SetFindTargetPerFrame(false);
+	if (TargetFinderComponent) {
+		TargetFinderComponent->SetFindTargetPerFrame(false);
+	}
 
 	GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
 	GetWorldTimerManager().ClearTimer(THandler_EndFire);
@@ -349,6 +353,7 @@ void ACombatAIController::ClearTimers()
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 	GetWorldTimerManager().ClearTimer(THandler_FindCover);
 	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
+	GetWorldTimerManager().ClearTimer(THandler_StrongholdCoverPoint);
 }
 
 
@@ -918,15 +923,15 @@ void ACombatAIController::MoveToCover()
 
 				if (ChosenCoverPointComponent)
 				{
-					TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
+					//TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
 				}
 			}
 		}
 	}
 
 
-	//auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, .0f);
-	auto CurrentMovement = MoveToTarget(0.0f);
+	auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::Normal);
+	//auto CurrentMovement = MoveToTarget(0.0f);
 
 	switch (CurrentMovement)
 	{
@@ -956,15 +961,57 @@ void ACombatAIController::MoveToCover()
 	}
 }
 
+void ACombatAIController::MoveToStrongholdPoint()
+{
+	if (CurrentStronghold == nullptr) {
+		return;
+	}
+
+	// if already has a priority cover point, then no need to process further.
+	if (ChosenCoverPointComponent && ChosenCoverPointComponent->GetIsPriority()) {
+		return;
+	}
+	OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
+
+	auto NewCoverPoint = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
+	bool MoveToCoverPoint = false;
+
+	if (NewCoverPoint) {
+
+		// if already has a chosen cover point
+		if (ChosenCoverPointComponent) {
+			// if found a new priroity cover point then take it.
+			if (NewCoverPoint->GetIsPriority()) {
+				ChosenCoverPointComponent = NewCoverPoint;
+				MoveToCoverPoint = true;
+			}
+		}
+		else {
+			ChosenCoverPointComponent = NewCoverPoint;
+			MoveToCoverPoint = true;
+		}
+	}
+
+
+
+	if (MoveToCoverPoint) {
+		TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
+		AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
+
+		//GetWorldTimerManager().ClearTimer(THandler_StrongholdCoverPoint);
+	}
+}
+
 void ACombatAIController::MoveToRandomPoint()
 {
-	if (Commander && CurrentCommand == CommanderOrders::Follow) {
+	// if following a commander or defending a stronghold, then do not move to random point
+	if (Commander && CurrentCommand == CommanderOrders::Follow || CurrentStronghold != nullptr) {
 		return;
 	}
 
 
-	//auto Movement = AIMovementComponent->MoveToDestination(TargetDestination, .0f);
-	auto Movement = MoveToTarget(0.0f);
+	auto Movement = AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::Normal);
+	//auto Movement = MoveToTarget(0.0f);
 
 	//// Find a random point around destination if has arrived at the original target destination
 	if (!HasChosenNearTargetDest && Movement == EPathFollowingRequestResult::AlreadyAtGoal)
@@ -1059,6 +1106,14 @@ void ACombatAIController::CheckCommanderOrder()
 		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
 		HasAssignedOrderEvent = true;
 		StayCombatAlert = false; // refresh state of behaviour
+
+		if (CurrentStronghold) {
+			OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
+			CurrentStronghold->RemoveDefender(OwningCombatCharacter);
+			CurrentStronghold = nullptr;
+		}
+
+		GetWorldTimerManager().ClearTimer(THandler_StrongholdCoverPoint);
 		SetBehaviourState(AIBehaviourState::PriorityOrdersCommander);
 	}
 

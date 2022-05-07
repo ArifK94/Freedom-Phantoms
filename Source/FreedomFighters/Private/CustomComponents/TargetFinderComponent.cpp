@@ -72,6 +72,7 @@ void UTargetFinderComponent::Init()
 			TargetSightSphere->RegisterComponent();
 			TargetSightSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
+			TargetSightSphere->SetCanEverAffectNavigation(false);
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
 		}
 	}

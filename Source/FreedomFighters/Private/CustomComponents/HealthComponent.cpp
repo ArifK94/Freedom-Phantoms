@@ -155,7 +155,7 @@ void UHealthComponent::Revive()
 	isAlive = true;
 	isWounded = false;
 	Health = 100.f;
-	
+
 	// Go back to default flag if has unlimited health
 	HasUnlimitedHealth = DefaulUnlimitedHealth;
 }
@@ -166,7 +166,12 @@ bool UHealthComponent::IsAlive(AActor* Owner)
 		return false;
 	}
 
-	auto ActorComponent = Owner->GetComponentByClass(UHealthComponent::StaticClass());
+	TWeakObjectPtr<AActor> TempActor = Owner;
+	if (!TempActor.IsValid()) {
+		return false;
+	}
+
+	auto ActorComponent = TempActor->GetComponentByClass(UHealthComponent::StaticClass());
 
 	if (!ActorComponent) {
 		return false;
@@ -187,7 +192,12 @@ bool UHealthComponent::IsWounded(AActor* Owner)
 		return false;
 	}
 
-	auto ActorComponent = Owner->GetComponentByClass(UHealthComponent::StaticClass());
+	TWeakObjectPtr<AActor> TempActor = Owner;
+	if (!TempActor.IsValid()) {
+		return false;
+	}
+
+	auto ActorComponent = TempActor->GetComponentByClass(UHealthComponent::StaticClass());
 
 	if (!ActorComponent) {
 		return false;

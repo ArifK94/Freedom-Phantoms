@@ -124,6 +124,7 @@ private:
 	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
 	FTimerHandle THandler_PatrolStart;
+	FTimerHandle THandler_StrongholdCoverPoint;
 
 
 	bool HasPlayedTargetFoundSound;
@@ -178,6 +179,8 @@ private:
 	void CheckCommanderOrder();
 
 	void MoveToCover();
+
+	void MoveToStrongholdPoint();
 
 	void StartPatrol();
 

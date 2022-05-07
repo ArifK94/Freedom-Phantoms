@@ -29,8 +29,20 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool PreferCrouched;
 
+	/** Setting this point to priority allows AI to prioritise this point than other non priority points */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool IsPriority;
+
 public:	
 	UCoverPointComponent();
+
+private:
+
+#if WITH_EDITOR
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
+	void UpdateShapes();
 
 public:	
 	FVector GetLocation() {
@@ -56,4 +68,6 @@ public:
 	bool IsCrouchPreferred() {
 		return PreferCrouched;
 	}
+
+	bool GetIsPriority() { return IsPriority; }
 };

@@ -13,6 +13,7 @@
 #include "Components/AudioComponent.h"
 #include "NavigationSystem.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 AStronghold::AStronghold()
@@ -57,7 +58,7 @@ void AStronghold::BeginPlay()
 	DominantFaction->FactionDataSet = nullptr;
 
 	GetSpawnAreas();
-	GetCoverPoints();
+	LoadCoverPoints();
 
 	GetWorldTimerManager().SetTimer(THandler_SpawnDelay, this, &AStronghold::SpawnDefender, SpawnRate, true);
 	GetWorldTimerManager().SetTimer(THandler_OverlappingCombatatant, this, &AStronghold::CheckOverlappingCombatatant, 0.5f, true);
@@ -77,18 +78,28 @@ void AStronghold::CheckOverlappingCombatatant()
 	TArray<AActor*> OverlappingActors;
 	StrongholdArea->GetOverlappingActors(OverlappingActors, ACombatCharacter::StaticClass());
 
+
 	for (int i = 0; i < OverlappingActors.Num(); i++)
 	{
-		ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(OverlappingActors[i]);
-		UHealthComponent* HealthComponent = Cast<UHealthComponent>(CombatCharacter->GetComponentByClass(UHealthComponent::StaticClass()));
+		auto CombatCharacter = Cast<ACombatCharacter>(OverlappingActors[i]);
 
-		if (HealthComponent && HealthComponent->IsAlive())
-		{
-			if (!DoesOccupantExist(CombatCharacter))
-			{
-				TotalOccupyingCombatants.Add(CombatCharacter);
-			}
+		if (!CombatCharacter) {
+			continue;
 		}
+
+		if (!UHealthComponent::IsAlive(CombatCharacter)) {
+			continue;
+		}
+
+		// avoid if in a vehicle or other non walking activities. Stronghold should only be affected by characters on foot.
+		if (CombatCharacter->GetCharacterMovement()->MovementMode != EMovementMode::MOVE_Walking) {
+			return;
+		}
+
+		if (!DoesOccupantExist(CombatCharacter)) {
+			TotalOccupyingCombatants.Add(CombatCharacter);
+		}
+
 	}
 }
 
@@ -108,35 +119,45 @@ void AStronghold::GetSpawnAreas()
 	}
 }
 
-void AStronghold::GetCoverPoints()
+void AStronghold::LoadCoverPoints()
 {
 	TArray<UCoverPointComponent*> CoverPoints;
 	GetComponents<UCoverPointComponent>(CoverPoints);
 
 	for (int i = 0; i < CoverPoints.Num(); i++)
 	{
-		UCoverPointComponent* CoverPoint = CoverPoints[i];
-		if (CoverPoint)
-		{
-			CoverPointComponents.Add(CoverPoint);
+		auto CoverPoint = CoverPoints[i];
+
+		if (CoverPoint) {
+			if (CoverPoint->GetIsPriority()) {
+				PriorityCoverPoints.Add(CoverPoint);
+			}
+			else {
+				NonPriorityCoverPoints.Add(CoverPoint);
+			}
 		}
 	}
 }
 
 UCoverPointComponent* AStronghold::GetCoverPoint(AActor* OwningCharacter)
 {
-	if (CoverPointComponents.Num() <= 0) {
-		return nullptr;
+	for (int i = 0; i < PriorityCoverPoints.Num(); i++)
+	{
+		auto CoverPoint = PriorityCoverPoints[i];
+
+		if (!CoverPoint->GetOwner()) {
+			CoverPoint->SetOccupant(OwningCharacter);
+			return CoverPoint;
+		}
 	}
 
-	for (int i = 0; i < CoverPointComponents.Num(); i++)
+	for (int i = 0; i < NonPriorityCoverPoints.Num(); i++)
 	{
-		UCoverPointComponent* CoverPointComp = CoverPointComponents[i];
+		auto CoverPoint = NonPriorityCoverPoints[i];
 
-		if (!CoverPointComp->GetOwner())
-		{
-			CoverPointComp->SetOccupant(OwningCharacter);
-			return CoverPointComp;
+		if (!CoverPoint->GetOwner()) {
+			CoverPoint->SetOccupant(OwningCharacter);
+			return CoverPoint;
 		}
 	}
 	return nullptr;
@@ -175,11 +196,12 @@ void AStronghold::SpawnDefender()
 	// check if location is on the navmesh
 	FNavLocation NavLocation;
 	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-	bool navResult = NavigationArea->ProjectPointToNavigation(Location, NavLocation);
+	//bool navResult = NavigationArea->ProjectPointToNavigation(Location, NavLocation);
+	bool navResult = NavigationArea->GetRandomReachablePointInRadius(Location, 1000.f, NavLocation);
 
 	if (navResult)
 	{
-		ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionDataSet->OperativeCharacterClass, Location, SpawnArea->GetComponentRotation(), SpawnParams);
+		auto Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionDataSet->OperativeCharacterClass, NavLocation.Location, SpawnArea->GetComponentRotation(), SpawnParams);
 
 		if (Character)
 		{
@@ -200,7 +222,7 @@ void AStronghold::UpdateTotalOccupants()
 		return;
 	}
 
-	for (int i = 0; i < TotalOccupyingCombatants.Num(); i++)
+	for (int i = TotalOccupyingCombatants.Num() - 1; i >= 0; i--)
 	{
 		ACombatCharacter* Character = TotalOccupyingCombatants[i];
 
@@ -224,8 +246,6 @@ void AStronghold::UpdateTotalOccupants()
 			{
 				TotalOccupyingCombatants.RemoveAt(i);
 			}
-
-
 		}
 		else
 		{
@@ -240,23 +260,14 @@ void AStronghold::UpdateDefenders()
 		return;
 	}
 
-	for (int i = 0; i < DefendingCombatatants.Num(); i++)
+	for (int i = DefendingCombatatants.Num() - 1; i >= 0; i--)
 	{
-		ACombatCharacter* Character = DefendingCombatatants[i];
+		auto Character = DefendingCombatatants[i];
 
-		if (Character)
+		// if dead or has been recruited by commander then it is no longer a stronghold 
+		if (!UHealthComponent::IsAlive(Character) || Character->getCommander() != nullptr)
 		{
-			UHealthComponent* CurrentHealth = Cast<UHealthComponent>(Character->GetComponentByClass(UHealthComponent::StaticClass()));
-
-			// if dead or has been recruited by commander then it is no longer a stronghold defender
-			if ((CurrentHealth && !CurrentHealth->IsAlive()) || Character->getCommander() != nullptr)
-			{
-				DefendingCombatatants.RemoveAt(i);
-			}
-		}
-		else
-		{
-			DefendingCombatatants.RemoveAt(i);
+			RemoveDefender(Character);
 		}
 	}
 }
@@ -354,4 +365,25 @@ void AStronghold::GetHighestFaction()
 	// update the dominant faction
 	DominantFaction = OwningFaction;
 	FactionFlag->SetMaterial(FlagClothMaterialIndex, DominantFaction->FlagMaterial);
+}
+
+void AStronghold::RemoveDefender(AActor* Actor)
+{
+	// remove actor from defender list
+	for (int i = 0; i < DefendingCombatatants.Num(); i++)
+	{
+		if (DefendingCombatatants[i] == Actor) {
+			DefendingCombatatants.RemoveAt(i);
+			break;
+		}
+	}
+
+	// reset cover point if actor has been assigned to one
+	for (int i = 0; i < NonPriorityCoverPoints.Num(); i++)
+	{
+		if (NonPriorityCoverPoints[i]->GetOwner() == Actor) {
+			NonPriorityCoverPoints[i]->SetOccupant(nullptr);
+			break;
+		}
+	}
 }

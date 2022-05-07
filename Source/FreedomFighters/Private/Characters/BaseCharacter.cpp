@@ -327,7 +327,10 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 			GetWorldTimerManager().SetTimer(THandler_Destroyer, this, &ABaseCharacter::StartDestroy, DestroyDelayTime, false);
 		}
 		IsInVehicle = false;
-		GetController()->UnPossess();
+
+		if (GetController()) {
+			GetController()->UnPossess();
+		}
 	}
 }
 
@@ -342,12 +345,12 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 		Character->GetCapsuleComponent()->IgnoreActorWhenMoving(this, true);
 	}
 
-	if (!HealthComp->IsAlive() && OtherActor != this)
-	{
-		if (!HealthComp->GetIsWounded()) {
-			PostDeath();
-		}
-	}
+	//if (!HealthComp->IsAlive() && OtherActor != this)
+	//{
+	//	if (!HealthComp->GetIsWounded()) {
+	//		PostDeath();
+	//	}
+	//}
 }
 
 void ABaseCharacter::Landed(const FHitResult& Hit)
@@ -1012,8 +1015,8 @@ void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 
 void ABaseCharacter::PostDeath()
 {
-	GetMesh()->SetAnimInstanceClass(NULL);
-	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	//GetMesh()->SetAnimInstanceClass(NULL);
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Death"));
 	GetMesh()->SetSimulatePhysics(true);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

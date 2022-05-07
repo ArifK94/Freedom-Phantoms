@@ -39,6 +39,7 @@ void UMountedGunFinderComponent::Init()
 			SearchSphere->RegisterComponent();
 			SearchSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 			SearchSphere->SetSphereRadius(SearchRadius);
+			SearchSphere->SetCanEverAffectNavigation(false);
 			SearchSphere->SetCollisionProfileName(TEXT("OverlapAll"));
 		}
 	}

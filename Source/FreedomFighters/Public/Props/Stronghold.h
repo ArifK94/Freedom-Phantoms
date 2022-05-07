@@ -81,7 +81,8 @@ private:
 
 	TArray<UBoxComponent*> SpawnAreas;
 
-	TArray<UCoverPointComponent*> CoverPointComponents;
+	TArray<UCoverPointComponent*> PriorityCoverPoints;
+	TArray<UCoverPointComponent*> NonPriorityCoverPoints;
 
 	FOccupiedFaction* DominantFaction;
 
@@ -95,12 +96,14 @@ public:
 
 	UCoverPointComponent* GetCoverPoint(AActor* OwningCharacter);
 
+	void RemoveDefender(AActor* Actor);
+
 private:
 	void CheckOverlappingCombatatant();
 
 	void GetSpawnAreas();
 
-	void GetCoverPoints();
+	void LoadCoverPoints();
 
 	void SpawnDefender();
 		

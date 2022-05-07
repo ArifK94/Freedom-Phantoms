@@ -46,6 +46,7 @@ AVehicleBase::AVehicleBase()
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->SetNotifyRigidBodyCollision(true);
 	MeshComponent->SetupAttachment(RootComponent);
+	MeshComponent->SetCanEverAffectNavigation(true);
 
 	EyePointComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("EyePointComponent"));
 	EyePointComponent->SetupAttachment(RootComponent);
@@ -150,8 +151,12 @@ void AVehicleBase::UpdatePassengerSeats()
 {
 	auto PassengerList = VehicleSeatPtrList;
 
+	if (PassengerList.Num() <= 0) {
+		return;
+	}
+
 	// Remove passengers if not alive
-	for (int i = 0; i < PassengerList.Num(); i++)
+	for (int i = PassengerList.Num() - 1; i >= 0; i--)
 	{
 		auto Character = PassengerList[i]->Character;
 

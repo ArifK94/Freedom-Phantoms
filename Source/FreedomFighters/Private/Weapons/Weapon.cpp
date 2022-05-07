@@ -271,7 +271,10 @@ FVector AWeapon::getMuzzleLocation()
 	if (ParentMesh) {
 		return ParentMesh->GetSocketLocation(MuzzleSocket);
 	}
-	return MeshComp->GetSocketLocation(MuzzleSocket);
+	else if (MeshComp) {
+		return MeshComp->GetSocketLocation(MuzzleSocket);
+	}
+	return GetActorLocation();
 }
 
 void AWeapon::LoadParentMesh()

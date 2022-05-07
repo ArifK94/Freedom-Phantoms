@@ -18,6 +18,8 @@ UAIMovementComponent::UAIMovementComponent()
 	MinAcceptanceRadius = 50.f;
 	MovementDebugLifetTime = 1.0f;
 	ProjectDestinationToNavigation = true;
+
+	UsePathfinding = true;
 }
 
 
@@ -238,6 +240,7 @@ void UAIMovementComponent::CreateDestinationTrigger(FVector Location, float Radi
 	DestinationTrigger->SetSphereRadius(Radius);
 	DestinationTrigger->SetWorldLocation(Location);
 	DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
+	DestinationTrigger->SetCanEverAffectNavigation(false);
 	DestinationTrigger->ShapeColor = FColor(0, 255, 0, 255);
 
 	if (!DestinationTrigger->OnComponentBeginOverlap.IsBound()) {

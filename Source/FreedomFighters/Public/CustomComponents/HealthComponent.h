@@ -135,4 +135,7 @@ public:
 	}
 
 	void SetDamageReduceFactor(float Value) { DamageReduceFactor = Value; }
+
+	void SetCanBeWounded(bool Value) { CanBeWounded = Value; }
+
 };
