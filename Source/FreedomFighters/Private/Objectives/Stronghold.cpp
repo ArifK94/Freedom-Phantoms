@@ -1,4 +1,4 @@
-#include "Props/Stronghold.h"
+#include "Objectives/Stronghold.h"
 #include "Characters/CombatCharacter.h"
 #include "Controllers/CombatAIController.h"
 #include "CustomComponents/HealthComponent.h"

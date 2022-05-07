@@ -3,7 +3,7 @@
 
 #include "CustomComponents/AI/StrongholdDefenderComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
-#include "Props/Stronghold.h"
+#include "Objectives/Stronghold.h"
 
 UStrongholdDefenderComponent::UStrongholdDefenderComponent()
 {
@@ -97,7 +97,6 @@ void UStrongholdDefenderComponent::SetDefender(AActor* Defender, AStronghold* St
 	}
 
 	StrongholdComponent->SetStronghold(Stronghold);
-
 }
 
 void UStrongholdDefenderComponent::RemoveStronghold()
