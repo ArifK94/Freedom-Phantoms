@@ -909,3 +909,13 @@ public:
 	}
 };
 
+USTRUCT(BlueprintType)
+struct FREEDOMFIGHTERS_API FStrongholdDefenderParams
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	/** The point which the defender should go to. */
+	UPROPERTY()
+		FVector TargetPoint;
+};

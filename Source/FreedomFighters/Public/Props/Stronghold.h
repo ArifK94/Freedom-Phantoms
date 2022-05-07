@@ -81,8 +81,7 @@ private:
 
 	TArray<UBoxComponent*> SpawnAreas;
 
-	TArray<UCoverPointComponent*> PriorityCoverPoints;
-	TArray<UCoverPointComponent*> NonPriorityCoverPoints;
+	TArray<UCoverPointComponent*> CoverPoints;
 
 	FOccupiedFaction* DominantFaction;
 

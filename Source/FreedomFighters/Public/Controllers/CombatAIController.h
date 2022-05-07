@@ -14,12 +14,12 @@ class ACommanderCharacter;
 class UAIMovementComponent;
 class UPatrolFollowerComponent;
 class UCoverFinderComponent;
+class UStrongholdDefenderComponent;
 class UTargetFinderComponent;
 class UMountedGunFinderComponent;
 
 class AWeapon;
 class APumpActionWeapon;
-class AStronghold;
 class UCommanderRecruit;
 
 UCLASS()
@@ -32,9 +32,7 @@ private:
 	APumpActionWeapon* PumpActionWeapon;
 	AActor* LastSeenEnemyActor;
 
-	// to take defensive positions within the stronghold
-	AStronghold* CurrentStronghold;
-	class UCoverPointComponent* ChosenCoverPointComponent;
+
 	ACommanderCharacter* Commander;
 
 
@@ -54,6 +52,8 @@ private:
 	UPatrolFollowerComponent* PatrolFollowerComponent;
 
 	UCoverFinderComponent* CoverFinderComponent;
+
+	UStrongholdDefenderComponent* StrongholdDefenderComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UTargetFinderComponent* TargetFinderComponent;
@@ -124,7 +124,6 @@ private:
 	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
 	FTimerHandle THandler_PatrolStart;
-	FTimerHandle THandler_StrongholdCoverPoint;
 
 
 	bool HasPlayedTargetFoundSound;
@@ -154,6 +153,10 @@ private:
 
 	UFUNCTION()
 		void OnOrderReceived(UCommanderRecruit* RecruitInfo);
+
+	UFUNCTION()
+		void OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams);
+
 	bool HasAssignedOrderEvent;
 
 	UFUNCTION()
@@ -180,8 +183,6 @@ private:
 
 	void MoveToCover();
 
-	void MoveToStrongholdPoint();
-
 	void StartPatrol();
 
 	void TargetFound();
@@ -207,10 +208,6 @@ protected:
 public:
 	AActor* GetEnemyActor() {
 		return EnemyActor;
-	}
-
-	void SetGuardingStronghold(AStronghold* Stronghold) {
-		CurrentStronghold = Stronghold;
 	}
 
 	void SetTargetDestination(FVector Destination) {

@@ -4,6 +4,7 @@
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/CoverPointComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
+#include "CustomComponents/AI/StrongholdDefenderComponent.h"
 
 #include "TimerManager.h"
 #include "Math/UnrealMathUtility.h"
@@ -121,43 +122,36 @@ void AStronghold::GetSpawnAreas()
 
 void AStronghold::LoadCoverPoints()
 {
-	TArray<UCoverPointComponent*> CoverPoints;
-	GetComponents<UCoverPointComponent>(CoverPoints);
+	TArray<UCoverPointComponent*> AllCoverPoints;
+	GetComponents<UCoverPointComponent>(AllCoverPoints);
 
-	for (int i = 0; i < CoverPoints.Num(); i++)
+	for (int i = 0; i < AllCoverPoints.Num(); i++)
 	{
-		auto CoverPoint = CoverPoints[i];
+		auto CoverPoint = AllCoverPoints[i];
 
-		if (CoverPoint) {
-			if (CoverPoint->GetIsPriority()) {
-				PriorityCoverPoints.Add(CoverPoint);
-			}
-			else {
-				NonPriorityCoverPoints.Add(CoverPoint);
-			}
+		if (CoverPoint && !CoverPoints.Contains(CoverPoint)) {
+			CoverPoints.Add(CoverPoint);
 		}
 	}
 }
 
 UCoverPointComponent* AStronghold::GetCoverPoint(AActor* OwningCharacter)
 {
-	for (int i = 0; i < PriorityCoverPoints.Num(); i++)
+	// look for any free priority points first.
+	for (int i = 0; i < CoverPoints.Num(); i++)
 	{
-		auto CoverPoint = PriorityCoverPoints[i];
-
-		if (!CoverPoint->GetOwner()) {
-			CoverPoint->SetOccupant(OwningCharacter);
-			return CoverPoint;
+		if (!CoverPoints[i]->GetOwner() && CoverPoints[i]->GetIsPriority()) {
+			CoverPoints[i]->SetOccupant(OwningCharacter);
+			return CoverPoints[i];
 		}
 	}
 
-	for (int i = 0; i < NonPriorityCoverPoints.Num(); i++)
+	// if no priority points found then choose any free point.
+	for (int i = 0; i < CoverPoints.Num(); i++)
 	{
-		auto CoverPoint = NonPriorityCoverPoints[i];
-
-		if (!CoverPoint->GetOwner()) {
-			CoverPoint->SetOccupant(OwningCharacter);
-			return CoverPoint;
+		if (!CoverPoints[i]->GetOwner()) {
+			CoverPoints[i]->SetOccupant(OwningCharacter);
+			return CoverPoints[i];
 		}
 	}
 	return nullptr;
@@ -205,11 +199,7 @@ void AStronghold::SpawnDefender()
 
 		if (Character)
 		{
-			ACombatAIController* CombatAI = Cast<ACombatAIController>(Character->GetController());
-
-			if (CombatAI) {
-				CombatAI->SetGuardingStronghold(this);
-			}
+			UStrongholdDefenderComponent::SetDefender(Character, this);
 
 			DefendingCombatatants.Add(Cast<ACombatCharacter>(Character));
 		}
@@ -379,10 +369,10 @@ void AStronghold::RemoveDefender(AActor* Actor)
 	}
 
 	// reset cover point if actor has been assigned to one
-	for (int i = 0; i < NonPriorityCoverPoints.Num(); i++)
+	for (int i = 0; i < CoverPoints.Num(); i++)
 	{
-		if (NonPriorityCoverPoints[i]->GetOwner() == Actor) {
-			NonPriorityCoverPoints[i]->SetOccupant(nullptr);
+		if (CoverPoints[i]->GetOwner() == Actor) {
+			CoverPoints[i]->SetOccupant(nullptr);
 			break;
 		}
 	}

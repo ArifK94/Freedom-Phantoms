@@ -5,11 +5,10 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
-#include "Props/Stronghold.h"
 #include "CustomComponents/AIMovementComponent.h"
 #include "CustomComponents/PatrolFollowerComponent.h"
 #include "CustomComponents/CoverFinderComponent.h"
-#include "CustomComponents/CoverPointComponent.h"
+#include "CustomComponents/AI/StrongholdDefenderComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/MountedGunFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
@@ -108,6 +107,14 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius, AIBehaviourState::PriorityOrdersCommander);
 }
 
+void ACombatAIController::OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams)
+{
+	OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
+
+	TargetDestination = StrongholdDefenderParams.TargetPoint;
+	AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
+}
+
 void ACombatAIController::Init()
 {
 	if (OwningCombatCharacter == nullptr) {
@@ -148,6 +155,16 @@ void ACombatAIController::Init()
 		if (PatrolFollowerComponent)
 		{
 			PatrolFollowerComponent->RegisterComponent();
+		}
+	}
+
+	if (!StrongholdDefenderComponent)
+	{
+		StrongholdDefenderComponent = NewObject<UStrongholdDefenderComponent>(OwningCombatCharacter);
+
+		if (StrongholdDefenderComponent)
+		{
+			StrongholdDefenderComponent->RegisterComponent();
 		}
 	}
 
@@ -251,8 +268,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true, 2.0f); // delay finding MG after checking if AI is set for patrol
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
 		//GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
-		GetWorldTimerManager().SetTimer(THandler_StrongholdCoverPoint, this, &ACombatAIController::MoveToStrongholdPoint, 1.0f, true, 2.f);
-
 
 
 		// Events! DON'T FORGET TO REMOVE EVENTS ON THE UNPOSSESS() method to prevent a crash when switching between possess & unpossess
@@ -278,6 +293,12 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 		if (TargetFinderComponent) {
 			TargetFinderComponent->SetFindTargetPerFrame(true);
+		}
+
+		if (StrongholdDefenderComponent) {
+			if (!StrongholdDefenderComponent->OnDefenderPointFound.IsBound()) {
+				StrongholdDefenderComponent->OnDefenderPointFound.AddDynamic(this, &ACombatAIController::OnStrongholdPointFound);
+			}
 		}
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
@@ -322,6 +343,14 @@ void ACombatAIController::OnUnPossess()
 			}
 		}
 
+
+		if (StrongholdDefenderComponent) {
+			if (StrongholdDefenderComponent->OnDefenderPointFound.IsBound()) {
+				StrongholdDefenderComponent->OnDefenderPointFound.RemoveDynamic(this, &ACombatAIController::OnStrongholdPointFound);
+			}
+		}
+
+
 		if (Commander) {
 			Commander->OnOrderSent.RemoveDynamic(this, &ACombatAIController::OnOrderReceived);
 		}
@@ -353,7 +382,6 @@ void ACombatAIController::ClearTimers()
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 	GetWorldTimerManager().ClearTimer(THandler_FindCover);
 	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
-	GetWorldTimerManager().ClearTimer(THandler_StrongholdCoverPoint);
 }
 
 
@@ -410,6 +438,11 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
 		ClearTimers();
+
+		if (StrongholdDefenderComponent->GetStronghold()) {
+			OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
+			StrongholdDefenderComponent->RemoveStronghold();
+		}
 
 		// destroy the controller if not wounded
 		if (!InHealthParameters.AffectedHealthComponent->GetIsWounded()) {
@@ -915,18 +948,6 @@ void ACombatAIController::MoveToCover()
 			TargetDestination = CoverLocation;
 			HasChosenCover = true;
 		}
-		else
-		{
-			if (CurrentStronghold)
-			{
-				ChosenCoverPointComponent = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
-
-				if (ChosenCoverPointComponent)
-				{
-					//TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
-				}
-			}
-		}
 	}
 
 
@@ -961,51 +982,11 @@ void ACombatAIController::MoveToCover()
 	}
 }
 
-void ACombatAIController::MoveToStrongholdPoint()
-{
-	if (CurrentStronghold == nullptr) {
-		return;
-	}
-
-	// if already has a priority cover point, then no need to process further.
-	if (ChosenCoverPointComponent && ChosenCoverPointComponent->GetIsPriority()) {
-		return;
-	}
-	OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
-
-	auto NewCoverPoint = CurrentStronghold->GetCoverPoint(OwningCombatCharacter);
-	bool MoveToCoverPoint = false;
-
-	if (NewCoverPoint) {
-
-		// if already has a chosen cover point
-		if (ChosenCoverPointComponent) {
-			// if found a new priroity cover point then take it.
-			if (NewCoverPoint->GetIsPriority()) {
-				ChosenCoverPointComponent = NewCoverPoint;
-				MoveToCoverPoint = true;
-			}
-		}
-		else {
-			ChosenCoverPointComponent = NewCoverPoint;
-			MoveToCoverPoint = true;
-		}
-	}
-
-
-
-	if (MoveToCoverPoint) {
-		TargetDestination = ChosenCoverPointComponent->GetComponentLocation();
-		AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
-
-		//GetWorldTimerManager().ClearTimer(THandler_StrongholdCoverPoint);
-	}
-}
 
 void ACombatAIController::MoveToRandomPoint()
 {
 	// if following a commander or defending a stronghold, then do not move to random point
-	if (Commander && CurrentCommand == CommanderOrders::Follow || CurrentStronghold != nullptr) {
+	if (Commander && CurrentCommand == CommanderOrders::Follow || StrongholdDefenderComponent->GetStronghold() != nullptr) {
 		return;
 	}
 
@@ -1107,13 +1088,11 @@ void ACombatAIController::CheckCommanderOrder()
 		HasAssignedOrderEvent = true;
 		StayCombatAlert = false; // refresh state of behaviour
 
-		if (CurrentStronghold) {
+		if (StrongholdDefenderComponent->GetStronghold()) {
 			OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
-			CurrentStronghold->RemoveDefender(OwningCombatCharacter);
-			CurrentStronghold = nullptr;
+			StrongholdDefenderComponent->RemoveStronghold();
 		}
 
-		GetWorldTimerManager().ClearTimer(THandler_StrongholdCoverPoint);
 		SetBehaviourState(AIBehaviourState::PriorityOrdersCommander);
 	}
 
