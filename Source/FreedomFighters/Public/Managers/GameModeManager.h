@@ -12,7 +12,7 @@ class ALevelManager;
 USTRUCT(BlueprintType)
 struct FWorldCoverPoint 
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	AActor* Owner;

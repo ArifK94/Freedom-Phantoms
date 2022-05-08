@@ -138,13 +138,13 @@ void AVehicleBase::Tick(float DeltaTime)
 	WheelRPM = (GetVelocity().Size() * 360.f) / 60.f;
 
 	CurrentRotationSpeed = DeltaTime * RotationSpeed;
+
+	SetTargetSystem();
 }
 
 void AVehicleBase::TimerTick()
 {
 	UpdatePassengerSeats();
-
-	SetTargetSystem();
 }
 
 void AVehicleBase::UpdatePassengerSeats()
@@ -717,19 +717,21 @@ void AVehicleBase::SetTargetSystem()
 
 			if (isFriendly)
 			{
-				if (!DoesFriendlyNodeExists(Actor))
+				if (!DoesNodeExist(FriendlyMarkerNodes, Actor))
 				{
-					FTargetSystemNode* TargetNode = new FTargetSystemNode;
-					TargetNode->Actor = Actor;
+					auto TargetNode = FTargetSystemNode();
+					TargetNode.Actor = Actor;
+					TargetNode.Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(FriendlyMarkerClass, TargetNode.Actor->GetActorLocation(), FRotator::ZeroRotator);
 					FriendlyMarkerNodes.Add(TargetNode);
 				}
 			}
 			else
 			{
-				if (!DoesEnemyNodeExists(Actor))
+				if (!DoesNodeExist(EnemySystemNodes, Actor))
 				{
-					FTargetSystemNode* TargetNode = new FTargetSystemNode;
-					TargetNode->Actor = Actor;
+					auto TargetNode = FTargetSystemNode();
+					TargetNode.Actor = Actor;
+					TargetNode.Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(EnemyMarkerClass, TargetNode.Actor->GetActorLocation(), FRotator::ZeroRotator);
 					EnemySystemNodes.Add(TargetNode);
 				}
 			}
@@ -741,70 +743,49 @@ void AVehicleBase::SetTargetSystem()
 		ShowOutlines(true);
 	}
 
-	UpdateMarker(FriendlyMarkerNodes, FriendlyMarkerClass);
-	UpdateMarker(EnemySystemNodes, EnemyMarkerClass);
+	UpdateMarker(FriendlyMarkerNodes);
+	UpdateMarker(EnemySystemNodes);
 }
 
 // add or update the marker UI
-void AVehicleBase::UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubclassOf<ATargetSystemMarker> MarkerClass)
+void AVehicleBase::UpdateMarker(TArray<FTargetSystemNode> TargetSystemNodes)
 {
-	if (!MarkerClass) {
-		return;
-	}
-
 	if (TargetSystemNodes.Num() <= 0) {
 		return;
 	}
 
-	for (int i = 0; i < TargetSystemNodes.Num(); i++)
+	for (int i = TargetSystemNodes.Num() - 1; i >= 0; i--)
 	{
-		auto TargetNode = TargetSystemNodes[i];
-		auto Actor = TargetNode->Actor;
+		// if the target is alive
+		if (UHealthComponent::IsAlive(TargetSystemNodes[i].Actor)) {
 
-		// if the target is not active
-		bool IsAlive = UHealthComponent::IsAlive(Actor);
-
-		if (IsAlive)
-		{
-			if (TargetNode->Marker) // marker to follow the actor location
-			{
-				TargetNode->Marker->SetActorLocation(Actor->GetActorLocation());
-			}
-			else // otherwise create a marker if does not exist 
-			{
-				TargetNode->Marker = GetWorld()->SpawnActor<ATargetSystemMarker>(MarkerClass, Actor->GetActorLocation(), FRotator::ZeroRotator);
+			// marker to follow the actor location
+			if (TargetSystemNodes[i].Marker) {
+				TargetSystemNodes[i].Marker->SetActorLocation(TargetSystemNodes[i].Actor->GetActorLocation());
 			}
 		}
-		else
-		{
+		else {
 			// Destroy target marker
-			if (TargetNode->Marker)
-			{
-				TargetNode->Marker->Destroy();
+			if (TargetSystemNodes[i].Marker) {
+				TargetSystemNodes[i].Marker->Destroy();
 			}
+
+			TargetSystemNodes.RemoveAt(i);
 		}
-
 	}
-
 }
 
-bool AVehicleBase::DoesFriendlyNodeExists(AActor* TargetActor)
+bool AVehicleBase::DoesNodeExist(TArray<FTargetSystemNode> TargetSystemNodes, AActor* TargetActor)
 {
-	for (FTargetSystemNode* node : FriendlyMarkerNodes)
-	{
-		if (node->Actor == TargetActor)
-			return true;
+	if (TargetSystemNodes.Num() <= 0) {
+		return false;
 	}
 
-	return false;
-}
-
-bool AVehicleBase::DoesEnemyNodeExists(AActor* TargetActor)
-{
-	for (FTargetSystemNode* node : EnemySystemNodes)
+	for (auto node : TargetSystemNodes)
 	{
-		if (node->Actor == TargetActor)
+		if (node.Actor == TargetActor) {
 			return true;
+		}
 	}
 
 	return false;
@@ -932,8 +913,7 @@ void AVehicleBase::ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters I
 
 void AVehicleBase::AddComponentToDestroyList(UActorComponent* ActorComponent)
 {
-	if (ActorComponent)
-	{
+	if (ActorComponent) {
 		DestroyableComponentList.Add(ActorComponent);
 	}
 }
@@ -964,30 +944,25 @@ void AVehicleBase::Destroyed()
 
 	RemoveUIWidget();
 
-	if (HighlightCharacters)
-	{
+	if (HighlightCharacters) {
 		ShowOutlines(false);
 	}
 
 	// destroy markers
-	if (FriendlyMarkerNodes.Num() > 0)
-	{
-		for (FTargetSystemNode* node : FriendlyMarkerNodes)
+	if (FriendlyMarkerNodes.Num() > 0) {
+		for (auto node : FriendlyMarkerNodes)
 		{
-			if (node->Marker)
-			{
-				node->Marker->Destroy();
+			if (node.Marker) {
+				node.Marker->Destroy();
 			}
 		}
 	}
 
-	if (FriendlyMarkerNodes.Num() > 0)
-	{
-		for (FTargetSystemNode* node : EnemySystemNodes)
+	if (FriendlyMarkerNodes.Num() > 0) {
+		for (auto node : EnemySystemNodes)
 		{
-			if (node->Marker)
-			{
-				node->Marker->Destroy();
+			if (node.Marker) {
+				node.Marker->Destroy();
 			}
 		}
 	}

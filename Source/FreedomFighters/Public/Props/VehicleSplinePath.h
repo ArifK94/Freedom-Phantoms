@@ -32,7 +32,7 @@ public:
 	int GetVehicleSplinePoint(FVector TargetLocation);
 	FVehicleSplinePoint GetNextSplinePoint(int Index);
 
-	void GetFirstSplinePoint(FVector Location, FRotator Rotation);
+	void GetFirstSplinePoint(FVector& OutLocation, FRotator& OutRotation);
 
 
 private:

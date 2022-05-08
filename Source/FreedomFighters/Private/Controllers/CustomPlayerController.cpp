@@ -271,11 +271,20 @@ void ACustomPlayerController::SpawnPlayer()
 
 	if (CombatCharacter)
 	{
+		OwningCombatCharacter = CombatCharacter;
+
 		CombatCharacter->SetPrimaryWeapon(GameInstanceController->SpawnPrimaryWeapon(CombatCharacter));
 		CombatCharacter->SetSecondaryWeapon(GameInstanceController->SpawnSecondaryWeapon(CombatCharacter));
 		CombatCharacter->AutoPossessAI = EAutoPossessAI::Disabled;
 		CombatCharacter->SetUseAimCameraSpring(true);
-		OwningCombatCharacter = CombatCharacter;
+
+		// enable game controls, this will be needed after restarting a level 
+		FInputModeGameOnly InputMode;
+		InputMode.SetConsumeCaptureMouseDown(false);
+		SetInputMode(InputMode);
+		SetShowMouseCursor(false);
+
+		// posses the player character
 		Possess(OwningCombatCharacter);
 	}
 

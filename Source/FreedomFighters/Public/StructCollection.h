@@ -39,7 +39,7 @@ class UNiagaraSystem;
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FMapDetail : public FTableRowBase
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	/** The exact name of the map asset */
@@ -71,7 +71,7 @@ public:
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FObjectPoolParameters
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY()
@@ -87,7 +87,7 @@ public:
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FHealthParameters
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -153,7 +153,7 @@ public:
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FTargetSearchParameters
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -292,6 +292,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		AVehicleBase* Vehicle;
 
+	/** The actor tag name of the path to follow */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName VehiclePathTagName;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName DisplayName;
 
@@ -322,10 +326,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FSupportPackageVoiceOverSet> SupportSoundsSet;
-
-	/** The actor tag name of the path to follow */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FName VehiclePathTagName;
 
 	FSupportPackageSet()
 	{
@@ -369,7 +369,7 @@ public:
 USTRUCT(BlueprintType)
 struct FWeaponsSet : public FTableRowBase
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -404,7 +404,7 @@ public:
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FProjectileImpactParameters
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 
@@ -446,7 +446,7 @@ public:
 USTRUCT(BlueprintType)
 struct FWeaponAnimSet : public FTableRowBase
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -663,7 +663,7 @@ public:
 USTRUCT(BlueprintType)
 struct FVehicleWeapon
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -912,7 +912,7 @@ public:
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FStrongholdDefenderParams
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	/** The point which the defender should go to. */
@@ -923,7 +923,7 @@ public:
 USTRUCT(BlueprintType)
 struct FOccupiedFaction
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

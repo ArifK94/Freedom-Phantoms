@@ -80,12 +80,14 @@ bool ASupportPackage::OnUseInteraction_Implementation(APawn* InPawn, AController
 
 	auto PlayerController = Cast<ACustomPlayerController>(InController);
 
-	if (PlayerController)
-	{
+	if (PlayerController) {
 		auto Vehicle = SpawnVehicle(Cast<ABaseCharacter>(InPawn), PlayerController);
-		PlayerController->SetControlledVehicle(Vehicle, SupportPackageSet.IsControllable);
-		Destroy();
-		return true;
+
+		if (Vehicle) {
+			PlayerController->SetControlledVehicle(Vehicle, SupportPackageSet.IsControllable);
+			Destroy();
+			return true;
+		}
 	}
 
 	return false;
@@ -152,7 +154,6 @@ void ASupportPackage::LoadDataSet()
 	SupportPackageSet.SupportSoundsSet = SPSet->SupportSoundsSet;
 
 	SupportPackageSet.VehiclePathTagName = SPSet->VehiclePathTagName;
-
 }
 
 AVehicleBase* ASupportPackage::SpawnVehicle(ABaseCharacter* Character, APlayerController* PlayerController)
@@ -161,21 +162,26 @@ AVehicleBase* ASupportPackage::SpawnVehicle(ABaseCharacter* Character, APlayerCo
 		return nullptr;
 	}
 
-	FVector StartLoc = FVector::ZeroVector;
-	FRotator StartRot = FRotator::ZeroRotator;
-
 	auto VehiclePath = AVehicleSplinePath::FindVehiclePath(GetWorld(), SupportPackageSet.VehiclePathTagName);
+
+	// if has a path to follow then spawn the vehicle
 	if (VehiclePath) {
+
+		FVector StartLoc = FVector::ZeroVector;
+		FRotator StartRot = FRotator::ZeroRotator;
+
 		VehiclePath->GetFirstSplinePoint(StartLoc, StartRot);
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		SupportPackageSet.Vehicle = GetWorld()->SpawnActor<AVehicleBase>(SupportPackageSet.VehicleClass, StartLoc, StartRot, SpawnParams);
+
+		return SupportPackageSet.Vehicle;
 	}
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = Character;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	SupportPackageSet.Vehicle = GetWorld()->SpawnActor<AVehicleBase>(SupportPackageSet.VehicleClass, StartLoc, StartRot, SpawnParams);
-
-	return SupportPackageSet.Vehicle;
+	return nullptr;
 }
 
 void ASupportPackage::PlayPickupSound()

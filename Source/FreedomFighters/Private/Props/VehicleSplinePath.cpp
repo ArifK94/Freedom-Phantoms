@@ -72,7 +72,7 @@ FVehicleSplinePoint AVehicleSplinePath::GetNextSplinePoint(int Index)
 	return FVehicleSplinePoint();
 }
 
-void AVehicleSplinePath::GetFirstSplinePoint(FVector Location, FRotator Rotation)
+void AVehicleSplinePath::GetFirstSplinePoint(FVector& OutLocation, FRotator& OutRotation)
 {
 	FVector Loc = FVector::ZeroVector;
 	FRotator Rot = FRotator::ZeroRotator;
@@ -80,8 +80,8 @@ void AVehicleSplinePath::GetFirstSplinePoint(FVector Location, FRotator Rotation
 	Loc = SplinePathComp->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
 	Rot = SplinePathComp->GetRotationAtSplinePoint(0, ESplineCoordinateSpace::World);
 
-	Location = Loc;
-	Rotation = Rot;
+	OutLocation = Loc;
+	OutRotation = Rot;
 }
 
 void AVehicleSplinePath::OnConstruction(const FTransform& Transform)

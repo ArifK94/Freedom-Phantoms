@@ -153,11 +153,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target System", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ATargetSystemMarker> FriendlyMarkerClass;
-	TArray<FTargetSystemNode*> FriendlyMarkerNodes;
+
+	UPROPERTY()
+		TArray<FTargetSystemNode> FriendlyMarkerNodes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target System", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ATargetSystemMarker> EnemyMarkerClass;
-	TArray<FTargetSystemNode*> EnemySystemNodes;
+
+	UPROPERTY()
+		TArray<FTargetSystemNode> EnemySystemNodes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target System", meta = (AllowPrivateAccess = "true"))
 		TArray<UMaterialInterface*> ThermalMaterials;
@@ -256,11 +260,10 @@ private:
 
 	void SetTargetSystem();
 
-	void UpdateMarker(TArray<FTargetSystemNode*> TargetSystemNodes, TSubclassOf<ATargetSystemMarker> MarkerClass);
+	void UpdateMarker(TArray<FTargetSystemNode> TargetSystemNode);
 
-	bool DoesFriendlyNodeExists(AActor* TargetActor);
-
-	bool DoesEnemyNodeExists(AActor* TargetActor);
+	/** Check if an actor has already been marked */
+	bool DoesNodeExist(TArray<FTargetSystemNode> TargetSystemNodes, AActor* TargetActor);
 
 	void UpdateWeaponView();
 
