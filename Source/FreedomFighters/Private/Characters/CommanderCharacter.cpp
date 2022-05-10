@@ -95,7 +95,7 @@ FHitResult ACommanderCharacter::GetCurrentTraceHit(float Length)
 
 
 	FHitResult OutHit;
-	FVector Start = GetActorLocation();
+	FVector Start = FollowCamera->GetComponentLocation();
 
 	FVector ForwardVector = FollowCamera->GetForwardVector();
 	FVector End = ((ForwardVector * Length) + Start);
