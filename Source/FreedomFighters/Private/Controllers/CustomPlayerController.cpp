@@ -96,6 +96,8 @@ void ACustomPlayerController::InitInputComponent()
 
 	// number keys
 	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
+	InputComponent->BindAction("SwitchWeapons", IE_Released, this, &ACustomPlayerController::CloseRadialMenu);
+
 	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
 
 	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
@@ -141,6 +143,8 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 			InteractKeyDisplayName = UKismetInputLibrary::Key_GetDisplayName(OutMappings[0].Key).ToString();
 		}
 	}
+
+	IsShowingRadialMenu = false;
 }
 
 void ACustomPlayerController::BeginPlay()
@@ -181,7 +185,7 @@ void ACustomPlayerController::InitBeginPlayCommon()
 		{
 			SetViewTargetWithBlend(OwningCombatCharacter->GetVehicletSeat().OwningVehicle, 0.0f);
 		}
-	 
+
 
 		// Character can be spawned in to use MG such as helicopter gunner
 		UseMountedGun();
@@ -234,6 +238,7 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 	{
 		CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
 		CurrentSupportPackage->PlayInteractSound();
+		CurrentSupportPackageIndex = SupportPackages.Num() - 1;
 	}
 
 
@@ -462,10 +467,18 @@ void ACustomPlayerController::AddUIWidgets()
 		}
 	}
 
+	if (RadialMenuWidgetClass) {
+		RadialMenuWidget = CreateWidget<UUserWidget>(World, RadialMenuWidgetClass);
+
+		if (RadialMenuWidget) {
+			RadialMenuWidget->AddToViewport();
+			RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+
+	}
 
 	// Commander UI
-	if (OwningCommander)
-	{
+	if (OwningCommander) {
 		OwningCommander->AddUIWidget();
 	}
 }
@@ -676,7 +689,7 @@ void ACustomPlayerController::DisplayEndGameUMG()
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
 {
-	if (Val == 0.f || !IsLocalPlayerController())
+	if (Val == 0.f || !IsLocalPlayerController() || IsShowingRadialMenu)
 	{
 		return;
 	}
@@ -717,7 +730,7 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 
 void ACustomPlayerController::AddControllerYawInput(float Val)
 {
-	if (Val == 0.f || !IsLocalPlayerController())
+	if (Val == 0.f || !IsLocalPlayerController() || IsShowingRadialMenu)
 	{
 		return;
 	}
@@ -925,7 +938,7 @@ void ACustomPlayerController::TakeCover()
 
 void ACustomPlayerController::BeginFire()
 {
-	if (OwningCombatCharacter->GetIsExitingVehicle()) {
+	if (OwningCombatCharacter->GetIsExitingVehicle() || IsShowingRadialMenu) {
 		return;
 	}
 
@@ -971,14 +984,39 @@ void ACustomPlayerController::SwitchWeapon()
 		return;
 	}
 
-	if (ControlledVehicle)
-	{
+	if (ControlledVehicle) {
 		ControlledVehicle->ChangeWeapon();
 	}
 	else
 	{
-		OwningCombatCharacter->BeginWeaponSwap();
+		// if there is a radial widget created
+		if (RadialMenuWidget && !IsShowingRadialMenu) {
+
+			IsShowingRadialMenu = true;
+
+			OwningCombatCharacter->DisableInput(this);
+			SetShowMouseCursor(true);
+			RadialMenuWidget->SetVisibility(ESlateVisibility::Visible);
+		}
 	}
+}
+
+
+void ACustomPlayerController::CloseRadialMenu()
+{
+	if (!IsShowingRadialMenu) {
+		return;
+	}
+
+	IsShowingRadialMenu = false;
+
+	// remove radial from screen
+	if (RadialMenuWidget->IsInViewport()) {
+		OwningCombatCharacter->EnableInput(this);
+		SetShowMouseCursor(false);
+		RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
 }
 
 
@@ -1183,6 +1221,34 @@ void ACustomPlayerController::SortSupportPackages()
 		CurrentSupportPackage = nullptr;
 		CurrentSupportPackageIndex = -1;
 	}
+}
+
+void ACustomPlayerController::SelectSupportPackage(int32 Index)
+{
+	int32 TargetPosition = SupportPackages.Num() - 1;
+
+	// ignore if selecting the same index
+	if (TargetPosition == Index) {
+		return;
+	}
+
+	// swap last index with the selected index
+	auto Temp = SupportPackages[TargetPosition];
+	SupportPackages[TargetPosition] = SupportPackages[Index];
+	SupportPackages[Index] = Temp;
+
+
+	// update current support package
+	CurrentSupportPackage = SupportPackages[TargetPosition];
+	CurrentSupportPackageIndex = TargetPosition;
+
+	CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
+	CurrentSupportPackage->PlayInteractSound();
+
+
+	// dispatch event
+	OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, Index, true);
+
 }
 
 bool ACustomPlayerController::CanAddSupportPackages()

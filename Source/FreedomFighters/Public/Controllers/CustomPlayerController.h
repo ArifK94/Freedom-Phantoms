@@ -103,12 +103,18 @@ private:
 		TSubclassOf<UUserWidget> EndGameWidgetClass;
 	UUserWidget* EndGameWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> RadialMenuWidgetClass;
+	UUserWidget* RadialMenuWidget;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FString InteractKeyDisplayName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<ASupportPackage*> SupportPackages;
-	ASupportPackage* CurrentSupportPackage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		ASupportPackage* CurrentSupportPackage;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AActor* FocusedInteractableActor;
@@ -141,6 +147,7 @@ private:
 		float OverlapSpehereRadius;
 
 	bool HasGameEnded;
+	bool IsShowingRadialMenu;
 
 private:
 	void PostDeath();
@@ -232,6 +239,9 @@ public:
 	void BeginReload();
 
 	void SwitchWeapon();
+
+	UFUNCTION(BlueprintCallable)
+		void CloseRadialMenu();
 	void ToggleThermalVision();
 
 	void PickupInteractable();
@@ -247,6 +257,10 @@ public:
 	void SetControlledVehicle(AVehicleBase* InVehicle, bool IsContolled);
 	void AddSupportPackage(ASupportPackage* InSupportPackage);
 	void SortSupportPackages();
+
+	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
+	UFUNCTION(BlueprintCallable)
+		void SelectSupportPackage(int32 Index);
 
 	bool CanAddSupportPackages();
 
