@@ -241,6 +241,9 @@ public:
 	void SwitchWeapon();
 
 	UFUNCTION(BlueprintCallable)
+		void OpenRadialMenu();
+
+	UFUNCTION(BlueprintCallable)
 		void CloseRadialMenu();
 	void ToggleThermalVision();
 

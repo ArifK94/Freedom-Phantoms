@@ -96,7 +96,9 @@ void ACustomPlayerController::InitInputComponent()
 
 	// number keys
 	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
-	InputComponent->BindAction("SwitchWeapons", IE_Released, this, &ACustomPlayerController::CloseRadialMenu);
+
+	InputComponent->BindAction("InventoryToggle", IE_Pressed, this, &ACustomPlayerController::OpenRadialMenu);
+	InputComponent->BindAction("InventoryToggle", IE_Released, this, &ACustomPlayerController::CloseRadialMenu);
 
 	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
 
@@ -989,16 +991,22 @@ void ACustomPlayerController::SwitchWeapon()
 	}
 	else
 	{
-		// if there is a radial widget created
-		if (RadialMenuWidget && !IsShowingRadialMenu) {
-
-			IsShowingRadialMenu = true;
-
-			OwningCombatCharacter->DisableInput(this);
-			SetShowMouseCursor(true);
-			RadialMenuWidget->SetVisibility(ESlateVisibility::Visible);
-		}
+		OwningCombatCharacter->BeginWeaponSwap();
 	}
+}
+
+void ACustomPlayerController::OpenRadialMenu()
+{
+	// if there is a radial widget created or already showing?
+	if (!RadialMenuWidget || IsShowingRadialMenu) {
+		return;
+	}
+
+	IsShowingRadialMenu = true;
+
+	OwningCombatCharacter->DisableInput(this);
+	SetShowMouseCursor(true);
+	RadialMenuWidget->SetVisibility(ESlateVisibility::Visible);
 }
 
 
@@ -1016,7 +1024,6 @@ void ACustomPlayerController::CloseRadialMenu()
 		SetShowMouseCursor(false);
 		RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
-
 }
 
 
