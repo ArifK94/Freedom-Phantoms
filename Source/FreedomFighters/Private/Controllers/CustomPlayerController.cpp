@@ -691,7 +691,7 @@ void ACustomPlayerController::DisplayEndGameUMG()
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
 {
-	if (Val == 0.f || !IsLocalPlayerController() || IsShowingRadialMenu)
+	if (Val == 0.f || !IsLocalPlayerController())
 	{
 		return;
 	}
@@ -732,7 +732,7 @@ void ACustomPlayerController::AddControllerPitchInput(float Val)
 
 void ACustomPlayerController::AddControllerYawInput(float Val)
 {
-	if (Val == 0.f || !IsLocalPlayerController() || IsShowingRadialMenu)
+	if (Val == 0.f || !IsLocalPlayerController())
 	{
 		return;
 	}
@@ -940,7 +940,7 @@ void ACustomPlayerController::TakeCover()
 
 void ACustomPlayerController::BeginFire()
 {
-	if (OwningCombatCharacter->GetIsExitingVehicle() || IsShowingRadialMenu) {
+	if (OwningCombatCharacter->GetIsExitingVehicle()) {
 		return;
 	}
 
@@ -1004,7 +1004,7 @@ void ACustomPlayerController::OpenRadialMenu()
 
 	IsShowingRadialMenu = true;
 
-	OwningCombatCharacter->DisableInput(this);
+	DisableInput(this);
 	SetShowMouseCursor(true);
 	RadialMenuWidget->SetVisibility(ESlateVisibility::Visible);
 }
@@ -1020,9 +1020,9 @@ void ACustomPlayerController::CloseRadialMenu()
 
 	// remove radial from screen
 	if (RadialMenuWidget->IsInViewport()) {
-		OwningCombatCharacter->EnableInput(this);
 		SetShowMouseCursor(false);
 		RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		EnableInput(this);
 	}
 }
 
