@@ -1006,6 +1006,11 @@ void ACustomPlayerController::OpenRadialMenu()
 
 	DisableInput(this);
 	SetShowMouseCursor(true);
+	FInputModeGameAndUI InData;
+	InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InData.SetWidgetToFocus(RadialMenuWidget->TakeWidget());
+	SetInputMode(InData);
+
 	RadialMenuWidget->SetVisibility(ESlateVisibility::Visible);
 }
 
@@ -1020,8 +1025,14 @@ void ACustomPlayerController::CloseRadialMenu()
 
 	// remove radial from screen
 	if (RadialMenuWidget->IsInViewport()) {
+
+		FInputModeGameOnly InputMode;
+		InputMode.SetConsumeCaptureMouseDown(false);
+		SetInputMode(InputMode);
 		SetShowMouseCursor(false);
+
 		RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+
 		EnableInput(this);
 	}
 }
