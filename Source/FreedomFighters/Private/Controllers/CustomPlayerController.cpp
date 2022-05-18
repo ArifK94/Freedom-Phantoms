@@ -1270,9 +1270,12 @@ void ACustomPlayerController::SelectSupportPackage(int32 Index)
 	CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
 	CurrentSupportPackage->PlayInteractSound();
 
+	// if current collected interactable is a support package, it will still reference the previious support package. 
+	// Either update the collected interactable to current support package or make it null
+	CollectedInteractableActor = Cast<ASupportPackage>(CollectedInteractableActor) ? CurrentSupportPackage : CollectedInteractableActor;
 
 	// dispatch event
-	OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, Index, true);
+	OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, TargetPosition, true);
 
 }
 
