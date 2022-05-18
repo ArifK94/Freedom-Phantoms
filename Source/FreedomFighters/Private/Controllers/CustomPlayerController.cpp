@@ -1160,8 +1160,6 @@ void ACustomPlayerController::PickupInteractable()
 
 	// Invoke the interface pickup method
 	IInteractable::Execute_OnPickup(CollectedInteractableActor, OwningCombatCharacter, this);
-
-
 }
 
 void ACustomPlayerController::UseInteractableActor()
