@@ -46,6 +46,8 @@ private:
 	USphereComponent* OverlapSphere;
 
 	FTimerHandle THandler_PostDeath;
+	FTimerHandle THandler_DelayedInput;
+
 
 	/** The actor tag of the player start position on the map */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -245,6 +247,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void CloseRadialMenu();
+
+	/** Wait for a few seconds after the radial menu is closed, then enable the controller input. Without this delay, the player can shoot after left clicking an item from the radial menu. */
+	void EnableInputDelay();
+
 	void ToggleThermalVision();
 
 	void PickupInteractable();

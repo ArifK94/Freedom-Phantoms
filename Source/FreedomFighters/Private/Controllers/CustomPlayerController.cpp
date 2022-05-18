@@ -1004,6 +1004,8 @@ void ACustomPlayerController::OpenRadialMenu()
 
 	IsShowingRadialMenu = true;
 
+	GetWorldTimerManager().ClearTimer(THandler_DelayedInput);
+
 	DisableInput(this);
 	SetShowMouseCursor(true);
 	FInputModeGameAndUI InData;
@@ -1033,10 +1035,15 @@ void ACustomPlayerController::CloseRadialMenu()
 
 		RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
 
-		EnableInput(this);
+		GetWorldTimerManager().SetTimer(THandler_DelayedInput, this, &ACustomPlayerController::EnableInputDelay, 0.1f, true, .1f);
 	}
 }
 
+void ACustomPlayerController::EnableInputDelay()
+{
+	EnableInput(this);
+	GetWorldTimerManager().ClearTimer(THandler_DelayedInput);
+}
 
 void ACustomPlayerController::ToggleThermalVision()
 {
