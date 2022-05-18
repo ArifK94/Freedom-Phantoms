@@ -96,6 +96,10 @@ void ACustomPlayerController::InitInputComponent()
 
 	// number keys
 	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
+
+	InputComponent->BindAction("InventoryToggle", IE_Pressed, this, &ACustomPlayerController::OpenRadialMenu);
+	InputComponent->BindAction("InventoryToggle", IE_Released, this, &ACustomPlayerController::CloseRadialMenu);
+
 	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
 
 	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
@@ -141,6 +145,8 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 			InteractKeyDisplayName = UKismetInputLibrary::Key_GetDisplayName(OutMappings[0].Key).ToString();
 		}
 	}
+
+	IsShowingRadialMenu = false;
 }
 
 void ACustomPlayerController::BeginPlay()
@@ -181,7 +187,7 @@ void ACustomPlayerController::InitBeginPlayCommon()
 		{
 			SetViewTargetWithBlend(OwningCombatCharacter->GetVehicletSeat().OwningVehicle, 0.0f);
 		}
-	 
+
 
 		// Character can be spawned in to use MG such as helicopter gunner
 		UseMountedGun();
@@ -234,6 +240,7 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 	{
 		CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
 		CurrentSupportPackage->PlayInteractSound();
+		CurrentSupportPackageIndex = SupportPackages.Num() - 1;
 	}
 
 
@@ -462,10 +469,18 @@ void ACustomPlayerController::AddUIWidgets()
 		}
 	}
 
+	if (RadialMenuWidgetClass) {
+		RadialMenuWidget = CreateWidget<UUserWidget>(World, RadialMenuWidgetClass);
+
+		if (RadialMenuWidget) {
+			RadialMenuWidget->AddToViewport();
+			RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+
+	}
 
 	// Commander UI
-	if (OwningCommander)
-	{
+	if (OwningCommander) {
 		OwningCommander->AddUIWidget();
 	}
 }
@@ -971,8 +986,7 @@ void ACustomPlayerController::SwitchWeapon()
 		return;
 	}
 
-	if (ControlledVehicle)
-	{
+	if (ControlledVehicle) {
 		ControlledVehicle->ChangeWeapon();
 	}
 	else
@@ -981,6 +995,55 @@ void ACustomPlayerController::SwitchWeapon()
 	}
 }
 
+void ACustomPlayerController::OpenRadialMenu()
+{
+	// if there is a radial widget created or already showing?
+	if (!RadialMenuWidget || IsShowingRadialMenu) {
+		return;
+	}
+
+	IsShowingRadialMenu = true;
+
+	GetWorldTimerManager().ClearTimer(THandler_DelayedInput);
+
+	DisableInput(this);
+	SetShowMouseCursor(true);
+	FInputModeGameAndUI InData;
+	InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InData.SetWidgetToFocus(RadialMenuWidget->TakeWidget());
+	SetInputMode(InData);
+
+	RadialMenuWidget->SetVisibility(ESlateVisibility::Visible);
+}
+
+
+void ACustomPlayerController::CloseRadialMenu()
+{
+	if (!IsShowingRadialMenu) {
+		return;
+	}
+
+	IsShowingRadialMenu = false;
+
+	// remove radial from screen
+	if (RadialMenuWidget->IsInViewport()) {
+
+		FInputModeGameOnly InputMode;
+		InputMode.SetConsumeCaptureMouseDown(false);
+		SetInputMode(InputMode);
+		SetShowMouseCursor(false);
+
+		RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+		GetWorldTimerManager().SetTimer(THandler_DelayedInput, this, &ACustomPlayerController::EnableInputDelay, 0.1f, true, .1f);
+	}
+}
+
+void ACustomPlayerController::EnableInputDelay()
+{
+	EnableInput(this);
+	GetWorldTimerManager().ClearTimer(THandler_DelayedInput);
+}
 
 void ACustomPlayerController::ToggleThermalVision()
 {
@@ -1097,8 +1160,6 @@ void ACustomPlayerController::PickupInteractable()
 
 	// Invoke the interface pickup method
 	IInteractable::Execute_OnPickup(CollectedInteractableActor, OwningCombatCharacter, this);
-
-
 }
 
 void ACustomPlayerController::UseInteractableActor()
@@ -1183,6 +1244,37 @@ void ACustomPlayerController::SortSupportPackages()
 		CurrentSupportPackage = nullptr;
 		CurrentSupportPackageIndex = -1;
 	}
+}
+
+void ACustomPlayerController::SelectSupportPackage(int32 Index)
+{
+	int32 TargetPosition = SupportPackages.Num() - 1;
+
+	// ignore if selecting the same index
+	if (TargetPosition == Index) {
+		return;
+	}
+
+	// swap last index with the selected index
+	auto Temp = SupportPackages[TargetPosition];
+	SupportPackages[TargetPosition] = SupportPackages[Index];
+	SupportPackages[Index] = Temp;
+
+
+	// update current support package
+	CurrentSupportPackage = SupportPackages[TargetPosition];
+	CurrentSupportPackageIndex = TargetPosition;
+
+	CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
+	CurrentSupportPackage->PlayInteractSound();
+
+	// if current collected interactable is a support package, it will still reference the previious support package. 
+	// Either update the collected interactable to current support package or make it null
+	CollectedInteractableActor = Cast<ASupportPackage>(CollectedInteractableActor) ? CurrentSupportPackage : CollectedInteractableActor;
+
+	// dispatch event
+	OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, TargetPosition, true);
+
 }
 
 bool ACustomPlayerController::CanAddSupportPackages()
