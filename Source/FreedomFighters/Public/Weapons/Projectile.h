@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "ObjectPoolActor.h"
 #include "StructCollection.h"
-#include "WeaponBullet.generated.h"
+#include "Projectile.generated.h"
 
 class UParticleSystem;
 class USoundBase;
@@ -16,17 +16,21 @@ class UArrowComponent;
 class USphereComponent;
 class ACombatCharacter;
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnProjectileImpactSignature, FProjectileImpactParameters, ProjectileImpactParameters);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnProjectileImpactSignature, FProjectileImpactParameters, ProjectileImpactParameters);
 UCLASS()
-class FREEDOMFIGHTERS_API AWeaponBullet : public AObjectPoolActor
+class FREEDOMFIGHTERS_API AProjectile : public AObjectPoolActor
 {
 	GENERATED_BODY()
-	
-public:	
-	AWeaponBullet();
 
-	//UPROPERTY(BlueprintAssignable)
-	//	FOnProjectileImpactSignature OnProjectileImpact;
+public:
+	AProjectile();
+
+	virtual void Activate() override;
+
+	virtual void Deactivate() override;
+
+	UPROPERTY(BlueprintAssignable)
+		FOnProjectileImpactSignature OnProjectileImpact;
 
 private:
 
@@ -119,10 +123,6 @@ private:
 private:
 	void Init();
 
-	virtual void Activate() override;
-
-	virtual void Deactivate() override;
-
 	void RetrieveSurfaceImpactSet();
 
 	void Movement();
@@ -144,7 +144,7 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 
-public:	
+public:
 	float getDamageAmount() {
 		return DamageAmount;
 	}

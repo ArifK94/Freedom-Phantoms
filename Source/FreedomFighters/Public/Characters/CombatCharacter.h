@@ -11,6 +11,7 @@ class AWeapon;
 class AMountedGun;
 class ACommanderCharacter;
 class UTeamFactionComponent;
+class AProjectile;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCharacter*, CombatCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
@@ -95,14 +96,17 @@ protected:
 		ACommanderCharacter* CommandingOfficer;
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* currentWeaponObj;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* primaryWeaponObj;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* secondaryWeaponObj;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+		AWeapon* GrenadeWeapon;
 
 	AMountedGun* MountedGun;
 
@@ -177,6 +181,8 @@ public:
 	void GrabWeapon();
 	void EndEquipWeapon();
 
+	void BeginEquipGrenade();
+
 	void swapWeapon();
 
 	void PickupWeapon(AWeapon* Weapon);
@@ -208,6 +214,7 @@ public:
 private:
 	void SpawnHelmet();
 	void SpawnLoadout(LoadoutType LoadoutType = LoadoutType::Assault, bool SpecifyType = false);
+	void SpawnGrenades();
 
 	void UpdateCombatMode();
 

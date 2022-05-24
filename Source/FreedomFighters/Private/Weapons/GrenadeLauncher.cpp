@@ -3,7 +3,7 @@
 
 #include "Weapons/GrenadeLauncher.h"
 #include "Weapons/WeaponClip.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "DrawDebugHelpers.h"

@@ -1,7 +1,7 @@
 #include "Characters/BaseCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
 #include "Weapons/Weapon.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "Vehicles/VehicleBase.h"
 #include "Visuals/OrderIcon.h"
 

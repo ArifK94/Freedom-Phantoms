@@ -2,7 +2,7 @@
 
 
 #include "Weapons/WeaponClip.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 
 #include "Kismet/GameplayStatics.h"
 

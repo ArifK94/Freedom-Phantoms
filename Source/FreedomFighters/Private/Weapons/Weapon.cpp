@@ -1,6 +1,6 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponClip.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "Weapons/WeaponAttachment.h"
 #include "Characters/CombatCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
@@ -481,7 +481,7 @@ void AWeapon::CreateBullet()
 
 		if (BulletClass)
 		{
-			AWeaponBullet* Bullet = nullptr;
+			AProjectile* Bullet = nullptr;
 
 			// Use object pooling if specified
 			if (UseObjectPool)
@@ -490,7 +490,7 @@ void AWeapon::CreateBullet()
 
 				if (PoolActor)
 				{
-					Bullet = Cast<AWeaponBullet>(PoolActor);
+					Bullet = Cast<AProjectile>(PoolActor);
 				}
 			}
 
@@ -501,7 +501,7 @@ void AWeapon::CreateBullet()
 				SpawnParams.Owner = MyOwner;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				Bullet = GetWorld()->SpawnActor<AWeaponBullet>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
+				Bullet = GetWorld()->SpawnActor<AProjectile>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
 			}
 
 

@@ -16,7 +16,7 @@ class USoundCue;
 class UAudioComponent;
 class AWeaponAttachment;
 class AWeaponClip;
-class AWeaponBullet;
+class AProjectile;
 class UObjectPoolComponent;
 class UTexture;
 class UPointLightComponent;
@@ -90,7 +90,7 @@ protected:
 	AWeaponClip* weaponClipObj;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<AWeaponBullet> BulletClass;
+		TSubclassOf<AProjectile> BulletClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		TSubclassOf<UDamageType> DamageType;

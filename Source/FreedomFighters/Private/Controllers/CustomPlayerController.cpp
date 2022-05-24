@@ -5,7 +5,7 @@
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "Weapons/AmmoCrate.h"
 #include "Vehicles/VehicleBase.h"
 #include "Props/SupportPackage.h"

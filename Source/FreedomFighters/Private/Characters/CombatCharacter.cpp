@@ -7,7 +7,7 @@
 #include "Weapons/Pistol.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "CustomComponents/ObjectPoolComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
 #include "FreedomFighters/FreedomFighters.h"
@@ -66,7 +66,7 @@ void ACombatCharacter::BeginPlay()
 
 	SpawnHelmet();
 	SpawnLoadout();
-
+	SpawnGrenades();
 
 	if (Loadout && WeaponsDataSet)
 	{
@@ -520,6 +520,19 @@ void ACombatCharacter::SpawnLoadout(LoadoutType LoadoutType, bool SpecifyType)
 
 }
 
+void ACombatCharacter::SpawnGrenades()
+{
+	if (!WeaponsDataSet || !WeaponsDataSet->GrenadeClass) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	GrenadeWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->GrenadeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+}
+
 
 void ACombatCharacter::BeginSprint()
 {
@@ -711,6 +724,10 @@ void ACombatCharacter::EndEquipWeapon()
 	if (WeaponAnimDataSet) {
 		StopAnimMontage(WeaponAnimDataSet->DrawMontage);
 	}
+}
+
+void ACombatCharacter::BeginEquipGrenade()
+{
 }
 
 

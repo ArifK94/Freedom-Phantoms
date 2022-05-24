@@ -17,7 +17,7 @@ class AVehicleBase;
 class ATargetSystemMarker;
 class AWeapon;
 class AMountedGun;
-class AWeaponBullet;
+class AProjectile;
 class UUserWidget;
 class USoundBase;
 class AHeadgear;
@@ -109,7 +109,7 @@ public:
 		AWeapon* WeaponCauser;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		AWeaponBullet* Bullet;
+		AProjectile* Projectile;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		FHitResult HitInfo;
@@ -135,7 +135,7 @@ public:
 
 		WeaponCauser = nullptr;
 
-		Bullet = nullptr;
+		Projectile = nullptr;
 
 		Damage = .0f;
 
@@ -393,6 +393,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<TSubclassOf<AWeapon>> MachinePistols;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TSubclassOf<AWeapon> GrenadeClass;
+
 
 	FWeaponsSet()
 	{
@@ -409,7 +412,7 @@ struct FREEDOMFIGHTERS_API FProjectileImpactParameters
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		AWeaponBullet* ProjectileActor;
+		AProjectile* ProjectileActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		int KillCount;
@@ -436,7 +439,7 @@ public:
 		IsMultiKill = false;
 	}
 
-	void SetProjectileActor(AWeaponBullet* InProjectileActor)
+	void SetProjectileActor(AProjectile* InProjectileActor)
 	{
 		ProjectileActor = InProjectileActor;
 	}

@@ -2,7 +2,7 @@
 #include "CustomComponents/TeamFactionComponent.h"
 #include "FreedomFighters/FreedomFighters.h"
 #include "Characters/CombatCharacter.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"

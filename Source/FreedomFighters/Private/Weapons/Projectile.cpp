@@ -1,4 +1,4 @@
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "ObjectPoolActor.h"
 #include "Weapons/Weapon.h"
 #include "CustomComponents/HealthComponent.h"
@@ -17,7 +17,7 @@
 #include "DrawDebugHelpers.h"
 #include "Niagara/Public/NiagaraFunctionLibrary.h"
 
-AWeaponBullet::AWeaponBullet()
+AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -42,7 +42,7 @@ AWeaponBullet::AWeaponBullet()
 	InitialSpeed = 12000.0;
 	Mass = 500.f;
 	Drag = 0.1f;
-	Gravity = FVector(0.f, 0.f, -980.f);
+	Gravity = FVector(0.f, 0.f, -100.f);
 
 	RowName = "Bullet";
 
@@ -51,7 +51,7 @@ AWeaponBullet::AWeaponBullet()
 	DestroyOnDeactivate = false;
 }
 
-void AWeaponBullet::Init()
+void AProjectile::Init()
 {
 	if (GetOwner())
 	{
@@ -72,7 +72,7 @@ void AWeaponBullet::Init()
 	}
 }
 
-void AWeaponBullet::BeginPlay()
+void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -85,7 +85,7 @@ void AWeaponBullet::BeginPlay()
 	RetrieveSurfaceImpactSet();
 }
 
-void AWeaponBullet::Tick(float DeltaTime)
+void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	CurrentDeltaTime = DeltaTime;
@@ -113,7 +113,7 @@ void AWeaponBullet::Tick(float DeltaTime)
 
 }
 
-void AWeaponBullet::Movement()
+void AProjectile::Movement()
 {
 	// Get projectile's location at beginning of tick
 	PreviousPosition = GetActorLocation();
@@ -139,7 +139,7 @@ void AWeaponBullet::Movement()
 	DetectHit();
 }
 
-void AWeaponBullet::FollowEyePoint()
+void AProjectile::FollowEyePoint()
 {
 	//if (WeaponParent == nullptr) {
 	//	return;
@@ -160,7 +160,7 @@ void AWeaponBullet::FollowEyePoint()
 
 }
 
-void AWeaponBullet::Activate()
+void AProjectile::Activate()
 {
 	Super::Activate();
 
@@ -176,7 +176,7 @@ void AWeaponBullet::Activate()
 	Init();
 }
 
-void AWeaponBullet::Deactivate()
+void AProjectile::Deactivate()
 {
 	if (DestroyOnDeactivate)
 	{
@@ -189,7 +189,7 @@ void AWeaponBullet::Deactivate()
 	Super::Deactivate();
 }
 
-void AWeaponBullet::RetrieveSurfaceImpactSet()
+void AProjectile::RetrieveSurfaceImpactSet()
 {
 	if (SurfaceImpactDatatable == nullptr) {
 		return;
@@ -199,7 +199,7 @@ void AWeaponBullet::RetrieveSurfaceImpactSet()
 	SurfaceImpact = SurfaceImpactDatatable->FindRow<FSurfaceImpact>(RowName, ContextString, true);
 }
 
-void AWeaponBullet::DetectHit()
+void AProjectile::DetectHit()
 {
 	FHitResult OutHit;
 
@@ -260,7 +260,7 @@ void AWeaponBullet::DetectHit()
 				HealthParameters.DamageCauser = MyOwner;
 				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
 				HealthParameters.WeaponCauser = WeaponParent;
-				//HealthParameters.Projectile = this;
+				HealthParameters.Projectile = this;
 				HealthParameters.HitInfo = OutHit;
 				HealthParameters.Damage = ActualDamage;
 				HealthComponent->OnDamage(HealthParameters);
@@ -306,7 +306,7 @@ void AWeaponBullet::DetectHit()
 		}
 
 		ProjectileImpactParameters.KillCount = KillCount;
-		//ProjectileImpactParameters.SetProjectileActor(this);
+		ProjectileImpactParameters.SetProjectileActor(this);
 
 		if (OwningCombatCharacter)
 		{
@@ -314,11 +314,11 @@ void AWeaponBullet::DetectHit()
 		}
 	}
 
-	//OnProjectileImpact.Broadcast(ProjectileImpactParameters);
+	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
 	Deactivate();
 }
 
-void AWeaponBullet::Explode(FVector ImpactPoint)
+void AProjectile::Explode(FVector ImpactPoint)
 {
 	UWorld* World = GetWorld();
 
@@ -361,7 +361,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 				HealthParameters.DamageCauser = MyOwner;
 				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
 				HealthParameters.WeaponCauser = WeaponParent;
-				//HealthParameters.Projectile = this;
+				HealthParameters.Projectile = this;
 				HealthParameters.HitInfo = Hit;
 				HealthParameters.Damage = DamageAmount;
 				HealthParameters.IsExplosive = isAnExplosive;
@@ -385,7 +385,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 
 
 
-FSurfaceImpactSet AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
+FSurfaceImpactSet AProjectile::CheckSurface(EPhysicalSurface SurfaceType)
 {
 	FSurfaceImpactSet SurfaceImpactSet = SurfaceImpact->Default;
 
@@ -418,7 +418,7 @@ FSurfaceImpactSet AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 	return SurfaceImpactSet;
 }
 
-void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction)
+void AProjectile::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction)
 {
 	// confirm kill if
 	// damaged actor is not the owner
@@ -440,7 +440,7 @@ void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionCo
 	}
 }
 
-FCollisionQueryParams AWeaponBullet::GetQueryParams()
+FCollisionQueryParams AProjectile::GetQueryParams()
 {
 	FCollisionQueryParams QueryParams;
 	QueryParams.bReturnPhysicalMaterial = true;

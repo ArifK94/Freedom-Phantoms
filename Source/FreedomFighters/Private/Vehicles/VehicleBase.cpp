@@ -6,7 +6,7 @@
 #include "Props/TargetSystemMarker.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
 #include "CustomComponents/ObjectPoolComponent.h"
@@ -901,7 +901,7 @@ void AVehicleBase::ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters I
 					HealthParameters.DamageCauser = InHealthParams.DamageCauser;
 					HealthParameters.InstigatedBy = InHealthParams.InstigatedBy;
 					HealthParameters.WeaponCauser = InHealthParams.WeaponCauser;
-					HealthParameters.Bullet = InHealthParams.Bullet;
+					HealthParameters.Projectile = InHealthParams.Projectile;
 					HealthParameters.HitInfo = InHealthParams.HitInfo;
 					HealthParameters.IsExplosive = true;
 					DamagedHealthComponent->OnDamage(HealthParameters);
