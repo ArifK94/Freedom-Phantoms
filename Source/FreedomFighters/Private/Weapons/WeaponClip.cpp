@@ -8,6 +8,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/AudioComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -66,7 +67,12 @@ void AWeaponClip::OnClipHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		{
 			if (HighImpactSound != NULL)
 			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), .5f, 1.f, 0.f, ClipAttenuationSettings);
+				if (CollisionAudioComponent == nullptr) {
+					CollisionAudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), FRotator::ZeroRotator,  .5f, 1.f, 0.f, ClipAttenuationSettings);
+				}
+				else {
+					CollisionAudioComponent->Play();
+				}
 			}
 		}
 

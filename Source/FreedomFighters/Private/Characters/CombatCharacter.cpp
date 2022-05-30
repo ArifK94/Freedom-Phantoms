@@ -295,6 +295,26 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 	}
 }
 
+void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParameters)
+{
+	if (!WeaponUpdateParameters.IsFiring && WeaponUpdateParameters.HasFiredShot) {
+		EndFire();
+
+		isFiring = false;
+
+		UpdateCombatMode();
+
+		// in case character is not aiming
+		if (!isAiming) {
+			HandGuardAlpha = 0.0f;
+		}
+
+		if (WeaponAnimDataSet) {
+			StopAnimMontage(WeaponAnimDataSet->Shooting);
+		}
+	}
+}
+
 void ACombatCharacter::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters)
 {
 	EnemyKilled();
@@ -316,9 +336,14 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 	if (Weapon == nullptr) {
 		return;
 	}
-
+	
 	if (BindEvent)
 	{
+		if (!Weapon->OnWeaponUpdate.IsBound())
+		{
+			Weapon->OnWeaponUpdate.AddDynamic(this, &ACombatCharacter::OnWeaponUpdated);
+		}
+
 		if (!Weapon->OnKillConfirmed.IsBound())
 		{
 			Weapon->OnKillConfirmed.AddDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
@@ -334,6 +359,11 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 	}
 	else
 	{
+		if (Weapon->OnWeaponUpdate.IsBound())
+		{
+			Weapon->OnWeaponUpdate.RemoveDynamic(this, &ACombatCharacter::OnWeaponUpdated);
+		}
+
 		if (Weapon->OnKillConfirmed.IsBound())
 		{
 			Weapon->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
@@ -530,7 +560,11 @@ void ACombatCharacter::SpawnGrenades()
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	GrenadeWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponsDataSet->GrenadeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	GrenadeWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(WeaponsDataSet->GrenadeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (GrenadeWeapon) {
+		RegisterWeaponEvents(Cast<AWeapon>(GrenadeWeapon), true);
+	}
 }
 
 
@@ -657,6 +691,7 @@ void ACombatCharacter::BeginWeaponSwap()
 	{
 		isSwappingWeapon = true;
 		EndFire();
+		EndAim();
 		UpdateCombatMode();
 
 		if (WeaponAnimDataSet) {
@@ -726,10 +761,6 @@ void ACombatCharacter::EndEquipWeapon()
 	}
 }
 
-void ACombatCharacter::BeginEquipGrenade()
-{
-}
-
 
 void ACombatCharacter::swapWeapon()
 {
@@ -745,11 +776,15 @@ void ACombatCharacter::swapWeapon()
 	hasEquippedWeapon = false;
 	UpdateCombatMode();
 
-	if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
+	if (currentWeaponObj == primaryWeaponObj)	// set secondary weapon if current is primary 
 	{
 		currentWeaponObj = secondaryWeaponObj;
 	}
-	else // set primary weapon
+	else if (currentWeaponObj == secondaryWeaponObj && GrenadeWeapon) // set to grenades if current is secondary
+	{
+		currentWeaponObj = Cast<AWeapon>(GrenadeWeapon);
+	}
+	else  // set primary weapon
 	{
 		currentWeaponObj = primaryWeaponObj;
 	}
@@ -784,7 +819,7 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 	if (currentWeaponObj == nullptr) {
 		IsPrimary = true;
 	}
-	
+
 	// if character is currently using a primary weapon then it should swap current with the pickup weapon.
 	else if (currentWeaponObj == primaryWeaponObj) {
 		IsPrimary = true;
@@ -868,36 +903,36 @@ void ACombatCharacter::BeginFire()
 		}
 	}
 
-	isFiring = true;
 	currentWeaponObj->StartFire();
 
+	isFiring = true;
 
 	UpdateCombatMode();
 
 	if (WeaponAnimDataSet) {
 		PlayAnimMontage(WeaponAnimDataSet->Shooting);
 	}
-
 }
 
 void ACombatCharacter::EndFire()
 {
-	if (currentWeaponObj)
-	{
-		currentWeaponObj->StopFire();
-		isFiring = false;
-
-		UpdateCombatMode();
-
-		// in case character is not aiming
-		if (!isAiming) {
-			HandGuardAlpha = 0.0f;
-		}
-
-		if (WeaponAnimDataSet) {
-			StopAnimMontage(WeaponAnimDataSet->Shooting);
-		}
+	if (currentWeaponObj == nullptr) {
+		return;
 	}
+
+	currentWeaponObj->StopFire();
+	//isFiring = false;
+
+	//UpdateCombatMode();
+
+	//// in case character is not aiming
+	//if (!isAiming) {
+	//	HandGuardAlpha = 0.0f;
+	//}
+
+	//if (WeaponAnimDataSet) {
+	//	StopAnimMontage(WeaponAnimDataSet->Shooting);
+	//}
 }
 
 

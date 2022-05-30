@@ -46,4 +46,9 @@ void UCharacterAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		Character->SetIsReviving(false);
 	}
 
+	if (EndCombat) {
+		Character->EndAim();
+		Character->EndFire();
+	}
+
 }

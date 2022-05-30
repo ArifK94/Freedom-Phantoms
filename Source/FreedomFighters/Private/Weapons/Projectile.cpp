@@ -113,6 +113,20 @@ void AProjectile::Tick(float DeltaTime)
 
 }
 
+void AProjectile::PlayCollisionSound(FVector Position)
+{
+	if (CollisionSound == nullptr) {
+		return;
+	}
+
+	if (CollisionAudioComponent == nullptr) {
+		CollisionAudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), CollisionSound, Position, FRotator::ZeroRotator, 1.f, 1.f, 0.f, ImpactAttenuation);
+	}
+	else {
+		CollisionAudioComponent->Play();
+	}
+}
+
 void AProjectile::Movement()
 {
 	// Get projectile's location at beginning of tick
@@ -270,6 +284,8 @@ void AProjectile::DetectHit()
 			}
 		}
 	}
+
+	PlayCollisionSound(OutHit.ImpactPoint);
 
 	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
 

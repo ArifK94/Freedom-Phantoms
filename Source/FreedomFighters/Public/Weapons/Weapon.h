@@ -21,6 +21,7 @@ class UObjectPoolComponent;
 class UTexture;
 class UPointLightComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponUpdateSignature, FWeaponUpdateParameters, WeaponUpdateParameters);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEmptyAmmoClipSignature, AWeapon*, Weapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmedSignature, FProjectileImpactParameters, ProjectileImpactParameters);
 
@@ -102,6 +103,10 @@ protected:
 		bool canShowClip;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isFiring;
+
+	/** Prevent shooting montage from stopping if pressed to fire but has not fired a shot, making sure that the weapon has been shot before stopping shooting montage */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool HasFiredFirstShot;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
@@ -307,6 +312,9 @@ public:
 	AWeapon();
 
 	UPROPERTY(BlueprintAssignable)
+		FOnWeaponUpdateSignature OnWeaponUpdate;
+
+	UPROPERTY(BlueprintAssignable)
 		FOnEmptyAmmoClipSignature OnEmptyAmmoClip;
 
 	UPROPERTY(BlueprintAssignable)
@@ -322,8 +330,10 @@ public:
 	virtual bool OnUseInteraction_Implementation(APawn* InPawn, AController* InController) override;
 	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 
+	virtual void Fire();
+
 	UFUNCTION(BlueprintCallable)
-		void StartFire();
+		virtual void StartFire();
 
 	UFUNCTION(BlueprintCallable)
 		void StopFire();
@@ -384,7 +394,6 @@ protected:
 
 	void DelayedInit();
 
-	virtual void Fire();
 
 	void CreateBullet();
 
@@ -429,6 +438,8 @@ public:
 
 	bool getIsReloading() { return isReloading; }
 	bool getIsFiring() { return isFiring; }
+	bool GetHasFiredFirstShot() { return HasFiredFirstShot; }
+
 
 	bool GetHasUnlimitedAmmo() { return HasUnlimitedAmmo; }
 	void SetUnlimitedAmmo(bool IsUnlimited) { HasUnlimitedAmmo = IsUnlimited; }

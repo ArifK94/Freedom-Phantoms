@@ -28,6 +28,9 @@ private:
 
 	int CurrentAmmo;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* CollisionAudioComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 		USoundBase* HighImpactSound;
 

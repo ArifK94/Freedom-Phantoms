@@ -41,19 +41,27 @@ void UWeaponAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 
 			if (Weapon)
 			{
-				if (animType == AnimType::ReloadClipIn)
+				switch (animType)
 				{
+				case AnimType::ReloadClipIn:
 					Weapon->ClipIn();
-				}
-				else if (animType == AnimType::ReloadClipOut)
-				{
+					break;
+				case AnimType::ReloadClipOut:
 					Weapon->ClipOut();
-
-				}
-				else if (animType == AnimType::GrabClip)
-				{
+					break;
+				case AnimType::GrabClip:
 					Character->GetCurrentWeapon()->SetClipSocket(Character->GetMesh());
+					break;
+				case AnimType::FireWeapon:
+					Weapon->Fire();
+					break;
+				case AnimType::StopFire:
+					Weapon->StopFire();
+					break;
+				default:
+					break;
 				}
+
 			}
 
 

@@ -17,6 +17,8 @@ enum class AnimType : uint8
 	ReloadClipOut UMETA(DisplayName = "ReloadClipOut"),
 	ReloadEnd UMETA(DisplayName = "ReloadEnd"),
 	GrabClip UMETA(DisplayName = "GrabClip"),
+	FireWeapon UMETA(DisplayName = "FireWeapon"),
+	StopFire UMETA(DisplayName = "StopFire"),
 
 };
 UCLASS()

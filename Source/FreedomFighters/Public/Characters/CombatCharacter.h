@@ -11,7 +11,7 @@ class AWeapon;
 class AMountedGun;
 class ACommanderCharacter;
 class UTeamFactionComponent;
-class AProjectile;
+class AThrowableWeapon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCharacter*, CombatCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
@@ -106,7 +106,7 @@ private:
 		AWeapon* secondaryWeaponObj;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-		AWeapon* GrenadeWeapon;
+		AThrowableWeapon* GrenadeWeapon;
 
 	AMountedGun* MountedGun;
 
@@ -169,6 +169,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon Actions")
 		void BeginWeaponSwap();
+
+	UFUNCTION()
+		void OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParameters);
 
 	UFUNCTION()
 		void OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters);

@@ -45,6 +45,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* BulletMovementAudio;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* CollisionAudioComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
 		UDataTable* SurfaceImpactDatatable;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
@@ -56,6 +59,10 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
 		USoundBase* TravelSound;
+
+	/** The audio asset to play when projectile collides with something */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+		USoundBase* CollisionSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		bool isAnExplosive;
@@ -143,6 +150,11 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
+
+
+	/** Play sound when collided with something. */
+	UFUNCTION(BlueprintCallable)
+		void PlayCollisionSound(FVector Position);
 
 public:
 	float getDamageAmount() {

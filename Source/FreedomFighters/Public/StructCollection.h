@@ -16,6 +16,7 @@ class ACommanderCharacter;
 class AVehicleBase;
 class ATargetSystemMarker;
 class AWeapon;
+class AThrowableWeapon;
 class AMountedGun;
 class AProjectile;
 class UUserWidget;
@@ -394,7 +395,7 @@ public:
 		TArray<TSubclassOf<AWeapon>> MachinePistols;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TSubclassOf<AWeapon> GrenadeClass;
+		TSubclassOf<AThrowableWeapon> GrenadeClass;
 
 
 	FWeaponsSet()
@@ -403,6 +404,30 @@ public:
 	}
 };
 
+
+/**
+* Used when weapon state is changed
+*/
+USTRUCT(BlueprintType)
+struct FREEDOMFIGHTERS_API FWeaponUpdateParameters
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+		bool IsFiring;
+
+	/** Has the weapon fired a shot? */
+	UPROPERTY()
+		bool HasFiredShot;
+
+
+	FWeaponUpdateParameters()
+	{
+		IsFiring = false;
+		HasFiredShot = false;
+	}
+};
 
 USTRUCT(BlueprintType)
 struct FREEDOMFIGHTERS_API FProjectileImpactParameters
@@ -502,6 +527,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UAimOffsetBlendSpace* AimOffsetProning;
+
+	FWeaponAnimSet()
+	{
+
+	}
 };
 
 

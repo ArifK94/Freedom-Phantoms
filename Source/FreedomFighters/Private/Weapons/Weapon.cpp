@@ -89,6 +89,7 @@ AWeapon::AWeapon()
 	HasUnlimitedAmmo = false;
 	CanAutoReload = false;
 	HasNoReload = false;
+	HasFiredFirstShot = false;
 
 	DrawShotLine = false;
 	ShotLineDuration = 5.0f;
@@ -416,6 +417,13 @@ void AWeapon::Fire()
 	{
 		BurstAmmountCount++;
 	}
+
+	HasFiredFirstShot = true;
+
+	FWeaponUpdateParameters WeaponUpdateParameters;
+	WeaponUpdateParameters.IsFiring = true;
+	WeaponUpdateParameters.HasFiredShot = true;
+	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 
 void AWeapon::CreateBullet()
@@ -653,15 +661,25 @@ void AWeapon::StartFire()
 
 void AWeapon::StopFire()
 {
+	if (!HasFiredFirstShot) {
+		return;
+	}
+
 	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
 	isFiring = false;
+	HasFiredFirstShot = false;
 
 	CurrentVerticleRecoil = 0.0f;
 
 	ChargeDown();
 
 	GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
+
+	FWeaponUpdateParameters WeaponUpdateParameters;
+	WeaponUpdateParameters.IsFiring = false;
+	WeaponUpdateParameters.HasFiredShot = true;
+	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 
 void AWeapon::ChargeUp()
@@ -806,6 +824,8 @@ void AWeapon::OnReload()
 void AWeapon::BeginReload()
 {
 	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !isReloading)	return;
+
+	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
 	isFiring = false;
 	isReloading = true;
