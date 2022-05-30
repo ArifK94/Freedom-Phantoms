@@ -43,6 +43,7 @@ AProjectile::AProjectile()
 	Mass = 500.f;
 	Drag = 0.1f;
 	Gravity = FVector(0.f, 0.f, -100.f);
+	CountdownTimer = -1.f;
 
 	RowName = "Bullet";
 
@@ -53,6 +54,10 @@ AProjectile::AProjectile()
 
 void AProjectile::Init()
 {
+	if (CountdownTimer > 0.f) {
+		GetWorldTimerManager().SetTimer(THandler_CountdownTimer, this, &AProjectile::SelfDestruct, 1.f, true, CountdownTimer);
+	}
+
 	if (GetOwner())
 	{
 		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
@@ -75,6 +80,8 @@ void AProjectile::Init()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	CapsuleComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnCapsuleHit);
 
 	// if not being used as an object pool, then perform as standard actor
 	Init();
@@ -113,6 +120,13 @@ void AProjectile::Tick(float DeltaTime)
 
 }
 
+void AProjectile::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	PlayCollisionSound(NormalImpulse);
+
+	LastHit = Hit;
+}
+
 void AProjectile::PlayCollisionSound(FVector Position)
 {
 	if (CollisionSound == nullptr) {
@@ -120,7 +134,7 @@ void AProjectile::PlayCollisionSound(FVector Position)
 	}
 
 	if (CollisionAudioComponent == nullptr) {
-		CollisionAudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), CollisionSound, Position, FRotator::ZeroRotator, 1.f, 1.f, 0.f, ImpactAttenuation);
+		CollisionAudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), CollisionSound, Position, FRotator::ZeroRotator, 1.f, 1.f, 0.f, CollisionAttenuation);
 	}
 	else {
 		CollisionAudioComponent->Play();
@@ -192,11 +206,12 @@ void AProjectile::Activate()
 
 void AProjectile::Deactivate()
 {
-	if (DestroyOnDeactivate)
-	{
+	if (DestroyOnDeactivate) {
 		Destroy();
 		return;
 	}
+
+	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
 
 	KillCount = 0;
 
@@ -476,4 +491,59 @@ FCollisionQueryParams AProjectile::GetQueryParams()
 	}
 
 	return QueryParams;
+}
+
+void AProjectile::SelfDestruct()
+{
+	FVector Location = GetActorLocation();
+	Explode(Location);
+
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(LastHit.PhysMaterial.Get());
+	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
+
+	if (ImpactSurface.Sound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, Location, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
+	}
+
+	if (ImpactSurface.ParticleEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, Location);
+	}
+
+	if (ImpactSurface.NiagaraEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, Location);
+	}
+
+
+	FProjectileImpactParameters ProjectileImpactParameters;
+	if (KillCount > 0)
+	{
+		if (KillCount == 1)
+		{
+			ProjectileImpactParameters.IsSingleKill = true;
+		}
+		else if (KillCount == 2)
+		{
+			ProjectileImpactParameters.IsDoubleKill = true;
+		}
+		else if (KillCount > 2)
+		{
+			ProjectileImpactParameters.IsMultiKill = true;
+		}
+
+		ProjectileImpactParameters.KillCount = KillCount;
+		ProjectileImpactParameters.SetProjectileActor(this);
+
+		if (OwningCombatCharacter) {
+			OwningCombatCharacter->SetKillCount(KillCount);
+		}
+	}
+
+	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
+
+	Deactivate();
+
+	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
 }

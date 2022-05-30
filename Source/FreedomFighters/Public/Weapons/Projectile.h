@@ -57,6 +57,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
 		USoundAttenuation* ImpactAttenuation;
 
+	/** Attentuation for the collision sound */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+		USoundAttenuation* CollisionAttenuation;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
 		USoundBase* TravelSound;
 
@@ -119,6 +123,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Object Pooling", meta = (AllowPrivateAccess = "true"))
 		bool DestroyOnDeactivate;
 
+	/** Countdown for the projectile to be destroyed, useful for grenades (Less than zero means there will be no countdown timer) */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Destruction", meta = (AllowPrivateAccess = "true"))
+		float CountdownTimer;
+
 	AWeapon* WeaponParent;
 
 	int KillCount;
@@ -126,6 +134,11 @@ private:
 	UHealthComponent* OwnerHealth;
 	UTeamFactionComponent* OwnerFaction;
 	ACombatCharacter* OwningCombatCharacter;
+
+	FTimerHandle THandler_CountdownTimer;
+
+	FHitResult LastHit;
+
 
 private:
 	void Init();
@@ -140,11 +153,16 @@ private:
 
 	void Explode(FVector ImpactPoint);
 
+	void SelfDestruct();
+
 	FSurfaceImpactSet CheckSurface(EPhysicalSurface SurfaceType);
 
 	void AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction);
 
 	FCollisionQueryParams GetQueryParams();
+
+	UFUNCTION()
+		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 protected:
 	virtual void BeginPlay() override;
