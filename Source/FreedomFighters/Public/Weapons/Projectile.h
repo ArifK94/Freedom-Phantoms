@@ -54,33 +54,33 @@ private:
 		FName RowName;
 	FSurfaceImpact* SurfaceImpact;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects", meta = (AllowPrivateAccess = "true"))
 		USoundAttenuation* ImpactAttenuation;
 
 	/** Attentuation for the collision sound */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects", meta = (AllowPrivateAccess = "true"))
 		USoundAttenuation* CollisionAttenuation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects", meta = (AllowPrivateAccess = "true"))
 		USoundBase* TravelSound;
 
 	/** The audio asset to play when projectile collides with something */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Effects", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects", meta = (AllowPrivateAccess = "true"))
 		USoundBase* CollisionSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		bool isAnExplosive;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UDamageType> DamageType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		float DamageAmount;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		float ExplosiveRadius;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		bool IgnoreOwner;
 
 
@@ -100,20 +100,21 @@ private:
 		float HomingFollowFactor;
 
 	// Custom Projectile Movement
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
 		bool UseCustomProjectileMovement;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
 		float InitialSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
 		float Mass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
 		float Drag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
 		FVector Gravity;
+
 	FVector Velocity;
 	FVector Acceleration;
 	FVector NextPosition;
@@ -126,6 +127,23 @@ private:
 	/** Countdown for the projectile to be destroyed, useful for grenades (Less than zero means there will be no countdown timer) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Destruction", meta = (AllowPrivateAccess = "true"))
 		float CountdownTimer;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+		float DecalSizeMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+		float DecalSizeMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+		float DecalRotationMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+		float DecalRotationMax;
+
+	/** Destroy decal component after time runs out (0 = infinite) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+		float DecalLifetime;
 
 	AWeapon* WeaponParent;
 
@@ -158,6 +176,8 @@ private:
 	FSurfaceImpactSet CheckSurface(EPhysicalSurface SurfaceType);
 
 	void AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction);
+
+	bool IsInAir();
 
 	FCollisionQueryParams GetQueryParams();
 

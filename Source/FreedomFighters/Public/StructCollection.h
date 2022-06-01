@@ -896,6 +896,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UNiagaraSystem* NiagaraEffect;
 
+	/** VFX for when in Air */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UParticleSystem* AirParticleEffect;
+
+	/** VFX for when in Air */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UNiagaraSystem* AirNiagaraEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UMaterialInterface* DecalMaterial;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USoundBase* Sound;
 

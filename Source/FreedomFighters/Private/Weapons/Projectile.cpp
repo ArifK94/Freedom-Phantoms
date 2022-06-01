@@ -50,6 +50,12 @@ AProjectile::AProjectile()
 	UseCustomProjectileMovement = true;
 	HomingFollowWeaponEyePoint = false;
 	DestroyOnDeactivate = false;
+
+	DecalSizeMin = 150.f;
+	DecalSizeMax = 300.f;
+	DecalRotationMin = -360.f;
+	DecalRotationMax = 360.f;
+	DecalLifetime = 0.f;
 }
 
 void AProjectile::Init()
@@ -309,15 +315,39 @@ void AProjectile::DetectHit()
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
 	}
 
-	if (ImpactSurface.ParticleEffect)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, OutHit.ImpactPoint);
+	if (IsInAir()) {
+
+		if (ImpactSurface.AirParticleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, OutHit.ImpactPoint);
+		}
+
+		if (ImpactSurface.AirNiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, OutHit.ImpactPoint);
+		}
+	}
+	else {
+
+		if (ImpactSurface.ParticleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, OutHit.ImpactPoint);
+		}
+
+		if (ImpactSurface.NiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, OutHit.ImpactPoint);
+		}
 	}
 
-	if (ImpactSurface.NiagaraEffect)
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, OutHit.ImpactPoint);
+	if (ImpactSurface.DecalMaterial) {
+		float Size = UKismetMathLibrary::RandomFloatInRange(DecalSizeMin, DecalSizeMax);
+		FVector SizeVector = UKismetMathLibrary::MakeVector(Size, Size, Size);
+		float Rotation = UKismetMathLibrary::RandomFloatInRange(DecalRotationMin, DecalRotationMax);
+		FRotator SizeRotator = UKismetMathLibrary::MakeRotator(Rotation, -90.f, Rotation);
+		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ImpactSurface.DecalMaterial, SizeVector, OutHit.ImpactPoint, SizeRotator, DecalLifetime);
 	}
+
 
 	FProjectileImpactParameters ProjectileImpactParameters;
 
@@ -444,6 +474,9 @@ FSurfaceImpactSet AProjectile::CheckSurface(EPhysicalSurface SurfaceType)
 	case SURFACE_SAND:
 		SurfaceImpactSet = SurfaceImpact->Sand;
 		break;
+	default:
+		SurfaceImpactSet = SurfaceImpact->Default;
+		break;
 	}
 
 	return SurfaceImpactSet;
@@ -506,14 +539,35 @@ void AProjectile::SelfDestruct()
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, Location, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
 	}
 
-	if (ImpactSurface.ParticleEffect)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, Location);
+	if (IsInAir()) {
+		if (ImpactSurface.AirParticleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, Location);
+		}
+
+		if (ImpactSurface.AirNiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, Location);
+		}
+	}
+	else {
+		if (ImpactSurface.ParticleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, Location);
+		}
+
+		if (ImpactSurface.NiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, Location);
+		}
 	}
 
-	if (ImpactSurface.NiagaraEffect)
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, Location);
+	if (ImpactSurface.DecalMaterial) {
+		float Size = UKismetMathLibrary::RandomFloatInRange(DecalSizeMin, DecalSizeMax);
+		FVector SizeVector = UKismetMathLibrary::MakeVector(Size, Size, Size);
+		float Rotation = UKismetMathLibrary::RandomFloatInRange(DecalRotationMin, DecalRotationMax);
+		FRotator SizeRotator = UKismetMathLibrary::MakeRotator(Rotation, -90.f, Rotation);
+		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ImpactSurface.DecalMaterial, SizeVector, Location, SizeRotator, DecalLifetime);
 	}
 
 
@@ -546,4 +600,23 @@ void AProjectile::SelfDestruct()
 	Deactivate();
 
 	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
+}
+
+bool AProjectile::IsInAir()
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.bTraceComplex = true;
+	QueryParams.AddIgnoredActor(this);
+
+	FVector Start = GetActorLocation();
+	FVector End = Start + FVector(.0f, .0f, -100.f);
+
+	FHitResult OutHit;
+	return GetWorld()->LineTraceSingleByChannel(
+		OutHit,
+		Start,
+		End,
+		ECC_Visibility,
+		QueryParams
+	);
 }
