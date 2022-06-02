@@ -10,12 +10,14 @@
 #include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/DecalComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "Niagara/Public/NiagaraFunctionLibrary.h"
+
 
 AProjectile::AProjectile()
 {
@@ -55,7 +57,10 @@ AProjectile::AProjectile()
 	DecalSizeMax = 300.f;
 	DecalRotationMin = -360.f;
 	DecalRotationMax = 360.f;
-	DecalLifetime = 0.f;
+	DecalLifetime = 5.f;
+	DecalFadeOutDuration = 10.f;
+
+	CamShakeOuterRadius = 2000.f;
 }
 
 void AProjectile::Init()
@@ -309,45 +314,7 @@ void AProjectile::DetectHit()
 	PlayCollisionSound(OutHit.ImpactPoint);
 
 	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
-
-	if (ImpactSurface.Sound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
-	}
-
-	if (IsInAir()) {
-
-		if (ImpactSurface.AirParticleEffect)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, OutHit.ImpactPoint);
-		}
-
-		if (ImpactSurface.AirNiagaraEffect)
-		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, OutHit.ImpactPoint);
-		}
-	}
-	else {
-
-		if (ImpactSurface.ParticleEffect)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, OutHit.ImpactPoint);
-		}
-
-		if (ImpactSurface.NiagaraEffect)
-		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, OutHit.ImpactPoint);
-		}
-	}
-
-	if (ImpactSurface.DecalMaterial) {
-		float Size = UKismetMathLibrary::RandomFloatInRange(DecalSizeMin, DecalSizeMax);
-		FVector SizeVector = UKismetMathLibrary::MakeVector(Size, Size, Size);
-		float Rotation = UKismetMathLibrary::RandomFloatInRange(DecalRotationMin, DecalRotationMax);
-		FRotator SizeRotator = UKismetMathLibrary::MakeRotator(Rotation, -90.f, Rotation);
-		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ImpactSurface.DecalMaterial, SizeVector, OutHit.ImpactPoint, SizeRotator, DecalLifetime);
-	}
-
+	SetVFX(ImpactSurface, OutHit.ImpactPoint);
 
 	FProjectileImpactParameters ProjectileImpactParameters;
 
@@ -533,42 +500,7 @@ void AProjectile::SelfDestruct()
 
 	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(LastHit.PhysMaterial.Get());
 	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
-
-	if (ImpactSurface.Sound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, Location, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
-	}
-
-	if (IsInAir()) {
-		if (ImpactSurface.AirParticleEffect)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, Location);
-		}
-
-		if (ImpactSurface.AirNiagaraEffect)
-		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, Location);
-		}
-	}
-	else {
-		if (ImpactSurface.ParticleEffect)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, Location);
-		}
-
-		if (ImpactSurface.NiagaraEffect)
-		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, Location);
-		}
-	}
-
-	if (ImpactSurface.DecalMaterial) {
-		float Size = UKismetMathLibrary::RandomFloatInRange(DecalSizeMin, DecalSizeMax);
-		FVector SizeVector = UKismetMathLibrary::MakeVector(Size, Size, Size);
-		float Rotation = UKismetMathLibrary::RandomFloatInRange(DecalRotationMin, DecalRotationMax);
-		FRotator SizeRotator = UKismetMathLibrary::MakeRotator(Rotation, -90.f, Rotation);
-		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ImpactSurface.DecalMaterial, SizeVector, Location, SizeRotator, DecalLifetime);
-	}
+	SetVFX(ImpactSurface, Location);
 
 
 	FProjectileImpactParameters ProjectileImpactParameters;
@@ -600,6 +532,51 @@ void AProjectile::SelfDestruct()
 	Deactivate();
 
 	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
+}
+
+void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation)
+{
+	if (ImpactSurface.Sound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, ImpactLocation, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
+	}
+
+	if (IsInAir()) {
+		if (ImpactSurface.AirParticleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, ImpactLocation);
+		}
+
+		if (ImpactSurface.AirNiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, ImpactLocation);
+		}
+	}
+	else {
+		if (ImpactSurface.ParticleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, ImpactLocation);
+		}
+
+		if (ImpactSurface.NiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, ImpactLocation);
+		}
+	}
+
+	if (ImpactSurface.DecalMaterial) {
+		float Size = UKismetMathLibrary::RandomFloatInRange(DecalSizeMin, DecalSizeMax);
+		FVector SizeVector = UKismetMathLibrary::MakeVector(Size, Size, Size);
+		float Rotation = UKismetMathLibrary::RandomFloatInRange(DecalRotationMin, DecalRotationMax);
+		FRotator SizeRotator = UKismetMathLibrary::MakeRotator(Rotation, -90.f, Rotation);
+		auto DecalComponent = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ImpactSurface.DecalMaterial, SizeVector, ImpactLocation, SizeRotator, DecalLifetime);
+		DecalComponent->SetFadeOut(DecalLifetime, DecalFadeOutDuration);
+	}
+
+	if (CameraShake) {
+		UGameplayStatics::PlayWorldCameraShake(GetWorld(), CameraShake, ImpactLocation, CamShakeInnerRadius, CamShakeOuterRadius);
+		//GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(CameraShake, .5f);
+	}
 }
 
 bool AProjectile::IsInAir()

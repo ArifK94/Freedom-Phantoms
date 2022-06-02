@@ -129,21 +129,35 @@ private:
 		float CountdownTimer;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 		float DecalSizeMin;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 		float DecalSizeMax;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 		float DecalRotationMin;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 		float DecalRotationMax;
 
 	/** Destroy decal component after time runs out (0 = infinite) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 		float DecalLifetime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+		float DecalFadeOutDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class UCameraShakeBase> CameraShake;
+
+	/** Cameras inside this radius are ignored */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+		float CamShakeInnerRadius;
+
+	/** Cameras outside of InnerRadius and inside this are effected */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
+		float CamShakeOuterRadius;
 
 	AWeapon* WeaponParent;
 
@@ -156,6 +170,8 @@ private:
 	FTimerHandle THandler_CountdownTimer;
 
 	FHitResult LastHit;
+
+
 
 
 private:
@@ -180,6 +196,8 @@ private:
 	bool IsInAir();
 
 	FCollisionQueryParams GetQueryParams();
+
+	void SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation);
 
 	UFUNCTION()
 		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
