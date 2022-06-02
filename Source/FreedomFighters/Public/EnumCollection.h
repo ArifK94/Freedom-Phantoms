@@ -34,6 +34,14 @@ enum class WeaponType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EWeaponState : uint8
+{
+	Default			UMETA(DisplayName = "Default"),
+	Firing			UMETA(DisplayName = "Firing"),
+	Reloading		UMETA(DisplayName = "Reloading")
+};
+
+UENUM(BlueprintType)
 enum class SelectiveFire : uint8
 {
 	Automatic		UMETA(DisplayName = "Automatic"),

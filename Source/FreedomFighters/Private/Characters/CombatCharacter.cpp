@@ -297,7 +297,7 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParameters)
 {
-	if (!WeaponUpdateParameters.IsFiring && WeaponUpdateParameters.HasFiredShot) {
+	if (WeaponUpdateParameters.WeaponState != EWeaponState::Firing && WeaponUpdateParameters.HasFiredShot) {
 		EndFire();
 
 		isFiring = false;
@@ -313,6 +313,7 @@ void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParam
 			StopAnimMontage(WeaponAnimDataSet->Shooting);
 		}
 	}
+
 }
 
 void ACombatCharacter::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters)

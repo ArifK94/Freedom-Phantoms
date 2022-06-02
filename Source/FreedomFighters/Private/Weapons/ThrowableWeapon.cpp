@@ -57,6 +57,22 @@ void AThrowableWeapon::Fire()
 	CurrentAmmo -= 1;
 
 	CreateBullet();
+
+	if (CurrentAmmo <= 0) {
+		isFiring = false;
+
+		OnEmptyAmmoClip.Broadcast(this);
+
+		if (!HasNoReload) {
+			return;
+		}
+	}
+
+	//BeginReload();
+	//FWeaponUpdateParameters WeaponUpdateParameters;
+	//WeaponUpdateParameters.HasFiredShot = true;
+	//WeaponUpdateParameters.WeaponState = EWeaponState::Reloading;
+	//OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 
 void AThrowableWeapon::StartFire()

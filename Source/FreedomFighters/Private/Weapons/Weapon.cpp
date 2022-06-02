@@ -421,9 +421,20 @@ void AWeapon::Fire()
 	HasFiredFirstShot = true;
 
 	FWeaponUpdateParameters WeaponUpdateParameters;
-	WeaponUpdateParameters.IsFiring = true;
 	WeaponUpdateParameters.HasFiredShot = true;
+	WeaponUpdateParameters.WeaponState = EWeaponState::Firing;
 	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
+
+	if (CurrentAmmo <= 0) {
+		isFiring = false;
+
+		OnEmptyAmmoClip.Broadcast(this);
+
+		if (!HasNoReload)
+		{
+			return;
+		}
+	}
 }
 
 void AWeapon::CreateBullet()
@@ -677,8 +688,8 @@ void AWeapon::StopFire()
 	GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
 
 	FWeaponUpdateParameters WeaponUpdateParameters;
-	WeaponUpdateParameters.IsFiring = false;
 	WeaponUpdateParameters.HasFiredShot = true;
+	WeaponUpdateParameters.WeaponState = EWeaponState::Default;
 	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 

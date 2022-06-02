@@ -414,17 +414,17 @@ struct FREEDOMFIGHTERS_API FWeaponUpdateParameters
 	GENERATED_BODY()
 
 public:
-	UPROPERTY()
-		bool IsFiring;
-
 	/** Has the weapon fired a shot? */
 	UPROPERTY()
 		bool HasFiredShot;
 
+	UPROPERTY()
+		EWeaponState WeaponState;
+
 
 	FWeaponUpdateParameters()
 	{
-		IsFiring = false;
+		WeaponState = EWeaponState::Default;
 		HasFiredShot = false;
 	}
 };
