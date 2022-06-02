@@ -575,7 +575,6 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 
 	if (CameraShake) {
 		UGameplayStatics::PlayWorldCameraShake(GetWorld(), CameraShake, ImpactLocation, CamShakeInnerRadius, CamShakeOuterRadius);
-		//GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(CameraShake, .5f);
 	}
 }
 
