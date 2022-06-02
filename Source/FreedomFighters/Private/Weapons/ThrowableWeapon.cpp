@@ -67,17 +67,15 @@ void AThrowableWeapon::Fire()
 			return;
 		}
 	}
-
-	//BeginReload();
-	//FWeaponUpdateParameters WeaponUpdateParameters;
-	//WeaponUpdateParameters.HasFiredShot = true;
-	//WeaponUpdateParameters.WeaponState = EWeaponState::Reloading;
-	//OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 
 void AThrowableWeapon::StartFire()
 {
 	if (isFiring) {
+		return;
+	}
+
+	if (isReloading) {
 		return;
 	}
 

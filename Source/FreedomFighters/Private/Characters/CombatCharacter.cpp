@@ -55,6 +55,7 @@ ACombatCharacter::ACombatCharacter()
 	HandGuardAlpha = 0.0f;
 
 	WeaponHandSocket = "weapon_hand";
+	WeaponHandThrowablesSocket = "weapon_throwable_hand";
 }
 
 void ACombatCharacter::BeginPlay()
@@ -665,7 +666,7 @@ void ACombatCharacter::UpdateCombatMode()
 bool ACombatCharacter::CanSwapWeapon()
 {
 	// if has no weapon.
-	if (currentWeaponObj == nullptr) {
+	if (currentWeaponObj == nullptr || isSwappingWeapon || isEquippingWeapon) {
 		return false;
 	}
 
@@ -740,7 +741,13 @@ void ACombatCharacter::GrabWeapon()
 
 	if (!hasEquippedWeapon)
 	{
-		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		
+		if (currentWeaponObj == Cast<AWeapon>(GrenadeWeapon)) {
+			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandThrowablesSocket);
+		}
+		else {
+			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		}
 		hasEquippedWeapon = true;
 		UpdateCombatMode();
 	}
@@ -816,15 +823,19 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 	// should the current weapon be dropped after picking up another weapon?
 	bool CanDropWeapon = false;
 
+	auto CurrentWeapon = currentWeaponObj;
+
 	// if no current weapon then this pickup weapon will be primary
-	if (currentWeaponObj == nullptr) {
+	if (CurrentWeapon == nullptr) {
 		IsPrimary = true;
 	}
 
 	// if character is currently using a primary weapon then it should swap current with the pickup weapon.
-	else if (currentWeaponObj == primaryWeaponObj) {
+	// or current weapons is a throwable.
+	else if (CurrentWeapon == primaryWeaponObj || CurrentWeapon == Cast<AWeapon>(GrenadeWeapon)) {
 		IsPrimary = true;
 		CanDropWeapon = true;
+		CurrentWeapon = primaryWeaponObj;
 	}
 
 	// if there is no secondary weapon, then this pickup weapon will be a secondary
@@ -834,7 +845,7 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 	}
 
 	// if currently using secondary weapon.
-	else if (currentWeaponObj == secondaryWeaponObj) {
+	else if (CurrentWeapon == secondaryWeaponObj) {
 		IsPrimary = false;
 		CanDropWeapon = true;
 	}
@@ -858,14 +869,17 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 
 	if (CanDropWeapon) {
 		// drop the current weapon
-		currentWeaponObj->DropWeapon();
+		CurrentWeapon->DropWeapon();
 
 		// set the actor location of current to where the pickup weapon is
-		currentWeaponObj->SetActorLocationAndRotation(Weapon->GetActorLocation(), Weapon->GetActorRotation());
+		CurrentWeapon->SetActorLocationAndRotation(Weapon->GetActorLocation(), Weapon->GetActorRotation());
 
 		// assign new weapon to current weapon
-		currentWeaponObj = Weapon;
-		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		CurrentWeapon = Weapon;
+
+		CurrentWeapon->setWeaponSocket(GetMesh(), WeaponHandSocket);
+
+		currentWeaponObj = CurrentWeapon;
 
 		RetrieveWeaponAnimDataSet();
 	}

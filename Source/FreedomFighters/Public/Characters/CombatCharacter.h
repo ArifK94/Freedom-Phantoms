@@ -84,6 +84,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName WeaponHandSocket;
 
+	/** Socket for the grenades & other throwables */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		FName WeaponHandThrowablesSocket;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accessory", meta = (AllowPrivateAccess = "true"))
 		AHeadgear* Headgear;
