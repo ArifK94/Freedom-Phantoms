@@ -693,6 +693,11 @@ void AWeapon::StopFire()
 	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 
+bool AWeapon::CanFireWeapon()
+{
+	return CurrentAmmo > 0 && !isReloading;
+}
+
 void AWeapon::ChargeUp()
 {
 	if (IsChargingUp) {

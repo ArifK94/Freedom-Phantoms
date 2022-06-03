@@ -918,6 +918,13 @@ void ACombatCharacter::BeginFire()
 		}
 	}
 
+	// do fire if no throwables available
+	if (Cast<AThrowableWeapon>(currentWeaponObj)) {
+		if (!currentWeaponObj->CanFireWeapon()) {
+			return;
+		}
+	}
+
 	currentWeaponObj->StartFire();
 
 	isFiring = true;

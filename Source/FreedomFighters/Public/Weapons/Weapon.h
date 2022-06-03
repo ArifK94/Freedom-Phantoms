@@ -338,6 +338,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void StopFire();
 
+	bool CanFireWeapon();
+
 	void BeginReload();
 
 	void EndReload();
