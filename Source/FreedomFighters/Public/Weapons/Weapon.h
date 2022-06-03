@@ -412,6 +412,8 @@ protected:
 
 	void PlayShotEffect(FVector EyeLocation);
 
+	void EmptyClipEvent();
+
 public:
 
 	void setCharacter(USkeletalMeshComponent* mesh) { CharacterReference = mesh; }

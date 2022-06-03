@@ -27,4 +27,7 @@ public:
 
 	virtual void StartFire() override;
 
+protected:
+	virtual void OnReload() override;
+
 };

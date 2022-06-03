@@ -43,14 +43,10 @@ void AThrowableWeapon::Fire()
 		return;
 	}
 
+	EmptyClipEvent();
+
 	if (CurrentAmmo <= 0) {
-		isFiring = false;
-
-		OnEmptyAmmoClip.Broadcast(this);
-
-		if (!HasNoReload) {
-			return;
-		}
+		return;
 	}
 
 	HasFiredFirstShot = true;
@@ -58,15 +54,9 @@ void AThrowableWeapon::Fire()
 
 	CreateBullet();
 
-	if (CurrentAmmo <= 0) {
-		isFiring = false;
+	EmptyClipEvent();
 
-		OnEmptyAmmoClip.Broadcast(this);
-
-		if (!HasNoReload) {
-			return;
-		}
-	}
+	MeshComp->SetHiddenInGame(true, true);
 }
 
 void AThrowableWeapon::StartFire()
@@ -80,4 +70,13 @@ void AThrowableWeapon::StartFire()
 	}
 
 	isFiring = false;
+}
+
+void AThrowableWeapon::OnReload()
+{
+	Super::OnReload();
+
+	if (CurrentAmmo > 0) {
+		MeshComp->SetHiddenInGame(false, true);
+	}
 }

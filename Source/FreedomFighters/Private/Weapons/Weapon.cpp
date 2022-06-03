@@ -832,6 +832,19 @@ void AWeapon::OnReload()
 	}
 }
 
+void AWeapon::EmptyClipEvent()
+{
+	if (CurrentAmmo <= 0) {
+		isFiring = false;
+
+		OnEmptyAmmoClip.Broadcast(this);
+
+		if (!HasNoReload) {
+			return;
+		}
+	}
+}
+
 void AWeapon::BeginReload()
 {
 	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !isReloading)	return;
