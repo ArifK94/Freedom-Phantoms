@@ -693,9 +693,16 @@ void AWeapon::StopFire()
 	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 
+void AWeapon::ReadyToUse()
+{
+	HasFiredFirstShot = true;
+
+	StopFire();
+}
+
 bool AWeapon::CanFireWeapon()
 {
-	return CurrentAmmo > 0 && !isReloading;
+	return CurrentAmmo > 0 && !isReloading && !isFiring;
 }
 
 void AWeapon::ChargeUp()

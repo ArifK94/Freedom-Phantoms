@@ -666,7 +666,7 @@ void ACombatCharacter::UpdateCombatMode()
 bool ACombatCharacter::CanSwapWeapon()
 {
 	// if has no weapon.
-	if (currentWeaponObj == nullptr || isSwappingWeapon || isEquippingWeapon) {
+	if (currentWeaponObj == nullptr || isSwappingWeapon || isEquippingWeapon || isFiring) {
 		return false;
 	}
 
@@ -711,6 +711,7 @@ void ACombatCharacter::BeginWeaponSwap()
 		{
 			currentWeaponObj = primaryWeaponObj;
 		}
+		currentWeaponObj->ReadyToUse();
 	}
 }
 
@@ -796,6 +797,8 @@ void ACombatCharacter::swapWeapon()
 	{
 		currentWeaponObj = primaryWeaponObj;
 	}
+
+	currentWeaponObj->ReadyToUse();
 
 	RetrieveWeaponAnimDataSet();
 	BeginEquipWeapon();

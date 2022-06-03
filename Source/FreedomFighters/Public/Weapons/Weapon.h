@@ -338,6 +338,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void StopFire();
 
+	/** Reset to Default. Useful for swapping weapons then making sure weapon can be fired again. */
+	void ReadyToUse();
+
 	bool CanFireWeapon();
 
 	void BeginReload();

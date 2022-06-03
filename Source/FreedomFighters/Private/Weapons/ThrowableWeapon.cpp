@@ -69,7 +69,7 @@ void AThrowableWeapon::StartFire()
 		return;
 	}
 
-	isFiring = false;
+	isFiring = true;
 }
 
 void AThrowableWeapon::OnReload()
