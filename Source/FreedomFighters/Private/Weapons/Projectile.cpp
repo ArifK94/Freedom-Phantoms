@@ -203,6 +203,8 @@ void AProjectile::Activate()
 {
 	Super::Activate();
 
+	IsDestroyed = false;
+
 	KillCount = 0;
 
 	if (TravelSound != NULL)
@@ -222,6 +224,8 @@ void AProjectile::Deactivate()
 		return;
 	}
 
+	IsDestroyed = true;
+
 	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
 
 	KillCount = 0;
@@ -234,6 +238,7 @@ void AProjectile::RetrieveSurfaceImpactSet()
 	if (SurfaceImpactDatatable == nullptr) {
 		return;
 	}
+
 
 	static const FString ContextString(TEXT("Surface Impact DataSet"));
 	SurfaceImpact = SurfaceImpactDatatable->FindRow<FSurfaceImpact>(RowName, ContextString, true);
@@ -348,6 +353,13 @@ void AProjectile::DetectHit()
 
 void AProjectile::Explode(FVector ImpactPoint)
 {
+	if (IsDestroyed) {
+		return;
+	}
+
+	// required to prevent stack overflow exception if destroying nearby explosives.
+	IsDestroyed = true;
+
 	UWorld* World = GetWorld();
 
 	if (!World) {
@@ -397,6 +409,12 @@ void AProjectile::Explode(FVector ImpactPoint)
 
 				auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
 				AddKill(HealthComponent, FactionComp);
+			}
+
+
+			auto HitProjectile = Cast<AProjectile>(DamagedActor);
+			if (HitProjectile && HitProjectile->IsExplosive()) {
+				HitProjectile->SelfDestruct();
 			}
 
 			auto MeshComp = Cast<UStaticMeshComponent>(DamagedActor->GetRootComponent());
@@ -530,8 +548,6 @@ void AProjectile::SelfDestruct()
 	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
 
 	Deactivate();
-
-	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
 }
 
 void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation)

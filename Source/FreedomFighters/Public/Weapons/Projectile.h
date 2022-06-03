@@ -22,16 +22,6 @@ class FREEDOMFIGHTERS_API AProjectile : public AObjectPoolActor
 {
 	GENERATED_BODY()
 
-public:
-	AProjectile();
-
-	virtual void Activate() override;
-
-	virtual void Deactivate() override;
-
-	UPROPERTY(BlueprintAssignable)
-		FOnProjectileImpactSignature OnProjectileImpact;
-
 private:
 
 	float CurrentDeltaTime;
@@ -171,7 +161,20 @@ private:
 
 	FHitResult LastHit;
 
+	bool IsDestroyed;
 
+
+public:
+	AProjectile();
+
+	virtual void Activate() override;
+
+	virtual void Deactivate() override;
+
+	void SelfDestruct();
+
+	UPROPERTY(BlueprintAssignable)
+		FOnProjectileImpactSignature OnProjectileImpact;
 
 
 private:
@@ -186,8 +189,6 @@ private:
 	void DetectHit();
 
 	void Explode(FVector ImpactPoint);
-
-	void SelfDestruct();
 
 	FSurfaceImpactSet CheckSurface(EPhysicalSurface SurfaceType);
 
