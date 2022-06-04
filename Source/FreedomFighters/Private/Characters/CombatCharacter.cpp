@@ -332,6 +332,7 @@ void ACombatCharacter::OnWeaponAmmoEmpty(AWeapon* Weapon)
 	// reload if weapon has more ammo
 	if (Weapon->getCurrentMaxAmmo() > 0) {
 		BeginReload();
+		HandGuardAlpha = 0.0f;
 	}
 	else {
 
