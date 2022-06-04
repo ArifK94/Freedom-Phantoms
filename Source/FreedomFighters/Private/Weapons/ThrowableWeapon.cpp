@@ -28,9 +28,10 @@ void AThrowableWeapon::SetIsAiming(bool isAiming)
 {
 	Super::SetIsAiming(isAiming);
 
-	if (isAiming)
-	{
-
+	if (isAiming) {
+		if (CurrentAmmo > 0) {
+			MeshComp->SetHiddenInGame(false, true);
+		}
 	}
 }
 
@@ -70,6 +71,8 @@ void AThrowableWeapon::StartFire()
 	}
 
 	isFiring = true;
+
+	MeshComp->SetHiddenInGame(false, true);
 }
 
 void AThrowableWeapon::OnReload()
