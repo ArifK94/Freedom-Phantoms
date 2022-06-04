@@ -52,6 +52,7 @@ AProjectile::AProjectile()
 	UseCustomProjectileMovement = true;
 	HomingFollowWeaponEyePoint = false;
 	DestroyOnDeactivate = false;
+	DetectProjectileHit = true;
 
 	DecalSizeMin = 150.f;
 	DecalSizeMax = 300.f;
@@ -175,7 +176,9 @@ void AProjectile::Movement()
 	SetActorLocation(NextPosition);
 	SetActorRotation(UKismetMathLibrary::MakeRotFromX(Velocity));
 
-	DetectHit();
+	if (DetectProjectileHit) {
+		DetectHit();
+	}
 }
 
 void AProjectile::FollowEyePoint()

@@ -105,6 +105,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
 		FVector Gravity;
 
+	/** Perform Hit detection. Only works if using custom movement. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
+		bool DetectProjectileHit;
+
 	FVector Velocity;
 	FVector Acceleration;
 	FVector NextPosition;
