@@ -342,10 +342,13 @@ void AWeapon::Fire()
 
 		OnEmptyAmmoClip.Broadcast(this);
 
-		if (!HasNoReload)
-		{
+		if (!HasNoReload) {
 			return;
 		}
+	}
+
+	if (CurrentAmmo <= 0) {
+		return;
 	}
 
 	// Reset Burst fire count
@@ -823,6 +826,8 @@ void AWeapon::OnReload()
 		return;
 	}
 
+	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
+
 	if (HasUnlimitedAmmo)
 	{
 		CurrentAmmo = AmmoPerClip;
@@ -844,18 +849,6 @@ void AWeapon::OnReload()
 	}
 }
 
-void AWeapon::EmptyClipEvent()
-{
-	if (CurrentAmmo <= 0) {
-		isFiring = false;
-
-		OnEmptyAmmoClip.Broadcast(this);
-
-		if (!HasNoReload) {
-			return;
-		}
-	}
-}
 
 void AWeapon::BeginReload()
 {
@@ -885,6 +878,7 @@ void AWeapon::EndReload()
 	HasPlayedClipOut = false;
 }
 
+
 void AWeapon::ClipIn()
 {
 	if (!HasPlayedClipIn && ReloadClipInSound != NULL)
@@ -912,6 +906,19 @@ void AWeapon::ClipOut()
 	if (weaponClipObj && weaponClip && canShowClip)
 	{
 		weaponClipObj->DropClip(MeshComp, ClipSocket, weaponClip);
+	}
+}
+
+void AWeapon::EmptyClipEvent()
+{
+	if (CurrentAmmo <= 0) {
+		isFiring = false;
+
+		OnEmptyAmmoClip.Broadcast(this);
+
+		if (!HasNoReload) {
+			return;
+		}
 	}
 }
 
