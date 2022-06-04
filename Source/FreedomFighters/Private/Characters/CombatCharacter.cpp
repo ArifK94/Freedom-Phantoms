@@ -338,7 +338,7 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 	if (Weapon == nullptr) {
 		return;
 	}
-	
+
 	if (BindEvent)
 	{
 		if (!Weapon->OnWeaponUpdate.IsBound())
@@ -683,6 +683,81 @@ bool ACombatCharacter::CanSwapWeapon()
 	return false;
 }
 
+
+void ACombatCharacter::EquipWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr) {
+		return;
+	}
+
+	if (isReloading) {
+		EndReload();
+	}
+
+	NewEquippedWeapon = Weapon;
+
+	EndFire();
+
+	UpdateCombatMode();
+
+	BeginWeaponSwap();
+}
+
+void ACombatCharacter::BeginEquipWeapon()
+{
+	if (isReloading) {
+		EndReload();
+	}
+
+	if (currentWeaponObj == MountedGun) {
+		return;
+	}
+
+
+	EndFire();
+
+	isEquippingWeapon = true;
+
+	if (WeaponAnimDataSet) {
+		PlayAnimMontage(WeaponAnimDataSet->DrawMontage);
+	}
+}
+
+void ACombatCharacter::GrabWeapon()
+{
+	if (currentWeaponObj == MountedGun) {
+		return;
+	}
+
+	if (!hasEquippedWeapon)
+	{
+		if (currentWeaponObj == Cast<AWeapon>(GrenadeWeapon)) {
+			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandThrowablesSocket);
+		}
+		else {
+			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		}
+		hasEquippedWeapon = true;
+		UpdateCombatMode();
+	}
+	else
+	{
+		HolsterWeapon();
+		hasEquippedWeapon = false;
+		UpdateCombatMode();
+	}
+}
+
+void ACombatCharacter::EndEquipWeapon()
+{
+	isEquippingWeapon = false;
+	isSwappingWeapon = false;
+
+	if (WeaponAnimDataSet) {
+		StopAnimMontage(WeaponAnimDataSet->DrawMontage);
+	}
+}
+
 void ACombatCharacter::BeginWeaponSwap()
 {
 	if (!CanSwapWeapon()) {
@@ -715,62 +790,6 @@ void ACombatCharacter::BeginWeaponSwap()
 	}
 }
 
-void ACombatCharacter::BeginEquipWeapon()
-{
-	if (isReloading) {
-		EndReload();
-	}
-
-	if (currentWeaponObj == MountedGun) {
-		return;
-	}
-
-	EndFire();
-
-	isEquippingWeapon = true;
-
-	if (WeaponAnimDataSet) {
-		PlayAnimMontage(WeaponAnimDataSet->DrawMontage);
-	}
-}
-
-void ACombatCharacter::GrabWeapon()
-{
-	if (currentWeaponObj == MountedGun) {
-		return;
-	}
-
-	if (!hasEquippedWeapon)
-	{
-		
-		if (currentWeaponObj == Cast<AWeapon>(GrenadeWeapon)) {
-			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandThrowablesSocket);
-		}
-		else {
-			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
-		}
-		hasEquippedWeapon = true;
-		UpdateCombatMode();
-	}
-	else
-	{
-		HolsterWeapon();
-		hasEquippedWeapon = false;
-		UpdateCombatMode();
-	}
-}
-
-void ACombatCharacter::EndEquipWeapon()
-{
-	isEquippingWeapon = false;
-	isSwappingWeapon = false;
-
-	if (WeaponAnimDataSet) {
-		StopAnimMontage(WeaponAnimDataSet->DrawMontage);
-	}
-}
-
-
 void ACombatCharacter::swapWeapon()
 {
 	if (currentWeaponObj == MountedGun) {
@@ -781,24 +800,21 @@ void ACombatCharacter::swapWeapon()
 		EndReload();
 	}
 
-
 	hasEquippedWeapon = false;
 	UpdateCombatMode();
 
-	if (currentWeaponObj == primaryWeaponObj)	// set secondary weapon if current is primary 
-	{
-		currentWeaponObj = secondaryWeaponObj;
-	}
-	else if (currentWeaponObj == secondaryWeaponObj && GrenadeWeapon) // set to grenades if current is secondary
-	{
-		currentWeaponObj = Cast<AWeapon>(GrenadeWeapon);
-	}
-	else  // set primary weapon
-	{
-		currentWeaponObj = primaryWeaponObj;
+	// if null, then it is assumed there is no specific weapon needed to be equipped.
+	if (NewEquippedWeapon == nullptr) {
+
+		// set secondary weapon if current is primary or vice versa
+		NewEquippedWeapon = currentWeaponObj == primaryWeaponObj ? secondaryWeaponObj : primaryWeaponObj;
 	}
 
+	currentWeaponObj = NewEquippedWeapon;
 	currentWeaponObj->ReadyToUse();
+
+	// reset the value to be used again next time otherwise previous if statement will fail if no specific weapon was chosen to be equipped.
+	NewEquippedWeapon = nullptr;
 
 	RetrieveWeaponAnimDataSet();
 	BeginEquipWeapon();

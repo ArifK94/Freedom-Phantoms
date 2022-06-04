@@ -114,6 +114,9 @@ private:
 
 	AMountedGun* MountedGun;
 
+	/** Used for equipping specific weapons. */
+	AWeapon* NewEquippedWeapon;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 		float MaxAimYawSprint;
@@ -188,7 +191,9 @@ public:
 	void GrabWeapon();
 	void EndEquipWeapon();
 
-	void BeginEquipGrenade();
+
+	UFUNCTION(BlueprintCallable)
+		void EquipWeapon(AWeapon * Weapon);
 
 	void swapWeapon();
 
