@@ -329,8 +329,25 @@ void ACombatCharacter::OnWeaponKillConfirm(FProjectileImpactParameters Projectil
 // Begin Auto Reload
 void ACombatCharacter::OnWeaponAmmoEmpty(AWeapon* Weapon)
 {
-	BeginReload();
-	HandGuardAlpha = 0.0f;
+	// reload if weapon has more ammo
+	if (Weapon->getCurrentMaxAmmo() > 0) {
+		BeginReload();
+	}
+	else {
+
+		// if weapon has no more ammo
+		if (Weapon->getCurrentMaxAmmo() <= 0) {
+
+			// change current weapon to primary if primary weapon has ammo
+			if (primaryWeaponObj->getCurrentMaxAmmo() > 0) {
+				EquipWeapon(primaryWeaponObj);
+			}
+			// otherwise change to secondary if secondary weapon has ammo.
+			else if (secondaryWeaponObj->getCurrentMaxAmmo() > 0) {
+				EquipWeapon(secondaryWeaponObj);
+			}
+		}
+	}
 }
 
 void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
