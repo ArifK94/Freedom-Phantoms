@@ -8,11 +8,8 @@
 #include "StructCollection.h"
 #include "HealthComponent.generated.h"
 
-// OnHealthChanged Event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, FHealthParameters, HealthParameters);
 
-class AWeapon;
-class AWeaponBullet;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UHealthComponent : public UActorComponent
 {

@@ -55,7 +55,7 @@ void AGrenadeLauncher::Fire()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 		UWorld* world = GetWorld();
-		AWeaponBullet* bulletObj = world->SpawnActor<AWeaponBullet>(weaponClipObj->getBulletClass(), MuzzleLocation, EyeRotation, SpawnParams);
+		auto bulletObj = world->SpawnActor<AProjectile>(weaponClipObj->getBulletClass(), MuzzleLocation, EyeRotation, SpawnParams);
 
 		BeginShellEffect();
 

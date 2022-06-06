@@ -15,7 +15,6 @@
 
 AWeaponClip::AWeaponClip()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	clipMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClipMeshComp"));
@@ -25,6 +24,18 @@ AWeaponClip::AWeaponClip()
 	ammoCapacity = 30;
 
 	CurrentAmmo = ammoCapacity;
+}
+
+void AWeaponClip::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CurrentAmmo = ammoCapacity;
+}
+
+void AWeaponClip::SetCurrentAmmo(int value)
+{
+	CurrentAmmo = value;
 }
 
 
@@ -92,7 +103,7 @@ void AWeaponClip::SpawnBullet()
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 			// Spawn the weapon actor
-			BulletObj = world->SpawnActor<AWeaponBullet>(WeaponBulletClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			BulletObj = world->SpawnActor<AProjectile>(WeaponBulletClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 			if (BulletObj)
 			{
@@ -102,24 +113,3 @@ void AWeaponClip::SpawnBullet()
 		}
 	}
 }
-
-// Called when the game starts or when spawned
-void AWeaponClip::BeginPlay()
-{
-	Super::BeginPlay();
-
-	CurrentAmmo = ammoCapacity;
-}
-
-// Called every frame
-void AWeaponClip::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AWeaponClip::SetCurrentAmmo(int value)
-{
-	CurrentAmmo = value;
-}
-

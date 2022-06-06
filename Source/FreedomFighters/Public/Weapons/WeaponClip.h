@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "WeaponClip.generated.h"
 
-class AWeaponBullet;
+class AProjectile;
 class USoundAttenuation;
 
 UCLASS()
@@ -38,8 +38,8 @@ private:
 		USoundAttenuation* ClipAttenuationSettings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Bullet", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf< AWeaponBullet> WeaponBulletClass;
-	 AWeaponBullet* BulletObj;
+		TSubclassOf<AProjectile> WeaponBulletClass;
+	AProjectile* BulletObj;
 
 	AWeaponClip* DroppedClip;
 
@@ -55,19 +55,17 @@ protected:
 
 
 public:
-	virtual void Tick(float DeltaTime) override;
-
 	UStaticMeshComponent* getClipMesh() { return clipMeshComp; }
 	int GetAmmoCapacity() const { return ammoCapacity; }
 
 	int GetCurrentAmmo() const { return CurrentAmmo; }
 	void SetCurrentAmmo(int value);
 
-	AWeaponBullet* getBulletObj() { 
+	AProjectile* getBulletObj() {
 		return BulletObj; 
 	}
 
-	TSubclassOf<AWeaponBullet> getBulletClass() {
+	TSubclassOf<AProjectile> getBulletClass() {
 		return WeaponBulletClass;
 	}
 
