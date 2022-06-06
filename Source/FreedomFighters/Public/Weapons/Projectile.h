@@ -68,7 +68,11 @@ private:
 		float DamageAmount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-		float ExplosiveRadius;
+		float ExplosiveRadiusInner;
+
+	/** The outer radius which would affect world objects but will not affect health components, should always be higher than inner explosive radius */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+		float ExplosiveRadiusOuter;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		bool IgnoreOwner;

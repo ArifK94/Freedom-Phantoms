@@ -63,7 +63,7 @@ private:
 		float DamageAmount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
-		float ExplosiveRadius;
+		float ExplosiveRadiusInner;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Damage", meta = (AllowPrivateAccess = "true"))
 		bool IgnoreOwner;

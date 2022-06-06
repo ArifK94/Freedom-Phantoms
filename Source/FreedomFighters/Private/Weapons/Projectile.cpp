@@ -36,7 +36,8 @@ AProjectile::AProjectile()
 	BulletMovementAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("BulletMovementAudio"));
 
 	DamageAmount = 15.0f;
-	ExplosiveRadius = 10.0f;
+	ExplosiveRadiusInner = 10.0f;
+	ExplosiveRadiusOuter = 20.f;
 
 	ShowExplosionRadius = false;
 	DebugExplosionLifeTime = 5.0f;
@@ -372,7 +373,7 @@ void AProjectile::Explode(FVector ImpactPoint)
 	AActor* MyOwner = GetOwner();
 
 	// create a collision sphere
-	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadius);
+	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadiusOuter);
 
 	// create tarray for hit results
 	TArray<FHitResult> OutHits;
@@ -382,11 +383,15 @@ void AProjectile::Explode(FVector ImpactPoint)
 
 	if (ShowExplosionRadius)
 	{
-		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadius, 20, FColor::Purple, false, DebugExplosionLifeTime, 0, 2);
+		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadiusInner, 20, FColor::Red, false, DebugExplosionLifeTime, 0, 2);
+		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadiusOuter, 20, FColor::Green, false, DebugExplosionLifeTime, 0, 2);
 	}
 
 	if (isHit)
 	{
+		TArray<AActor*> DamagedActors;
+		TArray<FHitResult> DamagedActorsHitInfo;
+
 		// loop through TArray
 		for (auto& Hit : OutHits)
 		{
@@ -395,23 +400,44 @@ void AProjectile::Explode(FVector ImpactPoint)
 			if (!DamagedActor) {
 				continue;
 			}
+
+			if (!DamagedActors.Contains(DamagedActor)) {
+				DamagedActors.Add(DamagedActor);
+				DamagedActorsHitInfo.Add(Hit);
+			}
+		}
+
+		for (auto i = 0; i < DamagedActors.Num(); i++)
+		{
+			auto DamagedActor = DamagedActors[i];
+
 			UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
 			if (HealthComponent && HealthComponent->IsAlive())
 			{
-				FHealthParameters HealthParameters;
-				HealthParameters.DamagedActor = DamagedActor;
-				HealthParameters.DamageCauser = MyOwner;
-				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
-				HealthParameters.WeaponCauser = WeaponParent;
-				HealthParameters.Projectile = this;
-				HealthParameters.HitInfo = Hit;
-				HealthParameters.Damage = DamageAmount;
-				HealthParameters.IsExplosive = isAnExplosive;
-				HealthComponent->OnDamage(HealthParameters);
+				auto Distance = GetDistanceTo(DamagedActor);
 
-				auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
-				AddKill(HealthComponent, FactionComp);
+				// health affected if within inner radius
+				if (Distance <= ExplosiveRadiusInner) {
+
+					auto newDamage = FMath::Clamp((DamageAmount * ExplosiveRadiusInner) / Distance, 0.f, DamageAmount);
+					newDamage = FMath::Abs(newDamage);
+
+					FHealthParameters HealthParameters;
+					HealthParameters.DamagedActor = DamagedActor;
+					HealthParameters.DamageCauser = MyOwner;
+					HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
+					HealthParameters.WeaponCauser = WeaponParent;
+					HealthParameters.Projectile = this;
+					HealthParameters.HitInfo = DamagedActorsHitInfo[i];
+					HealthParameters.Damage = newDamage;
+					HealthParameters.IsExplosive = isAnExplosive;
+					HealthComponent->OnDamage(HealthParameters);
+
+					auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+					AddKill(HealthComponent, FactionComp);
+				}
+
 			}
 
 
@@ -426,7 +452,7 @@ void AProjectile::Explode(FVector ImpactPoint)
 			{
 				// alternivly you can use  ERadialImpulseFalloff::RIF_Linear for the impulse to get linearly weaker as it gets further from origin.
 				// set the float radius to 500 and the float strength to 2000.
-				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadius, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
+				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadiusInner, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
 			}
 		}
 	}

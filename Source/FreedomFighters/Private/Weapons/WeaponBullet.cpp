@@ -34,7 +34,7 @@ AWeaponBullet::AWeaponBullet()
 	BulletMovementAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("BulletMovementAudio"));
 
 	DamageAmount = 15.0f;
-	ExplosiveRadius = 10.0f;
+	ExplosiveRadiusInner = 10.0f;
 
 	ShowExplosionRadius = false;
 	DebugExplosionLifeTime = 5.0f;
@@ -329,7 +329,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 	AActor* MyOwner = GetOwner();
 
 	// create a collision sphere
-	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadius);
+	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadiusInner);
 
 	// create tarray for hit results
 	TArray<FHitResult> OutHits;
@@ -339,7 +339,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 
 	if (ShowExplosionRadius)
 	{
-		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadius, 20, FColor::Purple, false, DebugExplosionLifeTime, 0, 2);
+		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadiusInner, 20, FColor::Purple, false, DebugExplosionLifeTime, 0, 2);
 	}
 
 	if (isHit)
@@ -377,7 +377,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 			{
 				// alternivly you can use  ERadialImpulseFalloff::RIF_Linear for the impulse to get linearly weaker as it gets further from origin.
 				// set the float radius to 500 and the float strength to 2000.
-				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadius, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
+				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadiusInner, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
 			}
 		}
 	}
