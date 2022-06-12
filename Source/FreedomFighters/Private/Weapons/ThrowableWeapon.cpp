@@ -57,7 +57,7 @@ void AThrowableWeapon::Fire()
 
 	EmptyClipEvent();
 
-	MeshComp->SetHiddenInGame(true, true);
+	Hide();
 }
 
 void AThrowableWeapon::StartFire()
@@ -82,4 +82,10 @@ void AThrowableWeapon::OnReload()
 	if (CurrentAmmo > 0) {
 		MeshComp->SetHiddenInGame(false, true);
 	}
+}
+
+void AThrowableWeapon::Hide()
+{
+	MeshComp->SetHiddenInGame(true, true);
+	SetActorEnableCollision(false);
 }

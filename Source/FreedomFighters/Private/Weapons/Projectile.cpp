@@ -38,6 +38,7 @@ AProjectile::AProjectile()
 	DamageAmount = 15.0f;
 	ExplosiveRadiusInner = 10.0f;
 	ExplosiveRadiusOuter = 20.f;
+	RadialForceStrength = 200.f;
 
 	ShowExplosionRadius = false;
 	DebugExplosionLifeTime = 5.0f;
@@ -54,6 +55,7 @@ AProjectile::AProjectile()
 	HomingFollowWeaponEyePoint = false;
 	DestroyOnDeactivate = false;
 	DetectProjectileHit = true;
+	SpinOnVelocity = false;
 
 	DecalSizeMin = 150.f;
 	DecalSizeMax = 300.f;
@@ -110,8 +112,7 @@ void AProjectile::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	CurrentDeltaTime = DeltaTime;
 
-	if (UseCustomProjectileMovement)
-	{
+	if (UseCustomProjectileMovement) {
 		Movement();
 
 		//if (HomingFollowWeaponEyePoint)
@@ -129,6 +130,11 @@ void AProjectile::Tick(float DeltaTime)
 		//	}
 		//}
 	}
+
+	if (SpinOnVelocity) {
+		SpinOnMovement();
+	}
+
 
 
 }
@@ -180,6 +186,26 @@ void AProjectile::Movement()
 	if (DetectProjectileHit) {
 		DetectHit();
 	}
+}
+
+void AProjectile::SpinOnMovement()
+{
+	auto CurrentSpeed = GetVelocity().Size();
+
+	if (CurrentSpeed <= 0.f) {
+		return;
+	}
+
+	// slow down the rotation 
+	//CurrentSpeed /= 10.f;
+
+	FRotator NewRotation = CurrentRotation;
+	NewRotation.Pitch += CurrentRotation.Pitch + CurrentSpeed;
+	NewRotation.Yaw += CurrentRotation.Yaw + CurrentSpeed;
+	NewRotation.Roll += CurrentRotation.Roll +  CurrentSpeed;
+
+	//AddActorWorldRotation(NewRotation);
+	CurrentRotation = NewRotation;
 }
 
 void AProjectile::FollowEyePoint()
@@ -452,7 +478,7 @@ void AProjectile::Explode(FVector ImpactPoint)
 			{
 				// alternivly you can use  ERadialImpulseFalloff::RIF_Linear for the impulse to get linearly weaker as it gets further from origin.
 				// set the float radius to 500 and the float strength to 2000.
-				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadiusInner, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
+				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadiusInner, RadialForceStrength, ERadialImpulseFalloff::RIF_Constant, true);
 			}
 		}
 	}

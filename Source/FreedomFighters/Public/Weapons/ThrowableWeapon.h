@@ -27,6 +27,8 @@ public:
 
 	virtual void StartFire() override;
 
+	void Hide();
+
 protected:
 	virtual void OnReload() override;
 

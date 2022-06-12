@@ -67,19 +67,20 @@ void ACombatCharacter::BeginPlay()
 
 	SpawnHelmet();
 	SpawnLoadout();
-	SpawnGrenades();
 
-	if (Loadout && WeaponsDataSet)
-	{
+	if (Loadout && WeaponsDataSet) {
+
 		// get random weapon if not selected from main menu, this is should be null for AI characters
-		if (primaryWeaponObj == nullptr)
-		{
+		if (primaryWeaponObj == nullptr) {
 			primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
 		}
 
-		if (secondaryWeaponObj == nullptr)
-		{
+		if (secondaryWeaponObj == nullptr) {
 			secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
+		}
+
+		if (GrenadeWeapon == nullptr) {
+			GrenadeWeapon = Loadout->SpawnGrenade(WeaponsDataSet);
 		}
 	}
 
@@ -94,10 +95,10 @@ void ACombatCharacter::BeginPlay()
 
 	RegisterWeaponEvents(primaryWeaponObj, true);
 	RegisterWeaponEvents(secondaryWeaponObj, true);
+	RegisterWeaponEvents(Cast<AWeapon>(GrenadeWeapon), true);
 
 
-	if (currentWeaponObj)
-	{
+	if (currentWeaponObj) {
 		RetrieveWeaponAnimDataSet();
 		BeginEquipWeapon();
 	}
@@ -243,15 +244,13 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 
 void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 {
-	if (secondaryWeaponObj)
-	{
+	if (secondaryWeaponObj) {
 		secondaryWeaponObj->Destroy();
 	}
 
 	secondaryWeaponObj = Weapon;
 
-	if (Loadout)
-	{
+	if (Loadout) {
 		Loadout->HolsterWeapon(secondaryWeaponObj);
 	}
 
@@ -568,23 +567,6 @@ void ACombatCharacter::SpawnLoadout(LoadoutType LoadoutType, bool SpecifyType)
 		}
 	}
 
-}
-
-void ACombatCharacter::SpawnGrenades()
-{
-	if (!WeaponsDataSet || !WeaponsDataSet->GrenadeClass) {
-		return;
-	}
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	GrenadeWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(WeaponsDataSet->GrenadeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-	if (GrenadeWeapon) {
-		RegisterWeaponEvents(Cast<AWeapon>(GrenadeWeapon), true);
-	}
 }
 
 

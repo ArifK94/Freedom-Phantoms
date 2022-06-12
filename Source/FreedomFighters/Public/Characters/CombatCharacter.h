@@ -226,7 +226,6 @@ public:
 private:
 	void SpawnHelmet();
 	void SpawnLoadout(LoadoutType LoadoutType = LoadoutType::Assault, bool SpecifyType = false);
-	void SpawnGrenades();
 
 	void UpdateCombatMode();
 

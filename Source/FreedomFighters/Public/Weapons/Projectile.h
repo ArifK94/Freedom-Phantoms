@@ -74,6 +74,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		float ExplosiveRadiusOuter;
 
+	/** Radial impulse strengh */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+		float RadialForceStrength;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		bool IgnoreOwner;
 
@@ -112,6 +116,10 @@ private:
 	/** Perform Hit detection. Only works if using custom movement. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
 		bool DetectProjectileHit;
+
+	/** Spin projectile while there is velocity? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
+		bool SpinOnVelocity;
 
 	FVector Velocity;
 	FVector Acceleration;
@@ -171,6 +179,8 @@ private:
 
 	bool IsDestroyed;
 
+	FRotator CurrentRotation;
+
 
 public:
 	AProjectile();
@@ -191,6 +201,9 @@ private:
 	void RetrieveSurfaceImpactSet();
 
 	void Movement();
+
+	/** Rotate projectile while moving */
+	void SpinOnMovement();
 
 	void FollowEyePoint();
 
