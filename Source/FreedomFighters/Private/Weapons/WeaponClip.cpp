@@ -2,19 +2,19 @@
 
 
 #include "Weapons/WeaponClip.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 
 #include "Kismet/GameplayStatics.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/AudioComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 AWeaponClip::AWeaponClip()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	clipMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClipMeshComp"));
@@ -24,6 +24,18 @@ AWeaponClip::AWeaponClip()
 	ammoCapacity = 30;
 
 	CurrentAmmo = ammoCapacity;
+}
+
+void AWeaponClip::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CurrentAmmo = ammoCapacity;
+}
+
+void AWeaponClip::SetCurrentAmmo(int value)
+{
+	CurrentAmmo = value;
 }
 
 
@@ -66,7 +78,12 @@ void AWeaponClip::OnClipHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		{
 			if (HighImpactSound != NULL)
 			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), .5f, 1.f, 0.f, ClipAttenuationSettings);
+				if (CollisionAudioComponent == nullptr) {
+					CollisionAudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), HighImpactSound, DroppedClip->getClipMesh()->GetComponentLocation(), FRotator::ZeroRotator,  .5f, 1.f, 0.f, ClipAttenuationSettings);
+				}
+				else {
+					CollisionAudioComponent->Play();
+				}
 			}
 		}
 
@@ -86,7 +103,7 @@ void AWeaponClip::SpawnBullet()
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 			// Spawn the weapon actor
-			BulletObj = world->SpawnActor<AWeaponBullet>(WeaponBulletClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			BulletObj = world->SpawnActor<AProjectile>(WeaponBulletClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 			if (BulletObj)
 			{
@@ -96,24 +113,3 @@ void AWeaponClip::SpawnBullet()
 		}
 	}
 }
-
-// Called when the game starts or when spawned
-void AWeaponClip::BeginPlay()
-{
-	Super::BeginPlay();
-
-	CurrentAmmo = ammoCapacity;
-}
-
-// Called every frame
-void AWeaponClip::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AWeaponClip::SetCurrentAmmo(int value)
-{
-	CurrentAmmo = value;
-}
-

@@ -1,6 +1,6 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/WeaponClip.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "Weapons/WeaponAttachment.h"
 #include "Characters/CombatCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
@@ -89,6 +89,7 @@ AWeapon::AWeapon()
 	HasUnlimitedAmmo = false;
 	CanAutoReload = false;
 	HasNoReload = false;
+	HasFiredFirstShot = false;
 
 	DrawShotLine = false;
 	ShotLineDuration = 5.0f;
@@ -341,10 +342,13 @@ void AWeapon::Fire()
 
 		OnEmptyAmmoClip.Broadcast(this);
 
-		if (!HasNoReload)
-		{
+		if (!HasNoReload) {
 			return;
 		}
+	}
+
+	if (CurrentAmmo <= 0) {
+		return;
 	}
 
 	// Reset Burst fire count
@@ -416,6 +420,24 @@ void AWeapon::Fire()
 	{
 		BurstAmmountCount++;
 	}
+
+	HasFiredFirstShot = true;
+
+	FWeaponUpdateParameters WeaponUpdateParameters;
+	WeaponUpdateParameters.HasFiredShot = true;
+	WeaponUpdateParameters.WeaponState = EWeaponState::Firing;
+	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
+
+	if (CurrentAmmo <= 0) {
+		isFiring = false;
+
+		OnEmptyAmmoClip.Broadcast(this);
+
+		if (!HasNoReload)
+		{
+			return;
+		}
+	}
 }
 
 void AWeapon::CreateBullet()
@@ -481,7 +503,7 @@ void AWeapon::CreateBullet()
 
 		if (BulletClass)
 		{
-			AWeaponBullet* Bullet = nullptr;
+			AProjectile* Bullet = nullptr;
 
 			// Use object pooling if specified
 			if (UseObjectPool)
@@ -490,7 +512,7 @@ void AWeapon::CreateBullet()
 
 				if (PoolActor)
 				{
-					Bullet = Cast<AWeaponBullet>(PoolActor);
+					Bullet = Cast<AProjectile>(PoolActor);
 				}
 			}
 
@@ -501,7 +523,7 @@ void AWeapon::CreateBullet()
 				SpawnParams.Owner = MyOwner;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				Bullet = GetWorld()->SpawnActor<AWeaponBullet>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
+				Bullet = GetWorld()->SpawnActor<AProjectile>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
 			}
 
 
@@ -653,15 +675,37 @@ void AWeapon::StartFire()
 
 void AWeapon::StopFire()
 {
+	if (!HasFiredFirstShot) {
+		return;
+	}
+
 	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
 	isFiring = false;
+	HasFiredFirstShot = false;
 
 	CurrentVerticleRecoil = 0.0f;
 
 	ChargeDown();
 
 	GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
+
+	FWeaponUpdateParameters WeaponUpdateParameters;
+	WeaponUpdateParameters.HasFiredShot = true;
+	WeaponUpdateParameters.WeaponState = EWeaponState::Default;
+	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
+}
+
+void AWeapon::ReadyToUse()
+{
+	HasFiredFirstShot = true;
+
+	StopFire();
+}
+
+bool AWeapon::CanFireWeapon()
+{
+	return CurrentAmmo > 0 && !isReloading && !isFiring;
 }
 
 void AWeapon::ChargeUp()
@@ -782,6 +826,8 @@ void AWeapon::OnReload()
 		return;
 	}
 
+	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
+
 	if (HasUnlimitedAmmo)
 	{
 		CurrentAmmo = AmmoPerClip;
@@ -803,9 +849,12 @@ void AWeapon::OnReload()
 	}
 }
 
+
 void AWeapon::BeginReload()
 {
 	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !isReloading)	return;
+
+	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
 	isFiring = false;
 	isReloading = true;
@@ -828,6 +877,7 @@ void AWeapon::EndReload()
 	HasPlayedClipIn = false;
 	HasPlayedClipOut = false;
 }
+
 
 void AWeapon::ClipIn()
 {
@@ -856,6 +906,19 @@ void AWeapon::ClipOut()
 	if (weaponClipObj && weaponClip && canShowClip)
 	{
 		weaponClipObj->DropClip(MeshComp, ClipSocket, weaponClip);
+	}
+}
+
+void AWeapon::EmptyClipEvent()
+{
+	if (CurrentAmmo <= 0) {
+		isFiring = false;
+
+		OnEmptyAmmoClip.Broadcast(this);
+
+		if (!HasNoReload) {
+			return;
+		}
 	}
 }
 
@@ -909,6 +972,11 @@ void AWeapon::SetClipSocket(USkeletalMeshComponent* meshComponent)
 void AWeapon::setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket)
 {
 	MeshComp->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, socket);
+}
+
+void AWeapon::HolsterWeapon(USkeletalMeshComponent* Parent)
+{
+	MeshComp->AttachToComponent(Parent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HolsterSocket);
 }
 
 void AWeapon::SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket)
@@ -968,6 +1036,16 @@ bool AWeapon::ReplenishAmmo(int Amount)
 	return false;
 }
 
+void AWeapon::ToggleVisibility(bool Enabled)
+{
+	if (Enabled) {
+		MeshComp->SetHiddenInGame(false, true);
+	}
+	else {
+		MeshComp->SetHiddenInGame(true, true);
+		SetActorEnableCollision(false);
+	}
+}
 
 void AWeapon::SetWeaponProfile(FName InCollisionProfileName)
 {

@@ -16,11 +16,12 @@ class USoundCue;
 class UAudioComponent;
 class AWeaponAttachment;
 class AWeaponClip;
-class AWeaponBullet;
+class AProjectile;
 class UObjectPoolComponent;
 class UTexture;
 class UPointLightComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponUpdateSignature, FWeaponUpdateParameters, WeaponUpdateParameters);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEmptyAmmoClipSignature, AWeapon*, Weapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmedSignature, FProjectileImpactParameters, ProjectileImpactParameters);
 
@@ -90,7 +91,7 @@ protected:
 	AWeaponClip* weaponClipObj;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<AWeaponBullet> BulletClass;
+		TSubclassOf<AProjectile> BulletClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		TSubclassOf<UDamageType> DamageType;
@@ -102,6 +103,10 @@ protected:
 		bool canShowClip;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isFiring;
+
+	/** Prevent shooting montage from stopping if pressed to fire but has not fired a shot, making sure that the weapon has been shot before stopping shooting montage */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool HasFiredFirstShot;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
@@ -307,6 +312,9 @@ public:
 	AWeapon();
 
 	UPROPERTY(BlueprintAssignable)
+		FOnWeaponUpdateSignature OnWeaponUpdate;
+
+	UPROPERTY(BlueprintAssignable)
 		FOnEmptyAmmoClipSignature OnEmptyAmmoClip;
 
 	UPROPERTY(BlueprintAssignable)
@@ -322,11 +330,18 @@ public:
 	virtual bool OnUseInteraction_Implementation(APawn* InPawn, AController* InController) override;
 	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 
+	virtual void Fire();
+
 	UFUNCTION(BlueprintCallable)
-		void StartFire();
+		virtual void StartFire();
 
 	UFUNCTION(BlueprintCallable)
 		void StopFire();
+
+	/** Reset to Default. Useful for swapping weapons then making sure weapon can be fired again. */
+	void ReadyToUse();
+
+	bool CanFireWeapon();
 
 	void BeginReload();
 
@@ -340,7 +355,7 @@ public:
 
 	void SetClipSocket(USkeletalMeshComponent* meshComponent);
 
-	void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket);
+	virtual void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket);
 
 	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
 
@@ -350,6 +365,10 @@ public:
 	virtual void SetIsAiming(bool isAiming);
 
 	void SetWeaponProfile(FName InCollisionProfileName);
+
+	virtual void HolsterWeapon(USkeletalMeshComponent* Parent);
+
+	void ToggleVisibility(bool Enabled);
 
 	/** Called when owning character has died or picking up another weapon */
 	virtual void DropWeapon(bool RemoveOwner = true, bool SimulatePhysics = false);
@@ -384,7 +403,6 @@ protected:
 
 	void DelayedInit();
 
-	virtual void Fire();
 
 	void CreateBullet();
 
@@ -403,6 +421,8 @@ protected:
 
 	void PlayShotEffect(FVector EyeLocation);
 
+	void EmptyClipEvent();
+
 public:
 
 	void setCharacter(USkeletalMeshComponent* mesh) { CharacterReference = mesh; }
@@ -419,7 +439,6 @@ public:
 	FName GetWeaponName() { return WeaponName; }
 
 	FName GetMuzzleSocket() { return MuzzleSocket; }
-	FName getHolsterSocket() { return HolsterSocket; }
 	FName getParentHolderSocket() { return ParentHolderSocket; }
 	FName getOpticsSocket() { return OpticsSocket; }
 	FName getLaserSocket() { return LaserSocket; }
@@ -429,6 +448,8 @@ public:
 
 	bool getIsReloading() { return isReloading; }
 	bool getIsFiring() { return isFiring; }
+	bool GetHasFiredFirstShot() { return HasFiredFirstShot; }
+
 
 	bool GetHasUnlimitedAmmo() { return HasUnlimitedAmmo; }
 	void SetUnlimitedAmmo(bool IsUnlimited) { HasUnlimitedAmmo = IsUnlimited; }

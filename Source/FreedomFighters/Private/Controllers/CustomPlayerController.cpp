@@ -5,7 +5,7 @@
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "Weapons/AmmoCrate.h"
 #include "Vehicles/VehicleBase.h"
 #include "Props/SupportPackage.h"
@@ -87,7 +87,7 @@ void ACustomPlayerController::InitInputComponent()
 
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::ToggleCrouch);
 
-	InputComponent->BindAction("TakeCover", IE_Pressed, this, &ACustomPlayerController::TakeCover);
+	//InputComponent->BindAction("TakeCover", IE_Pressed, this, &ACustomPlayerController::TakeCover);
 
 	InputComponent->BindAction("Fire", IE_Pressed, this, &ACustomPlayerController::BeginFire);
 	InputComponent->BindAction("Fire", IE_Released, this, &ACustomPlayerController::EndFire);

@@ -11,6 +11,7 @@
 
 class USkeletalMeshComponent;
 class AWeapon;
+class AThrowableWeapon;
 UCLASS()
 class FREEDOMFIGHTERS_API ALoadout : public AActor
 {
@@ -35,6 +36,8 @@ public:
 
 	// If primary is true, then spawn primary weapon otherwise spawn secondary
 	AWeapon* SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary);
+
+	AThrowableWeapon* SpawnGrenade(FWeaponsSet* WeaponsDataSet);
 
 	void HolsterWeapon(AWeapon* Weapon);
 

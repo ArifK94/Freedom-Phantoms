@@ -16,6 +16,7 @@ ABaseObjective::ABaseObjective()
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
 	BoxCollider->SetCollisionProfileName(TEXT("Objective"));
 	BoxCollider->CanCharacterStepUpOn = ECB_No;
+	BoxCollider->SetupAttachment(RootComponent);
 
 	IsObjectiveComplete = false;
 	IsFinalObjective = false;

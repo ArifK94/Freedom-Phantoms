@@ -7,7 +7,7 @@
 #include "Weapons/Pistol.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "CustomComponents/ObjectPoolComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
 #include "FreedomFighters/FreedomFighters.h"
@@ -55,6 +55,7 @@ ACombatCharacter::ACombatCharacter()
 	HandGuardAlpha = 0.0f;
 
 	WeaponHandSocket = "weapon_hand";
+	WeaponHandThrowablesSocket = "weapon_throwable_hand";
 }
 
 void ACombatCharacter::BeginPlay()
@@ -67,18 +68,19 @@ void ACombatCharacter::BeginPlay()
 	SpawnHelmet();
 	SpawnLoadout();
 
+	if (Loadout && WeaponsDataSet) {
 
-	if (Loadout && WeaponsDataSet)
-	{
 		// get random weapon if not selected from main menu, this is should be null for AI characters
-		if (primaryWeaponObj == nullptr)
-		{
+		if (primaryWeaponObj == nullptr) {
 			primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
 		}
 
-		if (secondaryWeaponObj == nullptr)
-		{
+		if (secondaryWeaponObj == nullptr) {
 			secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
+		}
+
+		if (GrenadeWeapon == nullptr) {
+			GrenadeWeapon = Loadout->SpawnGrenade(WeaponsDataSet);
 		}
 	}
 
@@ -93,10 +95,10 @@ void ACombatCharacter::BeginPlay()
 
 	RegisterWeaponEvents(primaryWeaponObj, true);
 	RegisterWeaponEvents(secondaryWeaponObj, true);
+	RegisterWeaponEvents(Cast<AWeapon>(GrenadeWeapon), true);
 
 
-	if (currentWeaponObj)
-	{
+	if (currentWeaponObj) {
 		RetrieveWeaponAnimDataSet();
 		BeginEquipWeapon();
 	}
@@ -242,15 +244,13 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 
 void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 {
-	if (secondaryWeaponObj)
-	{
+	if (secondaryWeaponObj) {
 		secondaryWeaponObj->Destroy();
 	}
 
 	secondaryWeaponObj = Weapon;
 
-	if (Loadout)
-	{
+	if (Loadout) {
 		Loadout->HolsterWeapon(secondaryWeaponObj);
 	}
 
@@ -295,6 +295,27 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 	}
 }
 
+void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParameters)
+{
+	if (WeaponUpdateParameters.WeaponState != EWeaponState::Firing && WeaponUpdateParameters.HasFiredShot) {
+		EndFire();
+
+		isFiring = false;
+
+		UpdateCombatMode();
+
+		// in case character is not aiming
+		if (!isAiming) {
+			HandGuardAlpha = 0.0f;
+		}
+
+		if (WeaponAnimDataSet) {
+			StopAnimMontage(WeaponAnimDataSet->Shooting);
+		}
+	}
+
+}
+
 void ACombatCharacter::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters)
 {
 	EnemyKilled();
@@ -307,8 +328,26 @@ void ACombatCharacter::OnWeaponKillConfirm(FProjectileImpactParameters Projectil
 // Begin Auto Reload
 void ACombatCharacter::OnWeaponAmmoEmpty(AWeapon* Weapon)
 {
-	BeginReload();
-	HandGuardAlpha = 0.0f;
+	// reload if weapon has more ammo
+	if (Weapon->getCurrentMaxAmmo() > 0) {
+		BeginReload();
+		HandGuardAlpha = 0.0f;
+	}
+	else {
+
+		// if weapon has no more ammo
+		if (Weapon->getCurrentMaxAmmo() <= 0) {
+
+			// change current weapon to primary if primary weapon has ammo
+			if (primaryWeaponObj->getCurrentMaxAmmo() > 0) {
+				EquipWeapon(primaryWeaponObj);
+			}
+			// otherwise change to secondary if secondary weapon has ammo.
+			else if (secondaryWeaponObj->getCurrentMaxAmmo() > 0) {
+				EquipWeapon(secondaryWeaponObj);
+			}
+		}
+	}
 }
 
 void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
@@ -319,6 +358,11 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 
 	if (BindEvent)
 	{
+		if (!Weapon->OnWeaponUpdate.IsBound())
+		{
+			Weapon->OnWeaponUpdate.AddDynamic(this, &ACombatCharacter::OnWeaponUpdated);
+		}
+
 		if (!Weapon->OnKillConfirmed.IsBound())
 		{
 			Weapon->OnKillConfirmed.AddDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
@@ -334,6 +378,11 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 	}
 	else
 	{
+		if (Weapon->OnWeaponUpdate.IsBound())
+		{
+			Weapon->OnWeaponUpdate.RemoveDynamic(this, &ACombatCharacter::OnWeaponUpdated);
+		}
+
 		if (Weapon->OnKillConfirmed.IsBound())
 		{
 			Weapon->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
@@ -617,7 +666,7 @@ void ACombatCharacter::UpdateCombatMode()
 bool ACombatCharacter::CanSwapWeapon()
 {
 	// if has no weapon.
-	if (currentWeaponObj == nullptr) {
+	if (currentWeaponObj == nullptr || isSwappingWeapon || isEquippingWeapon || isFiring) {
 		return false;
 	}
 
@@ -634,34 +683,24 @@ bool ACombatCharacter::CanSwapWeapon()
 	return false;
 }
 
-void ACombatCharacter::BeginWeaponSwap()
+
+void ACombatCharacter::EquipWeapon(AWeapon* Weapon)
 {
-	if (!CanSwapWeapon()) {
+	if (Weapon == nullptr) {
 		return;
 	}
 
-	if (hasEquippedWeapon)
-	{
-		isSwappingWeapon = true;
-		EndFire();
-		UpdateCombatMode();
+	if (isReloading) {
+		EndReload();
+	}
 
-		if (WeaponAnimDataSet) {
-			PlayAnimMontage(WeaponAnimDataSet->HolsterMontage);
-		}
-	}
-	else
-	{
-		// swap weapons without the need of animations if not already equipped
-		if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
-		{
-			currentWeaponObj = secondaryWeaponObj;
-		}
-		else // set primary weapon
-		{
-			currentWeaponObj = primaryWeaponObj;
-		}
-	}
+	NewEquippedWeapon = Weapon;
+
+	EndFire();
+
+	UpdateCombatMode();
+
+	BeginWeaponSwap();
 }
 
 void ACombatCharacter::BeginEquipWeapon()
@@ -673,6 +712,7 @@ void ACombatCharacter::BeginEquipWeapon()
 	if (currentWeaponObj == MountedGun) {
 		return;
 	}
+
 
 	EndFire();
 
@@ -691,7 +731,12 @@ void ACombatCharacter::GrabWeapon()
 
 	if (!hasEquippedWeapon)
 	{
-		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		if (currentWeaponObj == Cast<AWeapon>(GrenadeWeapon)) {
+			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandThrowablesSocket);
+		}
+		else {
+			currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		}
 		hasEquippedWeapon = true;
 		UpdateCombatMode();
 	}
@@ -713,6 +758,37 @@ void ACombatCharacter::EndEquipWeapon()
 	}
 }
 
+void ACombatCharacter::BeginWeaponSwap()
+{
+	if (!CanSwapWeapon()) {
+		return;
+	}
+
+	if (hasEquippedWeapon)
+	{
+		isSwappingWeapon = true;
+		EndFire();
+		EndAim();
+		UpdateCombatMode();
+
+		if (WeaponAnimDataSet) {
+			PlayAnimMontage(WeaponAnimDataSet->HolsterMontage);
+		}
+	}
+	else
+	{
+		// swap weapons without the need of animations if not already equipped
+		if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
+		{
+			currentWeaponObj = secondaryWeaponObj;
+		}
+		else // set primary weapon
+		{
+			currentWeaponObj = primaryWeaponObj;
+		}
+		currentWeaponObj->ReadyToUse();
+	}
+}
 
 void ACombatCharacter::swapWeapon()
 {
@@ -724,18 +800,21 @@ void ACombatCharacter::swapWeapon()
 		EndReload();
 	}
 
-
 	hasEquippedWeapon = false;
 	UpdateCombatMode();
 
-	if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
-	{
-		currentWeaponObj = secondaryWeaponObj;
+	// if null, then it is assumed there is no specific weapon needed to be equipped.
+	if (NewEquippedWeapon == nullptr) {
+
+		// set secondary weapon if current is primary or vice versa
+		NewEquippedWeapon = currentWeaponObj == primaryWeaponObj ? secondaryWeaponObj : primaryWeaponObj;
 	}
-	else // set primary weapon
-	{
-		currentWeaponObj = primaryWeaponObj;
-	}
+
+	currentWeaponObj = NewEquippedWeapon;
+	currentWeaponObj->ReadyToUse();
+
+	// reset the value to be used again next time otherwise previous if statement will fail if no specific weapon was chosen to be equipped.
+	NewEquippedWeapon = nullptr;
 
 	RetrieveWeaponAnimDataSet();
 	BeginEquipWeapon();
@@ -763,15 +842,19 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 	// should the current weapon be dropped after picking up another weapon?
 	bool CanDropWeapon = false;
 
+	auto CurrentWeapon = currentWeaponObj;
+
 	// if no current weapon then this pickup weapon will be primary
-	if (currentWeaponObj == nullptr) {
+	if (CurrentWeapon == nullptr) {
 		IsPrimary = true;
 	}
-	
+
 	// if character is currently using a primary weapon then it should swap current with the pickup weapon.
-	else if (currentWeaponObj == primaryWeaponObj) {
+	// or current weapons is a throwable.
+	else if (CurrentWeapon == primaryWeaponObj || CurrentWeapon == Cast<AWeapon>(GrenadeWeapon)) {
 		IsPrimary = true;
 		CanDropWeapon = true;
+		CurrentWeapon = primaryWeaponObj;
 	}
 
 	// if there is no secondary weapon, then this pickup weapon will be a secondary
@@ -781,7 +864,7 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 	}
 
 	// if currently using secondary weapon.
-	else if (currentWeaponObj == secondaryWeaponObj) {
+	else if (CurrentWeapon == secondaryWeaponObj) {
 		IsPrimary = false;
 		CanDropWeapon = true;
 	}
@@ -805,19 +888,22 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 
 	if (CanDropWeapon) {
 		// drop the current weapon
-		currentWeaponObj->DropWeapon();
+		CurrentWeapon->DropWeapon();
 
 		// set the actor location of current to where the pickup weapon is
-		currentWeaponObj->SetActorLocationAndRotation(Weapon->GetActorLocation(), Weapon->GetActorRotation());
+		CurrentWeapon->SetActorLocationAndRotation(Weapon->GetActorLocation(), Weapon->GetActorRotation());
 
 		// assign new weapon to current weapon
-		currentWeaponObj = Weapon;
-		currentWeaponObj->setWeaponSocket(GetMesh(), WeaponHandSocket);
+		CurrentWeapon = Weapon;
+
+		CurrentWeapon->setWeaponSocket(GetMesh(), WeaponHandSocket);
+
+		currentWeaponObj = CurrentWeapon;
 
 		RetrieveWeaponAnimDataSet();
 	}
 	else {
-		Weapon->setWeaponSocket(Loadout->GetMesh(), Weapon->getHolsterSocket());
+		Loadout->HolsterWeapon(Weapon);
 	}
 }
 
@@ -827,7 +913,7 @@ void ACombatCharacter::HolsterWeapon()
 		return;
 	}
 
-	currentWeaponObj->setWeaponSocket(Loadout->GetMesh(), currentWeaponObj->getHolsterSocket());
+	Loadout->HolsterWeapon(currentWeaponObj);
 }
 
 
@@ -851,36 +937,43 @@ void ACombatCharacter::BeginFire()
 		}
 	}
 
-	isFiring = true;
+	// do fire if no throwables available
+	if (Cast<AThrowableWeapon>(currentWeaponObj)) {
+		if (!currentWeaponObj->CanFireWeapon()) {
+			return;
+		}
+	}
+
 	currentWeaponObj->StartFire();
 
+	isFiring = true;
 
 	UpdateCombatMode();
 
 	if (WeaponAnimDataSet) {
 		PlayAnimMontage(WeaponAnimDataSet->Shooting);
 	}
-
 }
 
 void ACombatCharacter::EndFire()
 {
-	if (currentWeaponObj)
-	{
-		currentWeaponObj->StopFire();
-		isFiring = false;
-
-		UpdateCombatMode();
-
-		// in case character is not aiming
-		if (!isAiming) {
-			HandGuardAlpha = 0.0f;
-		}
-
-		if (WeaponAnimDataSet) {
-			StopAnimMontage(WeaponAnimDataSet->Shooting);
-		}
+	if (currentWeaponObj == nullptr) {
+		return;
 	}
+
+	currentWeaponObj->StopFire();
+	//isFiring = false;
+
+	//UpdateCombatMode();
+
+	//// in case character is not aiming
+	//if (!isAiming) {
+	//	HandGuardAlpha = 0.0f;
+	//}
+
+	//if (WeaponAnimDataSet) {
+	//	StopAnimMontage(WeaponAnimDataSet->Shooting);
+	//}
 }
 
 
@@ -966,7 +1059,6 @@ void ACombatCharacter::BeginReload()
 		return;
 	}
 
-	EndAim();
 	EndFire();
 	UpdateCombatMode();
 
@@ -1095,7 +1187,9 @@ void ACombatCharacter::UseMountedGun()
 	EndAim();
 
 	isUsingMountedWeapon = true;
+	
 	HolsterWeapon();
+
 	MountedGun->SetOwner(this);
 	MountedGun->SetPotentialOwner(this);
 	currentWeaponObj = MountedGun;

@@ -1,4 +1,4 @@
-#include "Weapons/WeaponBullet.h"
+#include "Weapons/Projectile.h"
 #include "ObjectPoolActor.h"
 #include "Weapons/Weapon.h"
 #include "CustomComponents/HealthComponent.h"
@@ -10,6 +10,7 @@
 #include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/DecalComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -17,7 +18,8 @@
 #include "DrawDebugHelpers.h"
 #include "Niagara/Public/NiagaraFunctionLibrary.h"
 
-AWeaponBullet::AWeaponBullet()
+
+AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -34,7 +36,9 @@ AWeaponBullet::AWeaponBullet()
 	BulletMovementAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("BulletMovementAudio"));
 
 	DamageAmount = 15.0f;
-	ExplosiveRadius = 10.0f;
+	ExplosiveRadiusInner = 10.0f;
+	ExplosiveRadiusOuter = 20.f;
+	RadialForceStrength = 200.f;
 
 	ShowExplosionRadius = false;
 	DebugExplosionLifeTime = 5.0f;
@@ -42,17 +46,33 @@ AWeaponBullet::AWeaponBullet()
 	InitialSpeed = 12000.0;
 	Mass = 500.f;
 	Drag = 0.1f;
-	Gravity = FVector(0.f, 0.f, -980.f);
+	Gravity = FVector(0.f, 0.f, -100.f);
+	CountdownTimer = -1.f;
 
 	RowName = "Bullet";
 
 	UseCustomProjectileMovement = true;
 	HomingFollowWeaponEyePoint = false;
 	DestroyOnDeactivate = false;
+	DetectProjectileHit = true;
+	SpinOnVelocity = false;
+
+	DecalSizeMin = 150.f;
+	DecalSizeMax = 300.f;
+	DecalRotationMin = -360.f;
+	DecalRotationMax = 360.f;
+	DecalLifetime = 5.f;
+	DecalFadeOutDuration = 10.f;
+
+	CamShakeOuterRadius = 2000.f;
 }
 
-void AWeaponBullet::Init()
+void AProjectile::Init()
 {
+	if (CountdownTimer > 0.f) {
+		GetWorldTimerManager().SetTimer(THandler_CountdownTimer, this, &AProjectile::SelfDestruct, 1.f, true, CountdownTimer);
+	}
+
 	if (GetOwner())
 	{
 		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
@@ -72,9 +92,11 @@ void AWeaponBullet::Init()
 	}
 }
 
-void AWeaponBullet::BeginPlay()
+void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	CapsuleComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnCapsuleHit);
 
 	// if not being used as an object pool, then perform as standard actor
 	Init();
@@ -85,13 +107,12 @@ void AWeaponBullet::BeginPlay()
 	RetrieveSurfaceImpactSet();
 }
 
-void AWeaponBullet::Tick(float DeltaTime)
+void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	CurrentDeltaTime = DeltaTime;
 
-	if (UseCustomProjectileMovement)
-	{
+	if (UseCustomProjectileMovement) {
 		Movement();
 
 		//if (HomingFollowWeaponEyePoint)
@@ -110,10 +131,36 @@ void AWeaponBullet::Tick(float DeltaTime)
 		//}
 	}
 
+	if (SpinOnVelocity) {
+		SpinOnMovement();
+	}
+
+
 
 }
 
-void AWeaponBullet::Movement()
+void AProjectile::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	PlayCollisionSound(NormalImpulse);
+
+	LastHit = Hit;
+}
+
+void AProjectile::PlayCollisionSound(FVector Position)
+{
+	if (CollisionSound == nullptr) {
+		return;
+	}
+
+	if (CollisionAudioComponent == nullptr) {
+		CollisionAudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), CollisionSound, Position, FRotator::ZeroRotator, 1.f, 1.f, 0.f, CollisionAttenuation);
+	}
+	else {
+		CollisionAudioComponent->Play();
+	}
+}
+
+void AProjectile::Movement()
 {
 	// Get projectile's location at beginning of tick
 	PreviousPosition = GetActorLocation();
@@ -136,10 +183,32 @@ void AWeaponBullet::Movement()
 	SetActorLocation(NextPosition);
 	SetActorRotation(UKismetMathLibrary::MakeRotFromX(Velocity));
 
-	DetectHit();
+	if (DetectProjectileHit) {
+		DetectHit();
+	}
 }
 
-void AWeaponBullet::FollowEyePoint()
+void AProjectile::SpinOnMovement()
+{
+	auto CurrentSpeed = GetVelocity().Size();
+
+	if (CurrentSpeed <= 0.f) {
+		return;
+	}
+
+	// slow down the rotation 
+	//CurrentSpeed /= 10.f;
+
+	FRotator NewRotation = CurrentRotation;
+	NewRotation.Pitch += CurrentRotation.Pitch + CurrentSpeed;
+	NewRotation.Yaw += CurrentRotation.Yaw + CurrentSpeed;
+	NewRotation.Roll += CurrentRotation.Roll +  CurrentSpeed;
+
+	//AddActorWorldRotation(NewRotation);
+	CurrentRotation = NewRotation;
+}
+
+void AProjectile::FollowEyePoint()
 {
 	//if (WeaponParent == nullptr) {
 	//	return;
@@ -160,9 +229,11 @@ void AWeaponBullet::FollowEyePoint()
 
 }
 
-void AWeaponBullet::Activate()
+void AProjectile::Activate()
 {
 	Super::Activate();
+
+	IsDestroyed = false;
 
 	KillCount = 0;
 
@@ -176,30 +247,34 @@ void AWeaponBullet::Activate()
 	Init();
 }
 
-void AWeaponBullet::Deactivate()
+void AProjectile::Deactivate()
 {
-	if (DestroyOnDeactivate)
-	{
+	if (DestroyOnDeactivate) {
 		Destroy();
 		return;
 	}
+
+	IsDestroyed = true;
+
+	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
 
 	KillCount = 0;
 
 	Super::Deactivate();
 }
 
-void AWeaponBullet::RetrieveSurfaceImpactSet()
+void AProjectile::RetrieveSurfaceImpactSet()
 {
 	if (SurfaceImpactDatatable == nullptr) {
 		return;
 	}
 
+
 	static const FString ContextString(TEXT("Surface Impact DataSet"));
 	SurfaceImpact = SurfaceImpactDatatable->FindRow<FSurfaceImpact>(RowName, ContextString, true);
 }
 
-void AWeaponBullet::DetectHit()
+void AProjectile::DetectHit()
 {
 	FHitResult OutHit;
 
@@ -260,7 +335,7 @@ void AWeaponBullet::DetectHit()
 				HealthParameters.DamageCauser = MyOwner;
 				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
 				HealthParameters.WeaponCauser = WeaponParent;
-				HealthParameters.Bullet = this;
+				HealthParameters.Projectile = this;
 				HealthParameters.HitInfo = OutHit;
 				HealthParameters.Damage = ActualDamage;
 				HealthComponent->OnDamage(HealthParameters);
@@ -271,22 +346,10 @@ void AWeaponBullet::DetectHit()
 		}
 	}
 
+	PlayCollisionSound(OutHit.ImpactPoint);
+
 	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
-
-	if (ImpactSurface.Sound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, OutHit.ImpactPoint, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
-	}
-
-	if (ImpactSurface.ParticleEffect)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, OutHit.ImpactPoint);
-	}
-
-	if (ImpactSurface.NiagaraEffect)
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, OutHit.ImpactPoint);
-	}
+	SetVFX(ImpactSurface, OutHit.ImpactPoint);
 
 	FProjectileImpactParameters ProjectileImpactParameters;
 
@@ -318,8 +381,15 @@ void AWeaponBullet::DetectHit()
 	Deactivate();
 }
 
-void AWeaponBullet::Explode(FVector ImpactPoint)
+void AProjectile::Explode(FVector ImpactPoint)
 {
+	if (IsDestroyed) {
+		return;
+	}
+
+	// required to prevent stack overflow exception if destroying nearby explosives.
+	IsDestroyed = true;
+
 	UWorld* World = GetWorld();
 
 	if (!World) {
@@ -329,7 +399,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 	AActor* MyOwner = GetOwner();
 
 	// create a collision sphere
-	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadius);
+	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadiusOuter);
 
 	// create tarray for hit results
 	TArray<FHitResult> OutHits;
@@ -339,11 +409,15 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 
 	if (ShowExplosionRadius)
 	{
-		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadius, 20, FColor::Purple, false, DebugExplosionLifeTime, 0, 2);
+		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadiusInner, 20, FColor::Red, false, DebugExplosionLifeTime, 0, 2);
+		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadiusOuter, 20, FColor::Green, false, DebugExplosionLifeTime, 0, 2);
 	}
 
 	if (isHit)
 	{
+		TArray<AActor*> DamagedActors;
+		TArray<FHitResult> DamagedActorsHitInfo;
+
 		// loop through TArray
 		for (auto& Hit : OutHits)
 		{
@@ -352,23 +426,50 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 			if (!DamagedActor) {
 				continue;
 			}
+
+			if (!DamagedActors.Contains(DamagedActor)) {
+				DamagedActors.Add(DamagedActor);
+				DamagedActorsHitInfo.Add(Hit);
+			}
+		}
+
+		for (auto i = 0; i < DamagedActors.Num(); i++)
+		{
+			auto DamagedActor = DamagedActors[i];
+
 			UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
 			if (HealthComponent && HealthComponent->IsAlive())
 			{
-				FHealthParameters HealthParameters;
-				HealthParameters.DamagedActor = DamagedActor;
-				HealthParameters.DamageCauser = MyOwner;
-				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
-				HealthParameters.WeaponCauser = WeaponParent;
-				HealthParameters.Bullet = this;
-				HealthParameters.HitInfo = Hit;
-				HealthParameters.Damage = DamageAmount;
-				HealthParameters.IsExplosive = isAnExplosive;
-				HealthComponent->OnDamage(HealthParameters);
+				auto Distance = GetDistanceTo(DamagedActor);
 
-				auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
-				AddKill(HealthComponent, FactionComp);
+				// health affected if within inner radius
+				if (Distance <= ExplosiveRadiusInner) {
+
+					auto newDamage = FMath::Clamp((DamageAmount * ExplosiveRadiusInner) / Distance, 0.f, DamageAmount);
+					newDamage = FMath::Abs(newDamage);
+
+					FHealthParameters HealthParameters;
+					HealthParameters.DamagedActor = DamagedActor;
+					HealthParameters.DamageCauser = MyOwner;
+					HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
+					HealthParameters.WeaponCauser = WeaponParent;
+					HealthParameters.Projectile = this;
+					HealthParameters.HitInfo = DamagedActorsHitInfo[i];
+					HealthParameters.Damage = newDamage;
+					HealthParameters.IsExplosive = isAnExplosive;
+					HealthComponent->OnDamage(HealthParameters);
+
+					auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+					AddKill(HealthComponent, FactionComp);
+				}
+
+			}
+
+
+			auto HitProjectile = Cast<AProjectile>(DamagedActor);
+			if (HitProjectile && HitProjectile->IsExplosive()) {
+				HitProjectile->SelfDestruct();
 			}
 
 			auto MeshComp = Cast<UStaticMeshComponent>(DamagedActor->GetRootComponent());
@@ -377,7 +478,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 			{
 				// alternivly you can use  ERadialImpulseFalloff::RIF_Linear for the impulse to get linearly weaker as it gets further from origin.
 				// set the float radius to 500 and the float strength to 2000.
-				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadius, 2000.f, ERadialImpulseFalloff::RIF_Constant, true);
+				MeshComp->AddRadialImpulse(ImpactPoint, ExplosiveRadiusInner, RadialForceStrength, ERadialImpulseFalloff::RIF_Constant, true);
 			}
 		}
 	}
@@ -385,7 +486,7 @@ void AWeaponBullet::Explode(FVector ImpactPoint)
 
 
 
-FSurfaceImpactSet AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
+FSurfaceImpactSet AProjectile::CheckSurface(EPhysicalSurface SurfaceType)
 {
 	FSurfaceImpactSet SurfaceImpactSet = SurfaceImpact->Default;
 
@@ -413,12 +514,15 @@ FSurfaceImpactSet AWeaponBullet::CheckSurface(EPhysicalSurface SurfaceType)
 	case SURFACE_SAND:
 		SurfaceImpactSet = SurfaceImpact->Sand;
 		break;
+	default:
+		SurfaceImpactSet = SurfaceImpact->Default;
+		break;
 	}
 
 	return SurfaceImpactSet;
 }
 
-void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction)
+void AProjectile::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction)
 {
 	// confirm kill if
 	// damaged actor is not the owner
@@ -440,7 +544,7 @@ void AWeaponBullet::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionCo
 	}
 }
 
-FCollisionQueryParams AWeaponBullet::GetQueryParams()
+FCollisionQueryParams AProjectile::GetQueryParams()
 {
 	FCollisionQueryParams QueryParams;
 	QueryParams.bReturnPhysicalMaterial = true;
@@ -460,4 +564,106 @@ FCollisionQueryParams AWeaponBullet::GetQueryParams()
 	}
 
 	return QueryParams;
+}
+
+void AProjectile::SelfDestruct()
+{
+	FVector Location = GetActorLocation();
+	Explode(Location);
+
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(LastHit.PhysMaterial.Get());
+	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
+	SetVFX(ImpactSurface, Location);
+
+
+	FProjectileImpactParameters ProjectileImpactParameters;
+	if (KillCount > 0)
+	{
+		if (KillCount == 1)
+		{
+			ProjectileImpactParameters.IsSingleKill = true;
+		}
+		else if (KillCount == 2)
+		{
+			ProjectileImpactParameters.IsDoubleKill = true;
+		}
+		else if (KillCount > 2)
+		{
+			ProjectileImpactParameters.IsMultiKill = true;
+		}
+
+		ProjectileImpactParameters.KillCount = KillCount;
+		ProjectileImpactParameters.SetProjectileActor(this);
+
+		if (OwningCombatCharacter) {
+			OwningCombatCharacter->SetKillCount(KillCount);
+		}
+	}
+
+	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
+
+	Deactivate();
+}
+
+void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation)
+{
+	if (ImpactSurface.Sound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, ImpactLocation, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
+	}
+
+	if (IsInAir()) {
+		if (ImpactSurface.AirParticleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, ImpactLocation);
+		}
+
+		if (ImpactSurface.AirNiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, ImpactLocation);
+		}
+	}
+	else {
+		if (ImpactSurface.ParticleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, ImpactLocation);
+		}
+
+		if (ImpactSurface.NiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, ImpactLocation);
+		}
+	}
+
+	if (ImpactSurface.DecalMaterial) {
+		float Size = UKismetMathLibrary::RandomFloatInRange(DecalSizeMin, DecalSizeMax);
+		FVector SizeVector = UKismetMathLibrary::MakeVector(Size, Size, Size);
+		float Rotation = UKismetMathLibrary::RandomFloatInRange(DecalRotationMin, DecalRotationMax);
+		FRotator SizeRotator = UKismetMathLibrary::MakeRotator(Rotation, -90.f, Rotation);
+		auto DecalComponent = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ImpactSurface.DecalMaterial, SizeVector, ImpactLocation, SizeRotator, DecalLifetime);
+		DecalComponent->SetFadeOut(DecalLifetime, DecalFadeOutDuration);
+	}
+
+	if (CameraShake) {
+		UGameplayStatics::PlayWorldCameraShake(GetWorld(), CameraShake, ImpactLocation, CamShakeInnerRadius, CamShakeOuterRadius);
+	}
+}
+
+bool AProjectile::IsInAir()
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.bTraceComplex = true;
+	QueryParams.AddIgnoredActor(this);
+
+	FVector Start = GetActorLocation();
+	FVector End = Start + FVector(.0f, .0f, -100.f);
+
+	FHitResult OutHit;
+	return GetWorld()->LineTraceSingleByChannel(
+		OutHit,
+		Start,
+		End,
+		ECC_Visibility,
+		QueryParams
+	);
 }

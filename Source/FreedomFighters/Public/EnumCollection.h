@@ -29,7 +29,16 @@ enum class WeaponType : uint8
 	Shotgun		UMETA(DisplayName = "Shotgun"),
 	LMG			UMETA(DisplayName = "LMG"),
 	Pistol		UMETA(DisplayName = "Pistol"),
-	MountedGun	UMETA(DisplayName = "MountedGun")
+	MountedGun	UMETA(DisplayName = "MountedGun"),
+	Throwable	UMETA(DisplayName = "Throwable")
+};
+
+UENUM(BlueprintType)
+enum class EWeaponState : uint8
+{
+	Default			UMETA(DisplayName = "Default"),
+	Firing			UMETA(DisplayName = "Firing"),
+	Reloading		UMETA(DisplayName = "Reloading")
 };
 
 UENUM(BlueprintType)

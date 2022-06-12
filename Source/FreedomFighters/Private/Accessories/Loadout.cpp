@@ -4,6 +4,7 @@
 #include "Accessories/Loadout.h"
 #include "StructCollection.h"
 #include "Weapons/Weapon.h"
+#include "Weapons/ThrowableWeapon.h"
 
 #include "UObject/UObjectGlobals.h"
 
@@ -92,16 +93,35 @@ AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 	if (Weapon)
 	{
 		Weapon->SetOwner(GetOwner());
-		Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Weapon->getHolsterSocket());
+		HolsterWeapon(Weapon);
 	}
 
 	return Weapon;
 }
 
+AThrowableWeapon* ALoadout::SpawnGrenade(FWeaponsSet* WeaponsDataSet)
+{
+	if (!WeaponsDataSet || !WeaponsDataSet->GrenadeClass) {
+		return nullptr;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	auto GrenadeWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(WeaponsDataSet->GrenadeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (GrenadeWeapon) {
+		GrenadeWeapon->ToggleVisibility(false);
+		//GrenadeWeapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+
+	return GrenadeWeapon;
+}
+
 void ALoadout::HolsterWeapon(AWeapon* Weapon)
 {
-	if (Weapon)
-	{
-		Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Weapon->getHolsterSocket());
+	if (Weapon) {
+		Weapon->HolsterWeapon(Mesh);
 	}
 }

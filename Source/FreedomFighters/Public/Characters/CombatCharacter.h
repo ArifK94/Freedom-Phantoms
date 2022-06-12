@@ -11,6 +11,7 @@ class AWeapon;
 class AMountedGun;
 class ACommanderCharacter;
 class UTeamFactionComponent;
+class AThrowableWeapon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCharacter*, CombatCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
@@ -83,6 +84,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName WeaponHandSocket;
 
+	/** Socket for the grenades & other throwables */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		FName WeaponHandThrowablesSocket;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accessory", meta = (AllowPrivateAccess = "true"))
 		AHeadgear* Headgear;
@@ -95,16 +100,22 @@ protected:
 		ACommanderCharacter* CommandingOfficer;
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* currentWeaponObj;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* primaryWeaponObj;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* secondaryWeaponObj;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+		AThrowableWeapon* GrenadeWeapon;
+
 	AMountedGun* MountedGun;
+
+	/** Used for equipping specific weapons. */
+	AWeapon* NewEquippedWeapon;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
@@ -167,6 +178,9 @@ public:
 		void BeginWeaponSwap();
 
 	UFUNCTION()
+		void OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParameters);
+
+	UFUNCTION()
 		void OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters);
 	void RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent);
 
@@ -176,6 +190,10 @@ public:
 	void BeginEquipWeapon();
 	void GrabWeapon();
 	void EndEquipWeapon();
+
+
+	UFUNCTION(BlueprintCallable)
+		void EquipWeapon(AWeapon * Weapon);
 
 	void swapWeapon();
 
