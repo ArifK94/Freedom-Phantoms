@@ -27,7 +27,9 @@ public:
 
 	virtual void StartFire() override;
 
-	void Hide();
+	virtual void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket) override;
+
+	virtual void HolsterWeapon(USkeletalMeshComponent* Parent) override;
 
 protected:
 	virtual void OnReload() override;

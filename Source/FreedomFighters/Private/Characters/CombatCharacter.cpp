@@ -903,7 +903,7 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 		RetrieveWeaponAnimDataSet();
 	}
 	else {
-		Weapon->setWeaponSocket(Loadout->GetMesh(), Weapon->getHolsterSocket());
+		Loadout->HolsterWeapon(Weapon);
 	}
 }
 
@@ -913,7 +913,7 @@ void ACombatCharacter::HolsterWeapon()
 		return;
 	}
 
-	currentWeaponObj->setWeaponSocket(Loadout->GetMesh(), currentWeaponObj->getHolsterSocket());
+	Loadout->HolsterWeapon(currentWeaponObj);
 }
 
 
@@ -1187,7 +1187,9 @@ void ACombatCharacter::UseMountedGun()
 	EndAim();
 
 	isUsingMountedWeapon = true;
+	
 	HolsterWeapon();
+
 	MountedGun->SetOwner(this);
 	MountedGun->SetPotentialOwner(this);
 	currentWeaponObj = MountedGun;

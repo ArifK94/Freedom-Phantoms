@@ -57,7 +57,7 @@ void AThrowableWeapon::Fire()
 
 	EmptyClipEvent();
 
-	Hide();
+	ToggleVisibility(false);
 }
 
 void AThrowableWeapon::StartFire()
@@ -72,7 +72,7 @@ void AThrowableWeapon::StartFire()
 
 	isFiring = true;
 
-	MeshComp->SetHiddenInGame(false, true);
+	ToggleVisibility(true);
 }
 
 void AThrowableWeapon::OnReload()
@@ -80,12 +80,20 @@ void AThrowableWeapon::OnReload()
 	Super::OnReload();
 
 	if (CurrentAmmo > 0) {
-		MeshComp->SetHiddenInGame(false, true);
+		ToggleVisibility(true);
 	}
 }
 
-void AThrowableWeapon::Hide()
+void AThrowableWeapon::setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket)
 {
-	MeshComp->SetHiddenInGame(true, true);
-	SetActorEnableCollision(false);
+	Super::setWeaponSocket(meshComponent, socket);
+
+	ToggleVisibility(true);
+}
+
+void AThrowableWeapon::HolsterWeapon(USkeletalMeshComponent* Parent)
+{
+	Super::HolsterWeapon(Parent);
+
+	ToggleVisibility(false);
 }

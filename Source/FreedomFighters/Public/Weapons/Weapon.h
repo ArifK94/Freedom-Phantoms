@@ -355,7 +355,7 @@ public:
 
 	void SetClipSocket(USkeletalMeshComponent* meshComponent);
 
-	void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket);
+	virtual void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket);
 
 	void SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket);
 
@@ -365,6 +365,10 @@ public:
 	virtual void SetIsAiming(bool isAiming);
 
 	void SetWeaponProfile(FName InCollisionProfileName);
+
+	virtual void HolsterWeapon(USkeletalMeshComponent* Parent);
+
+	void ToggleVisibility(bool Enabled);
 
 	/** Called when owning character has died or picking up another weapon */
 	virtual void DropWeapon(bool RemoveOwner = true, bool SimulatePhysics = false);
@@ -435,7 +439,6 @@ public:
 	FName GetWeaponName() { return WeaponName; }
 
 	FName GetMuzzleSocket() { return MuzzleSocket; }
-	FName getHolsterSocket() { return HolsterSocket; }
 	FName getParentHolderSocket() { return ParentHolderSocket; }
 	FName getOpticsSocket() { return OpticsSocket; }
 	FName getLaserSocket() { return LaserSocket; }

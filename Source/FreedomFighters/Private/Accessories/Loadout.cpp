@@ -93,7 +93,7 @@ AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 	if (Weapon)
 	{
 		Weapon->SetOwner(GetOwner());
-		Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Weapon->getHolsterSocket());
+		HolsterWeapon(Weapon);
 	}
 
 	return Weapon;
@@ -112,7 +112,7 @@ AThrowableWeapon* ALoadout::SpawnGrenade(FWeaponsSet* WeaponsDataSet)
 	auto GrenadeWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(WeaponsDataSet->GrenadeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (GrenadeWeapon) {
-		GrenadeWeapon->Hide();
+		GrenadeWeapon->ToggleVisibility(false);
 		//GrenadeWeapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
 
@@ -122,6 +122,6 @@ AThrowableWeapon* ALoadout::SpawnGrenade(FWeaponsSet* WeaponsDataSet)
 void ALoadout::HolsterWeapon(AWeapon* Weapon)
 {
 	if (Weapon) {
-		Weapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Weapon->getHolsterSocket());
+		Weapon->HolsterWeapon(Mesh);
 	}
 }

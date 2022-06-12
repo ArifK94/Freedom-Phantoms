@@ -974,6 +974,11 @@ void AWeapon::setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socke
 	MeshComp->AttachToComponent(meshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, socket);
 }
 
+void AWeapon::HolsterWeapon(USkeletalMeshComponent* Parent)
+{
+	MeshComp->AttachToComponent(Parent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HolsterSocket);
+}
+
 void AWeapon::SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName TriggerHandSocket)
 {
 	FVector TargetPosition;
@@ -1031,6 +1036,16 @@ bool AWeapon::ReplenishAmmo(int Amount)
 	return false;
 }
 
+void AWeapon::ToggleVisibility(bool Enabled)
+{
+	if (Enabled) {
+		MeshComp->SetHiddenInGame(false, true);
+	}
+	else {
+		MeshComp->SetHiddenInGame(true, true);
+		SetActorEnableCollision(false);
+	}
+}
 
 void AWeapon::SetWeaponProfile(FName InCollisionProfileName)
 {
