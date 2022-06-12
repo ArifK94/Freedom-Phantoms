@@ -97,3 +97,8 @@ void AThrowableWeapon::HolsterWeapon(USkeletalMeshComponent* Parent)
 
 	ToggleVisibility(false);
 }
+
+void AThrowableWeapon::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
+{
+	ToggleVisibility(false);
+}

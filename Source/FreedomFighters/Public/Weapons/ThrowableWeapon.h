@@ -31,6 +31,8 @@ public:
 
 	virtual void HolsterWeapon(USkeletalMeshComponent* Parent) override;
 
+	virtual void DropWeapon(bool RemoveOwner = true, bool SimulatePhysics = false) override;
+
 protected:
 	virtual void OnReload() override;
 
