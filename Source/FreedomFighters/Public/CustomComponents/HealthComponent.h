@@ -90,7 +90,8 @@ public:
 	static void SetIsReviving(AActor* Owner, bool Value);
 
 
-	void OnDamage(FHealthParameters HealthParameters);
+	UFUNCTION(BlueprintCallable)
+		void OnDamage(FHealthParameters HealthParameters);
 
 	void Revive();
 

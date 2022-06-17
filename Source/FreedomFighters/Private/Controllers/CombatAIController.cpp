@@ -556,6 +556,32 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	}
 }
 
+/**
+* Prioritise Actors to flee from.
+*/
+void ACombatAIController::OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams)
+{
+	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
+	FVector AvoidableLocation = AvoidableParams.Actor->GetActorLocation();
+
+	// Distance away from the avoidable actor.
+	FVector DirectionAvoidance = UKismetMathLibrary::GetForwardVector( UKismetMathLibrary::FindLookAtRotation(OwnerLocation, AvoidableLocation) );
+	DirectionAvoidance = (DirectionAvoidance * (AvoidableParams.AvoidableDistance * -1.f)) + OwnerLocation;
+
+
+	// get a random reachable point away from avoidance distance to make the move to dynamic
+	FNavLocation NavLocation;
+	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+	bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->GetRandomReachablePointInRadius(DirectionAvoidance, AvoidableParams.AvoidableDistance, NavLocation);
+
+
+	// move to the point away from the avoidable
+	TargetDestination = NavLocation.Location;
+	AIMovementComponent->MoveToDestination(TargetDestination, 20.f, AIBehaviourState::PriorityDestination);
+
+	OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound);
+}
+
 void ACombatAIController::UpdatCombatAlert()
 {
 	if (StayCombatAlert)

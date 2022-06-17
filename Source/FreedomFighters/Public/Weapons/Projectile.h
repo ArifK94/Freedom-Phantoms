@@ -24,6 +24,12 @@ class FREEDOMFIGHTERS_API AProjectile : public AObjectPoolActor
 
 private:
 
+	/** The detection sphere to check actors within the projectile radius */
+	USphereComponent* DetectionSphere;
+
+	/** Prevent processing the same overlapped actors */
+	TArray<AActor*> DetectionActors;
+
 	float CurrentDeltaTime;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -120,6 +126,10 @@ private:
 	/** Spin projectile while there is velocity? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
 		bool SpinOnVelocity;
+
+	/** Detect nearby overlapping actors when velocity is near zero. Used for grenade avoidance for example. Radius detection based on ExplosiveRadiusOuter amount.  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement", meta = (AllowPrivateAccess = "true"))
+		bool DetectNearbyActors;
 
 	FVector Velocity;
 	FVector Acceleration;
@@ -220,6 +230,9 @@ private:
 	FCollisionQueryParams GetQueryParams();
 
 	void SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation);
+
+	/** Check overalpping using the DetectionSphere */
+	void CheckNearbyActors();
 
 	UFUNCTION()
 		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

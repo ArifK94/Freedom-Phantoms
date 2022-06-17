@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include "EnumCollection.h"
+#include "Interfaces/Avoidable.h"
 #include "Characters/CommanderCharacter.h"
 #include "CombatAIController.generated.h"
 
@@ -23,7 +24,7 @@ class APumpActionWeapon;
 class UCommanderRecruit;
 
 UCLASS()
-class FREEDOMFIGHTERS_API ACombatAIController : public AAIController
+class FREEDOMFIGHTERS_API ACombatAIController : public AAIController, public IAvoidable
 {
 	GENERATED_BODY()
 
@@ -161,6 +162,9 @@ private:
 
 	UFUNCTION()
 		void OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters);
+
+	virtual void OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams) override;
+
 
 	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
 
