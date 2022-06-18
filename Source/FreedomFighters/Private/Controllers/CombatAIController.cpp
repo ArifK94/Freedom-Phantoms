@@ -1,5 +1,4 @@
 #include "Controllers/CombatAIController.h"
-
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
@@ -18,11 +17,11 @@
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/AudioComponent.h"
 #include "Engine/EngineTypes.h"
 #include "NavigationSystem.h"
 #include "NavFilters/NavigationQueryFilter.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "..\..\Public\Controllers\CombatAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -579,7 +578,9 @@ void ACombatAIController::OnNearbyActorFound_Implementation(FAvoidableParams Avo
 	TargetDestination = NavLocation.Location;
 	AIMovementComponent->MoveToDestination(TargetDestination, 20.f, AIBehaviourState::PriorityDestination);
 
-	OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound);
+	if (OwningCombatCharacter->GetVoiceAudioComponent()->Sound != OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound || !OwningCombatCharacter->GetVoiceAudioComponent()->IsPlaying()) {
+		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound);
+	}
 }
 
 void ACombatAIController::UpdatCombatAlert()
@@ -792,6 +793,86 @@ void ACombatAIController::ShootAtEnemy()
 		GetWorldTimerManager().ClearTimer(THandler_EndFire);
 	}
 
+}
+
+void ACombatAIController::ThrowGrenade()
+{
+	auto OwnerLocation = OwningCombatCharacter->GetActorLocation();
+	auto EnemyLocation = EnemyActor->GetActorLocation();
+
+	float Gravity = 980.f;
+
+	// Velocity needs to be set as the same velocity for the projectile's movement component's initial speed. Alternatively, retrieve the projectile's intial speed dynamically.
+	float Velocity = 1500.f;
+
+	// X
+	auto differenceXY = UKismetMathLibrary::VSize2D(FVector2D
+	(
+		EnemyLocation.X - OwnerLocation.X,
+		EnemyLocation.Y - OwnerLocation.Y
+	));
+
+
+	// x^2
+	auto SquaredX = UKismetMathLibrary::Square(differenceXY);
+
+	// gravity * x^2
+	auto SquaredGravity = SquaredX * Gravity;
+
+	// velocity ^2
+	float VelocityPower2 = UKismetMathLibrary::Square(Velocity);
+
+	// velocity ^4
+	float VelocityPower4 = UKismetMathLibrary::Square(VelocityPower2);
+
+	// Z
+	auto differenceZ = EnemyLocation.Z - OwnerLocation.Z;
+
+	// z * velocity ^2
+	auto SquaredVeloZ = differenceZ * VelocityPower2;
+
+	// 2 * z * velocity ^2
+	auto DoubleSquaredVeloZ = SquaredVeloZ * 2.f;
+
+
+	// gravity * (gravity * x^2 +  2 * z * v^2)
+	auto TotalGravity = Gravity * (SquaredGravity + DoubleSquaredVeloZ);
+
+	// sqrt eq
+	auto SqrtEq = VelocityPower4 - TotalGravity;
+
+	if (SqrtEq < 0.f) {
+		return;
+	}
+
+	// sqrt of eq
+	auto SqrtOfEq = UKismetMathLibrary::Sqrt(SqrtEq);
+
+	// gravity * x
+	auto GravityX = differenceXY * Gravity;
+
+	// velocity^2 + sqrt of eq
+	auto SqrtGravityX = SqrtOfEq + VelocityPower2;
+
+	auto FullEq = SqrtGravityX / GravityX;
+
+	auto DegreesMax = UKismetMathLibrary::DegAtan(FullEq);
+
+
+	// velocity^2 - sqrt of eq
+	auto MinimalSqrtGravityX = VelocityPower2 - SqrtOfEq;
+
+	auto FullEqMinimal = MinimalSqrtGravityX / GravityX;
+
+	auto DegreesMin = UKismetMathLibrary::DegAtan(FullEqMinimal);
+
+	auto MinTargetDegrees = UKismetMathLibrary::Min(DegreesMin, DegreesMax);
+
+
+	auto LookAt = UKismetMathLibrary::FindLookAtRotation(OwnerLocation, EnemyLocation);
+
+	// Target rotation for the Projectile to make the curve throw.
+	auto ProjectileRotation = UKismetMathLibrary::MakeRotator(LookAt.Roll, MinTargetDegrees, LookAt.Yaw);
 }
 
 // End fire for non pump-action weapons like shotguns

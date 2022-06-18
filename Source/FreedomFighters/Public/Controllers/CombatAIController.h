@@ -177,6 +177,8 @@ private:
 
 	void ShootAtEnemy();
 
+	void ThrowGrenade();
+
 	void EndFiring();
 
 	void ReloadWeapon();
