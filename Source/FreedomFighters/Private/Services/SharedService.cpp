@@ -1,0 +1,87 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Services/SharedService.h"
+
+#include "Kismet/KismetMathLibrary.h"
+
+
+bool SharedService::ThrowRotationAngle(FVector Start, FVector End, FRotator& TargetRotation)
+{
+	float Gravity = 980.f;
+
+	// Velocity needs to be set as the same velocity for the projectile's movement component's initial speed. Alternatively, retrieve the projectile's intial speed dynamically.
+	float Velocity = 1500.f;
+
+	// X
+	auto differenceXY = UKismetMathLibrary::VSize2D(FVector2D
+	(
+		End.X - Start.X,
+		End.Y - Start.Y
+	));
+
+
+	// x^2
+	auto SquaredX = UKismetMathLibrary::Square(differenceXY);
+
+	// gravity * x^2
+	auto SquaredGravity = SquaredX * Gravity;
+
+	// velocity ^2
+	float VelocityPower2 = UKismetMathLibrary::Square(Velocity);
+
+	// velocity ^4
+	float VelocityPower4 = UKismetMathLibrary::Square(VelocityPower2);
+
+	// Z
+	auto differenceZ = End.Z - Start.Z;
+
+	// z * velocity ^2
+	auto SquaredVeloZ = differenceZ * VelocityPower2;
+
+	// 2 * z * velocity ^2
+	auto DoubleSquaredVeloZ = SquaredVeloZ * 2.f;
+
+
+	// gravity * (gravity * x^2 +  2 * z * v^2)
+	auto TotalGravity = Gravity * (SquaredGravity + DoubleSquaredVeloZ);
+
+	// sqrt eq
+	auto SqrtEq = VelocityPower4 - TotalGravity;
+
+	// Is Reachable?
+	if (SqrtEq < 0.f) {
+		return false;
+	}
+
+	// sqrt of eq
+	auto SqrtOfEq = UKismetMathLibrary::Sqrt(SqrtEq);
+
+	// gravity * x
+	auto GravityX = differenceXY * Gravity;
+
+	// velocity^2 + sqrt of eq
+	auto SqrtGravityX = SqrtOfEq + VelocityPower2;
+
+	auto FullEq = SqrtGravityX / GravityX;
+
+	auto DegreesMax = UKismetMathLibrary::DegAtan(FullEq);
+
+
+	// velocity^2 - sqrt of eq
+	auto MinimalSqrtGravityX = VelocityPower2 - SqrtOfEq;
+
+	auto FullEqMinimal = MinimalSqrtGravityX / GravityX;
+
+	auto DegreesMin = UKismetMathLibrary::DegAtan(FullEqMinimal);
+
+	auto MinTargetDegrees = UKismetMathLibrary::Min(DegreesMin, DegreesMax);
+
+
+	auto LookAt = UKismetMathLibrary::FindLookAtRotation(Start, End);
+
+	// Target rotation for the Projectile to make the curve throw.
+	TargetRotation = UKismetMathLibrary::MakeRotator(LookAt.Roll, MinTargetDegrees, LookAt.Yaw);
+
+	return true;
+}
