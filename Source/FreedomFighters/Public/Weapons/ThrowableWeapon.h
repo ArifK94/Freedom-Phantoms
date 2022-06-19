@@ -15,6 +15,9 @@ class FREEDOMFIGHTERS_API AThrowableWeapon : public AWeapon
 {
 	GENERATED_BODY()
 
+private:
+	FRotator ThrowAngle;
+
 public:
 	AThrowableWeapon();
 
@@ -27,6 +30,8 @@ public:
 
 	virtual void StartFire() override;
 
+	virtual void CreateBullet() override;
+
 	virtual void setWeaponSocket(USkeletalMeshComponent* meshComponent, FName socket) override;
 
 	virtual void HolsterWeapon(USkeletalMeshComponent* Parent) override;
@@ -35,5 +40,9 @@ public:
 
 protected:
 	virtual void OnReload() override;
+
+
+public:
+	void SetRotationAngle(FRotator Angle) { ThrowAngle = Angle; }
 
 };

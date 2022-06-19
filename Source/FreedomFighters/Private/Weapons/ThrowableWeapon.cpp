@@ -75,6 +75,11 @@ void AThrowableWeapon::StartFire()
 	ToggleVisibility(true);
 }
 
+void AThrowableWeapon::CreateBullet()
+{
+	SpawnProjectile(getMuzzleLocation(), ThrowAngle);
+}
+
 void AThrowableWeapon::OnReload()
 {
 	Super::OnReload();
