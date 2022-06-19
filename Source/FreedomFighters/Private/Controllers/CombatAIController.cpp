@@ -4,6 +4,7 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
+#include "Weapons/ThrowableWeapon.h"
 #include "CustomComponents/AIMovementComponent.h"
 #include "CustomComponents/PatrolFollowerComponent.h"
 #include "CustomComponents/CoverFinderComponent.h"
@@ -11,6 +12,7 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/MountedGunFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
+#include "Services/SharedService.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -34,6 +36,9 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 	TimeBetweenShotsMax = 3.0f;
 
 	DestinationRadius = 300.0f;
+
+	GrenadeThrowTimeMin = 8.f;
+	GrenadeThrowTimeMax = 15.f;
 
 	MoveToLastSeenEnemy = true;
 
@@ -518,6 +523,12 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 			if (!THandler_EndFire.IsValid()) {
 				GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
 			}
+
+			// reset time on another enemy.
+			TimeOnCurrentEnemy = .0f;
+		}
+		else {
+			TimeOnCurrentEnemy += 1.f;
 		}
 
 		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
@@ -545,6 +556,9 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	}
 	else  // not found an enemy
 	{
+		// reset time on another enemy.
+		TimeOnCurrentEnemy = .0f;
+
 		if (EnemyActor) // if previous enemy still exists, look at the last location it was seen
 		{
 			LastSeenEnemyActor = EnemyActor;
@@ -691,7 +705,6 @@ void ACombatAIController::ShootAtEnemy()
 	}
 
 
-
 	// set unlimited ammo
 	if (!OwningCombatCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
 	{
@@ -700,6 +713,17 @@ void ACombatAIController::ShootAtEnemy()
 
 	if (EnemyActor)
 	{
+		if (CanThrowGrenade()) {
+			if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
+				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
+			}
+		}
+		else {
+			if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetPrimaryWeapon()) {
+				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
+			}
+		}
+
 		if (!OwningCombatCharacter->IsSprinting())
 		{
 			OwningCombatCharacter->BeginAim();
@@ -726,19 +750,18 @@ void ACombatAIController::ShootAtEnemy()
 				// Shotguns require bolt action rather than constant firing of weapon
 				// check if using shotgun weapon type
 
-				if (PumpActionWeapon)
-				{
-					if (PumpActionWeapon->GetHasLoadedShell())
-					{
+				if (PumpActionWeapon) {
+					if (PumpActionWeapon->GetHasLoadedShell()) {
 						OwningCombatCharacter->BeginFire();
 					}
-					else
-					{
+					else {
 						OwningCombatCharacter->EndFire();
 					}
 				}
-				else
-				{
+				else if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
+					ThrowGrenade();
+				}
+				else {
 					OwningCombatCharacter->BeginFire();
 				}
 			}
@@ -800,79 +823,22 @@ void ACombatAIController::ThrowGrenade()
 	auto OwnerLocation = OwningCombatCharacter->GetActorLocation();
 	auto EnemyLocation = EnemyActor->GetActorLocation();
 
-	float Gravity = 980.f;
+	FRotator TargetRotation;
+	bool IsReachable = SharedService::ThrowRotationAngle(OwnerLocation, EnemyLocation, TargetRotation);
 
-	// Velocity needs to be set as the same velocity for the projectile's movement component's initial speed. Alternatively, retrieve the projectile's intial speed dynamically.
-	float Velocity = 1500.f;
-
-	// X
-	auto differenceXY = UKismetMathLibrary::VSize2D(FVector2D
-	(
-		EnemyLocation.X - OwnerLocation.X,
-		EnemyLocation.Y - OwnerLocation.Y
-	));
-
-
-	// x^2
-	auto SquaredX = UKismetMathLibrary::Square(differenceXY);
-
-	// gravity * x^2
-	auto SquaredGravity = SquaredX * Gravity;
-
-	// velocity ^2
-	float VelocityPower2 = UKismetMathLibrary::Square(Velocity);
-
-	// velocity ^4
-	float VelocityPower4 = UKismetMathLibrary::Square(VelocityPower2);
-
-	// Z
-	auto differenceZ = EnemyLocation.Z - OwnerLocation.Z;
-
-	// z * velocity ^2
-	auto SquaredVeloZ = differenceZ * VelocityPower2;
-
-	// 2 * z * velocity ^2
-	auto DoubleSquaredVeloZ = SquaredVeloZ * 2.f;
-
-
-	// gravity * (gravity * x^2 +  2 * z * v^2)
-	auto TotalGravity = Gravity * (SquaredGravity + DoubleSquaredVeloZ);
-
-	// sqrt eq
-	auto SqrtEq = VelocityPower4 - TotalGravity;
-
-	if (SqrtEq < 0.f) {
-		return;
+	if (IsReachable) {
+		OwningCombatCharacter->GetGrenadeWeapon()->SetRotationAngle(TargetRotation);
+		OwningCombatCharacter->BeginFire();
+		HasThrownGrenade = true;
 	}
+}
 
-	// sqrt of eq
-	auto SqrtOfEq = UKismetMathLibrary::Sqrt(SqrtEq);
-
-	// gravity * x
-	auto GravityX = differenceXY * Gravity;
-
-	// velocity^2 + sqrt of eq
-	auto SqrtGravityX = SqrtOfEq + VelocityPower2;
-
-	auto FullEq = SqrtGravityX / GravityX;
-
-	auto DegreesMax = UKismetMathLibrary::DegAtan(FullEq);
-
-
-	// velocity^2 - sqrt of eq
-	auto MinimalSqrtGravityX = VelocityPower2 - SqrtOfEq;
-
-	auto FullEqMinimal = MinimalSqrtGravityX / GravityX;
-
-	auto DegreesMin = UKismetMathLibrary::DegAtan(FullEqMinimal);
-
-	auto MinTargetDegrees = UKismetMathLibrary::Min(DegreesMin, DegreesMax);
-
-
-	auto LookAt = UKismetMathLibrary::FindLookAtRotation(OwnerLocation, EnemyLocation);
-
-	// Target rotation for the Projectile to make the curve throw.
-	auto ProjectileRotation = UKismetMathLibrary::MakeRotator(LookAt.Roll, MinTargetDegrees, LookAt.Yaw);
+bool ACombatAIController::CanThrowGrenade()
+{
+	return EnemyActor && 
+		!HasThrownGrenade &&
+		TimeOnCurrentEnemy >= FMath::RandRange(GrenadeThrowTimeMin, GrenadeThrowTimeMax) && // too much time spent shooting at this enemy?
+		OwningCombatCharacter->GetDistanceTo(EnemyActor) <= 2000.f; // within throwing distance?
 }
 
 // End fire for non pump-action weapons like shotguns

@@ -275,6 +275,8 @@ public:
 		return secondaryWeaponObj;
 	}
 
+	AThrowableWeapon* GetGrenadeWeapon() { return GrenadeWeapon; }
+
 	AMountedGun* GetMountedGun() {
 		return MountedGun;
 	}

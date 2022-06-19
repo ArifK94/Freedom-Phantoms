@@ -36,10 +36,15 @@ private:
 
 	ACommanderCharacter* Commander;
 
+	/** Keep track of time in seconds spent on the enemy. Resets after getting another enemy. */
+	float TimeOnCurrentEnemy;
 
 	bool StayCombatAlert;
 	bool HasChosenCover;
 	bool CanFindCover;
+
+	// To prevent throwing a lot of grenades in short amount of time.
+	bool HasThrownGrenade;
 
 	FVector ChosenCoverPoint;
 	FVector LastSeenPosition;
@@ -115,6 +120,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool MoveToLastSeenEnemy;
 
+	/** Min time when ready to throw greande when time on enemy meets criteria */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float GrenadeThrowTimeMin;
+
+	/** Max time when ready to throw greande when time on enemy meets criteria */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float GrenadeThrowTimeMax;
+
 	FTimerHandle THandler_ShootEnemy;
 	FTimerHandle THandler_EndFire;
 	FTimerHandle THandler_CommanderOrders;
@@ -178,6 +191,8 @@ private:
 	void ShootAtEnemy();
 
 	void ThrowGrenade();
+
+	bool CanThrowGrenade();
 
 	void EndFiring();
 

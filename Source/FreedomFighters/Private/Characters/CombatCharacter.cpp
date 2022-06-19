@@ -298,6 +298,7 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParameters)
 {
 	if (WeaponUpdateParameters.WeaponState != EWeaponState::Firing && WeaponUpdateParameters.HasFiredShot) {
+
 		EndFire();
 
 		isFiring = false;
