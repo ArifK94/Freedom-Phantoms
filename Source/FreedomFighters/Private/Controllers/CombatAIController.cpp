@@ -578,7 +578,7 @@ void ACombatAIController::OnNearbyActorFound_Implementation(FAvoidableParams Avo
 	FVector AvoidableLocation = AvoidableParams.Actor->GetActorLocation();
 
 	// Distance away from the avoidable actor.
-	FVector DirectionAvoidance = UKismetMathLibrary::GetForwardVector( UKismetMathLibrary::FindLookAtRotation(OwnerLocation, AvoidableLocation) );
+	FVector DirectionAvoidance = UKismetMathLibrary::GetForwardVector(UKismetMathLibrary::FindLookAtRotation(OwnerLocation, AvoidableLocation));
 	DirectionAvoidance = (DirectionAvoidance * (AvoidableParams.AvoidableDistance * -1.f)) + OwnerLocation;
 
 
@@ -714,8 +714,14 @@ void ACombatAIController::ShootAtEnemy()
 	if (EnemyActor)
 	{
 		if (CanThrowGrenade()) {
-			if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
-				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
+
+			FRotator TargetRotation;
+			bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation(), TargetRotation);
+
+			if (IsReachable) {
+				if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
+					OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
+				}
 			}
 		}
 		else {
@@ -820,11 +826,8 @@ void ACombatAIController::ShootAtEnemy()
 
 void ACombatAIController::ThrowGrenade()
 {
-	auto OwnerLocation = OwningCombatCharacter->GetActorLocation();
-	auto EnemyLocation = EnemyActor->GetActorLocation();
-
 	FRotator TargetRotation;
-	bool IsReachable = SharedService::ThrowRotationAngle(OwnerLocation, EnemyLocation, TargetRotation);
+	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation(), TargetRotation);
 
 	if (IsReachable) {
 		OwningCombatCharacter->GetGrenadeWeapon()->SetRotationAngle(TargetRotation);
@@ -835,7 +838,7 @@ void ACombatAIController::ThrowGrenade()
 
 bool ACombatAIController::CanThrowGrenade()
 {
-	return EnemyActor && 
+	return EnemyActor &&
 		!HasThrownGrenade &&
 		TimeOnCurrentEnemy >= FMath::RandRange(GrenadeThrowTimeMin, GrenadeThrowTimeMax) && // too much time spent shooting at this enemy?
 		OwningCombatCharacter->GetDistanceTo(EnemyActor) <= 2000.f; // within throwing distance?
