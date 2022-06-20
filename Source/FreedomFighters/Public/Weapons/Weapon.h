@@ -108,6 +108,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool HasFiredFirstShot;
 
+	/** 
+	* If user has decided to stop but the first shot has not been fired, then the weapon will constantly fire if it is an automatic weapon.
+	* This flag will check after the first shot has been fired.
+	*/
+	bool ShouldStopFiring;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
 	bool IsAiming;
@@ -303,8 +310,6 @@ protected:
 
 
 private:
-	float CurrentVerticleRecoil;
-
 	USceneComponent* EyeViewPointComponent; // used for vehicles rather than pawns
 
 
