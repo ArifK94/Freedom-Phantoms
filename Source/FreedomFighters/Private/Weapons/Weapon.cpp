@@ -703,7 +703,7 @@ void AWeapon::StopFire()
 
 void AWeapon::ReadyToUse()
 {
-	HasFiredFirstShot = true;
+	HasFiredFirstShot = false;
 
 	StopFire();
 }

@@ -830,7 +830,7 @@ void ACombatAIController::ThrowGrenade()
 	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation(), TargetRotation);
 
 	if (IsReachable) {
-		OwningCombatCharacter->GetGrenadeWeapon()->SetRotationAngle(TargetRotation);
+		OwningCombatCharacter->GetGrenadeWeapon()->SetVolleyAngle(TargetRotation);
 		OwningCombatCharacter->BeginFire();
 		HasThrownGrenade = true;
 	}

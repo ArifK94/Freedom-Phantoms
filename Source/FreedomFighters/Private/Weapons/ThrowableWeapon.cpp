@@ -77,7 +77,16 @@ void AThrowableWeapon::StartFire()
 
 void AThrowableWeapon::CreateBullet()
 {
-	SpawnProjectile(getMuzzleLocation(), ThrowAngle);
+	auto Pawn = Cast<APawn>(GetOwner());
+
+	// for player throwing projectiles
+	if (Pawn && Pawn->IsPlayerControlled()) {
+		Super::CreateBullet();
+	}
+	// for NPC throwing projectiles
+	else {
+		SpawnProjectile(getMuzzleLocation(), VolleyAngle);
+	}
 }
 
 void AThrowableWeapon::OnReload()

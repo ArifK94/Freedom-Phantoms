@@ -16,7 +16,8 @@ class FREEDOMFIGHTERS_API AThrowableWeapon : public AWeapon
 	GENERATED_BODY()
 
 private:
-	FRotator ThrowAngle;
+	/** The angle when throwing the projectile. used for AI to directly throw at the target */
+	FRotator VolleyAngle;
 
 public:
 	AThrowableWeapon();
@@ -43,6 +44,6 @@ protected:
 
 
 public:
-	void SetRotationAngle(FRotator Angle) { ThrowAngle = Angle; }
+	void SetVolleyAngle(FRotator Angle) { VolleyAngle = Angle; }
 
 };
