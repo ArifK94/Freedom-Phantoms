@@ -5,6 +5,8 @@
 #include "CustomComponents/TeamFactionComponent.h"
 #include "FreedomFighters/FreedomFighters.h"
 #include "Characters/CombatCharacter.h"
+#include "Interfaces/Avoidable.h"
+#include "StructCollection.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -55,6 +57,7 @@ AProjectile::AProjectile()
 	HomingFollowWeaponEyePoint = false;
 	DestroyOnDeactivate = false;
 	DetectProjectileHit = true;
+	DetectNearbyActors = false;
 	SpinOnVelocity = false;
 
 	DecalSizeMin = 150.f;
@@ -73,29 +76,40 @@ void AProjectile::Init()
 		GetWorldTimerManager().SetTimer(THandler_CountdownTimer, this, &AProjectile::SelfDestruct, 1.f, true, CountdownTimer);
 	}
 
-	if (GetOwner())
-	{
+	if (GetOwner()) {
 		OwningCombatCharacter = Cast<ACombatCharacter>(GetOwner());
 
 		// The owner may not always be a character, can be a vehicle with the following components e.g. tank
 		auto HealthComp = GetOwner()->GetComponentByClass(UHealthComponent::StaticClass());
-		if (HealthComp)
-		{
+		if (HealthComp) {
 			OwnerHealth = Cast<UHealthComponent>(HealthComp);
 		}
 
 		auto FactionComp = GetOwner()->GetComponentByClass(UTeamFactionComponent::StaticClass());
-		if (FactionComp)
-		{
+		if (FactionComp) {
 			OwnerFaction = Cast<UTeamFactionComponent>(FactionComp);
 		}
 	}
+
+	if (!DetectionSphere) {
+		DetectionSphere = NewObject<USphereComponent>(this);
+
+		if (DetectionSphere) {
+			DetectionSphere->RegisterComponent();
+			DetectionSphere->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+			DetectionSphere->SetSphereRadius(ExplosiveRadiusOuter);
+			DetectionSphere->SetCanEverAffectNavigation(false);
+			DetectionSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+		}
+	}
+
+	DetectionActors.Empty();
 }
 
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	CapsuleComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnCapsuleHit);
 
 	// if not being used as an object pool, then perform as standard actor
@@ -135,8 +149,7 @@ void AProjectile::Tick(float DeltaTime)
 		SpinOnMovement();
 	}
 
-
-
+	CheckNearbyActors();
 }
 
 void AProjectile::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -202,7 +215,7 @@ void AProjectile::SpinOnMovement()
 	FRotator NewRotation = CurrentRotation;
 	NewRotation.Pitch += CurrentRotation.Pitch + CurrentSpeed;
 	NewRotation.Yaw += CurrentRotation.Yaw + CurrentSpeed;
-	NewRotation.Roll += CurrentRotation.Roll +  CurrentSpeed;
+	NewRotation.Roll += CurrentRotation.Roll + CurrentSpeed;
 
 	//AddActorWorldRotation(NewRotation);
 	CurrentRotation = NewRotation;
@@ -259,6 +272,11 @@ void AProjectile::Deactivate()
 	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
 
 	KillCount = 0;
+
+	if (DetectionSphere) {
+		DetectionSphere->SetCollisionProfileName(TEXT("NoCollision"));
+	}
+
 
 	Super::Deactivate();
 }
@@ -646,6 +664,70 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 
 	if (CameraShake) {
 		UGameplayStatics::PlayWorldCameraShake(GetWorld(), CameraShake, ImpactLocation, CamShakeInnerRadius, CamShakeOuterRadius);
+	}
+}
+
+void AProjectile::CheckNearbyActors()
+{
+	// check overlap detection when nearing to a stop
+	if (!DetectNearbyActors || GetVelocity().Size() >= 5.f) {
+		return;
+	}
+
+	// create a collision sphere
+	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadiusOuter);
+
+	// create tarray for hit results
+	TArray<FHitResult> OutHits;
+
+	// check if something got hit in the sweep
+	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, GetActorLocation(), GetActorLocation(), FQuat::Identity, ECC_Visibility, MyColSphere, GetQueryParams());
+
+	if (isHit)
+	{
+		// loop through TArray
+		for (auto& Hit : OutHits)
+		{
+			AActor* DamagedActor = Hit.GetActor();
+
+			if (!DamagedActor) {
+				continue;
+			}
+
+			if (DetectionActors.Contains(DamagedActor)) {
+				continue;
+			}
+
+			if (!UHealthComponent::IsAlive(DamagedActor)) {
+				continue;
+			}
+
+			// Does actor implement the avoidable interface?
+			if (!DamagedActor->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
+
+				// Does the actor's controller implement the avoidable interface then?
+				if (!DamagedActor->GetInstigatorController()->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
+					continue;
+				}
+			}
+
+			FAvoidableParams AvoidableParams;
+			AvoidableParams.Actor = this;
+			AvoidableParams.AvoidableDistance = ExplosiveRadiusOuter;
+
+			// Does actor implement the avoidable interface?
+			if (DamagedActor->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
+				IAvoidable::Execute_OnNearbyActorFound(DamagedActor, AvoidableParams);
+			}
+
+			// Does actor's controller implement the avoidable interface
+			if (DamagedActor->GetInstigatorController()->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
+				IAvoidable::Execute_OnNearbyActorFound(DamagedActor->GetInstigatorController(), AvoidableParams);
+			}
+
+			DetectionActors.Add(DamagedActor);
+		}
+
 	}
 }
 

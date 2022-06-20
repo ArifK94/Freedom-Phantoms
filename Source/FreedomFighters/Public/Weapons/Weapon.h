@@ -296,7 +296,7 @@ protected:
 
 	/** Debug */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = "true"))
-		bool DrawShotLine;
+		bool DrawDebugShotLine;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		float ShotLineDuration;
@@ -404,7 +404,9 @@ protected:
 	void DelayedInit();
 
 
-	void CreateBullet();
+	virtual void CreateBullet();
+
+	void SpawnProjectile(FVector Locatiom, FRotator Rotation);
 
 	UFUNCTION(BlueprintCallable)
 		virtual void OnReload();

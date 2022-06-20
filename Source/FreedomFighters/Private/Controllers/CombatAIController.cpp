@@ -1,10 +1,10 @@
 #include "Controllers/CombatAIController.h"
-
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
+#include "Weapons/ThrowableWeapon.h"
 #include "CustomComponents/AIMovementComponent.h"
 #include "CustomComponents/PatrolFollowerComponent.h"
 #include "CustomComponents/CoverFinderComponent.h"
@@ -12,17 +12,18 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/MountedGunFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
+#include "Services/SharedService.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/AudioComponent.h"
 #include "Engine/EngineTypes.h"
 #include "NavigationSystem.h"
 #include "NavFilters/NavigationQueryFilter.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "..\..\Public\Controllers\CombatAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -35,6 +36,9 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 	TimeBetweenShotsMax = 3.0f;
 
 	DestinationRadius = 300.0f;
+
+	GrenadeThrowTimeMin = 8.f;
+	GrenadeThrowTimeMax = 15.f;
 
 	MoveToLastSeenEnemy = true;
 
@@ -519,6 +523,12 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 			if (!THandler_EndFire.IsValid()) {
 				GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
 			}
+
+			// reset time on another enemy.
+			TimeOnCurrentEnemy = .0f;
+		}
+		else {
+			TimeOnCurrentEnemy += 1.f;
 		}
 
 		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
@@ -546,6 +556,9 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	}
 	else  // not found an enemy
 	{
+		// reset time on another enemy.
+		TimeOnCurrentEnemy = .0f;
+
 		if (EnemyActor) // if previous enemy still exists, look at the last location it was seen
 		{
 			LastSeenEnemyActor = EnemyActor;
@@ -553,6 +566,34 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 			EnemyActor = nullptr;
 			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
 		}
+	}
+}
+
+/**
+* Prioritise Actors to flee from.
+*/
+void ACombatAIController::OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams)
+{
+	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
+	FVector AvoidableLocation = AvoidableParams.Actor->GetActorLocation();
+
+	// Distance away from the avoidable actor.
+	FVector DirectionAvoidance = UKismetMathLibrary::GetForwardVector(UKismetMathLibrary::FindLookAtRotation(OwnerLocation, AvoidableLocation));
+	DirectionAvoidance = (DirectionAvoidance * (AvoidableParams.AvoidableDistance * -1.f)) + OwnerLocation;
+
+
+	// get a random reachable point away from avoidance distance to make the move to dynamic
+	FNavLocation NavLocation;
+	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+	bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->GetRandomReachablePointInRadius(DirectionAvoidance, AvoidableParams.AvoidableDistance, NavLocation);
+
+
+	// move to the point away from the avoidable
+	TargetDestination = NavLocation.Location;
+	AIMovementComponent->MoveToDestination(TargetDestination, 20.f, AIBehaviourState::PriorityDestination);
+
+	if (OwningCombatCharacter->GetVoiceAudioComponent()->Sound != OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound || !OwningCombatCharacter->GetVoiceAudioComponent()->IsPlaying()) {
+		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound);
 	}
 }
 
@@ -664,7 +705,6 @@ void ACombatAIController::ShootAtEnemy()
 	}
 
 
-
 	// set unlimited ammo
 	if (!OwningCombatCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
 	{
@@ -673,6 +713,23 @@ void ACombatAIController::ShootAtEnemy()
 
 	if (EnemyActor)
 	{
+		if (CanThrowGrenade()) {
+
+			FRotator TargetRotation;
+			bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation(), TargetRotation);
+
+			if (IsReachable) {
+				if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
+					OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
+				}
+			}
+		}
+		else {
+			if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetPrimaryWeapon()) {
+				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
+			}
+		}
+
 		if (!OwningCombatCharacter->IsSprinting())
 		{
 			OwningCombatCharacter->BeginAim();
@@ -699,19 +756,18 @@ void ACombatAIController::ShootAtEnemy()
 				// Shotguns require bolt action rather than constant firing of weapon
 				// check if using shotgun weapon type
 
-				if (PumpActionWeapon)
-				{
-					if (PumpActionWeapon->GetHasLoadedShell())
-					{
+				if (PumpActionWeapon) {
+					if (PumpActionWeapon->GetHasLoadedShell()) {
 						OwningCombatCharacter->BeginFire();
 					}
-					else
-					{
+					else {
 						OwningCombatCharacter->EndFire();
 					}
 				}
-				else
-				{
+				else if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
+					ThrowGrenade();
+				}
+				else {
 					OwningCombatCharacter->BeginFire();
 				}
 			}
@@ -766,6 +822,26 @@ void ACombatAIController::ShootAtEnemy()
 		GetWorldTimerManager().ClearTimer(THandler_EndFire);
 	}
 
+}
+
+void ACombatAIController::ThrowGrenade()
+{
+	FRotator TargetRotation;
+	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation(), TargetRotation);
+
+	if (IsReachable) {
+		OwningCombatCharacter->GetGrenadeWeapon()->SetVolleyAngle(TargetRotation);
+		OwningCombatCharacter->BeginFire();
+		HasThrownGrenade = true;
+	}
+}
+
+bool ACombatAIController::CanThrowGrenade()
+{
+	return EnemyActor &&
+		!HasThrownGrenade &&
+		TimeOnCurrentEnemy >= FMath::RandRange(GrenadeThrowTimeMin, GrenadeThrowTimeMax) && // too much time spent shooting at this enemy?
+		OwningCombatCharacter->GetDistanceTo(EnemyActor) <= 2000.f; // within throwing distance?
 }
 
 // End fire for non pump-action weapons like shotguns

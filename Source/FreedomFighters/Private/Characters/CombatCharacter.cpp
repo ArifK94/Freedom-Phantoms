@@ -298,6 +298,12 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParameters)
 {
 	if (WeaponUpdateParameters.WeaponState != EWeaponState::Firing && WeaponUpdateParameters.HasFiredShot) {
+
+		// play voice sound when throwing a grenade.
+		if (currentWeaponObj == Cast<AWeapon>(GrenadeWeapon)) {
+			PlayVoiceSound(GetVoiceClipsSet()->GrenadeThrowSound);
+		}
+
 		EndFire();
 
 		isFiring = false;
@@ -313,7 +319,6 @@ void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParam
 			StopAnimMontage(WeaponAnimDataSet->Shooting);
 		}
 	}
-
 }
 
 void ACombatCharacter::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters)
@@ -1013,6 +1018,60 @@ void ACombatCharacter::EndAim()
 	UpdateCombatMode();
 }
 
+void ACombatCharacter::BeginReload()
+{
+	if (currentWeaponObj == nullptr || isReloading || isSwappingWeapon) {
+		return;
+	}
+
+	currentWeaponObj->BeginReload();
+	isReloading = currentWeaponObj->getIsReloading();
+
+	if (!isReloading) {
+		return;
+	}
+
+	EndFire();
+	UpdateCombatMode();
+
+	if (WeaponAnimDataSet) {
+		PlayAnimMontage(WeaponAnimDataSet->Reloading);
+	}
+
+	// reloading grenades shouldn't require to play reload voice sound.
+	if (currentWeaponObj != Cast<AWeapon>(GrenadeWeapon)) {
+		PlayVoiceSound(GetVoiceClipsSet()->ReloadingSound);
+	}
+}
+
+void ACombatCharacter::EndReload()
+{
+	if (currentWeaponObj == nullptr) {
+		return;
+	}
+
+	currentWeaponObj->EndReload();
+	isReloading = currentWeaponObj->getIsReloading();
+	UpdateCombatMode();
+
+	if (WeaponAnimDataSet) {
+		StopAnimMontage(WeaponAnimDataSet->Reloading);
+	}
+
+}
+
+void ACombatCharacter::SetHandGaurdIK(float Alpha)
+{
+	// if mounted gun, then do not update hand IK
+	if (currentWeaponObj == nullptr || isUsingMountedWeapon) {
+		return;
+	}
+	currentWeaponObj->SetHandGuardIK(GetMesh(), RightHandSocket);
+
+	HandGuardAlpha = Alpha;
+}
+
+
 void ACombatCharacter::AimAutoRotation()
 {
 	if (isTakingCover || !IsInVehicle || !isInCombatMode) {
@@ -1044,56 +1103,6 @@ void ACombatCharacter::AimAutoRotation()
 		IsInAimOffSetRotation = !UKismetMathLibrary::NearlyEqual_FloatFloat(Target.Yaw, 0.0f, 2.0f);
 	}
 
-}
-
-void ACombatCharacter::BeginReload()
-{
-	if (currentWeaponObj == nullptr || isReloading || isSwappingWeapon) {
-		return;
-	}
-
-	currentWeaponObj->BeginReload();
-	isReloading = currentWeaponObj->getIsReloading();
-
-	if (!isReloading) {
-		return;
-	}
-
-	EndFire();
-	UpdateCombatMode();
-
-	if (WeaponAnimDataSet) {
-		PlayAnimMontage(WeaponAnimDataSet->Reloading);
-	}
-
-	PlayVoiceSound(GetVoiceClipsSet()->ReloadingSound);
-}
-
-void ACombatCharacter::EndReload()
-{
-	if (currentWeaponObj == nullptr) {
-		return;
-	}
-
-	currentWeaponObj->EndReload();
-	isReloading = currentWeaponObj->getIsReloading();
-	UpdateCombatMode();
-
-	if (WeaponAnimDataSet) {
-		StopAnimMontage(WeaponAnimDataSet->Reloading);
-	}
-
-}
-
-void ACombatCharacter::SetHandGaurdIK(float Alpha)
-{
-	// if mounted gun, then do not update hand IK
-	if (currentWeaponObj == nullptr || isUsingMountedWeapon) {
-		return;
-	}
-	currentWeaponObj->SetHandGuardIK(GetMesh(), RightHandSocket);
-
-	HandGuardAlpha = Alpha;
 }
 
 void ACombatCharacter::ToggleNightVision()

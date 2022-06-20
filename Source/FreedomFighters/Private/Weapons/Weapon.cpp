@@ -91,7 +91,7 @@ AWeapon::AWeapon()
 	HasNoReload = false;
 	HasFiredFirstShot = false;
 
-	DrawShotLine = false;
+	DrawDebugShotLine = false;
 	ShotLineDuration = 5.0f;
 }
 
@@ -496,49 +496,14 @@ void AWeapon::CreateBullet()
 
 		FHitResult Hit;
 		bool LineTraceFire = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
-		if (LineTraceFire)
-		{
+		
+		if (LineTraceFire) {
 			TracerEndPoint = Hit.ImpactPoint;
 		}
 
-		if (BulletClass)
-		{
-			AProjectile* Bullet = nullptr;
+		SpawnProjectile(getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
 
-			// Use object pooling if specified
-			if (UseObjectPool)
-			{
-				auto PoolActor = ObjectPoolComponent->ActivatePoolObject(BulletClass, MyOwner, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), true);
-
-				if (PoolActor)
-				{
-					Bullet = Cast<AProjectile>(PoolActor);
-				}
-			}
-
-			// If no bullet object not created
-			if (Bullet == nullptr)
-			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.Owner = MyOwner;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-				Bullet = GetWorld()->SpawnActor<AProjectile>(BulletClass, getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint), SpawnParams);
-			}
-
-
-			if (Bullet)
-			{
-				Bullet->SetWeaponParent(this);
-
-				if (!Bullet->OnProjectileImpact.IsBound())
-				{
-					Bullet->OnProjectileImpact.AddDynamic(this, &AWeapon::OnProjectileImpacted);
-				}
-			}
-		}
-
-		if (DrawShotLine)
+		if (DrawDebugShotLine)
 		{
 			TArray<AActor*> ActorsToIgnore;
 			UKismetSystemLibrary::LineTraceSingle(GetWorld(), EyeLocation, TraceEnd, ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, Hit, true, FLinearColor::Blue, FLinearColor::Green, ShotLineDuration);
@@ -546,6 +511,46 @@ void AWeapon::CreateBullet()
 	}
 
 	PlayShotEffect(EyeLocation);
+}
+
+void AWeapon::SpawnProjectile(FVector Locatiom, FRotator Rotation)
+{
+	if (BulletClass)
+	{
+		AProjectile* Bullet = nullptr;
+
+		// Use object pooling if specified
+		if (UseObjectPool)
+		{
+			auto PoolActor = ObjectPoolComponent->ActivatePoolObject(BulletClass, GetOwner(), Locatiom, Rotation, true);
+
+			if (PoolActor)
+			{
+				Bullet = Cast<AProjectile>(PoolActor);
+			}
+		}
+
+		// If no bullet object not created
+		if (Bullet == nullptr)
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = GetOwner();
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			Bullet = GetWorld()->SpawnActor<AProjectile>(BulletClass, Locatiom, Rotation, SpawnParams);
+		}
+
+
+		if (Bullet)
+		{
+			Bullet->SetWeaponParent(this);
+
+			if (!Bullet->OnProjectileImpact.IsBound())
+			{
+				Bullet->OnProjectileImpact.AddDynamic(this, &AWeapon::OnProjectileImpacted);
+			}
+		}
+	}
 }
 
 void AWeapon::PlayShotEffect(FVector EyeLocation)
@@ -698,7 +703,7 @@ void AWeapon::StopFire()
 
 void AWeapon::ReadyToUse()
 {
-	HasFiredFirstShot = true;
+	HasFiredFirstShot = false;
 
 	StopFire();
 }

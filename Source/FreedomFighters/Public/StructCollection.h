@@ -219,6 +219,12 @@ public:
 		USoundBase* DeathFallSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* GrenadeThrowSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* GrenadeIncomingSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* StrongholdCaptureSound;
 
 	FVoiceClipSet()
@@ -980,4 +986,29 @@ public:
 		UMaterialInterface* FlagMaterial;
 
 	FFaction* FactionDataSet;
+};
+
+USTRUCT(BlueprintType)
+struct FAvoidableParams
+{
+	GENERATED_BODY()
+
+public:
+	/**
+	* The Actor to avoid
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		AActor* Actor;
+
+	/**
+	* The distance to avoid this actor
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float AvoidableDistance;
+
+	FAvoidableParams()
+	{
+		Actor = nullptr;
+		AvoidableDistance = .0f;
+	}
 };

@@ -430,4 +430,7 @@ public:
 	FVehicletSeating GetVehicletSeat() { return CurrentVehicleSeat; }
 
 	AOrderIcon* GetOverheadIcon() { return OverheadIcon; }
+
+	UAudioComponent* GetVoiceAudioComponent() { return VoiceAudioComponent; }
+
 };
