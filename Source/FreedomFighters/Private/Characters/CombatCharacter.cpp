@@ -928,16 +928,13 @@ void ACombatCharacter::BeginFire()
 		return;
 	}
 
-	if (isReloading)
-	{
+	if (isReloading) {
 		// Pump Action Weapons can fire if there is ammo
-		if (Cast<APumpActionWeapon>(currentWeaponObj) && currentWeaponObj->getCurrentAmmo() > 0)
-		{
+		if (Cast<APumpActionWeapon>(currentWeaponObj) && currentWeaponObj->getCurrentAmmo() > 0) {
 			isReloading = false;
 			EndReload();
 		}
-		else
-		{
+		else {
 			return;
 		}
 	}
@@ -967,40 +964,25 @@ void ACombatCharacter::EndFire()
 	}
 
 	currentWeaponObj->StopFire();
-	//isFiring = false;
-
-	//UpdateCombatMode();
-
-	//// in case character is not aiming
-	//if (!isAiming) {
-	//	HandGuardAlpha = 0.0f;
-	//}
-
-	//if (WeaponAnimDataSet) {
-	//	StopAnimMontage(WeaponAnimDataSet->Shooting);
-	//}
 }
 
 
 void ACombatCharacter::BeginAim()
 {
-	if (currentWeaponObj == nullptr) {
+	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isSwappingWeapon) {
 		return;
 	}
 
-	if (!hasEquippedWeapon)
-	{
+	if (!hasEquippedWeapon) {
 		BeginEquipWeapon();
 	}
-	else
-	{
+	else {
 		Super::BeginAim();
 		currentWeaponObj->SetIsAiming(isAiming);
 	}
 
 	// if sprinting then stop
-	if (isSprinting)
-	{
+	if (isSprinting) {
 		EndSprint();
 	}
 
