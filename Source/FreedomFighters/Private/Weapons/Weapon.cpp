@@ -468,41 +468,34 @@ void AWeapon::CreateBullet()
 	{
 		FVector TraceEnd = EyeLocation + (ShotDirection * TraceLength);
 
-		if (hasRecoil)
-		{
-			if (UseRadialSpread)
-			{
-				FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
-				TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
-			}
-			else
-			{
-				TraceEnd = BulletSpread(TraceEnd);
-				//TraceEnd = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(getMuzzleLocation().ForwardVector, 2.f);
-			}
+		if (hasRecoil) {
+			//if (UseRadialSpread) {
+			//	FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
+			//	TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
+			//}
+			//else {
+			//	//TraceEnd = BulletSpread(TraceEnd);
+			//	TargetRotation = GetSprayAngle(ShotDirection, BulletSpreadCurrent);
+			//}
+			FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
+			TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
 		}
 
 
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(MyOwner);
-		QueryParams.AddIgnoredActor(this);
-		QueryParams.bTraceComplex = true;
-		QueryParams.bReturnPhysicalMaterial = true;
+		auto TargetRotation = UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TraceEnd);
 
-		// Particle "Target" parameter
-		FVector TracerEndPoint = TraceEnd;
+		SpawnProjectile(getMuzzleLocation(), TargetRotation);
 
-		FHitResult Hit;
-		bool LineTraceFire = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
-		
-		if (LineTraceFire) {
-			TracerEndPoint = Hit.ImpactPoint;
-		}
+		if (DrawDebugShotLine) {
 
-		SpawnProjectile(getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+			FCollisionQueryParams QueryParams;
+			QueryParams.AddIgnoredActor(MyOwner);
+			QueryParams.AddIgnoredActor(this);
+			QueryParams.bTraceComplex = true;
+			QueryParams.bReturnPhysicalMaterial = true;
 
-		if (DrawDebugShotLine)
-		{
+			FHitResult Hit;
+
 			TArray<AActor*> ActorsToIgnore;
 			UKismetSystemLibrary::LineTraceSingle(GetWorld(), EyeLocation, TraceEnd, ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, Hit, true, FLinearColor::Blue, FLinearColor::Green, ShotLineDuration);
 		}
@@ -611,6 +604,11 @@ FVector AWeapon::BulletSpreadRadial(float Radius)
 	Target.Y = DistanceFromCenter * UKismetMathLibrary::DegSin(Angle);
 
 	return Target;
+}
+
+FRotator AWeapon::GetSprayAngle(FVector MuzzleDirection, float MaxAngle)
+{
+	return UKismetMathLibrary::MakeRotFromX(UKismetMathLibrary::RandomUnitVectorInConeInDegrees(MuzzleDirection, MaxAngle));
 }
 
 FVector AWeapon::BulletSpread(FVector Spread)

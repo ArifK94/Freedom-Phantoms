@@ -401,6 +401,8 @@ private:
 
 	FVector BulletSpreadRadial(float Radius);
 
+	FRotator GetSprayAngle(FVector MuzzleDirection, float MaxAngle);
+
 	void DisableMuzzleLight();
 
 protected:
