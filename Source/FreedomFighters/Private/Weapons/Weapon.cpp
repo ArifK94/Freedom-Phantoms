@@ -367,7 +367,7 @@ void AWeapon::Fire()
 	isFiring = true;
 
 	if (!HasNoReload) {
-	//	CurrentAmmo -= 1;
+		CurrentAmmo -= 1;
 	}
 
 	if (weaponClipObj) {
@@ -692,7 +692,9 @@ void AWeapon::StopFire()
 
 	ChargeDown();
 
-	GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
+	if (!THandler_BulletSpread.IsValid()) {
+		GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
+	}
 
 	FWeaponUpdateParameters WeaponUpdateParameters;
 	WeaponUpdateParameters.HasFiredShot = true;
@@ -860,7 +862,7 @@ void AWeapon::BeginReload()
 
 	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
-	isFiring = false;
+	StopFire();
 	isReloading = true;
 
 	if (weaponClipObj) {

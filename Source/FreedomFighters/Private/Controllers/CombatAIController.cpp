@@ -14,6 +14,9 @@
 #include "CustomComponents/HealthComponent.h"
 #include "Services/SharedService.h"
 
+#include "AI/UtilityAIComponent.h"
+#include "AI/Actions/CombatAction.h"
+
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -44,79 +47,55 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
 	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
+
+	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
 }
 
-void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
+
+void ACombatAIController::BeginPlay()
 {
-	SetBehaviourState(BehaviourState);
+	Super::BeginPlay();
+
+	DefaultDestinationRadius = DestinationRadius;
+
+	TargetSearchParams = new FTargetSearchParameters();
 }
 
-void ACombatAIController::OnMovementDestinationReached(FVector Destination)
+void ACombatAIController::Tick(float DeltaTime)
 {
-	switch (CurrentBehaviourState)
-	{
-	case AIBehaviourState::Patrol:
-		MoveToNextPatrolPoint();
-		return;
-	case AIBehaviourState::MovingToLastSeenEnemy:
-		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, true, FMath::RandRange(2.f, 5.f));
-		return;
-	}
+	Super::Tick(DeltaTime);
 
-	if (!OwningCombatCharacter->GetMountedGun())
-	{
-		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
-	}
-
-	GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
-
-}
-
-void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
-{
-	// ensure the owning character received the order
-	if (RecruitInfo->Recruit != OwningCombatCharacter) {
+	if (!GetPawn()) {
 		return;
 	}
 
-	if (OwningCombatCharacter->IsTakingCover())
-	{
-		OwningCombatCharacter->StopCover();
+	m_DelaTime = DeltaTime;
+
+	if (!OwningCombatCharacter->GetHealthComp()->IsAlive()) {
+		return;
 	}
 
-	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
-	OwningCombatCharacter->DropMountedGun();
-
-	float TargetRadius = AcceptanceRadius;
-
-	CurrentCommand = RecruitInfo->CurrentCommand;
-	TargetDestination = RecruitInfo->TargetLocation;
-
-	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
-
-	// Defending point should be right where it was ordered to go to
-	if (CurrentCommand == CommanderOrders::Defend)
+	if (EnemyActor)
 	{
-		TargetRadius = 0.0f;
-		OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
+		// if using a mounted gun
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
+		{
+			MountedGunFinderComponent->FocusTarget(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation());
+		}
+		else
+		{
+			SetFocus(EnemyActor);
+			//SetFocalPoint(TargetSearchParams->TargetLocation);
+		}
+	}
+	else
+	{
+		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
+		}
 	}
 
-	CanFindCover = true;
-	HasChosenNearTargetDest = false;
-
-
-	StayCombatAlert = false;
-	UpdatCombatAlert();
-
-	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius, AIBehaviourState::PriorityOrdersCommander);
-}
-
-void ACombatAIController::OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams)
-{
-	OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
-
-	TargetDestination = StrongholdDefenderParams.TargetPoint;
-	AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
 }
 
 void ACombatAIController::Init()
@@ -192,15 +171,15 @@ void ACombatAIController::Init()
 		}
 	}
 
-	if (!MountedGunFinderComponent)
-	{
-		MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(OwningCombatCharacter);
+	//if (!MountedGunFinderComponent)
+	//{
+	//	MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(OwningCombatCharacter);
 
-		if (MountedGunFinderComponent)
-		{
-			MountedGunFinderComponent->RegisterComponent();
-		}
-	}
+	//	if (MountedGunFinderComponent)
+	//	{
+	//		MountedGunFinderComponent->RegisterComponent();
+	//	}
+	//}
 
 	HasAssignedOrderEvent = false;
 
@@ -209,7 +188,88 @@ void ACombatAIController::Init()
 	{
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 	}
+
+
+	if (UtilityAIComponent) {
+		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
+	}
+
 }
+
+void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
+{
+	SetBehaviourState(BehaviourState);
+}
+
+void ACombatAIController::OnMovementDestinationReached(FVector Destination)
+{
+	switch (CurrentBehaviourState)
+	{
+	case AIBehaviourState::Patrol:
+		MoveToNextPatrolPoint();
+		return;
+	case AIBehaviourState::MovingToLastSeenEnemy:
+		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, true, FMath::RandRange(2.f, 5.f));
+		return;
+	}
+
+	if (!OwningCombatCharacter->GetMountedGun())
+	{
+		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
+	}
+
+	GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
+
+}
+
+void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
+{
+	// ensure the owning character received the order
+	if (RecruitInfo->Recruit != OwningCombatCharacter) {
+		return;
+	}
+
+	if (OwningCombatCharacter->IsTakingCover())
+	{
+		OwningCombatCharacter->StopCover();
+	}
+
+	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
+	OwningCombatCharacter->DropMountedGun();
+
+	float TargetRadius = AcceptanceRadius;
+
+	CurrentCommand = RecruitInfo->CurrentCommand;
+	TargetDestination = RecruitInfo->TargetLocation;
+
+	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
+
+	// Defending point should be right where it was ordered to go to
+	if (CurrentCommand == CommanderOrders::Defend)
+	{
+		TargetRadius = 0.0f;
+		OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
+	}
+
+	CanFindCover = true;
+	HasChosenNearTargetDest = false;
+
+
+	StayCombatAlert = false;
+	UpdatCombatAlert();
+
+	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius, AIBehaviourState::PriorityOrdersCommander);
+}
+
+void ACombatAIController::OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams)
+{
+	OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
+
+	TargetDestination = StrongholdDefenderParams.TargetPoint;
+	AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
+}
+
+
 
 EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
 {
@@ -253,6 +313,10 @@ EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float Accept
 void ACombatAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	if (UtilityAIComponent) {
+		UtilityAIComponent->EnableUtilityAI = true;
+	}
 
 	// get owning character
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
@@ -325,6 +389,10 @@ void ACombatAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
 
+	if (UtilityAIComponent) {
+		UtilityAIComponent->EnableUtilityAI = false;
+	}
+
 	if (OwningCombatCharacter)
 	{
 		if (TargetFinderComponent && TargetFinderComponent->OnTargetSearch.IsBound()) {
@@ -389,53 +457,6 @@ void ACombatAIController::ClearTimers()
 }
 
 
-void ACombatAIController::BeginPlay()
-{
-	Super::BeginPlay();
-
-	DefaultDestinationRadius = DestinationRadius;
-
-	TargetSearchParams = new FTargetSearchParameters();
-}
-
-void ACombatAIController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (!GetPawn()) {
-		return;
-	}
-
-	m_DelaTime = DeltaTime;
-
-	if (!OwningCombatCharacter->GetHealthComp()->IsAlive()) {
-		return;
-	}
-
-	if (EnemyActor)
-	{
-		// if using a mounted gun
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
-		{
-			MountedGunFinderComponent->FocusTarget(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation());
-		}
-		else
-		{
-			SetFocus(EnemyActor);
-			//SetFocalPoint(TargetSearchParams->TargetLocation);
-		}
-	}
-	else
-	{
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
-		}
-	}
-
-}
-
-
 
 void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
@@ -484,89 +505,7 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	TargetSearchParams->TargetActor = TargetSearchParameters.TargetActor;
 	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
 
-
-	if (ChosenTarget) // found an enemy?
-	{
-		LastSeenEnemyActor = nullptr;
-
-		if (OwningCombatCharacter->IsTakingCover())
-		{
-			if (TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, ChosenTarget))
-			{
-				OwningCombatCharacter->StopCover();
-			}
-		}
-
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetUseControllerRotationYaw())
-		{
-			// check if enemy position is NOT within turret's pitch and yaw boundaries or is not behind the MG
-			if (!MountedGunFinderComponent->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, ChosenTarget) ||
-				TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, ChosenTarget))
-			{
-				// for normal turrets on the ground
-				if (OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
-				{
-					OwningCombatCharacter->DropMountedGun(false);
-				}
-				else // for aircraft turrets which cannot be exited
-				{
-					ChosenTarget = nullptr;
-				}
-			}
-		}
-
-		// if this is a new enemy then start end fire again so AI does not have wait to fire again when focusing on new enemy
-		if (EnemyActor != ChosenTarget)
-		{
-			GetWorldTimerManager().ClearTimer(THandler_EndFire);
-
-			if (!THandler_EndFire.IsValid()) {
-				GetWorldTimerManager().SetTimer(THandler_EndFire, this, &ACombatAIController::EndFiring, FMath::RandRange(TimeBetweenShotsMin, TimeBetweenShotsMax), true);
-			}
-
-			// reset time on another enemy.
-			TimeOnCurrentEnemy = .0f;
-		}
-		else {
-			TimeOnCurrentEnemy += 1.f;
-		}
-
-		GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
-		EnemyActor = ChosenTarget;
-
-		// Being firing at enemy
-		if (!THandler_ShootEnemy.IsValid()) {
-			GetWorldTimerManager().SetTimer(THandler_ShootEnemy, this, &ACombatAIController::ShootAtEnemy, 1.0f, true);
-		}
-
-		// Do find a random point if current command is defend
-		// & is set to use the mounted gun
-		if (!THandler_MoveToNearbyDestination.IsValid()
-			&& CurrentCommand != CommanderOrders::Defend
-			&& CurrentBehaviourState != AIBehaviourState::PriorityDestination
-			&& !OwningCombatCharacter->GetMountedGun())
-		{
-			SetBehaviourState(AIBehaviourState::Normal);
-			HasChosenNearTargetDest = false;
-			TargetDestination = OwningCombatCharacter->GetActorLocation();
-			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, FMath::RandRange(.5f, 2.f), true);
-		}
-
-
-	}
-	else  // not found an enemy
-	{
-		// reset time on another enemy.
-		TimeOnCurrentEnemy = .0f;
-
-		if (EnemyActor) // if previous enemy still exists, look at the last location it was seen
-		{
-			LastSeenEnemyActor = EnemyActor;
-			LastSeenPosition = LastSeenEnemyActor->GetActorLocation();
-			EnemyActor = nullptr;
-			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
-		}
-	}
+	EnemyActor = ChosenTarget;
 }
 
 /**
@@ -646,7 +585,7 @@ void ACombatAIController::UpdateLastSeen()
 		OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(OwningCombatCharacter->GetMountedGun()->GetCharacterStandRot());
 	}
 
-	if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() < OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip()) // reload clip if finished completely or  reload if not on full clip
+	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() < OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip()) // reload clip if finished completely or  reload if not on full clip
 	{
 		OwningCombatCharacter->BeginReload();
 	}
@@ -681,6 +620,8 @@ void ACombatAIController::UpdateLastSeen()
 
 void ACombatAIController::ShootAtEnemy()
 {
+	return;
+
 	if (OwningCombatCharacter->GetCurrentWeapon() == nullptr) {
 		return;
 	}
@@ -692,7 +633,7 @@ void ACombatAIController::ShootAtEnemy()
 		*/
 		if (OwningCombatCharacter->IsReloading())
 		{
-			if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() >= OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip())
+			if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() >= OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip())
 			{
 				OwningCombatCharacter->EndReload();
 			}
@@ -735,7 +676,7 @@ void ACombatAIController::ShootAtEnemy()
 			OwningCombatCharacter->BeginAim();
 		}
 
-		if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
+		if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
 		{
 			ReloadWeapon();
 		}
@@ -864,7 +805,7 @@ void ACombatAIController::ReloadWeapon()
 	float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);
 	bool IsTargetClose = DistanceDiff < randomDistanceLimit;
 
-	if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 && !PumpActionWeapon) // Reload the weapon
+	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 && !PumpActionWeapon) // Reload the weapon
 	{
 		if (IsTargetClose &&
 			OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetSecondaryWeaponObj() && // if using primary weapon & enemy is nearby, then swap to secondary
@@ -877,11 +818,11 @@ void ACombatAIController::ReloadWeapon()
 			OwningCombatCharacter->BeginReload();
 		}
 	}
-	else if (PumpActionWeapon && (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())) // pump action weapons can be fired as soon as the first ammo shell is inserted, so better to add few more bullets first before firing again
+	else if (PumpActionWeapon && (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())) // pump action weapons can be fired as soon as the first ammo shell is inserted, so better to add few more bullets first before firing again
 	{
 		int RandomAmount = rand() % OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip();
 
-		if (OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->getCurrentAmmo() < RandomAmount)
+		if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() < RandomAmount)
 		{
 			OwningCombatCharacter->BeginReload();
 		}

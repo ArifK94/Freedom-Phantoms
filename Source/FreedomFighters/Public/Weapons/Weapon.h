@@ -439,7 +439,7 @@ public:
 
 	USkeletalMeshComponent* getMeshComp() { return MeshComp; }
 
-	int32 getCurrentAmmo() { return CurrentAmmo; }
+	int32 GetCurrentAmmo() { return CurrentAmmo; }
 	int32 getCurrentMaxAmmo() { return CurrentMaxAmmo; }
 	int32 getAmmoPerClip() { return AmmoPerClip; }
 	int32 GetMaxAmmoCapacity() { return MaxAmmoCapacity; }

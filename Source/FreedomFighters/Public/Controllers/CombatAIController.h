@@ -53,6 +53,11 @@ private:
 
 	float m_DelaTime;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		class UUtilityAIComponent* UtilityAIComponent;
+	class UCombatAction* CombatAction;
+
 	UAIMovementComponent* AIMovementComponent;
 
 	UPatrolFollowerComponent* PatrolFollowerComponent;
@@ -234,4 +239,8 @@ public:
 	void SetTargetDestination(FVector Destination) {
 		TargetDestination = Destination;
 	}
+
+	bool GetHasThrownGrenade() { return HasThrownGrenade; }
+
+	void SetHasThrownGrenade(bool Value) { HasThrownGrenade = Value; }
 };

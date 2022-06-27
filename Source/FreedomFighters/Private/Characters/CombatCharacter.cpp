@@ -930,7 +930,7 @@ void ACombatCharacter::BeginFire()
 
 	if (isReloading) {
 		// Pump Action Weapons can fire if there is ammo
-		if (Cast<APumpActionWeapon>(currentWeaponObj) && currentWeaponObj->getCurrentAmmo() > 0) {
+		if (Cast<APumpActionWeapon>(currentWeaponObj) && currentWeaponObj->GetCurrentAmmo() > 0) {
 			isReloading = false;
 			EndReload();
 		}
@@ -1002,7 +1002,7 @@ void ACombatCharacter::EndAim()
 
 void ACombatCharacter::BeginReload()
 {
-	if (currentWeaponObj == nullptr || isReloading || isSwappingWeapon) {
+	if (currentWeaponObj == nullptr || isReloading || !hasEquippedWeapon || isSwappingWeapon) {
 		return;
 	}
 
