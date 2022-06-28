@@ -20,7 +20,6 @@ class UTargetFinderComponent;
 class UMountedGunFinderComponent;
 
 class AWeapon;
-class APumpActionWeapon;
 class UCommanderRecruit;
 
 UCLASS()
@@ -30,7 +29,6 @@ class FREEDOMFIGHTERS_API ACombatAIController : public AAIController, public IAv
 
 private:
 	ACombatCharacter* OwningCombatCharacter;
-	APumpActionWeapon* PumpActionWeapon;
 	AActor* LastSeenEnemyActor;
 
 
@@ -133,10 +131,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float GrenadeThrowTimeMax;
 
-	FTimerHandle THandler_ShootEnemy;
-	FTimerHandle THandler_EndFire;
 	FTimerHandle THandler_CommanderOrders;
-	FTimerHandle THandler_MountedGun;
 	FTimerHandle THandler_FindCover;
 	FTimerHandle THandler_BeginPeakCover;
 	FTimerHandle THandler_EndPeakCover;
@@ -152,6 +147,12 @@ private:
 
 public:
 	ACombatAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	bool IsNearCommander();
+
+	bool IsNearCommander(FVector Location);
+
+	void SetBehaviourState(AIBehaviourState State);
 
 private:
 	void Init();
@@ -193,18 +194,6 @@ private:
 
 	void UpdateLastSeen();
 
-	void ShootAtEnemy();
-
-	void ThrowGrenade();
-
-	bool CanThrowGrenade();
-
-	void EndFiring();
-
-	void ReloadWeapon();
-
-	void FindMountedGun();
-
 	void CheckCommanderOrder();
 
 	void MoveToCover();
@@ -217,12 +206,6 @@ private:
 
 	void MoveToNextPatrolPoint();
 
-	bool IsNearCommander();
-
-	bool IsNearCommander(FVector Location);
-
-	void SetBehaviourState(AIBehaviourState State);
-
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -232,9 +215,13 @@ protected:
 
 
 public:
+	AIBehaviourState GetCurrentBehaviourState() { return CurrentBehaviourState; };
+
 	AActor* GetEnemyActor() {
 		return EnemyActor;
 	}
+
+	FVector GetTargetDestination() { return TargetDestination; }
 
 	void SetTargetDestination(FVector Destination) {
 		TargetDestination = Destination;
@@ -243,4 +230,15 @@ public:
 	bool GetHasThrownGrenade() { return HasThrownGrenade; }
 
 	void SetHasThrownGrenade(bool Value) { HasThrownGrenade = Value; }
+
+	UAIMovementComponent* GetAIMovementComponent() { return AIMovementComponent; };
+
+
+	UMountedGunFinderComponent* GetMountedGunFinderComponent() { return MountedGunFinderComponent; }
+
+	CommanderOrders GetCurrentCommand() { return CurrentCommand; };
+
+	ACommanderCharacter* GetCommander() { return Commander; };
+
+
 };

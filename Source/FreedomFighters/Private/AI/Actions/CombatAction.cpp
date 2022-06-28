@@ -14,7 +14,7 @@ float UCombatAction::Score(AAIController* Controller, APawn* Pawn)
 {
 	Super::Score(Controller, Pawn);
 
-	return 9.5f;
+	return .95f;
 }
 
 bool UCombatAction::CanRun(AAIController* Controller, APawn* Pawn) const
@@ -67,25 +67,29 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 		ReloadWeapon();
 	}
 	else {
-		ShootAtEnemy();
-	}
 
+		if (CanThrowGrenade()) {
+			if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
+				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
+			}
+			else {
+				ThrowGrenade();
+			}
+		}
+		else {
+			ShootAtEnemy();
+		}
+	}
 }
 
 void UCombatAction::ShootAtEnemy()
 {
 	auto EnemyActor = CombatAIController->GetEnemyActor();
 
-	if (CanThrowGrenade()) {
-		if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
-			OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
-		}
+	if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
+		OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
 	}
-	else {
-		if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetPrimaryWeapon()) {
-			OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
-		}
-	}
+
 
 
 	// check if enemy distance is close, if so then pull out pistol
@@ -111,9 +115,6 @@ void UCombatAction::ShootAtEnemy()
 			else {
 				OwningCombatCharacter->EndFire();
 			}
-		}
-		else if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
-			ThrowGrenade();
 		}
 		else {
 			OwningCombatCharacter->BeginFire();

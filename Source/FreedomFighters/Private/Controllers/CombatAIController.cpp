@@ -2,7 +2,6 @@
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
-#include "Weapons/PumpActionWeapon.h"
 #include "Weapons/MountedGun.h"
 #include "Weapons/ThrowableWeapon.h"
 #include "CustomComponents/AIMovementComponent.h"
@@ -10,7 +9,6 @@
 #include "CustomComponents/CoverFinderComponent.h"
 #include "CustomComponents/AI/StrongholdDefenderComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
-#include "CustomComponents/MountedGunFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
 #include "Services/SharedService.h"
 
@@ -171,27 +169,27 @@ void ACombatAIController::Init()
 		}
 	}
 
-	//if (!MountedGunFinderComponent)
-	//{
-	//	MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(OwningCombatCharacter);
+	if (!MountedGunFinderComponent)
+	{
+		MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(OwningCombatCharacter);
 
-	//	if (MountedGunFinderComponent)
-	//	{
-	//		MountedGunFinderComponent->RegisterComponent();
-	//	}
-	//}
+		if (MountedGunFinderComponent)
+		{
+			MountedGunFinderComponent->RegisterComponent();
+		}
+	}
 
 	HasAssignedOrderEvent = false;
 
 	// if assigned an MG at the beginning
-	if (OwningCombatCharacter->GetMountedGun())
-	{
+	if (OwningCombatCharacter->GetMountedGun()) {
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 	}
 
 
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 	}
 
 }
@@ -217,9 +215,6 @@ void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 	{
 		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
 	}
-
-	GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true);
-
 }
 
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
@@ -234,7 +229,6 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 		OwningCombatCharacter->StopCover();
 	}
 
-	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
 	OwningCombatCharacter->DropMountedGun();
 
 	float TargetRadius = AcceptanceRadius;
@@ -330,10 +324,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		// Attach Follow Camera to head socket
 		OwningCombatCharacter->SetFirstPersonView();
 
-		PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetPrimaryWeapon());
-
 		GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
-		GetWorldTimerManager().SetTimer(THandler_MountedGun, this, &ACombatAIController::FindMountedGun, 1.0f, true, 2.0f); // delay finding MG after checking if AI is set for patrol
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
 		//GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
 
@@ -448,9 +439,6 @@ void ACombatAIController::ClearTimers()
 		TargetFinderComponent->SetFindTargetPerFrame(false);
 	}
 
-	GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
-	GetWorldTimerManager().ClearTimer(THandler_EndFire);
-	GetWorldTimerManager().ClearTimer(THandler_MountedGun);
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 	GetWorldTimerManager().ClearTimer(THandler_FindCover);
 	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
@@ -618,338 +606,6 @@ void ACombatAIController::UpdateLastSeen()
 	GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 }
 
-void ACombatAIController::ShootAtEnemy()
-{
-	return;
-
-	if (OwningCombatCharacter->GetCurrentWeapon() == nullptr) {
-		return;
-	}
-
-	if (OwningCombatCharacter->GetIsExitingVehicle() || OwningCombatCharacter->IsSwappingWeapon() || OwningCombatCharacter->IsReloading())
-	{
-		/**
-		* Remove this if statement when the end reload is triggered as soon as the capacity is reached. Problem arises when this function is returned because the reload was not being ended.
-		*/
-		if (OwningCombatCharacter->IsReloading())
-		{
-			if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() >= OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip())
-			{
-				OwningCombatCharacter->EndReload();
-			}
-		}
-
-		OwningCombatCharacter->EndFire();
-		OwningCombatCharacter->EndAim();
-		OwningCombatCharacter->IsInCombatMode(false);
-		return;
-	}
-
-
-	// set unlimited ammo
-	if (!OwningCombatCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo())
-	{
-		OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
-	}
-
-	if (EnemyActor)
-	{
-		if (CanThrowGrenade()) {
-
-			FRotator TargetRotation;
-			bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation(), TargetRotation);
-
-			if (IsReachable) {
-				if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
-					OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
-				}
-			}
-		}
-		else {
-			if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetPrimaryWeapon()) {
-				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
-			}
-		}
-
-		if (!OwningCombatCharacter->IsSprinting())
-		{
-			OwningCombatCharacter->BeginAim();
-		}
-
-		if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
-		{
-			ReloadWeapon();
-		}
-		else
-		{
-			// check if enemy distance is close, if so then pull out pistol
-			float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
-			float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);
-			bool IsTargetClose = DistanceDiff < randomDistanceLimit;
-
-			if (!IsTargetClose && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj() // if target is not close, then switch back to primary
-				&& !OwningCombatCharacter->GetIsInVehicle())
-			{
-				OwningCombatCharacter->BeginWeaponSwap();
-			}
-			else // Fire the weapon
-			{
-				// Shotguns require bolt action rather than constant firing of weapon
-				// check if using shotgun weapon type
-
-				if (PumpActionWeapon) {
-					if (PumpActionWeapon->GetHasLoadedShell()) {
-						OwningCombatCharacter->BeginFire();
-					}
-					else {
-						OwningCombatCharacter->EndFire();
-					}
-				}
-				else if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
-					ThrowGrenade();
-				}
-				else {
-					OwningCombatCharacter->BeginFire();
-				}
-			}
-		}
-
-
-	}
-	else
-	{
-		OwningCombatCharacter->EndFire();
-
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
-		{
-			OwningCombatCharacter->EndAim();
-		}
-		else
-		{
-			// Focus on the last seen enemy
-			if (LastSeenEnemyActor)
-			{
-				OwningCombatCharacter->BeginAim();
-
-				// Move near nearest enemy last seen
-				if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander ||
-					CurrentBehaviourState != AIBehaviourState::PriorityDestination ||
-					CurrentBehaviourState != AIBehaviourState::MovingToLastSeenEnemy)
-				{
-					SetBehaviourState(AIBehaviourState::MovingToLastSeenEnemy);
-
-
-					if (CurrentBehaviourState == AIBehaviourState::MovingToLastSeenEnemy && MoveToLastSeenEnemy)
-					{
-						if (OwningCombatCharacter->GetMountedGun())
-						{
-							OwningCombatCharacter->DropMountedGun();
-						}
-
-						// Go near the last seen postion on a random radius
-						float Radius = FMath::RandRange(500.f, 1000.f);
-						TArray<AActor*> IgnoreActors;
-						TargetDestination = AIMovementComponent->FindNearbyDestinationPoint(LastSeenPosition, Radius, IgnoreActors);
-						AIMovementComponent->MoveToDestination(TargetDestination, Radius, CurrentBehaviourState, false, true);
-						SetFocalPoint(TargetSearchParams->TargetLocation);
-					}
-				}
-			}
-		}
-
-
-
-		GetWorldTimerManager().ClearTimer(THandler_ShootEnemy);
-		GetWorldTimerManager().ClearTimer(THandler_EndFire);
-	}
-
-}
-
-void ACombatAIController::ThrowGrenade()
-{
-	FRotator TargetRotation;
-	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation(), TargetRotation);
-
-	if (IsReachable) {
-		OwningCombatCharacter->GetGrenadeWeapon()->SetVolleyAngle(TargetRotation);
-		OwningCombatCharacter->BeginFire();
-		HasThrownGrenade = true;
-	}
-}
-
-bool ACombatAIController::CanThrowGrenade()
-{
-	return EnemyActor &&
-		!HasThrownGrenade &&
-		TimeOnCurrentEnemy >= FMath::RandRange(GrenadeThrowTimeMin, GrenadeThrowTimeMax) && // too much time spent shooting at this enemy?
-		OwningCombatCharacter->GetDistanceTo(EnemyActor) <= 2000.f; // within throwing distance?
-}
-
-// End fire for non pump-action weapons like shotguns
-void ACombatAIController::EndFiring()
-{
-	if (PumpActionWeapon) {
-		return;
-	}
-
-	if (OwningCombatCharacter->IsFiring())
-	{
-		OwningCombatCharacter->EndFire();
-	}
-}
-
-void ACombatAIController::ReloadWeapon()
-{
-	// check if enemy distance is close, if so then pull out pistol
-	float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
-	float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);
-	bool IsTargetClose = DistanceDiff < randomDistanceLimit;
-
-	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 && !PumpActionWeapon) // Reload the weapon
-	{
-		if (IsTargetClose &&
-			OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetSecondaryWeaponObj() && // if using primary weapon & enemy is nearby, then swap to secondary
-			!OwningCombatCharacter->GetIsInVehicle())
-		{
-			OwningCombatCharacter->BeginWeaponSwap();
-		}
-		else
-		{
-			OwningCombatCharacter->BeginReload();
-		}
-	}
-	else if (PumpActionWeapon && (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())) // pump action weapons can be fired as soon as the first ammo shell is inserted, so better to add few more bullets first before firing again
-	{
-		int RandomAmount = rand() % OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip();
-
-		if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() < RandomAmount)
-		{
-			OwningCombatCharacter->BeginReload();
-		}
-		else
-		{
-			OwningCombatCharacter->EndReload();
-		}
-	}
-	else
-	{
-		OwningCombatCharacter->EndReload();
-	}
-}
-
-void ACombatAIController::FindMountedGun()
-{
-	// if already using an MG
-	// if using an aircraft MG for instance, which should not be exited, no need to run this method
-	if (OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetCanExitMG())
-	{
-		GetWorldTimerManager().ClearTimer(THandler_MountedGun);
-		return;
-	}
-
-	// If in patrol mode & no enemy in sight then do not search for MG
-	if (CurrentBehaviourState == AIBehaviourState::Patrol)
-	{
-		if (!EnemyActor)
-		{
-			OwningCombatCharacter->DropMountedGun();
-			GetWorldTimerManager().ClearTimer(THandler_MountedGun);
-			return;
-		}
-	}
-
-	// If an MG has been assigned
-	if (OwningCombatCharacter->GetMountedGun())
-	{
-		if (!OwningCombatCharacter->IsReloading()
-			&& !OwningCombatCharacter->IsUsingMountedWeapon()
-			&& !TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, EnemyActor)
-			&& MountedGunFinderComponent->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, EnemyActor)
-			)
-		{
-			// Don't want AI to teleport to the MG, needs to be close enough to use it
-			auto DistanceToMG = FVector::Distance(OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos());
-
-			if (DistanceToMG < 100.f)
-			{
-				OwningCombatCharacter->UseMountedGun();
-			}
-
-			return;
-		}
-
-		// in case player or another NPC has reached the MG before AI
-		if (OwningCombatCharacter->GetMountedGun()->GetOwner() != OwningCombatCharacter ||
-			!MountedGunFinderComponent->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, EnemyActor)
-			)
-		{
-			OwningCombatCharacter->DropMountedGun();
-			CanFindCover = true;
-			return;
-		}
-		else if (TargetFinderComponent->IsTargetBehind(OwningCombatCharacter, EnemyActor))
-		{
-			// Still posssess MG when enemy is no longer behing AI
-			OwningCombatCharacter->DropMountedGun(false);
-			CanFindCover = false;
-			return;
-		}
-	}
-
-
-	bool CanFindMG = true;
-
-	if (Commander && !IsNearCommander()) {
-		CanFindMG = false;
-	}
-
-	if (MountedGunFinderComponent && !OwningCombatCharacter->GetMountedGun() && CanFindMG)
-	{
-		auto SelectedMG = MountedGunFinderComponent->FindMG();
-
-		// if found an MG 
-		// & enemy is not behind the MG
-		if (SelectedMG)
-		{
-			bool IsMGValid = true;
-			// Check if AI has a ollow order, if it's defend or attack then the if statement should be ignored
-			// and commander is near the MG,
-			if (Commander && CurrentCommand == CommanderOrders::Follow && !IsNearCommander(SelectedMG->GetCharacterStandPos()))
-			{
-				IsMGValid = false;
-			}
-
-			if (EnemyActor && IsMGValid)
-			{
-				bool IsInRange = MountedGunFinderComponent->IsInTargetRange(SelectedMG, EnemyActor, OwningCombatCharacter);
-
-				if (!IsInRange)
-				{
-					IsMGValid = false;
-				}
-				else if (TargetFinderComponent->IsTargetBehind(SelectedMG, EnemyActor))
-				{
-					IsMGValid = false;
-				}
-			}
-
-			if (IsMGValid)
-			{
-				SelectedMG->SetPotentialOwner(OwningCombatCharacter);
-				OwningCombatCharacter->SetMountedGun(SelectedMG);
-				CanFindCover = false;
-
-				TargetDestination = OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos();
-				AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::Normal, true, false);
-			}
-
-		}
-	}
-
-
-
-}
-
 void ACombatAIController::MoveToCover()
 {
 	if (!CanFindCover) {
@@ -1071,7 +727,6 @@ void ACombatAIController::StartPatrol()
 		if (Movement == EPathFollowingRequestResult::RequestSuccessful)
 		{
 			SetBehaviourState(AIBehaviourState::Patrol);
-			GetWorldTimerManager().ClearTimer(THandler_MountedGun);
 			GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
 		}
 	}
@@ -1138,10 +793,6 @@ void ACombatAIController::CheckCommanderOrder()
 			OwningCombatCharacter->DropMountedGun();
 			TargetDestination = Commander->GetActorLocation();
 			AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius, AIBehaviourState::PriorityOrdersCommander);
-		}
-		else
-		{
-			FindMountedGun();
 		}
 
 	}
