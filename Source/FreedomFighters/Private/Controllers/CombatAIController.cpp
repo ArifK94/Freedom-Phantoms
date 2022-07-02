@@ -194,6 +194,7 @@ void ACombatAIController::Init()
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());
 	}
 
 }
@@ -228,6 +229,11 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 		return;
 	}
 
+	bRecruitInfo = RecruitInfo;
+
+	CurrentCommand = RecruitInfo->CurrentCommand;
+	TargetDestination = RecruitInfo->TargetLocation;
+
 	if (OwningCombatCharacter->IsTakingCover())
 	{
 		OwningCombatCharacter->StopCover();
@@ -235,19 +241,8 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	OwningCombatCharacter->DropMountedGun();
 
-	float TargetRadius = AcceptanceRadius;
-
-	CurrentCommand = RecruitInfo->CurrentCommand;
-	TargetDestination = RecruitInfo->TargetLocation;
 
 	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
-
-	// Defending point should be right where it was ordered to go to
-	if (CurrentCommand == CommanderOrders::Defend)
-	{
-		TargetRadius = 0.0f;
-		OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = false;
-	}
 
 	CanFindCover = true;
 	HasChosenNearTargetDest = false;
@@ -255,8 +250,6 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	StayCombatAlert = false;
 	UpdatCombatAlert();
-
-	AIMovementComponent->MoveToDestination(TargetDestination, TargetRadius, AIBehaviourState::PriorityOrdersCommander);
 }
 
 void ACombatAIController::OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams)
@@ -757,48 +750,22 @@ void ACombatAIController::CheckCommanderOrder()
 	}
 
 	// Assign Order Event
-	if (!HasAssignedOrderEvent) {
+	//if (!HasAssignedOrderEvent) {
 
 		OwningCombatCharacter->DropMountedGun();
 		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
 		HasAssignedOrderEvent = true;
 		StayCombatAlert = false; // refresh state of behaviour
 
+		// if NPC was a stronghold defender, then rmeove the stronghold memory actor & assign the wounded flag to true as it is a now a recruit of the commander.
 		if (StrongholdDefenderComponent->GetStronghold()) {
 			OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
 			StrongholdDefenderComponent->RemoveStronghold();
 		}
 
 		SetBehaviourState(AIBehaviourState::PriorityOrdersCommander);
-	}
 
-
-	//if (CurrentCommand == CommanderOrders::Follow)
-	//{
-	//	HasChosenNearTargetDest = true;
-	//	CanFindCover = false;
-
-	//	// Crouch if the commander is crouched
-	//	if (Commander->GetCharacterMovement()->IsCrouching())
-	//	{
-	//		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-	//			OwningCombatCharacter->Crouch();
-	//	}
-	//	else
-	//	{
-	//		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-	//			OwningCombatCharacter->UnCrouch();
-	//	}
-
-
-
-	//	if (!IsNearCommander())
-	//	{
-	//		OwningCombatCharacter->DropMountedGun();
-	//		TargetDestination = Commander->GetActorLocation();
-	//		AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius, AIBehaviourState::PriorityOrdersCommander);
-	//	}
-
+		GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 	//}
 }
 
@@ -823,6 +790,14 @@ bool ACombatAIController::IsNearCommander()
 bool ACombatAIController::IsNearCommander(FVector Location)
 {
 	if (Commander && FVector::Distance(Commander->GetActorLocation(), Location) <= AcceptanceRadius) {
+		return true;
+	}
+	return false;
+}
+
+bool ACombatAIController::IsNearTargetDestination(FVector Location)
+{
+	if (FVector::Distance(OwningCombatCharacter->GetActorLocation(), Location) <= AcceptanceRadius) {
 		return true;
 	}
 	return false;

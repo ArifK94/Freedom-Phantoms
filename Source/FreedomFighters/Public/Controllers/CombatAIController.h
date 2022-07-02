@@ -31,7 +31,7 @@ private:
 	ACombatCharacter* OwningCombatCharacter;
 	AActor* LastSeenEnemyActor;
 
-
+	UCommanderRecruit* bRecruitInfo;
 	ACommanderCharacter* Commander;
 
 	/** Keep track of time in seconds spent on the enemy. Resets after getting another enemy. */
@@ -152,6 +152,8 @@ public:
 
 	bool IsNearCommander(FVector Location);
 
+	bool IsNearTargetDestination(FVector Location);
+
 	void SetBehaviourState(AIBehaviourState State);
 
 private:
@@ -241,5 +243,8 @@ public:
 	ACommanderCharacter* GetCommander() { return Commander; };
 
 	float GetAcceptanceRadius() { return AcceptanceRadius; }
+
+	UCommanderRecruit* GetRecruitInfo() { return bRecruitInfo; }
+
 
 };

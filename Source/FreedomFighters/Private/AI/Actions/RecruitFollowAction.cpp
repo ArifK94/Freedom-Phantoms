@@ -11,7 +11,7 @@
 float URecruitFollowAction::Score(AAIController* Controller, APawn* Pawn)
 {
 	Super::Score(Controller, Pawn);
-	return .96f;
+	return .9f;
 }
 
 bool URecruitFollowAction::CanRun(AAIController* Controller, APawn* Pawn) const
