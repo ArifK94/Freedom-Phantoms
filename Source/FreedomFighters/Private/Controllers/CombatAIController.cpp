@@ -3,17 +3,20 @@
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
-#include "Weapons/ThrowableWeapon.h"
 #include "CustomComponents/AIMovementComponent.h"
 #include "CustomComponents/PatrolFollowerComponent.h"
 #include "CustomComponents/CoverFinderComponent.h"
 #include "CustomComponents/AI/StrongholdDefenderComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/MountedGunFinderComponent.h"
+
 #include "Services/SharedService.h"
 
 #include "AI/UtilityAIComponent.h"
 #include "AI/Actions/CombatAction.h"
+#include "AI/Actions/MountedGunAction.h"
+#include "AI/Actions/RecruitFollowAction.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -190,6 +193,7 @@ void ACombatAIController::Init()
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 	}
 
 }
@@ -746,7 +750,7 @@ void ACombatAIController::MoveToNextPatrolPoint()
 
 void ACombatAIController::CheckCommanderOrder()
 {
-	Commander = OwningCombatCharacter->getCommander();
+	Commander = OwningCombatCharacter->GetCommander();
 
 	if (Commander == nullptr) {
 		return;
@@ -769,33 +773,33 @@ void ACombatAIController::CheckCommanderOrder()
 	}
 
 
-	if (CurrentCommand == CommanderOrders::Follow)
-	{
-		HasChosenNearTargetDest = true;
-		CanFindCover = false;
+	//if (CurrentCommand == CommanderOrders::Follow)
+	//{
+	//	HasChosenNearTargetDest = true;
+	//	CanFindCover = false;
 
-		// Crouch if the commander is crouched
-		if (Commander->GetCharacterMovement()->IsCrouching())
-		{
-			if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-				OwningCombatCharacter->Crouch();
-		}
-		else
-		{
-			if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-				OwningCombatCharacter->UnCrouch();
-		}
+	//	// Crouch if the commander is crouched
+	//	if (Commander->GetCharacterMovement()->IsCrouching())
+	//	{
+	//		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+	//			OwningCombatCharacter->Crouch();
+	//	}
+	//	else
+	//	{
+	//		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+	//			OwningCombatCharacter->UnCrouch();
+	//	}
 
 
 
-		if (!IsNearCommander())
-		{
-			OwningCombatCharacter->DropMountedGun();
-			TargetDestination = Commander->GetActorLocation();
-			AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius, AIBehaviourState::PriorityOrdersCommander);
-		}
+	//	if (!IsNearCommander())
+	//	{
+	//		OwningCombatCharacter->DropMountedGun();
+	//		TargetDestination = Commander->GetActorLocation();
+	//		AIMovementComponent->MoveToDestination(TargetDestination, AcceptanceRadius, AIBehaviourState::PriorityOrdersCommander);
+	//	}
 
-	}
+	//}
 }
 
 

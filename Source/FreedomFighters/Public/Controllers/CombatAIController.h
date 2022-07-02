@@ -240,5 +240,6 @@ public:
 
 	ACommanderCharacter* GetCommander() { return Commander; };
 
+	float GetAcceptanceRadius() { return AcceptanceRadius; }
 
 };

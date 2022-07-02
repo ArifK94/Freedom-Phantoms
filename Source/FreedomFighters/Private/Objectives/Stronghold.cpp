@@ -255,7 +255,7 @@ void AStronghold::UpdateDefenders()
 		auto Character = DefendingCombatatants[i];
 
 		// if dead or has been recruited by commander then it is no longer a stronghold 
-		if (!UHealthComponent::IsAlive(Character) || Character->getCommander() != nullptr)
+		if (!UHealthComponent::IsAlive(Character) || Character->GetCommander() != nullptr)
 		{
 			RemoveDefender(Character);
 		}

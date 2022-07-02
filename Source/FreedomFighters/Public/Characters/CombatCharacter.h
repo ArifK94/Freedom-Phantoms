@@ -298,7 +298,7 @@ public:
 		CommandingOfficer = Commander;
 	}
 
-	ACommanderCharacter* getCommander() {
+	ACommanderCharacter* GetCommander() {
 		return CommandingOfficer;
 	}
 
