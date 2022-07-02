@@ -30,6 +30,11 @@ bool UUtilityAIAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return ReceiveCanRun(Controller, Pawn);
 }
 
+bool UUtilityAIAction::CanRunAsynchronously(AAIController* Controller, APawn* Pawn) const
+{
+	return false;
+}
+
 float UUtilityAIAction::Score(AAIController* Controller, APawn* Pawn)
 {
 	return ReceiveScore(Controller, Pawn);

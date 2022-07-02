@@ -93,6 +93,12 @@ public:
 	UPROPERTY()
 		TSet<UUtilityAIAction*> InstancedActions;
 
+	/**
+	* Actions which can run asynchronously with another action.
+	*/
+	UPROPERTY()
+		TSet<UUtilityAIAction*> InstancedAsyncActions;
+
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Utility AI")
 		TArray<UUtilityAIAction*> GetActionInstances() const;
 

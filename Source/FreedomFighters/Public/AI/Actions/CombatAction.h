@@ -23,6 +23,9 @@ public:
 
 	virtual bool CanRun(AAIController* Controller, APawn* Pawn) const override;
 
+	// NPC will need to have the ability to shoot 90% of the time.
+	virtual bool CanRunAsynchronously(AAIController* Controller, APawn* Pawn) const override;
+
 	virtual void Spawn(AAIController* Controller, APawn* Pawn) override;
 
 	virtual void Enter(AAIController* Controller, APawn* Pawn) override;

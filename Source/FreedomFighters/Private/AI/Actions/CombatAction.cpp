@@ -24,6 +24,11 @@ bool UCombatAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return CombatAIController->GetEnemyActor() != nullptr;
 }
 
+bool UCombatAction::CanRunAsynchronously(AAIController* Controller, APawn* Pawn) const
+{
+	return true;
+}
+
 void UCombatAction::Spawn(AAIController* Controller, APawn* Pawn)
 {
 	Super::Spawn(Controller, Pawn);

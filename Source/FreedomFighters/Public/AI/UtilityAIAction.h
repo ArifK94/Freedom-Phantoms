@@ -49,6 +49,12 @@ public:
 
 	virtual bool CanRun(AAIController* Controller, APawn* Pawn) const;
 
+
+	/**
+	* Should this action be run at the same time with other actions? if so, then the score is not considered for async actions.
+	*/
+	virtual bool CanRunAsynchronously(AAIController* Controller, APawn* Pawn) const;
+
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Score"))
 		float ReceiveScore(AAIController* Controller, APawn* Pawn);
 
@@ -73,6 +79,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void Resurrect();
+
+
 
 };
 

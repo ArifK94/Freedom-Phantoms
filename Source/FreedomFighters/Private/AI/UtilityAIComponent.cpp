@@ -61,7 +61,16 @@ UUtilityAIAction* UUtilityAIComponent::SpawnActionInstance(TSubclassOf<UUtilityA
 		return nullptr;
 
 	UUtilityAIAction* Action = NewObject<UUtilityAIAction>(Controller, ActionClass);
-	InstancedActions.Add(Action);
+
+	if (Action->CanRunAsynchronously(Controller, Controller->GetPawn()))
+	{
+		InstancedAsyncActions.Add(Action);
+	}
+	else
+	{
+		InstancedActions.Add(Action);
+	}
+
 	Action->Spawn(Controller, Controller->GetPawn());
 	OnUtilityAIActionSpawned.Broadcast(Action);
 
@@ -136,7 +145,8 @@ UUtilityAIAction* UUtilityAIComponent::ReceiveComputeBestAction_Implementation(A
 
 	for (UUtilityAIAction* Action : InstancedActions)
 	{
-		Action->LastCanRun = !Action->IsMarkedForDeath() && Action->CanRun(Controller, Pawn);
+		// do not compute asynchronous actions as they need to be run at the same time with another action.
+		Action->LastCanRun = !Action->IsMarkedForDeath() && Action->CanRun(Controller, Pawn) && !Action->CanRunAsynchronously(Controller, Pawn);
 		if (!Action->LastCanRun)
 			continue;
 		Action->LastScore = ScoreFilter(Action, Action->Score(Controller, Pawn));
@@ -184,6 +194,16 @@ void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 		BestAction = ComputeBestAction(Controller, Pawn);
 	}
 
+	for (UUtilityAIAction* Action : InstancedAsyncActions)
+	{
+		Action->LastCanRun = !Action->IsMarkedForDeath() && Action->CanRun(Controller, Pawn) && Action->CanRunAsynchronously(Controller, Pawn);
+
+		if (!Action->LastCanRun)
+			continue;
+
+		Action->Tick(DeltaTime, Controller, Pawn);
+		OnUtilityAIActionTicked.Broadcast(Action);
+	}
 
 	if (BestAction)
 	{
