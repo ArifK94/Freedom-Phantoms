@@ -23,4 +23,10 @@ public:
 	* Check if TargetActor is behind ActorA
 	*/
 	static bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
+
+	/**
+	* Is an actor near a location?
+	* Radius is how many far apart should be considered nearby to the location.
+	*/
+	static bool IsNearTargetPosition(FVector Start, FVector Location, float Radius);
 };

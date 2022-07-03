@@ -192,9 +192,10 @@ void ACombatAIController::Init()
 
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
-		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
+		//UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(URecruitAttackAction::StaticClass());
 	}
 
 }
@@ -750,23 +751,20 @@ void ACombatAIController::CheckCommanderOrder()
 	}
 
 	// Assign Order Event
-	//if (!HasAssignedOrderEvent) {
+	OwningCombatCharacter->DropMountedGun();
+	Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
+	HasAssignedOrderEvent = true;
+	StayCombatAlert = false; // refresh state of behaviour
 
-		OwningCombatCharacter->DropMountedGun();
-		Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
-		HasAssignedOrderEvent = true;
-		StayCombatAlert = false; // refresh state of behaviour
+	// if NPC was a stronghold defender, then rmeove the stronghold memory actor & assign the wounded flag to true as it is a now a recruit of the commander.
+	if (StrongholdDefenderComponent->GetStronghold()) {
+		OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
+		StrongholdDefenderComponent->RemoveStronghold();
+	}
 
-		// if NPC was a stronghold defender, then rmeove the stronghold memory actor & assign the wounded flag to true as it is a now a recruit of the commander.
-		if (StrongholdDefenderComponent->GetStronghold()) {
-			OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
-			StrongholdDefenderComponent->RemoveStronghold();
-		}
+	SetBehaviourState(AIBehaviourState::PriorityOrdersCommander);
 
-		SetBehaviourState(AIBehaviourState::PriorityOrdersCommander);
-
-		GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
-	//}
+	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 }
 
 
@@ -790,14 +788,6 @@ bool ACombatAIController::IsNearCommander()
 bool ACombatAIController::IsNearCommander(FVector Location)
 {
 	if (Commander && FVector::Distance(Commander->GetActorLocation(), Location) <= AcceptanceRadius) {
-		return true;
-	}
-	return false;
-}
-
-bool ACombatAIController::IsNearTargetDestination(FVector Location)
-{
-	if (FVector::Distance(OwningCombatCharacter->GetActorLocation(), Location) <= AcceptanceRadius) {
 		return true;
 	}
 	return false;

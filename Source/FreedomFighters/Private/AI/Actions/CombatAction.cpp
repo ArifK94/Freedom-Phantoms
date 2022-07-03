@@ -142,6 +142,10 @@ void UCombatAction::ThrowGrenade()
 
 bool UCombatAction::CanThrowGrenade()
 {
+	if (CombatAIController->GetHasThrownGrenade()) {
+		return false;
+	}
+
 	FRotator TargetRotation;
 	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetEnemyActor()->GetActorLocation(), TargetRotation);
 	return IsReachable;

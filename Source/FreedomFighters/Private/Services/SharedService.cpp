@@ -104,3 +104,12 @@ bool SharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
 
 	return false;
 }
+
+bool SharedService::IsNearTargetPosition(FVector Start, FVector Location, float Radius)
+{
+	if (FVector::Distance(Start, Location) <= Radius) {
+		return true;
+	}
+
+	return false;
+}

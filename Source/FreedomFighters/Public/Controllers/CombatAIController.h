@@ -152,8 +152,6 @@ public:
 
 	bool IsNearCommander(FVector Location);
 
-	bool IsNearTargetDestination(FVector Location);
-
 	void SetBehaviourState(AIBehaviourState State);
 
 private:

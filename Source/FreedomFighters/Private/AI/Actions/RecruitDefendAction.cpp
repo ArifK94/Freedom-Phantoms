@@ -5,6 +5,7 @@
 #include "Controllers/CombatAIController.h"
 #include "Characters/CombatCharacter.h"
 #include "CustomComponents/AIMovementComponent.h"
+#include "Services/SharedService.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -25,6 +26,11 @@ bool URecruitDefendAction::CanRun(AAIController* Controller, APawn* Pawn) const
 
 	// is the current order the FOLLOW command?
 	if (CombatAIController->GetCurrentCommand() != CommanderOrders::Defend) {
+		return false;
+	}
+
+	// if near destination to defend, then no need run this action any further.
+	if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetRecruitInfo()->TargetLocation, 2.f)) {
 		return false;
 	}
 
