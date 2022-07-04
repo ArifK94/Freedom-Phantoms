@@ -177,8 +177,6 @@ private:
 	UFUNCTION()
 		void OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams);
 
-	bool HasAssignedOrderEvent;
-
 	UFUNCTION()
 		void OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters);
 
@@ -195,8 +193,6 @@ private:
 	void UpdateLastSeen();
 
 	void CheckCommanderOrder();
-
-	void MoveToCover();
 
 	void StartPatrol();
 
@@ -235,6 +231,8 @@ public:
 
 
 	UMountedGunFinderComponent* GetMountedGunFinderComponent() { return MountedGunFinderComponent; }
+
+	UCoverFinderComponent* GetCoverFinderComponent() { return CoverFinderComponent; }
 
 	CommanderOrders GetCurrentCommand() { return CurrentCommand; };
 

@@ -15,8 +15,11 @@
 
 #include "AI/UtilityAIComponent.h"
 #include "AI/Actions/CombatAction.h"
+#include "AI/Actions/CoverAction.h"
 #include "AI/Actions/MountedGunAction.h"
 #include "AI/Actions/RecruitFollowAction.h"
+#include "AI/Actions/RecruitDefendAction.h"
+#include "AI/Actions/RecruitAttackAction.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -182,8 +185,6 @@ void ACombatAIController::Init()
 		}
 	}
 
-	HasAssignedOrderEvent = false;
-
 	// if assigned an MG at the beginning
 	if (OwningCombatCharacter->GetMountedGun()) {
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
@@ -192,7 +193,8 @@ void ACombatAIController::Init()
 
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
-		//UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
+		//UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitAttackAction::StaticClass());
@@ -378,9 +380,7 @@ void ACombatAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
 
-	if (UtilityAIComponent) {
-		UtilityAIComponent->EnableUtilityAI = false;
-	}
+	ClearTimers();
 
 	if (OwningCombatCharacter)
 	{
@@ -414,27 +414,27 @@ void ACombatAIController::OnUnPossess()
 
 		if (Commander) {
 			Commander->OnOrderSent.RemoveDynamic(this, &ACombatAIController::OnOrderReceived);
+			Commander = nullptr;
 		}
-		HasAssignedOrderEvent = false;
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 
-		if (HealthComp)
-		{
+		if (HealthComp) {
 			if (HealthComp->OnHealthChanged.IsBound()) {
 				HealthComp->OnHealthChanged.RemoveDynamic(this, &ACombatAIController::OnHealthUpdate);
 			}
 		}
 	}
-
-
-	ClearTimers();
 }
 
 void ACombatAIController::ClearTimers()
 {
 	if (TargetFinderComponent) {
 		TargetFinderComponent->SetFindTargetPerFrame(false);
+	}
+
+	if (UtilityAIComponent) {
+		UtilityAIComponent->EnableUtilityAI = false;
 	}
 
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
@@ -604,56 +604,6 @@ void ACombatAIController::UpdateLastSeen()
 	GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 }
 
-void ACombatAIController::MoveToCover()
-{
-	if (!CanFindCover) {
-		return;
-	}
-
-	if (!HasChosenCover)
-	{
-		if (EnemyActor)
-		{
-			auto CoverLocation = CoverFinderComponent->FindCover(EnemyActor->GetActorLocation());
-
-			TargetDestination = CoverLocation;
-			HasChosenCover = true;
-		}
-	}
-
-
-	auto CurrentMovement = AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::Normal);
-	//auto CurrentMovement = MoveToTarget(0.0f);
-
-	switch (CurrentMovement)
-	{
-	case EPathFollowingRequestResult::Failed:
-		HasChosenCover = false;
-		break;
-	case EPathFollowingRequestResult::AlreadyAtGoal:
-
-		if (!OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
-			OwningCombatCharacter->ToggleCrouch();
-
-		GetWorldTimerManager().ClearTimer(THandler_FindCover);
-
-		break;
-	case EPathFollowingRequestResult::RequestSuccessful:
-		HasChosenCover = true;
-		break;
-	default:
-		break;
-	}
-
-
-	// Choose another cover point if this has already been taken by another
-	if (CoverFinderComponent->IsCoverPointTaken(TargetDestination))
-	{
-		HasChosenCover = false;
-	}
-}
-
-
 void ACombatAIController::MoveToRandomPoint()
 {
 	// if following a commander or defending a stronghold, then do not move to random point
@@ -750,10 +700,11 @@ void ACombatAIController::CheckCommanderOrder()
 		return;
 	}
 
-	// Assign Order Event
 	OwningCombatCharacter->DropMountedGun();
+
+
+	// Assign Order Event
 	Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
-	HasAssignedOrderEvent = true;
 	StayCombatAlert = false; // refresh state of behaviour
 
 	// if NPC was a stronghold defender, then rmeove the stronghold memory actor & assign the wounded flag to true as it is a now a recruit of the commander.
