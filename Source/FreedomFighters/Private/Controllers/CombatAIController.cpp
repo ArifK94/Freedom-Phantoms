@@ -52,7 +52,6 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
 	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
-
 	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
 }
 
@@ -227,12 +226,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 			TargetFinderComponent->SetFindTargetPerFrame(true);
 		}
 
-		if (StrongholdDefenderComponent) {
-			if (!StrongholdDefenderComponent->OnDefenderPointFound.IsBound()) {
-				StrongholdDefenderComponent->OnDefenderPointFound.AddDynamic(this, &ACombatAIController::OnStrongholdPointFound);
-			}
-		}
-
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
 
 		if (HealthComp) {
@@ -274,13 +267,6 @@ void ACombatAIController::OnUnPossess()
 
 			if (AIMovementComponent->OnDestinationReached.IsBound()) {
 				AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
-			}
-		}
-
-
-		if (StrongholdDefenderComponent) {
-			if (StrongholdDefenderComponent->OnDefenderPointFound.IsBound()) {
-				StrongholdDefenderComponent->OnDefenderPointFound.RemoveDynamic(this, &ACombatAIController::OnStrongholdPointFound);
 			}
 		}
 
@@ -365,14 +351,6 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	StayCombatAlert = false;
 	UpdatCombatAlert();
-}
-
-void ACombatAIController::OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams)
-{
-	//OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
-
-	//TargetDestination = StrongholdDefenderParams.TargetPoint;
-	//AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
 }
 
 void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)

@@ -169,9 +169,6 @@ private:
 		void OnOrderReceived(UCommanderRecruit* RecruitInfo);
 
 	UFUNCTION()
-		void OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams);
-
-	UFUNCTION()
 		void OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters);
 
 	virtual void OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams) override;

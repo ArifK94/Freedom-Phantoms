@@ -25,11 +25,6 @@ float UStrongholdAction::Score(AAIController* Controller, APawn* Pawn)
 		else {
 			return .5f;
 		}
-
-		// if near destination, then no need for further action
-		//if (!SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()->GetComponentLocation(), 10.f)) {
-		//	return false;
-		//}
 	}
 
 	return .9f;
@@ -47,7 +42,7 @@ bool UStrongholdAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	if (CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent() && CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()->GetIsPriority()) {
 
 		// if near destination, then no need for further action
-		if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()->GetComponentLocation(), 100.f)) {
+		if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()->GetComponentLocation(), 10.f)) {
 			return false;
 		}
 	}
