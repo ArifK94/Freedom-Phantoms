@@ -3,12 +3,14 @@
 
 #include "AI/Actions/CombatAction.h"
 #include "Controllers/CombatAIController.h"
-#include "StructCollection.h"
 #include "Characters/CombatCharacter.h"
 #include "Weapons/Weapon.h"
-#include "Services/SharedService.h"
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/ThrowableWeapon.h"
+#include "Weapons/MountedGun.h"
+#include "CustomComponents/MountedGunFinderComponent.h"
+#include "StructCollection.h"
+#include "Services/SharedService.h"
 
 float UCombatAction::Score(AAIController* Controller, APawn* Pawn)
 {
@@ -63,6 +65,32 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 	}
 	else {
 		OwningCombatCharacter->EndFire();
+	}
+
+	FaceTarget();
+}
+
+void UCombatAction::FaceTarget()
+{
+	if (CombatAIController->GetEnemyActor())
+	{
+		// if using a mounted gun
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
+		{
+			CombatAIController->GetMountedGunFinderComponent()->FocusTarget(OwningCombatCharacter->GetMountedGun(), CombatAIController->GetEnemyActor()->GetActorLocation());
+		}
+		else
+		{
+			//CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
+			CombatAIController->SetFocalPoint(CombatAIController->GetTargetSearchParams()->TargetLocation);
+		}
+	}
+	else
+	{
+		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
+		}
 	}
 }
 

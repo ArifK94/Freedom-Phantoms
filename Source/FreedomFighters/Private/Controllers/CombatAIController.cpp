@@ -74,33 +74,9 @@ void ACombatAIController::Tick(float DeltaTime)
 		return;
 	}
 
-	m_DelaTime = DeltaTime;
-
 	if (!OwningCombatCharacter->GetHealthComp()->IsAlive()) {
 		return;
 	}
-
-	if (EnemyActor)
-	{
-		// if using a mounted gun
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
-		{
-			MountedGunFinderComponent->FocusTarget(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation());
-		}
-		else
-		{
-			SetFocus(EnemyActor);
-			//SetFocalPoint(TargetSearchParams->TargetLocation);
-		}
-	}
-	else
-	{
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
-		}
-	}
-
 }
 
 void ACombatAIController::Init()
@@ -216,8 +192,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
 
 	Init();
-
-	CanFindCover = true;
 
 	if (OwningCombatCharacter)
 	{
@@ -386,7 +360,6 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 
-	CanFindCover = true;
 	HasChosenNearTargetDest = false;
 
 

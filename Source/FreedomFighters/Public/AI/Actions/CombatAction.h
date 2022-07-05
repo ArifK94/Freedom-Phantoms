@@ -35,6 +35,8 @@ public:
 	virtual void Tick(float DeltaTime, AAIController* Controller, APawn* Pawn) override;
 
 private:
+	void FaceTarget();
+
 	void CombatMode();
 
 	void ShootAtEnemy();

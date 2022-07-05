@@ -38,8 +38,6 @@ private:
 	float TimeOnCurrentEnemy;
 
 	bool StayCombatAlert;
-	bool HasChosenCover;
-	bool CanFindCover;
 
 	// To prevent throwing a lot of grenades in short amount of time.
 	bool HasThrownGrenade;
@@ -48,8 +46,6 @@ private:
 	FVector LastSeenPosition;
 
 	FTargetSearchParameters* TargetSearchParams;
-
-	float m_DelaTime;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -206,22 +202,20 @@ protected:
 public:
 	AIBehaviourState GetCurrentBehaviourState() { return CurrentBehaviourState; };
 
-	AActor* GetEnemyActor() {
-		return EnemyActor;
-	}
+	AActor* GetEnemyActor() { return EnemyActor; }
+
+	FTargetSearchParameters* GetTargetSearchParams() { return TargetSearchParams; }
 
 	FVector GetTargetDestination() { return TargetDestination; }
 
-	void SetTargetDestination(FVector Destination) {
-		TargetDestination = Destination;
-	}
+	void SetTargetDestination(FVector Destination) { TargetDestination = Destination; }
 
 	bool GetHasThrownGrenade() { return HasThrownGrenade; }
 
 	void SetHasThrownGrenade(bool Value) { HasThrownGrenade = Value; }
 
-	UAIMovementComponent* GetAIMovementComponent() { return AIMovementComponent; };
 
+	UAIMovementComponent* GetAIMovementComponent() { return AIMovementComponent; };
 
 	UMountedGunFinderComponent* GetMountedGunFinderComponent() { return MountedGunFinderComponent; }
 
