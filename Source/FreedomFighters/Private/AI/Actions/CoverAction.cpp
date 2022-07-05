@@ -101,3 +101,25 @@ void UCoverAction::Peak()
 {
 
 }
+
+void UCoverAction::BeginCoverPeak()
+{
+	if (!OwningCombatCharacter->IsAtCoverCorner()) {
+		return;
+	}
+
+
+	if (OwningCombatCharacter->IsFacingCoverRHS())
+	{
+		OwningCombatCharacter->CoverMovement(1.0f);
+	}
+	else
+	{
+		OwningCombatCharacter->CoverMovement(-1.0f);
+	}
+}
+
+void UCoverAction::EndCoverPeak()
+{
+	OwningCombatCharacter->SetRightInputValue(.0f);
+}

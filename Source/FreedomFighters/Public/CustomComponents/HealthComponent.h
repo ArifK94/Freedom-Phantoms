@@ -136,4 +136,6 @@ public:
 
 	void SetCanBeWounded(bool Value) { CanBeWounded = Value; }
 
+	bool GetCanBeWounded() { return CanBeWounded; }
+
 };

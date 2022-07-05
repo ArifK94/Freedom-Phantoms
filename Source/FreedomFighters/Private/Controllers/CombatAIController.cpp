@@ -20,6 +20,7 @@
 #include "AI/Actions/RecruitFollowAction.h"
 #include "AI/Actions/RecruitDefendAction.h"
 #include "AI/Actions/RecruitAttackAction.h"
+#include "AI/Actions/StrongholdAction.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -198,110 +199,9 @@ void ACombatAIController::Init()
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitAttackAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UStrongholdAction::StaticClass());
 	}
 
-}
-
-void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
-{
-	SetBehaviourState(BehaviourState);
-}
-
-void ACombatAIController::OnMovementDestinationReached(FVector Destination)
-{
-	switch (CurrentBehaviourState)
-	{
-	case AIBehaviourState::Patrol:
-		MoveToNextPatrolPoint();
-		return;
-	case AIBehaviourState::MovingToLastSeenEnemy:
-		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, true, FMath::RandRange(2.f, 5.f));
-		return;
-	}
-
-	if (!OwningCombatCharacter->GetMountedGun())
-	{
-		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
-	}
-}
-
-void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
-{
-	// ensure the owning character received the order
-	if (RecruitInfo->Recruit != OwningCombatCharacter) {
-		return;
-	}
-
-	bRecruitInfo = RecruitInfo;
-
-	CurrentCommand = RecruitInfo->CurrentCommand;
-	TargetDestination = RecruitInfo->TargetLocation;
-
-	if (OwningCombatCharacter->IsTakingCover())
-	{
-		OwningCombatCharacter->StopCover();
-	}
-
-	OwningCombatCharacter->DropMountedGun();
-
-
-	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
-
-	CanFindCover = true;
-	HasChosenNearTargetDest = false;
-
-
-	StayCombatAlert = false;
-	UpdatCombatAlert();
-}
-
-void ACombatAIController::OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams)
-{
-	OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
-
-	TargetDestination = StrongholdDefenderParams.TargetPoint;
-	AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
-}
-
-
-
-EPathFollowingRequestResult::Type ACombatAIController::MoveToTarget(float AcceptRadius, bool WalkNearTarget)
-{
-	if (!OwningCombatCharacter || TargetDestination.IsZero() || OwningCombatCharacter->GetIsInVehicle() || OwningCombatCharacter->IsUsingMountedWeapon()) {
-		return EPathFollowingRequestResult::Failed;
-	}
-
-	auto CurrentMovement = MoveToLocation(TargetDestination, AcceptRadius, StopOnOverlap, UsePathfinding, ProjectDestinationToNavigation, CanStrafe, FilterClass, AllowPartialPaths);
-
-	// Walk when close to desination
-	if (WalkNearTarget)
-	{
-		FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
-
-		float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
-
-		if (CurrentTargetDistance > AcceptanceRadius)
-		{
-			OwningCombatCharacter->BeginSprint();
-		}
-		else
-		{
-			OwningCombatCharacter->EndSprint();
-		}
-	}
-	else
-	{
-		if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
-		{
-			OwningCombatCharacter->BeginSprint();
-		}
-		else
-		{
-			OwningCombatCharacter->EndSprint();
-		}
-	}
-
-	return CurrentMovement;
 }
 
 void ACombatAIController::OnPossess(APawn* InPawn)
@@ -326,7 +226,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 		GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
-		//GetWorldTimerManager().SetTimer(THandler_BeginPeakCover, this, &ACombatAIController::BeginCoverPeak, FMath::RandRange(2.0f, 5.0f), true);
 
 
 		// Events! DON'T FORGET TO REMOVE EVENTS ON THE UNPOSSESS() method to prevent a crash when switching between possess & unpossess
@@ -442,7 +341,66 @@ void ACombatAIController::ClearTimers()
 	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
 }
 
+void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
+{
+	SetBehaviourState(BehaviourState);
+}
 
+void ACombatAIController::OnMovementDestinationReached(FVector Destination)
+{
+	switch (CurrentBehaviourState)
+	{
+	case AIBehaviourState::Patrol:
+		MoveToNextPatrolPoint();
+		return;
+	case AIBehaviourState::MovingToLastSeenEnemy:
+		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, true, FMath::RandRange(2.f, 5.f));
+		return;
+	}
+
+	if (!OwningCombatCharacter->GetMountedGun())
+	{
+		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
+	}
+}
+
+void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
+{
+	// ensure the owning character received the order
+	if (RecruitInfo->Recruit != OwningCombatCharacter) {
+		return;
+	}
+
+	bRecruitInfo = RecruitInfo;
+
+	CurrentCommand = RecruitInfo->CurrentCommand;
+	TargetDestination = RecruitInfo->TargetLocation;
+
+	if (OwningCombatCharacter->IsTakingCover())
+	{
+		OwningCombatCharacter->StopCover();
+	}
+
+	OwningCombatCharacter->DropMountedGun();
+
+
+	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
+
+	CanFindCover = true;
+	HasChosenNearTargetDest = false;
+
+
+	StayCombatAlert = false;
+	UpdatCombatAlert();
+}
+
+void ACombatAIController::OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams)
+{
+	//OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
+
+	//TargetDestination = StrongholdDefenderParams.TargetPoint;
+	//AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
+}
 
 void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
@@ -534,34 +492,6 @@ void ACombatAIController::UpdatCombatAlert()
 	}
 }
 
-void ACombatAIController::BeginCoverPeak()
-{
-	if (!OwningCombatCharacter->IsAtCoverCorner()) {
-		return;
-	}
-
-
-	if (OwningCombatCharacter->IsFacingCoverRHS())
-	{
-		OwningCombatCharacter->CoverMovement(1.0f);
-	}
-	else
-	{
-		OwningCombatCharacter->CoverMovement(-1.0f);
-	}
-
-	if (!THandler_EndPeakCover.IsValid())
-	{
-		GetWorldTimerManager().SetTimer(THandler_EndPeakCover, this, &ACombatAIController::EndCoverPeak, FMath::RandRange(2.0f, 4.0f), false);
-	}
-}
-
-void ACombatAIController::EndCoverPeak()
-{
-	GetWorldTimerManager().ClearTimer(THandler_EndPeakCover);
-
-	OwningCombatCharacter->SetRightInputValue(.0f);
-}
 
 void ACombatAIController::UpdateLastSeen()
 {

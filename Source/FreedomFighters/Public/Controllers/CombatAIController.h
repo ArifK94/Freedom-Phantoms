@@ -133,8 +133,6 @@ private:
 
 	FTimerHandle THandler_CommanderOrders;
 	FTimerHandle THandler_FindCover;
-	FTimerHandle THandler_BeginPeakCover;
-	FTimerHandle THandler_EndPeakCover;
 	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
 	FTimerHandle THandler_PatrolStart;
@@ -183,12 +181,7 @@ private:
 	virtual void OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams) override;
 
 
-	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
-
 	void UpdatCombatAlert();
-
-	void BeginCoverPeak();
-	void EndCoverPeak();
 
 	void UpdateLastSeen();
 
@@ -233,6 +226,9 @@ public:
 	UMountedGunFinderComponent* GetMountedGunFinderComponent() { return MountedGunFinderComponent; }
 
 	UCoverFinderComponent* GetCoverFinderComponent() { return CoverFinderComponent; }
+
+	UStrongholdDefenderComponent* GetStrongholdDefenderComponent() { return StrongholdDefenderComponent; }
+
 
 	CommanderOrders GetCurrentCommand() { return CurrentCommand; };
 
