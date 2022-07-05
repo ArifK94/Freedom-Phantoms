@@ -21,7 +21,7 @@ bool UCombatAction::CanRun(AAIController* Controller, APawn* Pawn) const
 {
 	Super::CanRun(Controller, Pawn);
 
-	return CombatAIController->GetEnemyActor() != nullptr;
+	return true;
 }
 
 bool UCombatAction::CanRunAsynchronously(AAIController* Controller, APawn* Pawn) const
@@ -58,6 +58,16 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
 
+	if (CombatAIController->GetEnemyActor()) {
+		CombatMode();
+	}
+	else {
+		OwningCombatCharacter->EndFire();
+	}
+}
+
+void UCombatAction::CombatMode()
+{
 	// set unlimited ammo
 	if (!OwningCombatCharacter->GetCurrentWeapon()->GetHasUnlimitedAmmo()) {
 		OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
