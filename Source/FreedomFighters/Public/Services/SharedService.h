@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
 
 /**
  * Any shared functions which can be used across any class.
@@ -17,4 +18,15 @@ public:
 	*/
 	static bool ThrowRotationAngle(FVector Start, FVector End, FRotator& TargetRotation);
 
+
+	/**
+	* Check if TargetActor is behind ActorA
+	*/
+	static bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
+
+	/**
+	* Is an actor near a location?
+	* Radius is how many far apart should be considered nearby to the location.
+	*/
+	static bool IsNearTargetPosition(FVector Start, FVector Location, float Radius);
 };

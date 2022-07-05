@@ -90,6 +90,7 @@ AWeapon::AWeapon()
 	CanAutoReload = false;
 	HasNoReload = false;
 	HasFiredFirstShot = false;
+	ShouldStopFiring = false;
 
 	DrawDebugShotLine = false;
 	ShotLineDuration = 5.0f;
@@ -369,8 +370,7 @@ void AWeapon::Fire()
 		CurrentAmmo -= 1;
 	}
 
-	if (weaponClipObj)
-	{
+	if (weaponClipObj) {
 		weaponClipObj->SetCurrentAmmo(CurrentAmmo);
 	}
 
@@ -378,34 +378,28 @@ void AWeapon::Fire()
 
 	if (hasRecoil) {
 
-		if (BulletSpreadCurrent < BulletSpreadMax)
-		{
+		if (BulletSpreadCurrent < BulletSpreadMax) {
 			// Increase current spread based on character velocity
 			AActor* MyOwner = GetOwner();
 			if (MyOwner) {
 				BulletSpreadCurrent += MyOwner->GetVelocity().Size();
 			}
 
-			if (IsAiming)
-			{
+			if (IsAiming) {
 				BulletSpreadCurrent += .5f;
 			}
-			else
-			{
+			else {
 				BulletSpreadCurrent += 1.f;
 			}
 		}
-		else
-		{
+		else {
 			BulletSpreadCurrent = BulletSpreadMax;
 		}
 	}
 
 
-	if (CanAutoReload && !HasNoReload)
-	{
-		if (CurrentAmmo <= 0)
-		{
+	if (CanAutoReload && !HasNoReload) {
+		if (CurrentAmmo <= 0) {
 			isReloading = true;
 			ClipOut();
 			GetWorldTimerManager().SetTimer(THandler_AutoReloadBegin, this, &AWeapon::AutoReloadBegin, CooldownReload / 2.0f, false);
@@ -416,8 +410,7 @@ void AWeapon::Fire()
 		GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
 	}
 
-	if (selectiveFireMode == SelectiveFire::Burst)
-	{
+	if (selectiveFireMode == SelectiveFire::Burst) {
 		BurstAmmountCount++;
 	}
 
@@ -427,6 +420,10 @@ void AWeapon::Fire()
 	WeaponUpdateParameters.HasFiredShot = true;
 	WeaponUpdateParameters.WeaponState = EWeaponState::Firing;
 	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
+
+	if (ShouldStopFiring) {
+		StopFire();
+	}
 
 	if (CurrentAmmo <= 0) {
 		isFiring = false;
@@ -471,40 +468,34 @@ void AWeapon::CreateBullet()
 	{
 		FVector TraceEnd = EyeLocation + (ShotDirection * TraceLength);
 
-		if (hasRecoil)
-		{
-			if (UseRadialSpread)
-			{
-				FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
-				TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
-			}
-			else
-			{
-				TraceEnd = BulletSpread(TraceEnd);
-			}
+		if (hasRecoil) {
+			//if (UseRadialSpread) {
+			//	FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
+			//	TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
+			//}
+			//else {
+			//	//TraceEnd = BulletSpread(TraceEnd);
+			//	TargetRotation = GetSprayAngle(ShotDirection, BulletSpreadCurrent);
+			//}
+			FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
+			TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
 		}
 
 
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(MyOwner);
-		QueryParams.AddIgnoredActor(this);
-		QueryParams.bTraceComplex = true;
-		QueryParams.bReturnPhysicalMaterial = true;
+		auto TargetRotation = UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TraceEnd);
 
-		// Particle "Target" parameter
-		FVector TracerEndPoint = TraceEnd;
+		SpawnProjectile(getMuzzleLocation(), TargetRotation);
 
-		FHitResult Hit;
-		bool LineTraceFire = GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
-		
-		if (LineTraceFire) {
-			TracerEndPoint = Hit.ImpactPoint;
-		}
+		if (DrawDebugShotLine) {
 
-		SpawnProjectile(getMuzzleLocation(), UKismetMathLibrary::FindLookAtRotation(getMuzzleLocation(), TracerEndPoint));
+			FCollisionQueryParams QueryParams;
+			QueryParams.AddIgnoredActor(MyOwner);
+			QueryParams.AddIgnoredActor(this);
+			QueryParams.bTraceComplex = true;
+			QueryParams.bReturnPhysicalMaterial = true;
 
-		if (DrawDebugShotLine)
-		{
+			FHitResult Hit;
+
 			TArray<AActor*> ActorsToIgnore;
 			UKismetSystemLibrary::LineTraceSingle(GetWorld(), EyeLocation, TraceEnd, ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, Hit, true, FLinearColor::Blue, FLinearColor::Green, ShotLineDuration);
 		}
@@ -615,6 +606,11 @@ FVector AWeapon::BulletSpreadRadial(float Radius)
 	return Target;
 }
 
+FRotator AWeapon::GetSprayAngle(FVector MuzzleDirection, float MaxAngle)
+{
+	return UKismetMathLibrary::MakeRotFromX(UKismetMathLibrary::RandomUnitVectorInConeInDegrees(MuzzleDirection, MaxAngle));
+}
+
 FVector AWeapon::BulletSpread(FVector Spread)
 {
 	float Range = UKismetMathLibrary::MapRangeClamped(BulletSpreadCurrent, .0f, 1.f, 10.f, 20.f);
@@ -651,6 +647,8 @@ void AWeapon::BeginShellEffect()
 
 void AWeapon::StartFire()
 {
+	ShouldStopFiring = false;
+
 	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
 
 	switch (selectiveFireMode)
@@ -681,19 +679,22 @@ void AWeapon::StartFire()
 void AWeapon::StopFire()
 {
 	if (!HasFiredFirstShot) {
+		ShouldStopFiring = true;
 		return;
 	}
 
 	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
+	// reset flags
 	isFiring = false;
 	HasFiredFirstShot = false;
-
-	CurrentVerticleRecoil = 0.0f;
+	ShouldStopFiring = false;
 
 	ChargeDown();
 
-	GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
+	if (!THandler_BulletSpread.IsValid()) {
+		GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
+	}
 
 	FWeaponUpdateParameters WeaponUpdateParameters;
 	WeaponUpdateParameters.HasFiredShot = true;
@@ -861,7 +862,7 @@ void AWeapon::BeginReload()
 
 	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
-	isFiring = false;
+	StopFire();
 	isReloading = true;
 
 	if (weaponClipObj) {

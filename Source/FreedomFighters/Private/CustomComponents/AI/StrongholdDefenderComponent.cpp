@@ -10,32 +10,19 @@ UStrongholdDefenderComponent::UStrongholdDefenderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-
 void UStrongholdDefenderComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetOwner()->GetWorldTimerManager().SetTimer(THandler_StrongholdCoverPoint, this, &UStrongholdDefenderComponent::FindDefenderPoint, 1.0f, true);
+	//GetOwner()->GetWorldTimerManager().SetTimer(THandler_StrongholdCoverPoint, this, &UStrongholdDefenderComponent::FindDefenderPoint, 1.0f, true);
 }
 
-
-void UStrongholdDefenderComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
 
 void UStrongholdDefenderComponent::FindDefenderPoint()
 {
 	if (Stronghold == nullptr) {
 		return;
 	}
-
-	// if already has a priority cover point, then no need to process further.
-	if (ChosenCoverPointComponent && ChosenCoverPointComponent->GetIsPriority()) {
-		ClearTimer();
-		return;
-	}
-
 
 	auto NewCoverPoint = Stronghold->GetCoverPoint(GetOwner());
 	bool MoveToCoverPoint = false;

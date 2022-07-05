@@ -85,3 +85,31 @@ bool SharedService::ThrowRotationAngle(FVector Start, FVector End, FRotator& Tar
 
 	return true;
 }
+
+bool SharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
+{
+	if (ActorA == nullptr || TargetActor == nullptr) {
+		return false;
+	}
+
+	FVector MGForwardPos = UKismetMathLibrary::GetForwardVector(ActorA->GetActorRotation());
+	FVector Normalised = TargetActor->GetActorLocation() - ActorA->GetActorLocation();
+	UKismetMathLibrary::Vector_Normalize(Normalised);
+	float Angle = UKismetMathLibrary::Dot_VectorVector(MGForwardPos, Normalised);
+
+	if (Angle < -0.7f)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool SharedService::IsNearTargetPosition(FVector Start, FVector Location, float Radius)
+{
+	if (FVector::Distance(Start, Location) <= Radius) {
+		return true;
+	}
+
+	return false;
+}

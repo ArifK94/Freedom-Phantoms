@@ -108,6 +108,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool HasFiredFirstShot;
 
+	/** 
+	* If user has decided to stop but the first shot has not been fired, then the weapon will constantly fire if it is an automatic weapon.
+	* This flag will check after the first shot has been fired.
+	*/
+	bool ShouldStopFiring;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool isReloading;
 	bool IsAiming;
@@ -303,8 +310,6 @@ protected:
 
 
 private:
-	float CurrentVerticleRecoil;
-
 	USceneComponent* EyeViewPointComponent; // used for vehicles rather than pawns
 
 
@@ -396,6 +401,8 @@ private:
 
 	FVector BulletSpreadRadial(float Radius);
 
+	FRotator GetSprayAngle(FVector MuzzleDirection, float MaxAngle);
+
 	void DisableMuzzleLight();
 
 protected:
@@ -432,7 +439,7 @@ public:
 
 	USkeletalMeshComponent* getMeshComp() { return MeshComp; }
 
-	int32 getCurrentAmmo() { return CurrentAmmo; }
+	int32 GetCurrentAmmo() { return CurrentAmmo; }
 	int32 getCurrentMaxAmmo() { return CurrentMaxAmmo; }
 	int32 getAmmoPerClip() { return AmmoPerClip; }
 	int32 GetMaxAmmoCapacity() { return MaxAmmoCapacity; }

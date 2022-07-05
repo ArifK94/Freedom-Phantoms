@@ -45,8 +45,6 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnDefenderPointFoundSignature OnDefenderPointFound;
 
@@ -54,5 +52,8 @@ public:
 	AStronghold* GetStronghold() { return Stronghold; }
 
 	void SetStronghold(AStronghold* Target) { Stronghold = Target; }
+
+	UCoverPointComponent* GetChosenCoverPointComponent() { return ChosenCoverPointComponent; }
+
 
 };

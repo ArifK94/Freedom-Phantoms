@@ -20,7 +20,6 @@ class UTargetFinderComponent;
 class UMountedGunFinderComponent;
 
 class AWeapon;
-class APumpActionWeapon;
 class UCommanderRecruit;
 
 UCLASS()
@@ -30,10 +29,9 @@ class FREEDOMFIGHTERS_API ACombatAIController : public AAIController, public IAv
 
 private:
 	ACombatCharacter* OwningCombatCharacter;
-	APumpActionWeapon* PumpActionWeapon;
 	AActor* LastSeenEnemyActor;
 
-
+	UCommanderRecruit* bRecruitInfo;
 	ACommanderCharacter* Commander;
 
 	/** Keep track of time in seconds spent on the enemy. Resets after getting another enemy. */
@@ -52,6 +50,11 @@ private:
 	FTargetSearchParameters* TargetSearchParams;
 
 	float m_DelaTime;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		class UUtilityAIComponent* UtilityAIComponent;
+	class UCombatAction* CombatAction;
 
 	UAIMovementComponent* AIMovementComponent;
 
@@ -128,13 +131,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float GrenadeThrowTimeMax;
 
-	FTimerHandle THandler_ShootEnemy;
-	FTimerHandle THandler_EndFire;
 	FTimerHandle THandler_CommanderOrders;
-	FTimerHandle THandler_MountedGun;
 	FTimerHandle THandler_FindCover;
-	FTimerHandle THandler_BeginPeakCover;
-	FTimerHandle THandler_EndPeakCover;
 	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
 	FTimerHandle THandler_PatrolStart;
@@ -147,6 +145,12 @@ private:
 
 public:
 	ACombatAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	bool IsNearCommander();
+
+	bool IsNearCommander(FVector Location);
+
+	void SetBehaviourState(AIBehaviourState State);
 
 private:
 	void Init();
@@ -171,38 +175,17 @@ private:
 	UFUNCTION()
 		void OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams);
 
-	bool HasAssignedOrderEvent;
-
 	UFUNCTION()
 		void OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters);
 
 	virtual void OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams) override;
 
 
-	EPathFollowingRequestResult::Type MoveToTarget(float AcceptRadius, bool WalkNearTarget = true);
-
 	void UpdatCombatAlert();
-
-	void BeginCoverPeak();
-	void EndCoverPeak();
 
 	void UpdateLastSeen();
 
-	void ShootAtEnemy();
-
-	void ThrowGrenade();
-
-	bool CanThrowGrenade();
-
-	void EndFiring();
-
-	void ReloadWeapon();
-
-	void FindMountedGun();
-
 	void CheckCommanderOrder();
-
-	void MoveToCover();
 
 	void StartPatrol();
 
@@ -211,12 +194,6 @@ private:
 	void MoveToRandomPoint();
 
 	void MoveToNextPatrolPoint();
-
-	bool IsNearCommander();
-
-	bool IsNearCommander(FVector Location);
-
-	void SetBehaviourState(AIBehaviourState State);
 
 protected:
 	virtual void BeginPlay() override;
@@ -227,11 +204,39 @@ protected:
 
 
 public:
+	AIBehaviourState GetCurrentBehaviourState() { return CurrentBehaviourState; };
+
 	AActor* GetEnemyActor() {
 		return EnemyActor;
 	}
 
+	FVector GetTargetDestination() { return TargetDestination; }
+
 	void SetTargetDestination(FVector Destination) {
 		TargetDestination = Destination;
 	}
+
+	bool GetHasThrownGrenade() { return HasThrownGrenade; }
+
+	void SetHasThrownGrenade(bool Value) { HasThrownGrenade = Value; }
+
+	UAIMovementComponent* GetAIMovementComponent() { return AIMovementComponent; };
+
+
+	UMountedGunFinderComponent* GetMountedGunFinderComponent() { return MountedGunFinderComponent; }
+
+	UCoverFinderComponent* GetCoverFinderComponent() { return CoverFinderComponent; }
+
+	UStrongholdDefenderComponent* GetStrongholdDefenderComponent() { return StrongholdDefenderComponent; }
+
+
+	CommanderOrders GetCurrentCommand() { return CurrentCommand; };
+
+	ACommanderCharacter* GetCommander() { return Commander; };
+
+	float GetAcceptanceRadius() { return AcceptanceRadius; }
+
+	UCommanderRecruit* GetRecruitInfo() { return bRecruitInfo; }
+
+
 };

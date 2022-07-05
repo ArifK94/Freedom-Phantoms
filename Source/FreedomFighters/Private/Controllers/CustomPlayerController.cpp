@@ -549,7 +549,7 @@ void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 	// & not scavenged
 	if (Weapon && Weapon->GetOwner() == nullptr && !Weapon->GetIsScavenged())
 	{
-		float Amount = Weapon->getCurrentAmmo();
+		float Amount = Weapon->GetCurrentAmmo();
 		// replenish ammo if same weapon based on weapon name
 		if (OwningCombatCharacter->GetPrimaryWeapon() && OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponName() == Weapon->GetWeaponName())
 		{
