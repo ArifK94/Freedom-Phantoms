@@ -462,7 +462,7 @@ void ABaseCharacter::BeginSprint()
 {
 	if (isTakingCover)
 	{
-		isTakingCover = false;
+		StopCover();
 	}
 
 	if (GetCharacterMovement()->IsCrouching())
@@ -521,7 +521,7 @@ void ABaseCharacter::UpdateCharacterMovement()
 
 	if (IsSprintDefault)
 	{
-		if (IsCharacterMoving() && !GetCharacterMovement()->IsCrouching())
+		if (IsCharacterMoving() && !GetCharacterMovement()->IsCrouching() && !isTakingCover)
 		{
 			BeginSprint();
 		}
@@ -594,6 +594,15 @@ bool ABaseCharacter::IsCharacterMoving()
 	return Velocity > UKismetMathLibrary::Abs(1.f);
 }
 
+void ABaseCharacter::Jump()
+{
+	if (GetCharacterMovement()->IsCrouching() || isTakingCover) {
+		return;
+	}
+
+	Super::Jump();
+}
+
 void ABaseCharacter::SetFirstPersonView()
 {
 	IsFirstPersonView = true;
@@ -658,11 +667,11 @@ void ABaseCharacter::SetActorOutline(AActor* Actor, bool CanShow)
 
 void ABaseCharacter::TakeCover()
 {
-	if (isTakingCover)
+	if (isTakingCover) 
 	{
 		StopCover();
 	}
-	else
+	else 
 	{
 		FVector Start = GetActorLocation();
 		FVector End = (GetActorForwardVector() * CoverDistance) + Start;
@@ -696,20 +705,20 @@ void ABaseCharacter::StartCover(FHitResult OutHit)
 		GetActorLocation().Z
 	);
 
-	//FLatentActionInfo LatentInfo;
-	//LatentInfo.CallbackTarget = this;
+	FLatentActionInfo LatentInfo;
+	LatentInfo.CallbackTarget = this;
 
-	//UKismetSystemLibrary::MoveComponentTo(
-	//	GetCapsuleComponent(),
-	//	CoverFirstPos,
-	//	UKismetMathLibrary::MakeRotFromX(OutHit.Normal),
-	//	false,
-	//	false,
-	//	.2f,
-	//	false,
-	//	EMoveComponentAction::Type::Move,
-	//	LatentInfo
-	//);
+	UKismetSystemLibrary::MoveComponentTo(
+		GetCapsuleComponent(),
+		CoverFirstPos,
+		FRotator::ZeroRotator,
+		false,
+		false,
+		.2f,
+		false,
+		EMoveComponentAction::Type::Move,
+		LatentInfo
+	);
 
 	//SetActorLocation(CoverFirstPos);
 
@@ -717,7 +726,7 @@ void ABaseCharacter::StartCover(FHitResult OutHit)
 	GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
 	isTakingCover = true;
 }
 
@@ -742,7 +751,7 @@ void ABaseCharacter::CoverMovement(float Value)
 	FVector EndRight = WallDirection * CoverDistance + StartRight;
 	FHitResult OutHitRight;
 	bool LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitRight, StartRight, EndRight, COLLISION_COVER);
-	//DrawDebugLine(GetWorld(), StartRight, EndRight, FColor::Blue, false, 1, 0, 1);
+	DrawDebugLine(GetWorld(), StartRight, EndRight, FColor::Blue, false, 1, 0, 1);
 
 
 	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->GetPlaneConstraintNormal())) * GetCapsuleComponent()->GetScaledCapsuleRadius();
@@ -750,9 +759,11 @@ void ABaseCharacter::CoverMovement(float Value)
 	FVector EndLeft = WallDirection * CoverDistance + StartLeft;
 	FHitResult OutHitLeft;
 	bool LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
-	//DrawDebugLine(GetWorld(), StartLeft, EndLeft, FColor::Red, false, 1, 0, 1);
+	DrawDebugLine(GetWorld(), StartLeft, EndLeft, FColor::Red, false, 1, 0, 1);
 
 	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw));
+
+	// if can move left or right in cover.
 	if (LineTraceLeft && LineTraceRight)
 	{
 		FVector Start = GetActorLocation();
@@ -763,10 +774,11 @@ void ABaseCharacter::CoverMovement(float Value)
 
 		if (LineTrace)
 		{
-			//DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
+			DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
 
 			if (OutHit.bBlockingHit)
 			{
+				SetActorRotation(FRotator::ZeroRotator);
 				GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 				AddMovementInput(Dir, Value);
 
@@ -798,7 +810,7 @@ void ABaseCharacter::CoverMovement(float Value)
 		isAtCoverCorner = true;
 		isFacingCoverRHS = true;
 
-		SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
+		SetActorRotation(FRotator(0.0f, 90.0f, 0.0f));
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 
 	}
@@ -815,7 +827,7 @@ void ABaseCharacter::CoverMovement(float Value)
 		isAtCoverCorner = true;
 		isFacingCoverRHS = false;
 
-		SetActorRotation(FRotator(0.0f, 90.0f, 0.0f));
+		SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 	}
 }

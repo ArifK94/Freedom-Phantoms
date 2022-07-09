@@ -170,7 +170,7 @@ void ACombatAIController::Init()
 
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
-		//UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());

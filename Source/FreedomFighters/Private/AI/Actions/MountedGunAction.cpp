@@ -98,7 +98,6 @@ void UMountedGunAction::FindMountedGun()
 	auto MountedGunFinderComponent = CombatAIController->GetMountedGunFinderComponent();
 
 	auto SelectedMG = MountedGunFinderComponent->FindMG();
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Find MG"));
 
 	// if found an MG 
 	// & enemy is not behind the MG

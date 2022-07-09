@@ -294,6 +294,8 @@ public:
 
 	bool IsCharacterMoving();
 
+	virtual void Jump() override;
+
 	virtual void BeginAim();
 	virtual void EndAim();
 
