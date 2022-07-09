@@ -98,6 +98,7 @@ ABaseCharacter::ABaseCharacter()
 	AimCameraFOV = 50.0f;
 	AimCameraZoomSpeed = 20.0f;
 	CoverDistance = 150.0f;
+	CharacterDistanceFromCover = 50.f;
 
 	DestroyDelayTime = 10.f;
 
@@ -700,8 +701,8 @@ void ABaseCharacter::TakeCover()
 void ABaseCharacter::StartCover(FHitResult OutHit)
 {
 	FVector CoverFirstPos = FVector(
-		OutHit.ImpactPoint.X - (GetActorForwardVector().X * 50.0f),
-		OutHit.ImpactPoint.Y - (GetActorForwardVector().Y * 50.0f),
+		OutHit.ImpactPoint.X - (GetActorForwardVector().X * CharacterDistanceFromCover),
+		OutHit.ImpactPoint.Y - (GetActorForwardVector().Y * CharacterDistanceFromCover),
 		GetActorLocation().Z
 	);
 

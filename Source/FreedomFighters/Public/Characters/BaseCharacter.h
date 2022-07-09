@@ -151,6 +151,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverDistance;
 
+	/** How much distance should the character be from the cover wall?  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float CharacterDistanceFromCover;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsExitingVehicle;
 
