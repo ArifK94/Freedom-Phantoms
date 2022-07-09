@@ -16,10 +16,8 @@ float UMountedGunAction::Score(AAIController* Controller, APawn* Pawn)
 
 	if (OwningCombatCharacter->GetMountedGun() &&
 		!OwningCombatCharacter->IsReloading() &&
-		!OwningCombatCharacter->IsUsingMountedWeapon() &&
-		!SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor()) &&
-		CombatAIController->GetMountedGunFinderComponent()->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
-		
+		!OwningCombatCharacter->IsUsingMountedWeapon()) {
+
 		// Don't want AI to teleport to the MG, needs to be close enough to use it
 		auto DistanceToMG = FVector::Distance(OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos());
 
@@ -27,7 +25,7 @@ float UMountedGunAction::Score(AAIController* Controller, APawn* Pawn)
 			OwningCombatCharacter->UseMountedGun();
 		}
 
-		return 1.f;
+		return .9f;
 	}
 
 	return .8f;
@@ -49,7 +47,28 @@ bool UMountedGunAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	// if using an aircraft MG for instance, which should not be exited, no need to run this action
 	auto IsInVehicleMG = OwningCombatCharacter->GetMountedGun() && !OwningCombatCharacter->GetMountedGun()->GetCanExitMG();
 
-	return !IsInVehicleMG;
+	if (IsInVehicleMG) {
+		return false;
+	}
+
+	if (OwningCombatCharacter->GetMountedGun()) {
+
+		// enemy is behind MG?
+		if (SharedService::IsTargetBehind(OwningCombatCharacter->GetMountedGun(), CombatAIController->GetEnemyActor())) {
+			OwningCombatCharacter->DropMountedGun();
+			return false;
+		}
+
+		// Enemy is within MG range?
+		if (!CombatAIController->GetMountedGunFinderComponent()->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
+			OwningCombatCharacter->DropMountedGun();
+			return false;
+		}
+	}
+
+
+
+	return true;
 }
 
 void UMountedGunAction::Spawn(AAIController* Controller, APawn* Pawn)
@@ -58,16 +77,6 @@ void UMountedGunAction::Spawn(AAIController* Controller, APawn* Pawn)
 
 	CombatAIController = Cast<ACombatAIController>(Controller);
 	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
-void UMountedGunAction::Enter(AAIController* Controller, APawn* Pawn)
-{
-	Super::Enter(Controller, Pawn);
-}
-
-void UMountedGunAction::Exit(AAIController* Controller, APawn* Pawn)
-{
-	Super::Exit(Controller, Pawn);
 }
 
 void UMountedGunAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
@@ -86,48 +95,45 @@ void UMountedGunAction::FindMountedGun()
 {
 	auto EnemyActor = CombatAIController->GetEnemyActor();
 
-	bool CanFindMG = true;
-
 	auto MountedGunFinderComponent = CombatAIController->GetMountedGunFinderComponent();
 
-	if (!OwningCombatCharacter->GetMountedGun() && CanFindMG) {
+	auto SelectedMG = MountedGunFinderComponent->FindMG();
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Find MG"));
 
-		auto SelectedMG = MountedGunFinderComponent->FindMG();
+	// if found an MG 
+	// & enemy is not behind the MG
+	if (SelectedMG) {
+		bool IsMGValid = true;
+		// Check if AI has a ollow order, if it's defend or attack then the if statement should be ignored
+		// and commander is near the MG,
+		if (CombatAIController->GetCommander() &&
+			CombatAIController->GetCurrentCommand() == CommanderOrders::Follow &&
+			!CombatAIController->IsNearCommander(SelectedMG->GetCharacterStandPos())) {
+			IsMGValid = false;
+		}
 
-		// if found an MG 
-		// & enemy is not behind the MG
-		if (SelectedMG) {
-			bool IsMGValid = true;
-			// Check if AI has a ollow order, if it's defend or attack then the if statement should be ignored
-			// and commander is near the MG,
-			if (CombatAIController->GetCommander() && 
-				CombatAIController->GetCurrentCommand() == CommanderOrders::Follow && 
-				!CombatAIController->IsNearCommander(SelectedMG->GetCharacterStandPos())) {
+		if (EnemyActor && IsMGValid) {
+			bool IsInRange = MountedGunFinderComponent->IsInTargetRange(SelectedMG, EnemyActor, OwningCombatCharacter);
+
+			if (!IsInRange) {
 				IsMGValid = false;
 			}
-
-			if (EnemyActor && IsMGValid) {
-				bool IsInRange = MountedGunFinderComponent->IsInTargetRange(SelectedMG, EnemyActor, OwningCombatCharacter);
-
-				if (!IsInRange) {
-					IsMGValid = false;
-				}
-				else if (SharedService::IsTargetBehind(SelectedMG, EnemyActor)) {
-					IsMGValid = false;
-				}
+			else if (SharedService::IsTargetBehind(SelectedMG, EnemyActor)) {
+				IsMGValid = false;
 			}
-
-			if (IsMGValid) {
-
-				SelectedMG->SetPotentialOwner(OwningCombatCharacter);
-				OwningCombatCharacter->SetMountedGun(SelectedMG);
-
-				CombatAIController->SetTargetDestination(OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos());
-				CombatAIController->GetAIMovementComponent()->MoveToDestination(CombatAIController->GetTargetDestination(), .0f, AIBehaviourState::Normal, true, false);
-			}
-
 		}
+
+		if (IsMGValid) {
+
+			SelectedMG->SetPotentialOwner(OwningCombatCharacter);
+			OwningCombatCharacter->SetMountedGun(SelectedMG);
+
+			CombatAIController->SetTargetDestination(OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos());
+			CombatAIController->GetAIMovementComponent()->MoveToDestination(CombatAIController->GetTargetDestination(), .0f, AIBehaviourState::Normal, true, false);
+		}
+
 	}
+
 }
 
 void UMountedGunAction::MaintainMG()

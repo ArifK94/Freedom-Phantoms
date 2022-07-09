@@ -25,10 +25,6 @@ public:
 
 	virtual void Spawn(AAIController* Controller, APawn* Pawn) override;
 
-	virtual void Enter(AAIController* Controller, APawn* Pawn) override;
-
-	virtual void Exit(AAIController* Controller, APawn* Pawn) override;
-
 	virtual void Tick(float DeltaTime, AAIController* Controller, APawn* Pawn) override;
 
 private:
