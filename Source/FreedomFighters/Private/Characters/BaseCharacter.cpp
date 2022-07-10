@@ -61,13 +61,23 @@ ABaseCharacter::ABaseCharacter()
 	CameraBoom->CameraRotationLagSpeed = 50.0f;
 	CameraBoom->CameraLagMaxDistance = 10.0f;
 
-	AimCameraSpring = CreateDefaultSubobject<USpringArmComponent>(TEXT("AimCameraSpring"));
-	AimCameraSpring->SetupAttachment(GetMesh());
-	AimCameraSpring->bUsePawnControlRotation = true;
-	AimCameraSpring->TargetArmLength = 0.0f;
-	AimCameraSpring->SocketOffset.Set(0.0f, 0.0f, 0.0f);
-	AimCameraSpring->bEnableCameraLag = false;
-	AimCameraSpring->bEnableCameraRotationLag = false;
+	AimCameraRightSpring = CreateDefaultSubobject<USpringArmComponent>(TEXT("AimCameraRightSpring"));
+	AimCameraRightSpring->SetupAttachment(GetMesh());
+	AimCameraRightSpring->bUsePawnControlRotation = true;
+	AimCameraRightSpring->TargetArmLength = 100.f;
+	AimCameraRightSpring->SocketOffset.Set(0.0f, 45.f, 0.0f);
+	AimCameraRightSpring->bEnableCameraLag = false;
+	AimCameraRightSpring->bEnableCameraRotationLag = false;
+
+
+	AimCameraLeftSpring = CreateDefaultSubobject<USpringArmComponent>(TEXT("AimCameraLeftSpring"));
+	AimCameraLeftSpring->SetupAttachment(GetMesh());
+	AimCameraLeftSpring->bUsePawnControlRotation = true;
+	AimCameraLeftSpring->TargetArmLength = 100.f;
+	AimCameraLeftSpring->SocketOffset.Set(0.0f, -45.f, 0.0f);
+	AimCameraLeftSpring->bEnableCameraLag = false;
+	AimCameraLeftSpring->bEnableCameraRotationLag = false;
+
 
 	FirstPersonCameraSpring = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCameraSpring"));
 	FirstPersonCameraSpring->bUsePawnControlRotation = true;
@@ -110,6 +120,7 @@ ABaseCharacter::ABaseCharacter()
 
 	HeadSocket = "j_head";
 	RightHandSocket = "j_wrist_ri";
+	ShoulderLeftocket = "j_shoulder_le";
 	ShoulderRightSocket = "j_shoulder_ri";
 
 	CoverRotationLeftPitch = FVector2D(-10.0f, 10.0f);
@@ -140,7 +151,8 @@ void ABaseCharacter::BeginPlay()
 	DefaultCamSocketOffset = CameraBoom->SocketOffset;
 	DefaultCameraFOV = FollowCamera->FieldOfView;
 
-	AimCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderRightSocket);
+	AimCameraLeftSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderLeftocket);
+	AimCameraRightSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderRightSocket);
 	FirstPersonCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeadSocket);
 
 	InitTimeHandlers();
@@ -721,8 +733,6 @@ void ABaseCharacter::StartCover(FHitResult OutHit)
 		LatentInfo
 	);
 
-	//SetActorLocation(CoverFirstPos);
-
 	GetCharacterMovement()->SetPlaneConstraintEnabled(true);
 	GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -763,6 +773,7 @@ void ABaseCharacter::CoverMovement(float Value)
 	DrawDebugLine(GetWorld(), StartLeft, EndLeft, FColor::Red, false, 1, 0, 1);
 
 	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw));
+	LastCoverPosition = GetActorLocation();
 
 	// if can move left or right in cover.
 	if (LineTraceLeft && LineTraceRight)
@@ -811,7 +822,8 @@ void ABaseCharacter::CoverMovement(float Value)
 		isAtCoverCorner = true;
 		isFacingCoverRHS = true;
 
-		SetActorRotation(FRotator(0.0f, 90.0f, 0.0f));
+		LastCoverRotation = FRotator(0.0f, 90.0f, 0.0f);
+		SetActorRotation(LastCoverRotation);
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 
 	}
@@ -828,7 +840,8 @@ void ABaseCharacter::CoverMovement(float Value)
 		isAtCoverCorner = true;
 		isFacingCoverRHS = false;
 
-		SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
+		LastCoverRotation = FRotator(0.0f, -90.0f, 0.0f);
+		SetActorRotation(LastCoverRotation);
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 	}
 }
@@ -862,7 +875,17 @@ void ABaseCharacter::BeginAim()
 
 	if (isAiming && UseAimCameraSpring && !IsInVehicle)
 	{
-		FollowCamera->AttachToComponent(AimCameraSpring, FAttachmentTransformRules::KeepWorldTransform);
+		if (isTakingCover) {
+			if (isAtCoverCorner) {
+				if (isFacingCoverRHS) {
+					FollowCamera->AttachToComponent(AimCameraRightSpring, FAttachmentTransformRules::KeepWorldTransform);
+				}
+				else {
+					FollowCamera->AttachToComponent(AimCameraLeftSpring, FAttachmentTransformRules::KeepWorldTransform);
+				}
+			}
+		}
+
 
 		FLatentActionInfo LatentInfo;
 		LatentInfo.CallbackTarget = this;

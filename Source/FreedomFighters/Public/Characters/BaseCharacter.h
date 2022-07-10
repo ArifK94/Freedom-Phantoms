@@ -33,8 +33,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* CameraBoom;
 
+	/*
+	* Left shoulder spring arm.
+	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		USpringArmComponent* AimCameraSpring;
+		USpringArmComponent* AimCameraLeftSpring;
+
+	/*
+	* Right shoulder spring arm.
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		USpringArmComponent* AimCameraRightSpring;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		USpringArmComponent* FirstPersonCameraSpring;
@@ -88,6 +97,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName RightHandSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		FName ShoulderLeftocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ShoulderRightSocket;
@@ -154,6 +166,18 @@ protected:
 	/** How much distance should the character be from the cover wall?  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CharacterDistanceFromCover;
+
+	/**
+	* Last position when taking cover. This is to allow the character to move back last position after moving out of corner cover using root motion.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector LastCoverPosition;
+
+	/**
+	* Last rotation when taking cover. This is to allow the character to move back last position after moving out of corner cover using root motion.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FRotator LastCoverRotation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsExitingVehicle;
