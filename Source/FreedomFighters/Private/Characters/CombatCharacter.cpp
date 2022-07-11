@@ -703,6 +703,11 @@ void ACombatCharacter::EquipWeapon(AWeapon* Weapon)
 
 	EndFire();
 
+	// allowing player to aim while reloading in cover has a strange effect.
+	if (isTakingCover) {
+		EndAim();
+	}
+
 	UpdateCombatMode();
 
 	BeginWeaponSwap();

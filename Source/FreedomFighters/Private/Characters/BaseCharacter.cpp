@@ -775,9 +775,23 @@ void ABaseCharacter::CoverMovement(float Value)
 	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw));
 	LastCoverPosition = GetActorLocation();
 
+	// if no line cover found for both sides then assuming character is not in cover.
+	if (!LineTraceLeft && !LineTraceRight)
+	{
+		StopCover();
+	}
+
 	// if can move left or right in cover.
+	if (LineTraceLeft || LineTraceRight)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = false; // based on corner animation being used, set to false
+	}
+
+	// if has left & right points to move to.
 	if (LineTraceLeft && LineTraceRight)
 	{
+		isAtCoverCorner = false;
 		FVector Start = GetActorLocation();
 		FVector End = Start + ((GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f) * CoverDistance);
 		FHitResult OutHit;
@@ -786,29 +800,16 @@ void ABaseCharacter::CoverMovement(float Value)
 
 		if (LineTrace)
 		{
-			DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
-
 			if (OutHit.bBlockingHit)
 			{
+				DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
+
 				SetActorRotation(FRotator::ZeroRotator);
 				GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 				AddMovementInput(Dir, Value);
-
-				//FVector CoverFirstPos = FVector(
-				//	OutHit.ImpactPoint.X - (GetActorForwardVector().X / 100.0f),
-				//	OutHit.ImpactPoint.Y - (GetActorForwardVector().Y / 100.0f),
-				//	OutHit.ImpactPoint.Z- (GetActorForwardVector().Z / 100.0f)
-				//	);
-
-				//DrawDebugSphere(GetWorld(), CoverFirstPos, 10.0f, 20, FColor::Purple, false, 20.0f, 0, 2);
-
-				//SetActorLocation(CoverFirstPos);
-				//SetActorRotation(UKismetMathLibrary::MakeRotFromX(WallDirection));
 			}
 		}
-		isAtCoverCorner = false;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		bUseControllerRotationYaw = false;
+
 	}
 	else if (LineTraceLeft) // if reached right corner
 	{
@@ -817,8 +818,6 @@ void ABaseCharacter::CoverMovement(float Value)
 			AddMovementInput(Dir, Value);
 		}
 
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		bUseControllerRotationYaw = false; // based on corner animation being used, set to false
 		isAtCoverCorner = true;
 		isFacingCoverRHS = true;
 
@@ -835,8 +834,6 @@ void ABaseCharacter::CoverMovement(float Value)
 		}
 
 
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		bUseControllerRotationYaw = false; // based on corner animation being used, set to false
 		isAtCoverCorner = true;
 		isFacingCoverRHS = false;
 
