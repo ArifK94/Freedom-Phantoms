@@ -108,7 +108,6 @@ ABaseCharacter::ABaseCharacter()
 	AimCameraFOV = 50.0f;
 	AimCameraZoomSpeed = 20.0f;
 	CoverDistance = 150.0f;
-	CharacterDistanceFromCover = 50.f;
 
 	DestroyDelayTime = 10.f;
 
@@ -712,8 +711,8 @@ void ABaseCharacter::TakeCover()
 void ABaseCharacter::StartCover(FHitResult OutHit)
 {
 	FVector CoverFirstPos = FVector(
-		OutHit.ImpactPoint.X - (GetActorForwardVector().X * CharacterDistanceFromCover),
-		OutHit.ImpactPoint.Y - (GetActorForwardVector().Y * CharacterDistanceFromCover),
+		(OutHit.ImpactPoint.X - GetCapsuleComponent()->GetScaledCapsuleRadius()) - (GetActorForwardVector().X),
+		(OutHit.ImpactPoint.Y - GetCapsuleComponent()->GetScaledCapsuleRadius()) - (GetActorForwardVector().Y),
 		GetActorLocation().Z
 	);
 
@@ -825,8 +824,6 @@ void ABaseCharacter::CoverMovement(float Value)
 		LastCoverRotation.Roll = 0.f;
 		SetActorRotation(LastCoverRotation);
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("%s"), *UKismetMathLibrary::MakeRotFromZ(WallDirection).ToString()));
-
 	}
 	else if (LineTraceRight) // if reached left corner
 	{

@@ -164,10 +164,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverDistance;
 
-	/** How much distance should the character be from the cover wall?  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float CharacterDistanceFromCover;
-
 	/**
 	* Last position when taking cover. This is to allow the character to move back last position after moving out of corner cover using root motion.
 	*/
