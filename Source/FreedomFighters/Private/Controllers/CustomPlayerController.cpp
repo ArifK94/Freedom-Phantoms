@@ -787,6 +787,8 @@ void ACustomPlayerController::MoveForward(float Value)
 		return;
 	}
 
+	OwningCombatCharacter->SetForwardInputValue(Value);
+
 	if (Value == 0.0f) {
 		return;
 	}

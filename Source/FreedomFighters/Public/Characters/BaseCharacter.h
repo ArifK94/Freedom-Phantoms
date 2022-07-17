@@ -160,6 +160,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isCoveringLow;
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverDistance;
 
@@ -331,6 +332,12 @@ public:
 	void CoverMovement(float Value);
 	virtual void StopCover();
 
+	/**
+	* Can character peak up while in cover?
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool CanCoverPeakUp();
+
 	void SetVehicleSeat(FVehicletSeating Seat);
 	virtual void SetIsExitingVehicle(bool IsExiting);
 
@@ -435,9 +442,13 @@ public:
 
 	void SetIsReviving(bool Value);
 
-
+	
 	void SetRightInputValue(float Value) {
 		RightInputValue = Value;
+	}
+
+	void SetForwardInputValue(float Value) {
+		ForwardInputValue = Value;
 	}
 
 

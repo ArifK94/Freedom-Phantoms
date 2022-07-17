@@ -187,7 +187,6 @@ void ABaseCharacter::SetDefaultState()
 	UnCrouch();
 }
 
-
 void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 {
 	if (Seat.OwningVehicle)
@@ -793,7 +792,7 @@ void ABaseCharacter::CoverMovement(float Value)
 	{
 		isAtCoverCorner = false;
 		FVector Start = GetActorLocation();
-		FVector End = Start + ((GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f) * CoverDistance);
+		FVector End = Start + (WallDirection * CoverDistance);
 		FHitResult OutHit;
 
 		bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, COLLISION_COVER);
@@ -804,7 +803,7 @@ void ABaseCharacter::CoverMovement(float Value)
 			{
 				DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
 
-				SetActorRotation(FRotator::ZeroRotator);
+				SetActorRotation(UKismetMathLibrary::MakeRotFromX(OutHit.Normal * -1.f));
 				GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 				AddMovementInput(Dir, Value);
 			}
@@ -821,9 +820,12 @@ void ABaseCharacter::CoverMovement(float Value)
 		isAtCoverCorner = true;
 		isFacingCoverRHS = true;
 
-		LastCoverRotation = FRotator(0.0f, 90.0f, 0.0f);
+		LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(GetCharacterMovement()->GetPlaneConstraintNormal());
+		LastCoverRotation.Yaw += 180.f;
+		LastCoverRotation.Roll = 0.f;
 		SetActorRotation(LastCoverRotation);
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("%s"), *UKismetMathLibrary::MakeRotFromZ(WallDirection).ToString()));
 
 	}
 	else if (LineTraceRight) // if reached left corner
@@ -837,10 +839,40 @@ void ABaseCharacter::CoverMovement(float Value)
 		isAtCoverCorner = true;
 		isFacingCoverRHS = false;
 
-		LastCoverRotation = FRotator(0.0f, -90.0f, 0.0f);
+		LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(WallDirection);
+		LastCoverRotation.Yaw -= 180.f;
+		LastCoverRotation.Roll = 0.f;
 		SetActorRotation(LastCoverRotation);
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 	}
+}
+
+bool ABaseCharacter::CanCoverPeakUp()
+{
+	if (!isTakingCover) {
+		return false;
+	}
+
+	float Distance = 150.0f;
+
+
+	FVector WallDirection = GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f; // get direction towards the cover wall
+
+	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
+	FVector Start = GetActorLocation() + RightVector + FVector(0.0f, 0.0f, 50.0f);
+	FVector End = WallDirection * CoverDistance + Start;
+
+	FHitResult OutHit;
+	bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
+
+	if (LineTrace) {
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
+	}
+	else {
+		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
+	}
+
+	return !LineTrace;
 }
 
 
@@ -848,19 +880,7 @@ void ABaseCharacter::BeginAim()
 {
 	if (isTakingCover)
 	{
-		float Distance = 150.0f;
-		FVector Start = GetActorLocation() + FVector(0.0f, 0.0f, 100.0f);
-		FVector End = Start + (GetActorForwardVector() * Distance);
-
-		FHitResult OutHit;
-		bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
-		DrawDebugLine(GetWorld(), Start, End, FColor::Yellow, false, 1, 0, 1);
-
-		if (LineTrace)
-		{
-			isAiming = false;
-		}
-		else
+		if (CanCoverPeakUp())
 		{
 			isAiming = true;
 		}
