@@ -678,11 +678,11 @@ void ABaseCharacter::SetActorOutline(AActor* Actor, bool CanShow)
 
 void ABaseCharacter::TakeCover()
 {
-	if (isTakingCover) 
+	if (isTakingCover)
 	{
 		StopCover();
 	}
-	else 
+	else
 	{
 		FVector Start = GetActorLocation();
 		FVector End = (GetActorForwardVector() * CoverDistance) + Start;
@@ -710,11 +710,33 @@ void ABaseCharacter::TakeCover()
 
 void ABaseCharacter::StartCover(FHitResult OutHit)
 {
+	auto CoverGap = 5.f; // gap from cover point & character
+
+	auto ForwardPoint = UKismetMathLibrary::GetForwardVector(UKismetMathLibrary::MakeRotFromX((OutHit.ImpactPoint)));
+
+	auto DistanceX = (OutHit.ImpactPoint.X + GetCapsuleComponent()->GetScaledCapsuleRadius()) + ForwardPoint.X + CoverGap;
+
+	if (OutHit.ImpactNormal.X < 0) {
+		DistanceX = (OutHit.ImpactPoint.X - GetCapsuleComponent()->GetScaledCapsuleRadius()) - ForwardPoint.X - CoverGap;
+	}
+
+	auto DistanceY = (OutHit.ImpactPoint.Y + GetCapsuleComponent()->GetScaledCapsuleRadius()) + ForwardPoint.Y + CoverGap;
+
+	if (OutHit.ImpactNormal.Y < 0) {
+		DistanceY = (OutHit.ImpactPoint.Y - GetCapsuleComponent()->GetScaledCapsuleRadius()) - ForwardPoint.Y - CoverGap;
+	}
+
 	FVector CoverFirstPos = FVector(
-		(OutHit.ImpactPoint.X - GetCapsuleComponent()->GetScaledCapsuleRadius()) - (GetActorForwardVector().X),
-		(OutHit.ImpactPoint.Y - GetCapsuleComponent()->GetScaledCapsuleRadius()) - (GetActorForwardVector().Y),
+		DistanceX,
+		DistanceY,
 		GetActorLocation().Z
 	);
+
+	LastCoverPosition = CoverFirstPos;
+	LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal);
+	LastCoverRotation.Yaw += 90.f;
+	LastCoverRotation.Roll = 0.f;
+	LastCoverRotation.Pitch = 0.f;
 
 	FLatentActionInfo LatentInfo;
 	LatentInfo.CallbackTarget = this;
@@ -722,7 +744,7 @@ void ABaseCharacter::StartCover(FHitResult OutHit)
 	UKismetSystemLibrary::MoveComponentTo(
 		GetCapsuleComponent(),
 		CoverFirstPos,
-		FRotator::ZeroRotator,
+		LastCoverRotation,
 		false,
 		false,
 		.2f,
@@ -743,6 +765,7 @@ void ABaseCharacter::StopCover()
 {
 	GetCharacterMovement()->SetPlaneConstraintEnabled(false);
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+
 	bUseControllerRotationYaw = false;
 	isTakingCover = false;
 	isAtCoverCorner = false;
@@ -770,7 +793,7 @@ void ABaseCharacter::CoverMovement(float Value)
 	bool LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
 	//DrawDebugLine(GetWorld(), StartLeft, EndLeft, FColor::Red, false, 1, 0, 1);
 
-	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw));
+	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw + 5.f));
 	LastCoverPosition = GetActorLocation();
 
 	// if no line cover found for both sides then assuming character is not in cover.
@@ -790,20 +813,20 @@ void ABaseCharacter::CoverMovement(float Value)
 	if (LineTraceLeft && LineTraceRight)
 	{
 		isAtCoverCorner = false;
+
 		FVector Start = GetActorLocation();
 		FVector End = Start + (WallDirection * CoverDistance);
 		FHitResult OutHit;
 
 		bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, COLLISION_COVER);
 
-		if (LineTrace)
+		if (LineTrace && OutHit.bBlockingHit)
 		{
-			if (OutHit.bBlockingHit)
-			{
-				SetActorRotation(UKismetMathLibrary::MakeRotFromX(OutHit.Normal * -1.f));
-				GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
-				AddMovementInput(Dir, Value);
-			}
+			DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 100, 0, 1);
+
+			SetActorRotation(UKismetMathLibrary::MakeRotFromX(OutHit.Normal * -1.f));
+			GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
+			AddMovementInput(Dir, Value);
 		}
 
 	}
@@ -820,6 +843,7 @@ void ABaseCharacter::CoverMovement(float Value)
 		LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(GetCharacterMovement()->GetPlaneConstraintNormal());
 		LastCoverRotation.Yaw += 180.f;
 		LastCoverRotation.Roll = 0.f;
+		LastCoverRotation.Pitch = 0.f;
 		SetActorRotation(LastCoverRotation);
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 	}
@@ -836,8 +860,33 @@ void ABaseCharacter::CoverMovement(float Value)
 		LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(WallDirection);
 		LastCoverRotation.Yaw -= 180.f;
 		LastCoverRotation.Roll = 0.f;
+		LastCoverRotation.Pitch = 0.f;
 		SetActorRotation(LastCoverRotation);
 		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+	}
+}
+
+bool ABaseCharacter::CanAim()
+{
+	if (isTakingCover)
+	{
+		if (isAtCoverCorner)
+		{
+			return true;
+		}
+		else
+		{
+			if (CanCoverPeakUp()) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	else
+	{
+		return true;
 	}
 }
 
@@ -865,27 +914,15 @@ bool ABaseCharacter::CanCoverPeakUp()
 
 void ABaseCharacter::BeginAim()
 {
-	if (isTakingCover)
-	{
-		if (isAtCoverCorner)
-		{
-			isAiming = true;
-		}
-		else
-		{
-			if (CanCoverPeakUp())
-			{
-				isAiming = true;
-			}
-		}
+	if (!CanAim()) {
+		return;
 	}
-	else
-	{
-		isAiming = true;
-	}
+
+	isAiming = true;
 
 	if (isAiming && UseAimCameraSpring && !IsInVehicle)
 	{
+		// switch between camera angles based on which side of the cover the character is using. (left or right cover)
 		if (isTakingCover) {
 			if (isAtCoverCorner) {
 				if (isFacingCoverRHS) {

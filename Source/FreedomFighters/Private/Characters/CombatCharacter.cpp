@@ -944,6 +944,11 @@ void ACombatCharacter::BeginFire()
 		}
 	}
 
+	// can shoot from cover?
+	if (isTakingCover && !isAtCoverCorner && !CanCoverPeakUp()) {
+		return;
+	}
+
 	// do fire if no throwables available
 	if (Cast<AThrowableWeapon>(currentWeaponObj)) {
 		if (!currentWeaponObj->CanFireWeapon()) {

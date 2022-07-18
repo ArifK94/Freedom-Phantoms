@@ -328,6 +328,13 @@ public:
 	void CoverMovement(float Value);
 	virtual void StopCover();
 
+
+	/**
+	* Can character aim based on current state eg. while taking cover or crouching etc.
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool CanAim();
+
 	/**
 	* Can character peak up while in cover?
 	*/
