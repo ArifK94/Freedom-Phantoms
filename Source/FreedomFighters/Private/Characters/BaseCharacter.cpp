@@ -783,17 +783,14 @@ void ABaseCharacter::CoverMovement(float Value)
 	FVector EndRight = WallDirection * CoverDistance + StartRight;
 	FHitResult OutHitRight;
 	bool LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitRight, StartRight, EndRight, COLLISION_COVER);
-	//DrawDebugLine(GetWorld(), StartRight, EndRight, FColor::Blue, false, 1, 0, 1);
-
 
 	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->GetPlaneConstraintNormal())) * GetCapsuleComponent()->GetScaledCapsuleRadius();
 	FVector StartLeft = GetActorLocation() + LeftVector;
 	FVector EndLeft = WallDirection * CoverDistance + StartLeft;
 	FHitResult OutHitLeft;
 	bool LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
-	//DrawDebugLine(GetWorld(), StartLeft, EndLeft, FColor::Red, false, 1, 0, 1);
 
-	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw + 5.f));
+	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw));
 	LastCoverPosition = GetActorLocation();
 
 	// if no line cover found for both sides then assuming character is not in cover.
@@ -822,8 +819,6 @@ void ABaseCharacter::CoverMovement(float Value)
 
 		if (LineTrace && OutHit.bBlockingHit)
 		{
-			DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 100, 0, 1);
-
 			SetActorRotation(UKismetMathLibrary::MakeRotFromX(OutHit.Normal * -1.f));
 			GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 			AddMovementInput(Dir, Value);
