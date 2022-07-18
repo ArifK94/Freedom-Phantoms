@@ -760,7 +760,7 @@ void ABaseCharacter::CoverMovement(float Value)
 	FVector EndRight = WallDirection * CoverDistance + StartRight;
 	FHitResult OutHitRight;
 	bool LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitRight, StartRight, EndRight, COLLISION_COVER);
-	DrawDebugLine(GetWorld(), StartRight, EndRight, FColor::Blue, false, 1, 0, 1);
+	//DrawDebugLine(GetWorld(), StartRight, EndRight, FColor::Blue, false, 1, 0, 1);
 
 
 	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->GetPlaneConstraintNormal())) * GetCapsuleComponent()->GetScaledCapsuleRadius();
@@ -768,7 +768,7 @@ void ABaseCharacter::CoverMovement(float Value)
 	FVector EndLeft = WallDirection * CoverDistance + StartLeft;
 	FHitResult OutHitLeft;
 	bool LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
-	DrawDebugLine(GetWorld(), StartLeft, EndLeft, FColor::Red, false, 1, 0, 1);
+	//DrawDebugLine(GetWorld(), StartLeft, EndLeft, FColor::Red, false, 1, 0, 1);
 
 	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw));
 	LastCoverPosition = GetActorLocation();
@@ -800,8 +800,6 @@ void ABaseCharacter::CoverMovement(float Value)
 		{
 			if (OutHit.bBlockingHit)
 			{
-				DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
-
 				SetActorRotation(UKismetMathLibrary::MakeRotFromX(OutHit.Normal * -1.f));
 				GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 				AddMovementInput(Dir, Value);
@@ -832,7 +830,6 @@ void ABaseCharacter::CoverMovement(float Value)
 			AddMovementInput(Dir, Value);
 		}
 
-
 		isAtCoverCorner = true;
 		isFacingCoverRHS = false;
 
@@ -862,13 +859,6 @@ bool ABaseCharacter::CanCoverPeakUp()
 	FHitResult OutHit;
 	bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
 
-	if (LineTrace) {
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
-	}
-	else {
-		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
-	}
-
 	return !LineTrace;
 }
 
@@ -877,9 +867,16 @@ void ABaseCharacter::BeginAim()
 {
 	if (isTakingCover)
 	{
-		if (CanCoverPeakUp())
+		if (isAtCoverCorner)
 		{
 			isAiming = true;
+		}
+		else
+		{
+			if (CanCoverPeakUp())
+			{
+				isAiming = true;
+			}
 		}
 	}
 	else
