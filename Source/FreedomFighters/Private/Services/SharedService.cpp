@@ -107,6 +107,11 @@ bool SharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
 
 bool SharedService::IsNearTargetPosition(FVector Start, FVector Location, float Radius)
 {
+	// if zero, then this is assumed a target destination has not been set, therefore it is near target.
+	if (Location.IsZero()) {
+		return true;
+	}
+
 	if (FVector::Distance(Start, Location) <= Radius) {
 		return true;
 	}

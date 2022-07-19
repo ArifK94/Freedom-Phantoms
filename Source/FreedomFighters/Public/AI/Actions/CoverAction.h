@@ -19,9 +19,13 @@ private:
 	class ACombatCharacter* OwningCombatCharacter;
 
 	bool CoverFound;
-	bool IsCoverValid;
 
 	FVector CoverLocation;
+
+	float PeakCountdown;
+
+	FTimerHandle THandler_Peaking;
+	FTimerHandle THandler_EndPeaking;
 
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
@@ -40,8 +44,6 @@ private:
 	void FindCover();
 
 	void TakeCover();
-
-	void Peak();
 
 	void BeginCoverPeak();
 

@@ -7,24 +7,26 @@
 #include "CoverFinderComponent.generated.h"
 
 
-class AGameModeManager;
-
-class USphereComponent;
-
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMFIGHTERS_API UCoverFinderComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 private:
-	AGameModeManager* GameModeManager;
+	class AGameModeManager* GameModeManager;
+	class AController* Controller;
+	class APawn* Pawn;
 
-	//USphereComponent* CoverSphere;
+	//class USphereComponent* CoverSphere;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int NumberOfCoverTraces;
 
+	/**
+	* The length og the line trace to find cover.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float CoverLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverRadius;
@@ -32,7 +34,13 @@ private:
 public:	
 	UCoverFinderComponent();
 
-	FVector FindCover(FVector StartLocation);
+	bool FindCover(FVector StartLocation, FVector& ChosenCoverPoint);
+
+	/**
+	* Find cover around target actor.
+	*/
+	bool FindCover(AActor* TargetActor, FVector& ChosenCoverPoint);
+
 
 	FVector GetClosestCoverPoint(TArray<FVector> CoverLocationPoints);
 
