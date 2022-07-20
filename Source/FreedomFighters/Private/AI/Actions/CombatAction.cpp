@@ -39,11 +39,6 @@ void UCombatAction::Spawn(AAIController* Controller, APawn* Pawn)
 	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
 }
 
-void UCombatAction::Enter(AAIController* Controller, APawn* Pawn)
-{
-	Super::Enter(Controller, Pawn);
-}
-
 void UCombatAction::Exit(AAIController* Controller, APawn* Pawn)
 {
 	Super::Exit(Controller, Pawn);
@@ -81,8 +76,8 @@ void UCombatAction::FaceTarget()
 		}
 		else
 		{
-			//CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
-			CombatAIController->SetFocalPoint(CombatAIController->GetTargetSearchParams()->TargetLocation);
+			CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
+			//CombatAIController->SetFocalPoint(CombatAIController->GetTargetSearchParams()->TargetLocation);
 		}
 	}
 	else
@@ -111,17 +106,21 @@ void UCombatAction::CombatMode()
 	}
 	else {
 
-		if (CanThrowGrenade()) {
-			if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
-				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
-			}
-			else {
-				ThrowGrenade();
-			}
+		if (!THandler_Shoot.IsValid()) {
+			OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_Shoot, this, &UCombatAction::ShootAtEnemy, 1.f, true);
 		}
-		else {
-			ShootAtEnemy();
-		}
+
+		//if (CanThrowGrenade()) {
+		//	if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
+		//		OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
+		//	}
+		//	else {
+		//		ThrowGrenade();
+		//	}
+		//}
+		//else {
+		//	ShootAtEnemy();
+		//}
 	}
 }
 
@@ -132,8 +131,6 @@ void UCombatAction::ShootAtEnemy()
 	if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
 		OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
 	}
-
-
 
 	// check if enemy distance is close, if so then pull out pistol
 	float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
@@ -164,6 +161,19 @@ void UCombatAction::ShootAtEnemy()
 		}
 	}
 
+	// cooldown the shooting
+	if (!THandler_EndShooting.IsValid()) {
+		OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndShooting, this, &UCombatAction::EndShooting, 1.f, true, FMath::RandRange(2.f, 3.f));
+	}
+
+}
+
+void UCombatAction::EndShooting()
+{
+	OwningCombatCharacter->EndFire();
+
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Shoot);
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndShooting);
 }
 
 void UCombatAction::ThrowGrenade()
