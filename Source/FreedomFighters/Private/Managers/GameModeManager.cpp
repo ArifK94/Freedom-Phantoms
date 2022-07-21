@@ -1,5 +1,6 @@
 #include "Managers/GameModeManager.h"
 #include "Managers/LevelManager.h"
+#include "CustomComponents/HealthComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -29,20 +30,34 @@ bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 		{
 			FVector CoverPoint = CoverPoints[i].Location;
 
-			if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 2.0f))
-			{
-				DuplicateAmount++;
-			}
+			//if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 2.0f))
+			//{
+			//	DuplicateAmount++;
+			//}
 
-			if (DuplicateAmount > 0)
-			{
-				return true;
-			}
+			//if (DuplicateAmount > 0)
+			//{
+			//	return true;
+			//}
 
 
-			if (CoverLocation.Owner != CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 15.0f)) 
+			// is there a cover location close to this point?
+			if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 5.f)) 
 			{
-				return true;
+				// is the cover point assigned to a different?
+				if (CoverLocation.Owner != CoverPoints[i].Owner) 
+				{
+					// Owner is no longer alive?
+					if (!UHealthComponent::IsAlive(CoverPoints[i].Owner)) {
+
+						// update the owner to this new owner.
+						CoverPoints[i].Owner = CoverLocation.Owner;
+						return false;
+					}
+
+					// if existing owner is still alive then point is taken.
+					return true;
+				}
 			}
 		}
 	}

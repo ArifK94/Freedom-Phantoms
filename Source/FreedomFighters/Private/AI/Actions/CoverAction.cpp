@@ -54,27 +54,36 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 
 	if (OwningCombatCharacter->IsTakingCover()) {
 
-		if (!THandler_Peaking.IsValid()) {
-			OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_Peaking, this, &UCoverAction::BeginCoverPeak, 1.f, true, FMath::RandRange(2.f, 5.f));
+		if (SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
+			OwningCombatCharacter->StopCover();
+		}
+		else {
+			if (!THandler_Peaking.IsValid()) {
+				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_Peaking, this, &UCoverAction::BeginCoverPeak, 1.f, true, FMath::RandRange(2.f, 5.f));
+			}
 		}
 	}
 	else if (!CoverFound) {
 		FindCover();
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Searching for Cover!"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Searching for Cover!"));
 	}
 	else if (CoverFound) {
 
 		if (CombatAIController->GetCoverFinderComponent()->IsCoverPointTaken(CoverLocation)) {
 			CoverFound = false;
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("Cover Invalid!"));
+			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Cover Taken!"));
 		}
-		else if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CoverLocation, 10.f)) {
+		else if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CoverLocation, 50.f)) {
 			TakeCover();
+			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Take Cover!"));
 		}
 		else {
 			CombatAIController->GetAIMovementComponent()->MoveToDestination(CoverLocation, .0f, AIBehaviourState::PriorityOrdersCommander);
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, TEXT("Moving to Cover!"));
+			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, TEXT("Moving to Cover!"));
 		}
+
+		DrawDebugSphere(GetWorld(), CoverLocation, 20.f, 1.f, FColor::Orange, false, 1.f, 0, 2);
+
 	}
 }
 
@@ -82,16 +91,16 @@ void UCoverAction::FindCover()
 {
 	auto TargetLocation = OwningCombatCharacter->GetActorLocation();
 
-	if (CombatAIController->GetEnemyActor()) {
-		TargetLocation = CombatAIController->GetEnemyActor()->GetActorLocation();
-	}
+	//if (CombatAIController->GetEnemyActor()) {
+	//	TargetLocation = CombatAIController->GetEnemyActor()->GetActorLocation();
+	//}
 
-	FVector ChosenCoverPoint;
-	bool HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(TargetLocation, ChosenCoverPoint);
+	bool HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(TargetLocation, CoverLocation);
 
 	if (HasCoverPoint) {
-		CombatAIController->SetTargetDestination(ChosenCoverPoint);
+		CombatAIController->SetTargetDestination(CoverLocation);
 		CoverFound = true;
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Cover Found!"));
 	}
 
 }
@@ -110,6 +119,9 @@ void UCoverAction::BeginCoverPeak()
 	// randomly choose whether to peak or aim from cover.
 	bool ShouldAim = UKismetMathLibrary::RandomBool();
 
+	if (CombatAIController->GetEnemyActor()) {
+		ShouldAim = true;
+	}
 
 	if (OwningCombatCharacter->CanCoverPeakUp()) {
 
@@ -125,8 +137,6 @@ void UCoverAction::BeginCoverPeak()
 				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndPeaking, this, &UCoverAction::EndCoverPeak, 1.f, true, FMath::RandRange(2.f, 5.f));
 			}
 		}
-
-
 	}
 }
 
@@ -135,8 +145,8 @@ void UCoverAction::EndCoverPeak()
 	OwningCombatCharacter->SetForwardInputValue(.0f);
 	OwningCombatCharacter->SetRightInputValue(.0f);
 
-	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndPeaking);
-	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
-
 	OwningCombatCharacter->EndAim();
+
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndPeaking);
 }

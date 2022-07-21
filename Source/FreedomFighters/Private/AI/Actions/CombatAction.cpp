@@ -59,7 +59,7 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 		CombatMode();
 	}
 	else {
-		OwningCombatCharacter->EndFire();
+		EndShooting();
 	}
 
 	FaceTarget();
@@ -97,7 +97,7 @@ void UCombatAction::CombatMode()
 	}
 
 	// can only aim if not sprinting.
-	if (!OwningCombatCharacter->IsSprinting()) {
+	if (!OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsAiming()) {
 		OwningCombatCharacter->BeginAim();
 	}
 
@@ -163,7 +163,7 @@ void UCombatAction::ShootAtEnemy()
 
 	// cooldown the shooting
 	if (!THandler_EndShooting.IsValid()) {
-		OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndShooting, this, &UCombatAction::EndShooting, 1.f, true, FMath::RandRange(2.f, 3.f));
+		OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndShooting, this, &UCombatAction::EndShooting, 1.f, true, FMath::RandRange(1.f, 2.f));
 	}
 
 }

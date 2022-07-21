@@ -47,14 +47,7 @@ bool UCoverFinderComponent::FindCover(FVector StartLocation, FVector& ChosenCove
 
 	TArray<FVector> CoverLocationPoints;
 
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(Pawn);
-	QueryParams.bTraceComplex = true;
-
-	FCollisionObjectQueryParams ObjectParams;
-	ObjectParams.AllObjects;
-
-	float factor = 360.0f / NumberOfCoverTraces;
+	float factor = 360.f / NumberOfCoverTraces;
 
 	// 360 degrees line trace around character
 	for (int i = 0; i < NumberOfCoverTraces; i++)
@@ -69,58 +62,39 @@ bool UCoverFinderComponent::FindCover(FVector StartLocation, FVector& ChosenCove
 		const FQuat CharacterTopRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, i * factor).Quaternion();
 		FVector Foward = UKismetMathLibrary::Quat_RotateVector(CharacterTopRotation, FVector(1.0f, 0.0f, 0.0f));
 
-		FVector Start = (Foward * CoverLength) + NavLocation.Location;
+		FVector Start = NavLocation.Location;
+		FVector End = (Foward * CoverLength) + Start;
 
 		FHitResult HitResult;
-		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, NavLocation.Location, COLLISION_COVER, QueryParams);
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, COLLISION_COVER);
 
-
-		//DrawDebugLine(GetWorld(), Start, NavLocation.Location, FColor::Emerald, true, 5.0f, 0, 1.0f);
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Cyan, true, 5.0f, 0, 1.0f);
 
 		// get all hit results which hit an obstacle
 		if (!bHit) {
 			continue;
 		}
 
-		//FVector LocationPoint = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
-		FVector LocationPoint = HitResult.ImpactPoint;
+		// add 50.f to to allow the destination to be reachable on the navmesh 
+		FVector LocationPoint = HitResult.ImpactPoint + 50.f;
 
+		DrawDebugSphere(GetWorld(), LocationPoint, 5.f, 10.f, FColor::Red, false, 10.f, 0, 2);
+
+		if (LocationPoint.IsZero()) {
+			continue;
+		}
+
+		// has this location already been added to the list?
 		if (CoverLocationPoints.Contains(LocationPoint)) {
 			continue;
 		}
 
-		//DrawDebugLine(GetWorld(), Start, LocationPoint, FColor::Magenta, true, 50.0f, 0, 1.0f);
-
+		// is the cover point taken by someone else?
 		if (IsCoverPointTaken(LocationPoint)) {
 			continue;
 		}
 
-		bool CanSeeTarget = false;
-		float directionValue = FVector::DotProduct(LocationPoint, Pawn->GetActorLocation());
-
-		float Offset = 50.0f;
-		FHitResult HitTargetResult2, HitTargetResult3;
-		bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationPoint + FVector(0.0f, Offset, 0.0f), Pawn->GetActorLocation(), ObjectParams, QueryParams);
-		bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationPoint + FVector(0.0f, 0.0f, Offset), Pawn->GetActorLocation(), ObjectParams, QueryParams);
-
-		//if (bTargetHit2)
-		//{
-		//	if (Cast<ACombatCharacter>(HitTargetResult2.GetActor()))
-		//	{
-		//		CanSeeTarget = true;
-		//	}
-		//}
-
-		//if (bTargetHit3)
-		//{
-		//	if (Cast<ACombatCharacter>(HitTargetResult3.GetActor()))
-		//	{
-		//		CanSeeTarget = true;
-		//	}
-		//}
-
 		CoverLocationPoints.Add(LocationPoint);
-		//DrawDebugSphere(GetWorld(), LocationPoint, CoverRadius, 2, FColor::Purple, false, 100.f, 0, 2);
 	}
 
 
@@ -168,17 +142,53 @@ bool UCoverFinderComponent::FindCover(FVector StartLocation, FVector& ChosenCove
 		if (!PointLocation.IsZero())
 		{
 			ChosenCoverPoint = PointLocation;
-
-			DrawDebugSphere(GetWorld(), ChosenCoverPoint, 20.f, 2, FColor::Purple, false, 1.f, 0, 2);
 		}
 	}
 
-	return ChosenCoverPoint.IsZero() ? false : true;
+	return !ChosenCoverPoint.IsZero();
+}
+
+bool UCoverFinderComponent::FindCover(AActor* TargetActor, FVector& ChosenCoverPoint)
+{
+	//FVector LocationPoint = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
+
+	//FCollisionQueryParams QueryParams;
+	//QueryParams.AddIgnoredActor(Pawn);
+	//QueryParams.bTraceComplex = true;
+
+	//FCollisionObjectQueryParams ObjectParams;
+	//ObjectParams.AllObjects;
+
+	//bool CanSeeTarget = false;
+	//float directionValue = FVector::DotProduct(LocationPoint, Pawn->GetActorLocation());
+
+	//float Offset = 50.0f;
+	//FHitResult HitTargetResult2, HitTargetResult3;
+	//bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationPoint + FVector(0.0f, Offset, 0.0f), Pawn->GetActorLocation(), ObjectParams, QueryParams);
+	//bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationPoint + FVector(0.0f, 0.0f, Offset), Pawn->GetActorLocation(), ObjectParams, QueryParams);
+
+	//if (bTargetHit2)
+	//{
+	//	if (Cast<ACombatCharacter>(HitTargetResult2.GetActor()))
+	//	{
+	//		CanSeeTarget = true;
+	//	}
+	//}
+
+	//if (bTargetHit3)
+	//{
+	//	if (Cast<ACombatCharacter>(HitTargetResult3.GetActor()))
+	//	{
+	//		CanSeeTarget = true;
+	//	}
+	//}
+
+	return false;
 }
 
 FVector UCoverFinderComponent::GetClosestCoverPoint(TArray<FVector> CoverLocationPoints)
 {
-	FVector ClosestPoint;
+	FVector ClosestPoint = FVector::ZeroVector;
 	float minDist = CoverRadius;
 
 	for (int i = 0; i < CoverLocationPoints.Num(); i++)
@@ -187,11 +197,16 @@ FVector UCoverFinderComponent::GetClosestCoverPoint(TArray<FVector> CoverLocatio
 
 		float Distance = FVector::Dist(Pawn->GetActorLocation(), Point);
 
-		if (Distance < minDist)
+		if (Distance < minDist || ClosestPoint.IsZero())
 		{
 			ClosestPoint = Point;
 			minDist = Distance;
 		}
+	}
+
+	// ignore origin location
+	if (ClosestPoint.IsZero()) {
+		return ClosestPoint;
 	}
 
 	// update current cover point, 
