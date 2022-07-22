@@ -54,8 +54,16 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 
 	if (OwningCombatCharacter->IsTakingCover()) {
 
-		if (SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
+		// is the enemy behind the NPC?
+		// can the enemy see the cover point?
+		// stop using this cover & search for another cover point.
+		if (SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor(), -1.f) ||
+			SharedService::CanSeeTarget(GetWorld(), CoverLocation, CombatAIController->GetEnemyActor(), OwningCombatCharacter)) {
+
 			OwningCombatCharacter->StopCover();
+			CoverFound = false;
+
+			OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
 		}
 		else {
 			if (!THandler_Peaking.IsValid()) {
@@ -65,6 +73,7 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 	}
 	else if (!CoverFound) {
 		FindCover();
+		MoveToResult = EPathFollowingRequestResult::Failed;
 		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Searching for Cover!"));
 	}
 	else if (CoverFound) {
@@ -73,12 +82,12 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 			CoverFound = false;
 			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Cover Taken!"));
 		}
-		else if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CoverLocation, 50.f)) {
+		else if (MoveToResult == EPathFollowingRequestResult::AlreadyAtGoal) {
 			TakeCover();
 			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Take Cover!"));
 		}
 		else {
-			CombatAIController->GetAIMovementComponent()->MoveToDestination(CoverLocation, .0f, AIBehaviourState::PriorityOrdersCommander);
+			MoveToResult = CombatAIController->GetAIMovementComponent()->MoveToDestination(CoverLocation, 10.f, AIBehaviourState::PriorityOrdersCommander);
 			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, TEXT("Moving to Cover!"));
 		}
 
@@ -89,35 +98,46 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 
 void UCoverAction::FindCover()
 {
-	auto TargetLocation = OwningCombatCharacter->GetActorLocation();
+	// find a random cover point in range.
+	bool HasCoverPoint = false;
 
-	//if (CombatAIController->GetEnemyActor()) {
-	//	TargetLocation = CombatAIController->GetEnemyActor()->GetActorLocation();
-	//}
+	// find a cover point around enemy.
+	if (CombatAIController->GetEnemyActor()) {
+		HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(CombatAIController->GetEnemyActor(), CoverLocation);
+	}
+	else {
+		HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(OwningCombatCharacter->GetActorLocation(), CoverLocation);
+	}
 
-	bool HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(TargetLocation, CoverLocation);
-
+	// is there a cover point to go to?
 	if (HasCoverPoint) {
 		CombatAIController->SetTargetDestination(CoverLocation);
 		CoverFound = true;
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Cover Found!"));
 	}
 
 }
 
 void UCoverAction::TakeCover()
 {
-	if (!OwningCombatCharacter->IsTakingCover()) {
-		OwningCombatCharacter->TakeCover();
-
-		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
+	if (OwningCombatCharacter->IsTakingCover()) {
+		return;
 	}
+
+	// need to face cover point for the cover to take place.
+	//OwningCombatCharacter->SetActorRotation(
+	//	UKismetMathLibrary::FindLookAtRotation(OwningCombatCharacter->GetActorLocation(), CoverLocation));
+
+
+	OwningCombatCharacter->TakeCover();
 }
 
 void UCoverAction::BeginCoverPeak()
 {
 	// randomly choose whether to peak or aim from cover.
 	bool ShouldAim = UKismetMathLibrary::RandomBool();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, TEXT("Peak!"));
+
 
 	if (CombatAIController->GetEnemyActor()) {
 		ShouldAim = true;

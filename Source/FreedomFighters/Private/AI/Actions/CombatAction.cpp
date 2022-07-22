@@ -76,8 +76,8 @@ void UCombatAction::FaceTarget()
 		}
 		else
 		{
-			CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
-			//CombatAIController->SetFocalPoint(CombatAIController->GetTargetSearchParams()->TargetLocation);
+			//CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
+			CombatAIController->SetFocalPoint(CombatAIController->GetTargetSearchParams()->TargetLocation);
 		}
 	}
 	else
@@ -97,7 +97,7 @@ void UCombatAction::CombatMode()
 	}
 
 	// can only aim if not sprinting.
-	if (!OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsAiming()) {
+	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading()) {
 		OwningCombatCharacter->BeginAim();
 	}
 
@@ -127,6 +127,10 @@ void UCombatAction::CombatMode()
 void UCombatAction::ShootAtEnemy()
 {
 	auto EnemyActor = CombatAIController->GetEnemyActor();
+
+	if (EnemyActor == nullptr) {
+		return;
+	}
 
 	if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
 		OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
@@ -201,6 +205,8 @@ bool UCombatAction::CanThrowGrenade()
 
 void UCombatAction::ReloadWeapon()
 {
+	OwningCombatCharacter->EndAim();
+
 	// check if enemy distance is close, if so then pull out pistol
 	float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetEnemyActor()->GetActorLocation());
 	float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);

@@ -24,6 +24,8 @@ private:
 
 	float PeakCountdown;
 
+	EPathFollowingRequestResult::Type MoveToResult;
+
 	FTimerHandle THandler_Peaking;
 	FTimerHandle THandler_EndPeaking;
 

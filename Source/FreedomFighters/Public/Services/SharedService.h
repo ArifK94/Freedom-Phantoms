@@ -22,11 +22,16 @@ public:
 	/**
 	* Check if TargetActor is behind ActorA
 	*/
-	static bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
+	static bool IsTargetBehind(AActor* ActorA, AActor* TargetActor, float Amount = -.7f);
 
 	/**
 	* Is an actor near a location?
 	* Radius is how many far apart should be considered nearby to the location.
 	*/
 	static bool IsNearTargetPosition(FVector Start, FVector Location, float Radius);
+
+	/**
+	* Can the target actor been seen from a position?
+	*/
+	static bool CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner);
 };

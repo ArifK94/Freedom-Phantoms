@@ -891,9 +891,6 @@ bool ABaseCharacter::CanCoverPeakUp()
 		return false;
 	}
 
-	float Distance = 150.0f;
-
-
 	FVector WallDirection = GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f; // get direction towards the cover wall
 
 	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection)) * GetCapsuleComponent()->GetScaledCapsuleRadius();

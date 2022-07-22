@@ -86,7 +86,7 @@ bool SharedService::ThrowRotationAngle(FVector Start, FVector End, FRotator& Tar
 	return true;
 }
 
-bool SharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
+bool SharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor, float Amount)
 {
 	if (ActorA == nullptr || TargetActor == nullptr) {
 		return false;
@@ -97,7 +97,7 @@ bool SharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
 	UKismetMathLibrary::Vector_Normalize(Normalised);
 	float Angle = UKismetMathLibrary::Dot_VectorVector(MGForwardPos, Normalised);
 
-	if (Angle < -0.7f)
+	if (Angle < Amount)
 	{
 		return true;
 	}
@@ -117,4 +117,27 @@ bool SharedService::IsNearTargetPosition(FVector Start, FVector Location, float 
 	}
 
 	return false;
+}
+
+bool SharedService::CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner)
+{
+	if (World == nullptr || TargetActor == nullptr) {
+		return false;
+	}
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(Owner);
+	QueryParams.bTraceComplex = true;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	TargetActor->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+	FHitResult OutHitTarget;
+	bool bHitTarget = World->LineTraceSingleByObjectType(OutHitTarget, Start, EyeLocation, ObjectParams, QueryParams);
+
+	return bHitTarget && OutHitTarget.GetActor() == TargetActor;
 }
