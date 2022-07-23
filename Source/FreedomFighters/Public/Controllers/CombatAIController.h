@@ -216,6 +216,8 @@ public:
 
 	UAIMovementComponent* GetAIMovementComponent() { return AIMovementComponent; };
 
+	UTargetFinderComponent* GetTargetFinderComponent() { return TargetFinderComponent; }
+
 	UMountedGunFinderComponent* GetMountedGunFinderComponent() { return MountedGunFinderComponent; }
 
 	UCoverFinderComponent* GetCoverFinderComponent() { return CoverFinderComponent; }

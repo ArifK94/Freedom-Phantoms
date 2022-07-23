@@ -402,7 +402,33 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	TargetSearchParams->TargetActor = TargetSearchParameters.TargetActor;
 	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
 
-	EnemyActor = ChosenTarget;
+	//EnemyActor = ChosenTarget;
+
+	// if no new enemy found,
+	// maintain current enemy as target if enemy or owning AI character are taking cover.
+	if (ChosenTarget == nullptr && EnemyActor) {
+		auto EnemyCharacter = Cast<ACombatCharacter>(EnemyActor);
+
+		if (UHealthComponent::IsAlive(EnemyCharacter) && EnemyCharacter->IsTakingCover() || OwningCombatCharacter->IsTakingCover()) {
+			return;
+		}
+
+	}
+	else {
+		EnemyActor = ChosenTarget;
+	}
+
+	//if (EnemyCharacter && EnemyCharacter->IsTakingCover()) {
+	//	TargetSearchParams->TargetActor = EnemyActor;
+	//	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
+	//}
+	//else {
+	//	TargetSearchParams->TargetActor = TargetSearchParameters.TargetActor;
+	//	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
+	//	EnemyActor = ChosenTarget;
+	//}
+
+
 }
 
 /**
@@ -412,7 +438,7 @@ void ACombatAIController::OnNearbyActorFound_Implementation(FAvoidableParams Avo
 {
 	bAvoidableParams = AvoidableParams;
 
-	if (OwningCombatCharacter->GetVoiceAudioComponent()->Sound != OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound || 
+	if (OwningCombatCharacter->GetVoiceAudioComponent()->Sound != OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound ||
 		!OwningCombatCharacter->GetVoiceAudioComponent()->IsPlaying()) {
 		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound);
 	}

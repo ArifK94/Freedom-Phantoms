@@ -76,8 +76,20 @@ bool UCoverFinderComponent::FindCover(FVector StartLocation, FVector& ChosenCove
 			continue;
 		}
 
-		// add 50.f to to allow the destination to be reachable on the navmesh 
-		FVector LocationPoint = HitResult.ImpactPoint + 50.f;
+		// the gap between impact point & the location on the navmesh for the npc to move to.
+		float CoverOffset = 50.f;
+
+		// based on which side the cover point is of the object, the offset will need to be negative or positive.
+		auto DistanceX = HitResult.ImpactNormal.X > 0 ? CoverOffset : -CoverOffset;
+		auto DistanceY = HitResult.ImpactNormal.Y > 0 ? CoverOffset : -CoverOffset;
+
+
+		// add offset to to allow the destination to be reachable on the navmesh 
+		FVector LocationPoint = FVector(
+			HitResult.ImpactPoint.X + DistanceX,
+			HitResult.ImpactPoint.Y + DistanceY,
+			HitResult.ImpactPoint.Z
+		);
 
 		DrawDebugSphere(GetWorld(), LocationPoint, 5.f, 10.f, FColor::Red, false, 10.f, 0, 2);
 

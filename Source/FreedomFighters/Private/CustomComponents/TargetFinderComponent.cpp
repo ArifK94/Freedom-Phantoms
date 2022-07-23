@@ -172,36 +172,38 @@ AActor* UTargetFinderComponent::FindTarget()
 			continue;
 		}
 
+		FVector TargetLocation;
+		bool HasHitTarget = CanSeeTarget(PotentialEnemy, TargetLocation);
+
 		FVector EnemyLocation = PotentialEnemy->GetActorLocation();
 
 		// check if can see the target
-		FHitResult HitTargetResult;
-		auto Trace = GetTrace(HitTargetResult, EyeLocation, EnemyLocation);
+		//FHitResult HitTargetResult;
+		//auto Trace = GetTrace(HitTargetResult, EyeLocation, EnemyLocation);
 
-		bool HasHitTarget = false;
 
-		if (Trace && HitTargetResult.GetActor() == PotentialEnemy)
-		{
-			HasHitTarget = true;
-			TargetSearchParameters.TargetLocation = EnemyLocation;
-		}
+		//if (Trace && HitTargetResult.GetActor() == PotentialEnemy)
+		//{
+		//	HasHitTarget = true;
+		//	TargetSearchParameters.TargetLocation = EnemyLocation;
+		//}
 
-		if (!HasHitTarget)
-		{
-			FVector EnemyEyeLocation;
-			FRotator EnemyEyeRotation;
-			PotentialEnemy->GetActorEyesViewPoint(EnemyEyeLocation, EnemyEyeRotation);
+		//if (!HasHitTarget)
+		//{
+		//	FVector EnemyEyeLocation;
+		//	FRotator EnemyEyeRotation;
+		//	PotentialEnemy->GetActorEyesViewPoint(EnemyEyeLocation, EnemyEyeRotation);
 
-			// check if can see the target
-			FHitResult OutHitHead;
-			auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation);
+		//	// check if can see the target
+		//	FHitResult OutHitHead;
+		//	auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation);
 
-			if (HeadTrace && OutHitHead.GetActor() == PotentialEnemy)
-			{
-				HasHitTarget = true;
-				TargetSearchParameters.TargetLocation = EnemyEyeLocation;
-			}
-		}
+		//	if (HeadTrace && OutHitHead.GetActor() == PotentialEnemy)
+		//	{
+		//		HasHitTarget = true;
+		//		TargetSearchParameters.TargetLocation = EnemyEyeLocation;
+		//	}
+		//}
 
 		if (HasHitTarget)
 		{
@@ -224,6 +226,48 @@ AActor* UTargetFinderComponent::FindTarget()
 	return TargetActor;
 }
 
+
+bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLocation)
+{
+	if (TargetActor == nullptr) {
+		return false;
+	}
+
+	FVector OwnerLocation = GetOwner()->GetActorLocation();
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+	FVector ActorLocation = TargetActor->GetActorLocation();
+
+	// check if can see the target
+	FHitResult HitTargetResult;
+	auto Trace = GetTrace(HitTargetResult, EyeLocation, ActorLocation);
+
+
+	if (Trace && HitTargetResult.GetActor() == TargetActor)
+	{
+		TargetLocation = ActorLocation;
+		return true;
+	}
+
+	// if not hit the target actor yet, try line trace to the actor's eye point.
+	FVector EnemyEyeLocation;
+	FRotator EnemyEyeRotation;
+	TargetActor->GetActorEyesViewPoint(EnemyEyeLocation, EnemyEyeRotation);
+
+	// check if can see the target
+	FHitResult OutHitHead;
+	auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation);
+
+	if (HeadTrace && OutHitHead.GetActor() == TargetActor)
+	{
+		TargetLocation = EnemyEyeLocation;
+		return true;
+	}
+
+	return false;
+}
 
 AActor* UTargetFinderComponent::GetChildrenTargets(AActor* ParentTarget)
 {
@@ -397,7 +441,7 @@ void UTargetFinderComponent::AddIgnoreActor(AActor* InOwner, AActor* InActorIgno
 
 FRotator UTargetFinderComponent::RotateTowardsTarget(AActor* OwnerActor, AActor* TargetActor, FRotator CurrentRotation, FRotator& TargetRotation, float DeltaTime, float LerpSpeed)
 {
-	if (!TargetActor) 
+	if (!TargetActor)
 	{
 		TargetRotation = FRotator::ZeroRotator;
 	}

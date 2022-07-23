@@ -9,8 +9,11 @@
 #include "Weapons/ThrowableWeapon.h"
 #include "Weapons/MountedGun.h"
 #include "CustomComponents/MountedGunFinderComponent.h"
+#include "CustomComponents/TargetFinderComponent.h"
 #include "StructCollection.h"
 #include "Services/SharedService.h"
+
+#include "Kismet/KismetMathLibrary.h"
 
 float UCombatAction::Score(AAIController* Controller, APawn* Pawn)
 {
@@ -55,6 +58,9 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
 
+	FaceTarget();
+
+
 	if (CombatAIController->GetEnemyActor()) {
 		CombatMode();
 	}
@@ -62,7 +68,6 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 		EndShooting();
 	}
 
-	FaceTarget();
 }
 
 void UCombatAction::FaceTarget()
@@ -76,8 +81,17 @@ void UCombatAction::FaceTarget()
 		}
 		else
 		{
-			//CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
-			CombatAIController->SetFocalPoint(CombatAIController->GetTargetSearchParams()->TargetLocation);
+			FVector TargetLocation;
+			bool HasHitTarget = CombatAIController->GetTargetFinderComponent()->CanSeeTarget(CombatAIController->GetEnemyActor(), TargetLocation);
+
+			if (HasHitTarget) {
+				// use focal point since enemy maybe behind a barrier or cover so only the head would be visible.
+				CombatAIController->SetFocalPoint(TargetLocation);
+			}
+			else {
+				// face towards actor location in case enemy is taking cover.
+				CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
+			}
 		}
 	}
 	else
@@ -96,9 +110,19 @@ void UCombatAction::CombatMode()
 		OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
 	}
 
-	// can only aim if not sprinting.
-	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading()) {
+	// always aim towards target :-
+	// can only aim if not spritig,
+	// if not in cover, since the character can do blind fire and no aim.
+	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsTakingCover()) {
 		OwningCombatCharacter->BeginAim();
+	}
+	// can do blind fire if in cover without aiming but only if enemy is nearby.
+	else if (SharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), FMath::RandRange(500.0f, 1000.0f)) &&
+		OwningCombatCharacter->IsTakingCover()) {
+
+		if (!UKismetMathLibrary::RandomBool() && OwningCombatCharacter->IsAiming()) {
+			OwningCombatCharacter->EndAim();
+		}
 	}
 
 	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading()) {
@@ -106,21 +130,27 @@ void UCombatAction::CombatMode()
 	}
 	else {
 
-		if (!THandler_Shoot.IsValid()) {
-			OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_Shoot, this, &UCombatAction::ShootAtEnemy, 1.f, true);
-		}
 
-		//if (CanThrowGrenade()) {
-		//	if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
-		//		OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
-		//	}
-		//	else {
-		//		ThrowGrenade();
-		//	}
-		//}
-		//else {
-		//	ShootAtEnemy();
-		//}
+		if (CanThrowGrenade()) {
+			if (OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetGrenadeWeapon()) {
+				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetGrenadeWeapon());
+			}
+			else {
+				ThrowGrenade();
+			}
+		}
+		else {
+			
+			if (!THandler_Shoot.IsValid() && !THandler_EndShooting.IsValid()) {
+
+				// change grenade to primary weapon if greande is equipped.
+				if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
+					OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
+				}
+
+				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_Shoot, this, &UCombatAction::ShootAtEnemy, 1.f, true);
+			}
+		}
 	}
 }
 
@@ -132,16 +162,14 @@ void UCombatAction::ShootAtEnemy()
 		return;
 	}
 
-	if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) {
-		OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
-	}
 
 	// check if enemy distance is close, if so then pull out pistol
 	float DistanceDiff = FVector::Dist(OwningCombatCharacter->GetActorLocation(), EnemyActor->GetActorLocation());
 	float randomDistanceLimit = FMath::RandRange(500.0f, 1000.0f);
 	bool IsTargetClose = DistanceDiff < randomDistanceLimit;
 
-	if (!IsTargetClose && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj() // if target is not close, then switch back to primary
+	// if target is not close, then switch back to primary
+	if (!IsTargetClose && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj()
 		&& !OwningCombatCharacter->GetIsInVehicle()) {
 		OwningCombatCharacter->BeginWeaponSwap();
 	}
@@ -167,6 +195,7 @@ void UCombatAction::ShootAtEnemy()
 
 	// cooldown the shooting
 	if (!THandler_EndShooting.IsValid()) {
+		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Shoot);
 		OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndShooting, this, &UCombatAction::EndShooting, 1.f, true, FMath::RandRange(1.f, 2.f));
 	}
 
@@ -176,7 +205,6 @@ void UCombatAction::EndShooting()
 {
 	OwningCombatCharacter->EndFire();
 
-	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Shoot);
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndShooting);
 }
 
@@ -218,8 +246,9 @@ void UCombatAction::ReloadWeapon()
 	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 && !PumpActionWeapon) { // Reload the weapon
 
 		// if using primary weapon & enemy is nearby, then swap to secondary
+		// should not swap weapon while in cover, better to go back to cover and reload instead.
 		if (IsTargetClose &&
-			OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->GetIsInVehicle()) {
+			OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->GetIsInVehicle() && !OwningCombatCharacter->IsTakingCover()) {
 			OwningCombatCharacter->BeginWeaponSwap();
 		}
 		else {

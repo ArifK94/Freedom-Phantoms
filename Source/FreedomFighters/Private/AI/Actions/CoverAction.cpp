@@ -136,9 +136,6 @@ void UCoverAction::BeginCoverPeak()
 	// randomly choose whether to peak or aim from cover.
 	bool ShouldAim = UKismetMathLibrary::RandomBool();
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, TEXT("Peak!"));
-
-
 	if (CombatAIController->GetEnemyActor()) {
 		ShouldAim = true;
 	}

@@ -31,6 +31,12 @@ public:
 	static bool IsNearTargetPosition(FVector Start, FVector Location, float Radius);
 
 	/**
+	* are actors near each other?
+	*/
+	static bool IsNearTargetPosition(AActor* ActorA, AActor* ActorB, float Radius);
+
+
+	/**
 	* Can the target actor been seen from a position?
 	*/
 	static bool CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner);

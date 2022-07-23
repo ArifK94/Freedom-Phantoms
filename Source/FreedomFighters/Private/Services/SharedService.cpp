@@ -119,6 +119,15 @@ bool SharedService::IsNearTargetPosition(FVector Start, FVector Location, float 
 	return false;
 }
 
+bool SharedService::IsNearTargetPosition(AActor* ActorA, AActor* ActorB, float Radius)
+{
+	if (ActorA == nullptr || ActorB == nullptr) {
+		return false;
+	}
+
+	return IsNearTargetPosition(ActorA->GetActorLocation(), ActorB->GetActorLocation(), Radius);
+}
+
 bool SharedService::CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner)
 {
 	if (World == nullptr || TargetActor == nullptr) {
