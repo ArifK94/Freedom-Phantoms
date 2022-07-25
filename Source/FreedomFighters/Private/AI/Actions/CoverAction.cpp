@@ -26,7 +26,6 @@ bool UCoverAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	//	return false;
 	//}
 
-
 	return true;
 }
 

@@ -173,7 +173,7 @@ void ACombatAIController::Init()
 
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
-		//UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
 		//UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());
@@ -410,11 +410,21 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	if (ChosenTarget == nullptr && EnemyActor) 
 	{
 		auto EnemyCharacter = Cast<ACombatCharacter>(EnemyActor);
+		
+		auto IsTargetClose = SharedService::IsNearTargetPosition(OwningCombatCharacter, EnemyActor, EnemyCloseRange);
 
-		if (UHealthComponent::IsAlive(EnemyCharacter) && EnemyCharacter->IsTakingCover() || OwningCombatCharacter->IsTakingCover()) 
+		// is enemy alive?
+		// AI can still see enemy if either enemy.
+		// or is my AI taking cover & the enemy is close?
+		if (UHealthComponent::IsAlive(EnemyCharacter) && EnemyCharacter->IsTakingCover() || (OwningCombatCharacter->IsTakingCover() && IsTargetClose))
 		{
 			TimeSpentOnEnemy++;
 			return;
+		}
+		// otherwise enemy is unreachable.
+		else
+		{
+			EnemyActor = nullptr;
 		}
 	}
 	else 
