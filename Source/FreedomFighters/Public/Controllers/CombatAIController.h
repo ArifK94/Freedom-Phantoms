@@ -28,6 +28,8 @@ class FREEDOMFIGHTERS_API ACombatAIController : public AAIController, public IAv
 	GENERATED_BODY()
 
 private:
+	float bDeltaTime;
+
 	ACombatCharacter* OwningCombatCharacter;
 	AActor* LastSeenEnemyActor;
 
@@ -43,6 +45,7 @@ private:
 	bool HasThrownGrenade;
 
 	FVector ChosenCoverPoint;
+	bool CoverFound;
 	FVector LastSeenPosition;
 
 	FTargetSearchParameters* TargetSearchParams;
@@ -145,6 +148,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float GrenadeThrowTimeMax;
 
+	/**
+	* Is Running for cover point?
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsRunningForCover;
+
 	FTimerHandle THandler_CommanderOrders;
 	FTimerHandle THandler_FindCover;
 	FTimerHandle THandler_LastSeenEnemy;
@@ -165,6 +174,11 @@ public:
 	bool IsNearCommander(FVector Location);
 
 	void SetBehaviourState(AIBehaviourState State);
+
+	/**
+	* AI SetFocalPoint custom method.
+	*/
+	void SetFocalPosition(FVector TargetLocation);
 
 private:
 	void Init();
@@ -256,5 +270,13 @@ public:
 	float GetTimeSpentOnEnemy() { return TimeSpentOnEnemy; }
 
 	float GetTimeSpentOnEnemyRange() { return TimeSpentOnEnemyRange; }
+
+	bool GetCoverFound() { return CoverFound; }
+
+	void SetCoverFound(bool Value) { CoverFound = Value; }
+
+	bool GetIsRunningForCover() { return IsRunningForCover; }
+
+	void SetIsRunningForCover(bool Value) { IsRunningForCover = Value; }
 
 };

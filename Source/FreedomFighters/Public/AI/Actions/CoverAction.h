@@ -18,7 +18,6 @@ private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
-	bool CoverFound;
 
 	FVector CoverLocation;
 

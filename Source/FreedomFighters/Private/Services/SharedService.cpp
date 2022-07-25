@@ -112,7 +112,14 @@ bool SharedService::IsNearTargetPosition(FVector Start, FVector Location, float 
 		return true;
 	}
 
-	if (FVector::Distance(Start, Location) <= Radius) {
+
+	FVector StartLocation = Start;
+	StartLocation.Z = 0.f;
+
+	FVector EndLocation = Location;
+	EndLocation.Z = 0.f;
+
+	if (UKismetMathLibrary::Vector_Distance(StartLocation, EndLocation) <= Radius) {
 		return true;
 	}
 

@@ -73,6 +73,8 @@ void ACombatAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	bDeltaTime = DeltaTime;
+
 	if (!GetPawn()) {
 		return;
 	}
@@ -309,6 +311,8 @@ void ACombatAIController::ClearTimers()
 void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
 {
 	SetBehaviourState(BehaviourState);
+
+	OwningCombatCharacter->StopCover();
 }
 
 void ACombatAIController::OnMovementDestinationReached(FVector Destination)
@@ -348,11 +352,11 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	OwningCombatCharacter->DropMountedGun();
 
-
 	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 
 	HasChosenNearTargetDest = false;
-
+	IsRunningForCover = false;
+	CoverFound = false;
 
 	StayCombatAlert = false;
 	UpdatCombatAlert();
@@ -415,7 +419,7 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 
 		// is enemy alive?
 		// AI can still see enemy if either enemy.
-		// or is my AI taking cover & the enemy is close?
+		// or is my AI taking cover & the enemy is close? Should not be able to 
 		if (UHealthComponent::IsAlive(EnemyCharacter) && EnemyCharacter->IsTakingCover() || (OwningCombatCharacter->IsTakingCover() && IsTargetClose))
 		{
 			TimeSpentOnEnemy++;
@@ -650,4 +654,22 @@ void ACombatAIController::SetBehaviourState(AIBehaviourState State)
 	}
 
 	CurrentBehaviourState = State;
+}
+
+void ACombatAIController::SetFocalPosition(FVector TargetLocation)
+{
+	FRotator NewControlRotation = GetControlRotation();
+
+	// Look toward focus
+	const FVector FocalPoint = TargetLocation;
+	NewControlRotation = (FocalPoint - OwningCombatCharacter->GetPawnViewLocation()).Rotation();
+
+	SetControlRotation(NewControlRotation);
+
+	const FRotator CurrentPawnRotation = OwningCombatCharacter->GetActorRotation();
+
+	if (CurrentPawnRotation.Equals(NewControlRotation, 1e-3f) == false)
+	{
+		OwningCombatCharacter->FaceRotation(NewControlRotation, bDeltaTime);
+	}
 }

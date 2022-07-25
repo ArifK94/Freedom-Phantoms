@@ -58,8 +58,6 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
 
-	bDeltaTime = DeltaTime;
-
 	FaceTarget();
 
 	if (CombatAIController->GetEnemyActor())
@@ -89,7 +87,7 @@ void UCombatAction::FaceTarget()
 			if (HasHitTarget)
 			{
 				// use focal point since enemy maybe behind a barrier or cover so only the head would be visible.
-				SetFocalPoint(TargetLocation);
+				CombatAIController->SetFocalPosition(TargetLocation);
 			}
 			else
 			{
@@ -310,22 +308,4 @@ bool UCombatAction::CanThrowGrenade()
 	FRotator TargetRotation;
 	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetEnemyActor()->GetActorLocation(), TargetRotation);
 	return IsReachable;
-}
-
-void UCombatAction::SetFocalPoint(FVector TargetLocation)
-{
-	FRotator NewControlRotation = CombatAIController->GetControlRotation();
-
-	// Look toward focus
-	const FVector FocalPoint = TargetLocation;
-	NewControlRotation = (FocalPoint - OwningCombatCharacter->GetPawnViewLocation()).Rotation();
-
-	CombatAIController->SetControlRotation(NewControlRotation);
-
-	const FRotator CurrentPawnRotation = OwningCombatCharacter->GetActorRotation();
-
-	if (CurrentPawnRotation.Equals(NewControlRotation, 1e-3f) == false)
-	{
-		OwningCombatCharacter->FaceRotation(NewControlRotation, bDeltaTime);
-	}
 }

@@ -18,8 +18,6 @@ private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
-	float bDeltaTime;
-
 	FTimerHandle THandler_Shoot;
 	FTimerHandle THandler_EndShooting;
 
@@ -53,6 +51,4 @@ private:
 	void ReloadWeapon();
 
 	void Aim();
-
-	void SetFocalPoint(FVector TargetLocation);
 };
