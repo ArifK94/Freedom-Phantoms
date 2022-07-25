@@ -58,13 +58,15 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
 
+	bDeltaTime = DeltaTime;
+
 	FaceTarget();
 
-	if (CombatAIController->GetEnemyActor()) 
+	if (CombatAIController->GetEnemyActor())
 	{
 		CombatMode();
 	}
-	else 
+	else
 	{
 		EndShooting();
 	}
@@ -84,12 +86,12 @@ void UCombatAction::FaceTarget()
 			FVector TargetLocation;
 			bool HasHitTarget = CombatAIController->GetTargetFinderComponent()->CanSeeTarget(CombatAIController->GetEnemyActor(), TargetLocation);
 
-			if (HasHitTarget) 
+			if (HasHitTarget)
 			{
 				// use focal point since enemy maybe behind a barrier or cover so only the head would be visible.
-				CombatAIController->SetFocalPoint(TargetLocation);
+				SetFocalPoint(TargetLocation);
 			}
-			else 
+			else
 			{
 				// face towards actor location in case enemy is taking cover.
 				CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
@@ -113,7 +115,7 @@ void UCombatAction::CombatMode()
 	}
 
 	// reload the weapon
-	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading()) 
+	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
 	{
 		ReloadWeapon();
 	}
@@ -122,7 +124,7 @@ void UCombatAction::CombatMode()
 		// throw grenade
 		if (CanThrowGrenade())
 		{
-			if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) 
+			if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon())
 			{
 				ThrowGrenade();
 			}
@@ -132,14 +134,14 @@ void UCombatAction::CombatMode()
 			}
 		}
 		// shoot with primary / secondary wepaons.
-		else 
+		else
 		{
 			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Shoot!"));
 
 			Aim();
 
 			// change grenade to primary weapon if greande is equipped.
-			if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon()) 
+			if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon())
 			{
 				OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
 			}
@@ -163,36 +165,36 @@ void UCombatAction::ShootAtEnemy()
 	bool IsTargetClose = SharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange());
 
 	// if target is not close, then switch back to primary
-	if (!IsTargetClose && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->GetIsInVehicle()) 
+	if (!IsTargetClose && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->GetIsInVehicle())
 	{
 		OwningCombatCharacter->BeginWeaponSwap();
 	}
 	// Fire the weapon
-	else 
+	else
 	{
 		auto PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetCurrentWeapon());
 
 		// Shotguns require pump action rather than constant firing of weapon
 		// check if using shotgun weapon type
-		if (PumpActionWeapon) 
+		if (PumpActionWeapon)
 		{
-			if (PumpActionWeapon->GetHasLoadedShell()) 
+			if (PumpActionWeapon->GetHasLoadedShell())
 			{
 				OwningCombatCharacter->BeginFire();
 			}
-			else 
+			else
 			{
 				OwningCombatCharacter->EndFire();
 			}
 		}
-		else 
+		else
 		{
 			OwningCombatCharacter->BeginFire();
 		}
 	}
 
 	// cooldown the shooting
-	if (!THandler_EndShooting.IsValid()) 
+	if (!THandler_EndShooting.IsValid())
 	{
 		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Shoot);
 		OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndShooting, this, &UCombatAction::EndShooting, 1.f, true, FMath::RandRange(1.f, 2.f));
@@ -223,12 +225,12 @@ void UCombatAction::ReloadWeapon()
 		// if using primary weapon & enemy is nearby, then swap to secondary
 		// should not swap weapon while in cover, better to go back to cover and reload instead.
 		if (IsTargetClose &&
-			OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetSecondaryWeaponObj() && 
-			!OwningCombatCharacter->GetIsInVehicle() && !OwningCombatCharacter->IsTakingCover()) 
+			OwningCombatCharacter->GetCurrentWeapon() != OwningCombatCharacter->GetSecondaryWeaponObj() &&
+			!OwningCombatCharacter->GetIsInVehicle() && !OwningCombatCharacter->IsTakingCover())
 		{
 			OwningCombatCharacter->BeginWeaponSwap();
 		}
-		else 
+		else
 		{
 			OwningCombatCharacter->BeginReload();
 		}
@@ -238,16 +240,16 @@ void UCombatAction::ReloadWeapon()
 	{
 		int RandomAmount = rand() % OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip();
 
-		if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() < RandomAmount) 
+		if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() < RandomAmount)
 		{
 			OwningCombatCharacter->BeginReload();
 		}
-		else 
+		else
 		{
 			OwningCombatCharacter->EndReload();
 		}
 	}
-	else 
+	else
 	{
 		OwningCombatCharacter->EndReload();
 	}
@@ -258,13 +260,13 @@ void UCombatAction::Aim()
 	// always aim towards target :-
 	// can only aim if not spritig,
 	// if not in cover, since the character can do blind fire and no aim.
-	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsTakingCover()) 
+	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsTakingCover())
 	{
 		OwningCombatCharacter->BeginAim();
 	}
 	// can do blind fire if in cover without aiming but only if enemy is nearby.
 	else if (SharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange()) &&
-		OwningCombatCharacter->IsTakingCover()) 
+		OwningCombatCharacter->IsTakingCover())
 	{
 		if (!UKismetMathLibrary::RandomBool() && OwningCombatCharacter->IsAiming())
 		{
@@ -308,4 +310,22 @@ bool UCombatAction::CanThrowGrenade()
 	FRotator TargetRotation;
 	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetEnemyActor()->GetActorLocation(), TargetRotation);
 	return IsReachable;
+}
+
+void UCombatAction::SetFocalPoint(FVector TargetLocation)
+{
+	FRotator NewControlRotation = CombatAIController->GetControlRotation();
+
+	// Look toward focus
+	const FVector FocalPoint = TargetLocation;
+	NewControlRotation = (FocalPoint - OwningCombatCharacter->GetPawnViewLocation()).Rotation();
+
+	CombatAIController->SetControlRotation(NewControlRotation);
+
+	const FRotator CurrentPawnRotation = OwningCombatCharacter->GetActorRotation();
+
+	if (CurrentPawnRotation.Equals(NewControlRotation, 1e-3f) == false)
+	{
+		OwningCombatCharacter->FaceRotation(NewControlRotation, bDeltaTime);
+	}
 }

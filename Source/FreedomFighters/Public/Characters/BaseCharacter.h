@@ -301,6 +301,10 @@ private:
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
 
+	virtual FVector GetPawnViewLocation() const override;
+
+	virtual FRotator GetViewRotation() const override;
+
 	/** Default is idle, no interaction, the point is to reach default idle animation state.  */
 	virtual void SetDefaultState();
 
@@ -357,11 +361,6 @@ protected:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
-
-	virtual FVector GetPawnViewLocation() const override;
-
-	virtual FRotator GetViewRotation() const override;
 
 	virtual void BeginPlay() override;
 

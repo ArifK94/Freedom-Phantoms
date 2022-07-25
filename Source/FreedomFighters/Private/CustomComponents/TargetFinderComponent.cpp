@@ -5,6 +5,7 @@
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
 #include "Weapons/Weapon.h"
+#include "Characters/BaseCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "GameFramework/Character.h"
@@ -251,19 +252,24 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 		return true;
 	}
 
-	// if not hit the target actor yet, try line trace to the actor's eye point.
-	FVector EnemyEyeLocation;
-	FRotator EnemyEyeRotation;
-	TargetActor->GetActorEyesViewPoint(EnemyEyeLocation, EnemyEyeRotation);
+	// if not hit the target actor yet, try line trace to the actor's head.
+	auto EnemyCharacter  = Cast<ABaseCharacter>(TargetActor);
 
-	// check if can see the target
-	FHitResult OutHitHead;
-	auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation);
-
-	if (HeadTrace && OutHitHead.GetActor() == TargetActor)
+	if (EnemyCharacter)
 	{
-		TargetLocation = EnemyEyeLocation;
-		return true;
+		FVector EnemyEyeLocation = EnemyCharacter->GetMesh()->GetSocketLocation(EnemyCharacter->GetHeadSocket());
+		FRotator EnemyEyeRotation;
+		TargetActor->GetActorEyesViewPoint(EnemyEyeLocation, EnemyEyeRotation);
+
+		// check if can see the target
+		FHitResult OutHitHead;
+		auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation);
+
+		if (HeadTrace && OutHitHead.GetActor() == TargetActor)
+		{
+			TargetLocation = EnemyEyeLocation;
+			return true;
+		}
 	}
 
 	return false;
