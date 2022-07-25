@@ -63,6 +63,9 @@ void ACombatAIController::BeginPlay()
 
 	DefaultDestinationRadius = DestinationRadius;
 
+	EnemyCloseRange = FMath::RandRange(500.0f, 1000.0f);
+	TimeSpentOnEnemyRange = FMath::RandRange(10.f, 20.0f);
+
 	TargetSearchParams = new FTargetSearchParameters();
 }
 
@@ -170,7 +173,7 @@ void ACombatAIController::Init()
 
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
-		UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
+		//UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
 		//UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());
@@ -402,33 +405,25 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	TargetSearchParams->TargetActor = TargetSearchParameters.TargetActor;
 	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
 
-	//EnemyActor = ChosenTarget;
-
 	// if no new enemy found,
-	// maintain current enemy as target if enemy or owning AI character are taking cover.
-	if (ChosenTarget == nullptr && EnemyActor) {
+	// maintain current enemy if enemy or owning AI character are taking cover.
+	if (ChosenTarget == nullptr && EnemyActor) 
+	{
 		auto EnemyCharacter = Cast<ACombatCharacter>(EnemyActor);
 
-		if (UHealthComponent::IsAlive(EnemyCharacter) && EnemyCharacter->IsTakingCover() || OwningCombatCharacter->IsTakingCover()) {
+		if (UHealthComponent::IsAlive(EnemyCharacter) && EnemyCharacter->IsTakingCover() || OwningCombatCharacter->IsTakingCover()) 
+		{
+			TimeSpentOnEnemy++;
 			return;
 		}
-
 	}
-	else {
+	else 
+	{
+		// same enemy as before?
+		TimeSpentOnEnemy = EnemyActor == ChosenTarget ? TimeSpentOnEnemy + 1 : .0f;
+
 		EnemyActor = ChosenTarget;
 	}
-
-	//if (EnemyCharacter && EnemyCharacter->IsTakingCover()) {
-	//	TargetSearchParams->TargetActor = EnemyActor;
-	//	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
-	//}
-	//else {
-	//	TargetSearchParams->TargetActor = TargetSearchParameters.TargetActor;
-	//	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
-	//	EnemyActor = ChosenTarget;
-	//}
-
-
 }
 
 /**

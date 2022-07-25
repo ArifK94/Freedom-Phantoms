@@ -116,6 +116,24 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AActor* EnemyActor;
 
+	/**
+	* the range determines if the enemy is close by.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float EnemyCloseRange;
+
+	/**
+	* How much time spent on the same enemy?
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float TimeSpentOnEnemy;
+
+	/**
+	* Time Range when spending time on same enemy.
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float TimeSpentOnEnemyRange;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool MoveToLastSeenEnemy;
 
@@ -233,5 +251,10 @@ public:
 
 	UCommanderRecruit* GetRecruitInfo() { return bRecruitInfo; }
 
+	float GetEnemyCloseRange() { return EnemyCloseRange; }
+
+	float GetTimeSpentOnEnemy() { return TimeSpentOnEnemy; }
+
+	float GetTimeSpentOnEnemyRange() { return TimeSpentOnEnemyRange; }
 
 };

@@ -49,4 +49,6 @@ private:
 	bool CanThrowGrenade();
 
 	void ReloadWeapon();
+
+	void Aim();
 };
