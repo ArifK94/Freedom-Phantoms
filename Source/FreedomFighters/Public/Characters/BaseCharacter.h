@@ -293,7 +293,10 @@ private:
 
 	void UpdateDirection();
 
-	void StartCover(FHitResult OutHit);
+	/**
+	* Is the cover crouch only will only allow character to crouch but not stand in cover.
+	*/
+	void StartCover(FHitResult OutHit, bool IsCrouchOnly);
 
 	void StartDestroy();
 	void DetroyChildActor(TArray<AActor*> ParentActor);

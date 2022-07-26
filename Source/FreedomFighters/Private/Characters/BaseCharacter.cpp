@@ -690,25 +690,34 @@ void ABaseCharacter::TakeCover()
 		FHitResult OutHit;
 		bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, COLLISION_COVER);
 
-		if (LineTrace)
+
+		if (LineTrace && OutHit.bBlockingHit)
 		{
-			if (OutHit.bBlockingHit)
+			StartCover(OutHit, false);
+		}
+		// if not found a trace from actor location, then trace from the knees or near bottom of character, but not tracing if currently crouched.
+		else if(!GetCharacterMovement()->IsCrouching())
+		{
+			FVector StartBelow = Start;
+			StartBelow.Z -= 50.f;
+
+			FVector EndBelow = (GetActorForwardVector() * CoverDistance) + StartBelow;
+			FHitResult OutHitBelow;
+			LineTrace = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartBelow, EndBelow, COLLISION_COVER);
+
+			if (LineTrace && OutHitBelow.bBlockingHit)
 			{
-				StartCover(OutHit);
-			}
-			else
-			{
-				StopCover();
+				StartCover(OutHitBelow, true);
 			}
 		}
-		else
+		else 
 		{
 			StopCover();
 		}
 	}
 }
 
-void ABaseCharacter::StartCover(FHitResult OutHit)
+void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 {
 	auto CoverGap = 5.f; // gap from cover point & character
 
@@ -732,26 +741,41 @@ void ABaseCharacter::StartCover(FHitResult OutHit)
 		GetActorLocation().Z
 	);
 
+	// Only rotate in the horizontal axis to cover point.
 	LastCoverPosition = CoverFirstPos;
 	LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal);
 	LastCoverRotation.Yaw += 90.f;
 	LastCoverRotation.Roll = 0.f;
 	LastCoverRotation.Pitch = 0.f;
 
-	FLatentActionInfo LatentInfo;
-	LatentInfo.CallbackTarget = this;
 
-	UKismetSystemLibrary::MoveComponentTo(
-		GetCapsuleComponent(),
-		CoverFirstPos,
-		LastCoverRotation,
-		false,
-		false,
-		.2f,
-		false,
-		EMoveComponentAction::Type::Move,
-		LatentInfo
-	);
+	if (IsCrouchOnly) 
+	{
+		Crouch();
+
+		// Character jumps up when moving to cover using MoveComponentTo when state is crouched, so this SetActorLocationAndRotation fixes it.
+		SetActorLocationAndRotation(CoverFirstPos, LastCoverRotation);
+	}
+	else
+	{
+		FLatentActionInfo LatentInfo;
+		LatentInfo.CallbackTarget = this;
+
+		UKismetSystemLibrary::MoveComponentTo(
+			GetCapsuleComponent(),
+			CoverFirstPos,
+			LastCoverRotation,
+			false,
+			false,
+			.2f,
+			false,
+			EMoveComponentAction::Type::Move,
+			LatentInfo
+		);
+	}
+
+
+
 
 	GetCharacterMovement()->SetPlaneConstraintEnabled(true);
 	GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
