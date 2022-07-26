@@ -17,7 +17,6 @@ private:
 	class AController* Controller;
 	class APawn* Pawn;
 
-	//class USphereComponent* CoverSphere;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int NumberOfCoverTraces;
@@ -48,6 +47,8 @@ public:
 
 	virtual void BeginPlay() override;
 
+private:
+	void Init();
 
 		
 };

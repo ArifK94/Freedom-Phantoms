@@ -97,7 +97,7 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, TEXT("Moving to Cover!"));
 		}
 
-		DrawDebugSphere(GetWorld(), CoverLocation, 50.f, 1.f, FColor::Orange, false, 1.f, 0, 2);
+		//DrawDebugSphere(GetWorld(), CoverLocation, 50.f, 1.f, FColor::Orange, false, 1.f, 0, 2);
 
 	}
 }
@@ -131,11 +131,6 @@ void UCoverAction::TakeCover()
 
 	// face the cover location before taking cover.
 	CombatAIController->SetFocalPosition(CoverLocation);
-
-	// need to face cover point for the cover to take place.
-	//OwningCombatCharacter->SetActorRotation(
-	//	UKismetMathLibrary::FindLookAtRotation(OwningCombatCharacter->GetActorLocation(), CoverLocation));
-
 
 	OwningCombatCharacter->TakeCover();
 }

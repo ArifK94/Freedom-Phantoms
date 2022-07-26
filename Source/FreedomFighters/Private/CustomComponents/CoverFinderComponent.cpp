@@ -8,7 +8,6 @@
 
 #include "GameFramework/Controller.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Components/SphereComponent.h"
 #include "NavigationSystem.h"
 #include "DrawDebugHelpers.h"
 
@@ -29,12 +28,17 @@ void UCoverFinderComponent::BeginPlay()
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
 	Controller = Cast<AController>(GetOwner());
 	Pawn = Controller->GetPawn();
+}
 
-	//CoverSphere = NewObject<USphereComponent>(GetOwner());
-	//CoverSphere->RegisterComponent();
-	//CoverSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-	//CoverSphere->SetSphereRadius(CoverRadius);
-	//CoverSphere->SetCollisionProfileName(TEXT("OverlapAll"));
+void UCoverFinderComponent::Init()
+{
+	if (Controller == nullptr) {
+		Controller = Cast<AController>(GetOwner());
+	}
+
+	if (Pawn == nullptr) {
+		Pawn = Controller->GetPawn();
+	}
 }
 
 
@@ -91,7 +95,7 @@ bool UCoverFinderComponent::FindCover(FVector StartLocation, FVector& ChosenCove
 			HitResult.ImpactPoint.Z
 		);
 
-		DrawDebugSphere(GetWorld(), LocationPoint, 5.f, 10.f, FColor::Red, false, 10.f, 0, 2);
+		//DrawDebugSphere(GetWorld(), LocationPoint, 5.f, 10.f, FColor::Red, false, 10.f, 0, 2);
 
 		if (LocationPoint.IsZero()) {
 			continue;
@@ -131,6 +135,8 @@ bool UCoverFinderComponent::FindCover(AActor* TargetActor, FVector& ChosenCoverP
 	if (TargetActor == nullptr || TargetActor->GetActorLocation().IsZero()) {
 		return false;
 	}
+
+	Init();
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(Pawn);
@@ -246,6 +252,8 @@ FVector UCoverFinderComponent::GetClosestCoverPoint(TArray<FVector> CoverLocatio
 	FVector ClosestPoint = FVector::ZeroVector;
 	float minDist = CoverRadius;
 
+	Init();
+
 	for (int i = 0; i < CoverLocationPoints.Num(); i++)
 	{
 		FVector Point = CoverLocationPoints[i];
@@ -281,6 +289,7 @@ FVector UCoverFinderComponent::GetClosestCoverPoint(TArray<FVector> CoverLocatio
 
 bool UCoverFinderComponent::IsCoverPointTaken(FVector PointLocation)
 {
+	Init();
 
 	// check if current cover has been taken,
 	// if so, then find another cover point
