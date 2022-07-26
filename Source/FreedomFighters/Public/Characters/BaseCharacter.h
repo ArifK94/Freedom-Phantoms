@@ -335,6 +335,11 @@ public:
 	void CoverMovement(float Value);
 	virtual void StopCover();
 
+	/**
+	* Can character stand up while in cover?
+	*/
+	bool CanCoverStand();
+
 
 	/**
 	* Can character aim based on current state eg. while taking cover or crouching etc.

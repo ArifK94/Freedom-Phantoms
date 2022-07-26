@@ -497,7 +497,18 @@ void ABaseCharacter::ToggleCrouch()
 {
 	if (GetCharacterMovement()->IsCrouching())
 	{
-		UnCrouch();
+		if (isTakingCover)
+		{
+			// Can stand up while in cover?
+			if (CanCoverStand()) 
+			{
+				UnCrouch();
+			}
+		}
+		else
+		{
+			UnCrouch();
+		}
 	}
 	else
 	{
@@ -774,9 +785,6 @@ void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 		);
 	}
 
-
-
-
 	GetCharacterMovement()->SetPlaneConstraintEnabled(true);
 	GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -796,6 +804,19 @@ void ABaseCharacter::StopCover()
 
 	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 
+}
+
+bool ABaseCharacter::CanCoverStand()
+{
+	FVector Start = GetActorLocation();
+	Start.Z += 50.f;
+	FVector End = (GetActorForwardVector() * CoverDistance) + Start;
+
+	FHitResult OutHit;
+	bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, COLLISION_COVER);
+
+	// if has hit a cover collision layer then character can stand up.
+	return LineTrace && OutHit.bBlockingHit;
 }
 
 void ABaseCharacter::CoverMovement(float Value)
