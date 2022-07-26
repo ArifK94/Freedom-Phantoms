@@ -160,6 +160,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isCoveringLow;
 
+	/**
+	* To prevent the stand to crouch animations from playing if aleady in croching position, this is usefulf when changing from cover state back to default animation state.
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsCurrentlyCrouched;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverDistance;

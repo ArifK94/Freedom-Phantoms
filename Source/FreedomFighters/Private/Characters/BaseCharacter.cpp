@@ -503,16 +503,24 @@ void ABaseCharacter::ToggleCrouch()
 			if (CanCoverStand()) 
 			{
 				UnCrouch();
+				IsCurrentlyCrouched = false;
 			}
 		}
 		else
 		{
 			UnCrouch();
+			IsCurrentlyCrouched = false;
 		}
 	}
 	else
 	{
 		Crouch();
+
+		// to prevent stand to crouch animation from playing after leaving cover while still in cover state.
+		if (isTakingCover)
+		{
+			IsCurrentlyCrouched = true;
+		}
 	}
 }
 
@@ -759,6 +767,7 @@ void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 	LastCoverRotation.Roll = 0.f;
 	LastCoverRotation.Pitch = 0.f;
 
+	IsCurrentlyCrouched = IsCrouchOnly;
 
 	if (IsCrouchOnly) 
 	{
