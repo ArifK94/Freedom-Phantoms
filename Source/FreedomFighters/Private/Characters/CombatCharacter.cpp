@@ -10,6 +10,7 @@
 #include "Weapons/Projectile.h"
 #include "CustomComponents/ObjectPoolComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
+#include "Managers/GameModeManager.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -291,6 +292,13 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		if (nearestFriendly)
 		{
 			nearestFriendly->FriendlyKilled();
+		}
+
+
+		if (!InHealthParameters.AffectedHealthComponent->GetIsWounded())
+		{
+			GameModeManager->AddDroppedWeapon(primaryWeaponObj);
+			GameModeManager->AddDroppedWeapon(secondaryWeaponObj);
 		}
 	}
 }

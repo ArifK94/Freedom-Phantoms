@@ -1,6 +1,7 @@
 #include "Managers/GameModeManager.h"
 #include "Managers/LevelManager.h"
 #include "CustomComponents/HealthComponent.h"
+#include "Weapons/Weapon.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -91,6 +92,27 @@ void AGameModeManager::RemoveCoverPoint(FWorldCoverPoint CoverLocation)
 			if (CoverLocation.Owner == CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location)) {
 				CoverPoints.RemoveAt(i);
 			}
+		}
+	}
+}
+
+void AGameModeManager::AddDroppedWeapon(AWeapon* Weapon)
+{
+	Weapon->SetOwner(nullptr);
+	DroppedWeapons.Add(Weapon);
+
+	// if dropped list has reached x amoun then remove the first weapon
+	if (DroppedWeapons.Num() > 10) {
+
+		if (DroppedWeapons[0]) 
+		{
+			// weapon can be picked up by player after it has been dropped so need to check if it still has no owner
+			if (DroppedWeapons[0]->GetOwner() == nullptr)
+			{
+				DroppedWeapons[0]->Destroy();
+			}
+
+			DroppedWeapons.RemoveAt(0);
 		}
 	}
 }

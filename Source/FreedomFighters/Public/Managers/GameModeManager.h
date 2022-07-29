@@ -8,6 +8,7 @@
 #include "GameModeManager.generated.h"
 
 class ALevelManager;
+class AWeapon;
 
 USTRUCT(BlueprintType)
 struct FWorldCoverPoint 
@@ -35,6 +36,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		ALevelManager* LevelManager;
 
+	/**
+	* Hold a list of weapons which have been dropped from the dead characters.
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TArray<AWeapon*> DroppedWeapons;
+
 private:
 	virtual void BeginPlay() override;
 
@@ -46,6 +53,8 @@ public:
 	void AddCoverPoint(FWorldCoverPoint CoverLocation);
 
 	void RemoveCoverPoint(FWorldCoverPoint CoverLocation);
+
+	void AddDroppedWeapon(AWeapon* Weapon);
 
 
 	ALevelManager* GetLevelManager() {

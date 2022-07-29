@@ -92,6 +92,9 @@ private:
 		UAudioComponent* VoiceAudioComponent;
 
 protected:
+	class AGameModeManager* GameModeManager;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName HeadSocket;
 

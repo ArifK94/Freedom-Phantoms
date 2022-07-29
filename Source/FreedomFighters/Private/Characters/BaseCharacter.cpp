@@ -4,6 +4,7 @@
 #include "Weapons/Projectile.h"
 #include "Vehicles/VehicleBase.h"
 #include "Visuals/OrderIcon.h"
+#include "Managers/GameModeManager.h"
 
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -131,6 +132,8 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
 
 	RetrieveVoiceDataSet();
 	RetrieveAccessoryDataSet();
