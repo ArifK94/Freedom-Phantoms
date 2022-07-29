@@ -44,19 +44,29 @@ bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 			// is there a cover location close to this point?
 			if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 5.f)) 
 			{
-				// is the cover point assigned to a different?
-				if (CoverLocation.Owner != CoverPoints[i].Owner) 
+				if (CoverPoints[i].Owner)
 				{
-					// Owner is no longer alive?
-					if (!UHealthComponent::IsAlive(CoverPoints[i].Owner)) {
+					// is the cover point assigned to a different?
+					if (CoverLocation.Owner != CoverPoints[i].Owner)
+					{
+						// Owner is no longer alive?
+						if (!UHealthComponent::IsAlive(CoverPoints[i].Owner)) {
 
-						// update the owner to this new owner.
-						CoverPoints[i].Owner = CoverLocation.Owner;
-						return false;
+							// update the owner to this new owner.
+							CoverPoints[i].Owner = CoverLocation.Owner;
+							return false;
+						}
+
+						// if existing owner is still alive then point is taken.
+						return true;
 					}
-
-					// if existing owner is still alive then point is taken.
-					return true;
+				}
+				// if owner is null
+				else
+				{
+					// update the owner to this new owner.
+					CoverPoints[i].Owner = CoverLocation.Owner;
+					return false;
 				}
 			}
 		}

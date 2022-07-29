@@ -206,6 +206,8 @@ private:
 	virtual void OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams) override;
 
 
+	void FindMountedGun();
+
 	void UpdatCombatAlert();
 
 	void UpdateLastSeen();

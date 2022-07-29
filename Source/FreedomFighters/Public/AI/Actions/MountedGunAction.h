@@ -18,6 +18,8 @@ private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
+	EPathFollowingRequestResult::Type MoveToResult;
+
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
 

@@ -27,6 +27,17 @@ bool UCoverAction::CanRun(AAIController* Controller, APawn* Pawn) const
 		return false;
 	}
 
+
+	// do not look for cover if using MG
+	if (OwningCombatCharacter->GetMountedGun()) {
+		return false;
+	}
+
+	// do not look for cover if in a vehicle
+	if (OwningCombatCharacter->GetIsInVehicle()) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -46,11 +57,15 @@ void UCoverAction::Enter(AAIController* Controller, APawn* Pawn)
 void UCoverAction::Exit(AAIController* Controller, APawn* Pawn)
 {
 	Super::Exit(Controller, Pawn);
+
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndPeaking);
 }
 
 void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
+
 
 	if (OwningCombatCharacter->IsTakingCover()) {
 
@@ -77,27 +92,20 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 		FindCover();
 		MoveToResult = EPathFollowingRequestResult::Failed;
 		CombatAIController->SetIsRunningForCover(true);
-
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Searching for Cover!"));
 	}
 	else if (CombatAIController->GetCoverFound()) {
 
 		if (CombatAIController->GetCoverFinderComponent()->IsCoverPointTaken(CoverLocation)) {
 			CombatAIController->SetCoverFound(false);
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Cover Taken!"));
 		}
 		else if (MoveToResult == EPathFollowingRequestResult::AlreadyAtGoal) {
 			TakeCover();
 			CombatAIController->SetCoverFound(false);
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Take Cover!"));
 		}
 		else {
 			MoveToResult = CombatAIController->GetAIMovementComponent()->MoveToDestination(CoverLocation, 10.f, AIBehaviourState::PriorityOrdersCommander);
 			CombatAIController->SetCoverFound(true);
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, TEXT("Moving to Cover!"));
 		}
-
-		//DrawDebugSphere(GetWorld(), CoverLocation, 50.f, 1.f, FColor::Orange, false, 1.f, 0, 2);
 
 	}
 }

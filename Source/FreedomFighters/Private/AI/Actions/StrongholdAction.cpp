@@ -16,17 +16,6 @@ float UStrongholdAction::Score(AAIController* Controller, APawn* Pawn)
 {
 	Super::Score(Controller, Pawn);
 
-	// if defense point is of priority then no need for further action.
-	//if (CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()) {
-
-	//	if (CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()->GetIsPriority()) {
-	//		return .5f;
-	//	}
-	//	else {
-	//		return .8f;
-	//	}
-	//}
-
 	return .9f;
 }
 
@@ -38,13 +27,9 @@ bool UStrongholdAction::CanRun(AAIController* Controller, APawn* Pawn) const
 		return false;
 	}
 
-	// if defense point is of priority then no need for further action.
-	if (CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent() && CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()->GetIsPriority()) {
-
-		// if near destination, then no need for further action
-		if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()->GetComponentLocation(), 50.f)) {
-			return false;
-		}
+	// has arrived at the stronghold point?
+	if (ArrivedAtTarget) {
+		return false;
 	}
 
 	return true;
@@ -81,5 +66,13 @@ void UStrongholdAction::MoveToDefensePoint()
 {
 	auto TargetDestination = CombatAIController->GetStrongholdDefenderComponent()->GetChosenCoverPointComponent()->GetComponentLocation();
 	CombatAIController->SetTargetDestination(TargetDestination);
-	CombatAIController->GetAIMovementComponent()->MoveToDestination(TargetDestination, 20.f, AIBehaviourState::Normal, true, false);
+	MoveToResult = CombatAIController->GetAIMovementComponent()->MoveToDestination(TargetDestination, 10.f, AIBehaviourState::Normal, true, false);
+
+	// if near destination, then no need for further action
+	if (MoveToResult == EPathFollowingRequestResult::AlreadyAtGoal) {
+		ArrivedAtTarget = true;
+	}
+	else {
+		ArrivedAtTarget = false;
+	}
 }

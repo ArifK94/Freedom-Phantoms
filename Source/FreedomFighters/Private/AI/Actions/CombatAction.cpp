@@ -46,6 +46,9 @@ void UCombatAction::Exit(AAIController* Controller, APawn* Pawn)
 {
 	Super::Exit(Controller, Pawn);
 
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Shoot);
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndShooting);
+
 	OwningCombatCharacter->EndFire();
 
 	// To avoid MG from contining to charge up.
@@ -134,8 +137,6 @@ void UCombatAction::CombatMode()
 		// shoot with primary / secondary wepaons.
 		else
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Shoot!"));
-
 			Aim();
 
 			// change grenade to primary weapon if greande is equipped.

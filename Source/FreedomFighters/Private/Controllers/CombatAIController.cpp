@@ -82,6 +82,8 @@ void ACombatAIController::Tick(float DeltaTime)
 	if (!OwningCombatCharacter->GetHealthComp()->IsAlive()) {
 		return;
 	}
+
+	FindMountedGun();
 }
 
 void ACombatAIController::Init()
@@ -176,7 +178,7 @@ void ACombatAIController::Init()
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
-		//UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitAttackAction::StaticClass());
@@ -191,7 +193,7 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	if (UtilityAIComponent) {
-		UtilityAIComponent->EnableUtilityAI = true;
+		UtilityAIComponent->SetEnableUtilityAI(true);
 	}
 
 	// get owning character
@@ -300,7 +302,7 @@ void ACombatAIController::ClearTimers()
 	}
 
 	if (UtilityAIComponent) {
-		UtilityAIComponent->EnableUtilityAI = false;
+		UtilityAIComponent->SetEnableUtilityAI(false);
 	}
 
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
@@ -559,6 +561,41 @@ void ACombatAIController::MoveToRandomPoint()
 	}
 }
 
+void ACombatAIController::FindMountedGun()
+{
+	auto SelectedMG = MountedGunFinderComponent->FindMG();
+
+	// if found an MG 
+	// & enemy is not behind the MG
+	if (SelectedMG) {
+		bool IsMGValid = true;
+		// Check if AI has a ollow order, if it's defend or attack then the if statement should be ignored
+		// and commander is near the MG,
+		if (Commander &&
+			CurrentCommand == CommanderOrders::Follow &&
+			!IsNearCommander(SelectedMG->GetCharacterStandPos())) {
+			IsMGValid = false;
+		}
+
+		if (EnemyActor && IsMGValid) {
+			bool IsInRange = MountedGunFinderComponent->IsInTargetRange(SelectedMG, EnemyActor, OwningCombatCharacter);
+
+			if (!IsInRange) {
+				IsMGValid = false;
+			}
+			else if (SharedService::IsTargetBehind(SelectedMG, EnemyActor)) {
+				IsMGValid = false;
+			}
+		}
+
+		if (IsMGValid) {
+
+			SelectedMG->SetPotentialOwner(OwningCombatCharacter);
+			OwningCombatCharacter->SetMountedGun(SelectedMG);
+		}
+	}
+
+}
 
 
 void ACombatAIController::StartPatrol()
