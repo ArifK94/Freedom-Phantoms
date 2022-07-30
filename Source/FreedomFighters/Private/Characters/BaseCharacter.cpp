@@ -1160,11 +1160,11 @@ void ABaseCharacter::StartDestroy()
 	GetAttachedActors(AttachedActors);
 	DetroyChildActor(AttachedActors);
 
-	SetActorHiddenInGame(true);
-	SetHidden(true);
-	SetActorEnableCollision(false);
-	SetActorTickEnabled(false);
-	//Destroy();
+	//SetActorHiddenInGame(true);
+	//SetHidden(true);
+	//SetActorEnableCollision(false);
+	//SetActorTickEnabled(false);
+	Destroy();
 }
 
 void ABaseCharacter::DetroyChildActor(TArray<AActor*> ParentActor)

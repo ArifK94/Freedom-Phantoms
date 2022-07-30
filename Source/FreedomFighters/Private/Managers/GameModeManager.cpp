@@ -114,5 +114,10 @@ void AGameModeManager::AddDroppedWeapon(AWeapon* Weapon)
 
 			DroppedWeapons.RemoveAt(0);
 		}
+		// if weapon returned is null then remove it from the list.
+		else
+		{
+			DroppedWeapons.RemoveAt(0);
+		}
 	}
 }

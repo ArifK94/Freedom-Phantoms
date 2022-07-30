@@ -30,6 +30,8 @@ void UUtilityAIComponent::BeginPlay()
 	OnUtilityAIInitialized.Broadcast();
 }
 
+#include "CustomComponents/HealthComponent.h"
+
 // Called every frame
 void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -298,7 +300,9 @@ void UUtilityAIComponent::SetEnableUtilityAI(bool Enabled)
 	// if not enabled, then do not tick
 	if (!Enabled) {
 
-		if (LastAction) {
+		if (LastAction) 
+		{
+			LastAction->Kill();
 			LastAction->Exit(nullptr, nullptr);
 			LastAction = nullptr;
 		}
