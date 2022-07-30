@@ -30,8 +30,6 @@ void UUtilityAIComponent::BeginPlay()
 	OnUtilityAIInitialized.Broadcast();
 }
 
-#include "CustomComponents/HealthComponent.h"
-
 // Called every frame
 void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
