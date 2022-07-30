@@ -158,7 +158,6 @@ private:
 	FTimerHandle THandler_FindCover;
 	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
-	FTimerHandle THandler_PatrolStart;
 
 
 	bool HasPlayedTargetFoundSound;
@@ -214,13 +213,10 @@ private:
 
 	void CheckCommanderOrder();
 
-	void StartPatrol();
-
 	void TargetFound();
 
 	void MoveToRandomPoint();
 
-	void MoveToNextPatrolPoint();
 
 protected:
 	virtual void BeginPlay() override;
@@ -234,6 +230,8 @@ public:
 	AIBehaviourState GetCurrentBehaviourState() { return CurrentBehaviourState; };
 
 	AActor* GetEnemyActor() { return EnemyActor; }
+
+	AActor* GetLastSeenEnemyActor() { return LastSeenEnemyActor; }
 
 	FTargetSearchParameters* GetTargetSearchParams() { return TargetSearchParams; }
 
@@ -257,6 +255,8 @@ public:
 	UCoverFinderComponent* GetCoverFinderComponent() { return CoverFinderComponent; }
 
 	UStrongholdDefenderComponent* GetStrongholdDefenderComponent() { return StrongholdDefenderComponent; }
+
+	UPatrolFollowerComponent* GetPatrolFollowerComponent() { return PatrolFollowerComponent; }
 
 
 	CommanderOrders GetCurrentCommand() { return CurrentCommand; };

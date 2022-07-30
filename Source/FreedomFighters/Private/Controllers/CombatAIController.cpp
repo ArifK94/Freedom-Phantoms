@@ -22,6 +22,7 @@
 #include "AI/Actions/RecruitAttackAction.h"
 #include "AI/Actions/StrongholdAction.h"
 #include "AI/Actions/AvoidanceAction.h"
+#include "AI/Actions/PatrolAction.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -111,14 +112,6 @@ void ACombatAIController::Init()
 		}
 	}
 
-
-	// We want to add patrol path to existing characters on the level rather than spawning AI characters then assigning them
-	auto ActorComponent = OwningCombatCharacter->GetComponentByClass(UPatrolFollowerComponent::StaticClass());
-
-	if (ActorComponent) {
-		PatrolFollowerComponent = Cast<UPatrolFollowerComponent>(ActorComponent);
-	}
-
 	if (!PatrolFollowerComponent)
 	{
 		PatrolFollowerComponent = NewObject<UPatrolFollowerComponent>(OwningCombatCharacter);
@@ -184,6 +177,7 @@ void ACombatAIController::Init()
 		UtilityAIComponent->SpawnActionInstance(URecruitAttackAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UStrongholdAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UAvoidanceAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UPatrolAction::StaticClass());
 	}
 
 }
@@ -206,7 +200,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		// Attach Follow Camera to head socket
 		OwningCombatCharacter->SetFirstPersonView();
 
-		GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
 		GetWorldTimerManager().SetTimer(THandler_CommanderOrders, this, &ACombatAIController::CheckCommanderOrder, 1.0f, true);
 
 
@@ -307,7 +300,6 @@ void ACombatAIController::ClearTimers()
 
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 	GetWorldTimerManager().ClearTimer(THandler_FindCover);
-	GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
 }
 
 void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
@@ -319,20 +311,7 @@ void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourSta
 
 void ACombatAIController::OnMovementDestinationReached(FVector Destination)
 {
-	switch (CurrentBehaviourState)
-	{
-	case AIBehaviourState::Patrol:
-		MoveToNextPatrolPoint();
-		return;
-	case AIBehaviourState::MovingToLastSeenEnemy:
-		GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ACombatAIController::UpdateLastSeen, 1.0f, true, FMath::RandRange(2.f, 5.f));
-		return;
-	}
 
-	if (!OwningCombatCharacter->GetMountedGun())
-	{
-		GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, .5f, true);
-	}
 }
 
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
@@ -497,15 +476,6 @@ void ACombatAIController::UpdateLastSeen()
 
 	LastSeenEnemyActor = nullptr;
 
-	// Go back to patrolling if not following commander or has no destination set
-	if (CurrentBehaviourState != AIBehaviourState::PriorityOrdersCommander &&
-		CurrentBehaviourState != AIBehaviourState::PriorityDestination)
-	{
-		if (!THandler_PatrolStart.IsValid()) {
-			GetWorldTimerManager().SetTimer(THandler_PatrolStart, this, &ACombatAIController::StartPatrol, 1.0f, true);
-		}
-	}
-
 	GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 }
 
@@ -598,39 +568,6 @@ void ACombatAIController::FindMountedGun()
 }
 
 
-void ACombatAIController::StartPatrol()
-{
-	if (!PatrolFollowerComponent || EnemyActor || LastSeenEnemyActor || CurrentBehaviourState == AIBehaviourState::Patrol) {
-		GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
-		return;
-	}
-
-	auto OutLocation = PatrolFollowerComponent->GetCurrentPathPoint();
-
-	if (!OutLocation.IsZero())
-	{
-		TargetDestination = OutLocation;
-		auto Movement = AIMovementComponent->MoveToDestination(TargetDestination, 0.f, AIBehaviourState::Patrol, false);
-
-		if (Movement == EPathFollowingRequestResult::RequestSuccessful)
-		{
-			SetBehaviourState(AIBehaviourState::Patrol);
-			GetWorldTimerManager().ClearTimer(THandler_PatrolStart);
-		}
-	}
-}
-
-void ACombatAIController::MoveToNextPatrolPoint()
-{
-	auto OutLocation = PatrolFollowerComponent->GetNextPathPoint();
-
-	if (!OutLocation.IsZero())
-	{
-		TargetDestination = OutLocation;
-		AIMovementComponent->MoveToDestination(TargetDestination, 0.f, AIBehaviourState::Patrol, false);
-	}
-
-}
 
 void ACombatAIController::CheckCommanderOrder()
 {

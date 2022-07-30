@@ -40,5 +40,8 @@ protected:
 	virtual void BeginPlay() override;
 
 
+public:
+
+	APatrolPath* GetPatrolPath() { return PatrolPath; }
 		
 };
