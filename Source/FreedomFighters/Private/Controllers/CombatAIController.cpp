@@ -21,6 +21,7 @@
 #include "AI/Actions/RecruitDefendAction.h"
 #include "AI/Actions/RecruitAttackAction.h"
 #include "AI/Actions/StrongholdAction.h"
+#include "AI/Actions/AvoidanceAction.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -52,7 +53,6 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
 	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
-
 	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
 }
 
@@ -63,6 +63,9 @@ void ACombatAIController::BeginPlay()
 
 	DefaultDestinationRadius = DestinationRadius;
 
+	EnemyCloseRange = FMath::RandRange(500.0f, 1000.0f);
+	TimeSpentOnEnemyRange = FMath::RandRange(10.f, 20.0f);
+
 	TargetSearchParams = new FTargetSearchParameters();
 }
 
@@ -70,37 +73,17 @@ void ACombatAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	bDeltaTime = DeltaTime;
+
 	if (!GetPawn()) {
 		return;
 	}
-
-	m_DelaTime = DeltaTime;
 
 	if (!OwningCombatCharacter->GetHealthComp()->IsAlive()) {
 		return;
 	}
 
-	if (EnemyActor)
-	{
-		// if using a mounted gun
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
-		{
-			MountedGunFinderComponent->FocusTarget(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation());
-		}
-		else
-		{
-			SetFocus(EnemyActor);
-			//SetFocalPoint(TargetSearchParams->TargetLocation);
-		}
-	}
-	else
-	{
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
-		}
-	}
-
+	FindMountedGun();
 }
 
 void ACombatAIController::Init()
@@ -194,12 +177,13 @@ void ACombatAIController::Init()
 
 	if (UtilityAIComponent) {
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
-		//UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitFollowAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitDefendAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(URecruitAttackAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UStrongholdAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UAvoidanceAction::StaticClass());
 	}
 
 }
@@ -209,15 +193,13 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	if (UtilityAIComponent) {
-		UtilityAIComponent->EnableUtilityAI = true;
+		UtilityAIComponent->SetEnableUtilityAI(true);
 	}
 
 	// get owning character
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
 
 	Init();
-
-	CanFindCover = true;
 
 	if (OwningCombatCharacter)
 	{
@@ -251,12 +233,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 
 		if (TargetFinderComponent) {
 			TargetFinderComponent->SetFindTargetPerFrame(true);
-		}
-
-		if (StrongholdDefenderComponent) {
-			if (!StrongholdDefenderComponent->OnDefenderPointFound.IsBound()) {
-				StrongholdDefenderComponent->OnDefenderPointFound.AddDynamic(this, &ACombatAIController::OnStrongholdPointFound);
-			}
 		}
 
 		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
@@ -304,13 +280,6 @@ void ACombatAIController::OnUnPossess()
 		}
 
 
-		if (StrongholdDefenderComponent) {
-			if (StrongholdDefenderComponent->OnDefenderPointFound.IsBound()) {
-				StrongholdDefenderComponent->OnDefenderPointFound.RemoveDynamic(this, &ACombatAIController::OnStrongholdPointFound);
-			}
-		}
-
-
 		if (Commander) {
 			Commander->OnOrderSent.RemoveDynamic(this, &ACombatAIController::OnOrderReceived);
 			Commander = nullptr;
@@ -333,7 +302,7 @@ void ACombatAIController::ClearTimers()
 	}
 
 	if (UtilityAIComponent) {
-		UtilityAIComponent->EnableUtilityAI = false;
+		UtilityAIComponent->SetEnableUtilityAI(false);
 	}
 
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
@@ -344,6 +313,8 @@ void ACombatAIController::ClearTimers()
 void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
 {
 	SetBehaviourState(BehaviourState);
+
+	OwningCombatCharacter->StopCover();
 }
 
 void ACombatAIController::OnMovementDestinationReached(FVector Destination)
@@ -383,23 +354,14 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	OwningCombatCharacter->DropMountedGun();
 
-
 	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 
-	CanFindCover = true;
 	HasChosenNearTargetDest = false;
-
+	IsRunningForCover = false;
+	CoverFound = false;
 
 	StayCombatAlert = false;
 	UpdatCombatAlert();
-}
-
-void ACombatAIController::OnStrongholdPointFound(FStrongholdDefenderParams StrongholdDefenderParams)
-{
-	//OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(false);
-
-	//TargetDestination = StrongholdDefenderParams.TargetPoint;
-	//AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::PriorityDestination);
 }
 
 void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
@@ -449,7 +411,35 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	TargetSearchParams->TargetActor = TargetSearchParameters.TargetActor;
 	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
 
-	EnemyActor = ChosenTarget;
+	// if no new enemy found,
+	// maintain current enemy if enemy or owning AI character are taking cover.
+	if (ChosenTarget == nullptr && EnemyActor) 
+	{
+		auto EnemyCharacter = Cast<ACombatCharacter>(EnemyActor);
+		
+		auto IsTargetClose = SharedService::IsNearTargetPosition(OwningCombatCharacter, EnemyActor, EnemyCloseRange);
+
+		// is enemy alive?
+		// AI can still see enemy if either enemy.
+		// or is my AI taking cover & the enemy is close? Should not be able to 
+		if (UHealthComponent::IsAlive(EnemyCharacter) && EnemyCharacter->IsTakingCover() || (OwningCombatCharacter->IsTakingCover() && IsTargetClose))
+		{
+			TimeSpentOnEnemy++;
+			return;
+		}
+		// otherwise enemy is unreachable.
+		else
+		{
+			EnemyActor = nullptr;
+		}
+	}
+	else 
+	{
+		// same enemy as before?
+		TimeSpentOnEnemy = EnemyActor == ChosenTarget ? TimeSpentOnEnemy + 1 : .0f;
+
+		EnemyActor = ChosenTarget;
+	}
 }
 
 /**
@@ -457,25 +447,10 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 */
 void ACombatAIController::OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams)
 {
-	FVector OwnerLocation = OwningCombatCharacter->GetActorLocation();
-	FVector AvoidableLocation = AvoidableParams.Actor->GetActorLocation();
+	bAvoidableParams = AvoidableParams;
 
-	// Distance away from the avoidable actor.
-	FVector DirectionAvoidance = UKismetMathLibrary::GetForwardVector(UKismetMathLibrary::FindLookAtRotation(OwnerLocation, AvoidableLocation));
-	DirectionAvoidance = (DirectionAvoidance * (AvoidableParams.AvoidableDistance * -1.f)) + OwnerLocation;
-
-
-	// get a random reachable point away from avoidance distance to make the move to dynamic
-	FNavLocation NavLocation;
-	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-	bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->GetRandomReachablePointInRadius(DirectionAvoidance, AvoidableParams.AvoidableDistance, NavLocation);
-
-
-	// move to the point away from the avoidable
-	TargetDestination = NavLocation.Location;
-	AIMovementComponent->MoveToDestination(TargetDestination, 20.f, AIBehaviourState::PriorityDestination);
-
-	if (OwningCombatCharacter->GetVoiceAudioComponent()->Sound != OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound || !OwningCombatCharacter->GetVoiceAudioComponent()->IsPlaying()) {
+	if (OwningCombatCharacter->GetVoiceAudioComponent()->Sound != OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound ||
+		!OwningCombatCharacter->GetVoiceAudioComponent()->IsPlaying()) {
 		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound);
 	}
 }
@@ -586,6 +561,41 @@ void ACombatAIController::MoveToRandomPoint()
 	}
 }
 
+void ACombatAIController::FindMountedGun()
+{
+	auto SelectedMG = MountedGunFinderComponent->FindMG();
+
+	// if found an MG 
+	// & enemy is not behind the MG
+	if (SelectedMG) {
+		bool IsMGValid = true;
+		// Check if AI has a ollow order, if it's defend or attack then the if statement should be ignored
+		// and commander is near the MG,
+		if (Commander &&
+			CurrentCommand == CommanderOrders::Follow &&
+			!IsNearCommander(SelectedMG->GetCharacterStandPos())) {
+			IsMGValid = false;
+		}
+
+		if (EnemyActor && IsMGValid) {
+			bool IsInRange = MountedGunFinderComponent->IsInTargetRange(SelectedMG, EnemyActor, OwningCombatCharacter);
+
+			if (!IsInRange) {
+				IsMGValid = false;
+			}
+			else if (SharedService::IsTargetBehind(SelectedMG, EnemyActor)) {
+				IsMGValid = false;
+			}
+		}
+
+		if (IsMGValid) {
+
+			SelectedMG->SetPotentialOwner(OwningCombatCharacter);
+			OwningCombatCharacter->SetMountedGun(SelectedMG);
+		}
+	}
+
+}
 
 
 void ACombatAIController::StartPatrol()
@@ -681,4 +691,22 @@ void ACombatAIController::SetBehaviourState(AIBehaviourState State)
 	}
 
 	CurrentBehaviourState = State;
+}
+
+void ACombatAIController::SetFocalPosition(FVector TargetLocation)
+{
+	FRotator NewControlRotation = GetControlRotation();
+
+	// Look toward focus
+	const FVector FocalPoint = TargetLocation;
+	NewControlRotation = (FocalPoint - OwningCombatCharacter->GetPawnViewLocation()).Rotation();
+
+	SetControlRotation(NewControlRotation);
+
+	const FRotator CurrentPawnRotation = OwningCombatCharacter->GetActorRotation();
+
+	if (CurrentPawnRotation.Equals(NewControlRotation, 1e-3f) == false)
+	{
+		OwningCombatCharacter->FaceRotation(NewControlRotation, bDeltaTime);
+	}
 }

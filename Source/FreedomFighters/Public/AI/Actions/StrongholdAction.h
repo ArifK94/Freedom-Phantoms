@@ -18,6 +18,13 @@ private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
+	EPathFollowingRequestResult::Type MoveToResult;
+
+	/**
+	* Has AI arrived at the stronghold point?
+	*/
+	bool ArrivedAtTarget;
+
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
 

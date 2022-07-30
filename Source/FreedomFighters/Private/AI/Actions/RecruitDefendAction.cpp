@@ -29,8 +29,13 @@ bool URecruitDefendAction::CanRun(AAIController* Controller, APawn* Pawn) const
 		return false;
 	}
 
+	// is searching or in cover? To allow AI to find cover once it has its reached order destination.
+	if (CombatAIController->GetIsRunningForCover() || OwningCombatCharacter->IsTakingCover()) {
+		return false;
+	}
+
 	// if near destination to defend, then no need run this action any further.
-	if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetRecruitInfo()->TargetLocation, 2.f)) {
+	if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetRecruitInfo()->TargetLocation, 5.f)) {
 		return false;
 	}
 

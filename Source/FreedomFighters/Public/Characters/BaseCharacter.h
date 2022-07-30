@@ -33,8 +33,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* CameraBoom;
 
+	/*
+	* Left shoulder spring arm.
+	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		USpringArmComponent* AimCameraSpring;
+		USpringArmComponent* AimCameraLeftSpring;
+
+	/*
+	* Right shoulder spring arm.
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		USpringArmComponent* AimCameraRightSpring;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		USpringArmComponent* FirstPersonCameraSpring;
@@ -83,11 +92,17 @@ private:
 		UAudioComponent* VoiceAudioComponent;
 
 protected:
+	class AGameModeManager* GameModeManager;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName HeadSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName RightHandSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		FName ShoulderLeftocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ShoulderRightSocket;
@@ -148,8 +163,27 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool isCoveringLow;
 
+	/**
+	* To prevent the stand to crouch animations from playing if aleady in croching position, this is usefulf when changing from cover state back to default animation state.
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsCurrentlyCrouched;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverDistance;
+
+	/**
+	* Last position when taking cover. This is to allow the character to move back last position after moving out of corner cover using root motion.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector LastCoverPosition;
+
+	/**
+	* Last rotation when taking cover. This is to allow the character to move back last position after moving out of corner cover using root motion.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FRotator LastCoverRotation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsExitingVehicle;
@@ -268,13 +302,20 @@ private:
 
 	void UpdateDirection();
 
-	void StartCover(FHitResult OutHit);
+	/**
+	* Is the cover crouch only will only allow character to crouch but not stand in cover.
+	*/
+	void StartCover(FHitResult OutHit, bool IsCrouchOnly);
 
 	void StartDestroy();
 	void DetroyChildActor(TArray<AActor*> ParentActor);
 
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
+
+	virtual FVector GetPawnViewLocation() const override;
+
+	virtual FRotator GetViewRotation() const override;
 
 	/** Default is idle, no interaction, the point is to reach default idle animation state.  */
 	virtual void SetDefaultState();
@@ -294,12 +335,32 @@ public:
 
 	bool IsCharacterMoving();
 
+	virtual void Jump() override;
+
 	virtual void BeginAim();
 	virtual void EndAim();
 
 	void TakeCover();
 	void CoverMovement(float Value);
 	virtual void StopCover();
+
+	/**
+	* Can character stand up while in cover?
+	*/
+	bool CanCoverStand();
+
+
+	/**
+	* Can character aim based on current state eg. while taking cover or crouching etc.
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool CanAim();
+
+	/**
+	* Can character peak up while in cover?
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool CanCoverPeakUp();
 
 	void SetVehicleSeat(FVehicletSeating Seat);
 	virtual void SetIsExitingVehicle(bool IsExiting);
@@ -317,11 +378,6 @@ protected:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
-
-	virtual FVector GetPawnViewLocation() const override;
-
-	virtual FRotator GetViewRotation() const override;
 
 	virtual void BeginPlay() override;
 
@@ -405,9 +461,13 @@ public:
 
 	void SetIsReviving(bool Value);
 
-
+	
 	void SetRightInputValue(float Value) {
 		RightInputValue = Value;
+	}
+
+	void SetForwardInputValue(float Value) {
+		ForwardInputValue = Value;
 	}
 
 

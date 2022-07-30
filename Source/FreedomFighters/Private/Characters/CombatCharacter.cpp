@@ -10,6 +10,7 @@
 #include "Weapons/Projectile.h"
 #include "CustomComponents/ObjectPoolComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
+#include "Managers/GameModeManager.h"
 #include "FreedomFighters/FreedomFighters.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -291,6 +292,13 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		if (nearestFriendly)
 		{
 			nearestFriendly->FriendlyKilled();
+		}
+
+
+		if (!InHealthParameters.AffectedHealthComponent->GetIsWounded())
+		{
+			GameModeManager->AddDroppedWeapon(primaryWeaponObj);
+			GameModeManager->AddDroppedWeapon(secondaryWeaponObj);
 		}
 	}
 }
@@ -703,6 +711,11 @@ void ACombatCharacter::EquipWeapon(AWeapon* Weapon)
 
 	EndFire();
 
+	// allowing player to aim while reloading in cover has a strange effect.
+	if (isTakingCover) {
+		EndAim();
+	}
+
 	UpdateCombatMode();
 
 	BeginWeaponSwap();
@@ -937,6 +950,11 @@ void ACombatCharacter::BeginFire()
 		else {
 			return;
 		}
+	}
+
+	// can shoot from cover?
+	if (isTakingCover && !isAtCoverCorner && !CanCoverPeakUp()) {
+		return;
 	}
 
 	// do fire if no throwables available

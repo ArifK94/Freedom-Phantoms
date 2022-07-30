@@ -3,9 +3,11 @@
 
 #include "CustomComponents/CoverFinderComponent.h"
 #include "Managers/GameModeManager.h"
+#include "Services/SharedService.h"
+#include "FreedomFighters/FreedomFighters.h"
 
+#include "GameFramework/Controller.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Components/SphereComponent.h"
 #include "NavigationSystem.h"
 #include "DrawDebugHelpers.h"
 
@@ -13,7 +15,8 @@ UCoverFinderComponent::UCoverFinderComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-	CoverRadius = 500.f;
+	CoverRadius = 10.f;
+	CoverLength = 1000.f;
 
 	NumberOfCoverTraces = 35;
 }
@@ -22,135 +25,94 @@ void UCoverFinderComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//CoverSphere = NewObject<USphereComponent>(GetOwner());
-	//CoverSphere->RegisterComponent();
-	//CoverSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-	//CoverSphere->SetSphereRadius(CoverRadius);
-	//CoverSphere->SetCollisionProfileName(TEXT("OverlapAll"));
-
-
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
+	Controller = Cast<AController>(GetOwner());
+	Pawn = Controller->GetPawn();
+}
+
+void UCoverFinderComponent::Init()
+{
+	if (Controller == nullptr) {
+		Controller = Cast<AController>(GetOwner());
+	}
+
+	if (Pawn == nullptr) {
+		Pawn = Controller->GetPawn();
+	}
 }
 
 
-FVector UCoverFinderComponent::FindCover(FVector StartLocation)
+bool UCoverFinderComponent::FindCover(FVector StartLocation, FVector& ChosenCoverPoint)
 {
-	auto ChosenCoverPoint = FVector();
+	ChosenCoverPoint = FVector::ZeroVector;
 
 	if (StartLocation.IsZero()) {
-		return ChosenCoverPoint;
+		return false;
 	}
 
 	TArray<FVector> CoverLocationPoints;
 
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(GetOwner());
-	QueryParams.bTraceComplex = true;
-
-	FCollisionObjectQueryParams ObjectParams;
-	ObjectParams.AllObjects;
-
-	float factor = 360.0f / NumberOfCoverTraces;
+	float factor = 360.f / NumberOfCoverTraces;
 
 	// 360 degrees line trace around character
 	for (int i = 0; i < NumberOfCoverTraces; i++)
 	{
-
 		FNavLocation NavLocation;
-		bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(GetOwner()->GetActorLocation(), NavLocation);
+		bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(StartLocation, NavLocation);
 
-		if (bOnNavMesh)
-		{
-			const FQuat CharacterTopRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, i * factor).Quaternion();
-			FVector Foward = UKismetMathLibrary::Quat_RotateVector(CharacterTopRotation, FVector(1.0f, 0.0f, 0.0f));
-
-			FVector Start = (Foward * CoverRadius) + NavLocation.Location;
-
-			FHitResult HitResult;
-			bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, NavLocation.Location, ECC_Visibility);
-
-
-			//DrawDebugLine(GetWorld(), Start, NavLocation.Location, FColor::Emerald, true, 5.0f, 0, 1.0f);
-
-			// get all hit results which hit an obstacle
-			if (bHit)
-			{
-				//FVector LocationPoint = HitResult.ImpactPoint + (HitResult.ImpactNormal * 50.0f) + FVector(0.0f, 0.0f, 100.0f);
-				FVector LocationPoint = HitResult.ImpactPoint;
-
-				DrawDebugLine(GetWorld(), Start, LocationPoint, FColor::Magenta, true, 50.0f, 0, 1.0f);
-
-				if (!IsCoverPointTaken(LocationPoint))
-				{
-
-					bool CanSeeTarget = false;
-					float directionValue = FVector::DotProduct(LocationPoint, GetOwner()->GetActorLocation());
-
-					float Offset = 50.0f;
-					FHitResult HitTargetResult2, HitTargetResult3;
-					bool bTargetHit2 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult2, LocationPoint + FVector(0.0f, Offset, 0.0f), GetOwner()->GetActorLocation(), ObjectParams, QueryParams);
-					bool bTargetHit3 = GetWorld()->LineTraceSingleByObjectType(HitTargetResult3, LocationPoint + FVector(0.0f, 0.0f, Offset), GetOwner()->GetActorLocation(), ObjectParams, QueryParams);
-
-					//if (bTargetHit2)
-					//{
-					//	if (Cast<ACombatCharacter>(HitTargetResult2.GetActor()))
-					//	{
-					//		CanSeeTarget = true;
-					//	}
-					//}
-
-					//if (bTargetHit3)
-					//{
-					//	if (Cast<ACombatCharacter>(HitTargetResult3.GetActor()))
-					//	{
-					//		CanSeeTarget = true;
-					//	}
-					//}
-
-					CoverLocationPoints.Add(LocationPoint);
-
-				}
-
-			}
+		if (!bOnNavMesh) {
+			continue;
 		}
+
+		const FQuat CharacterTopRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, i * factor).Quaternion();
+		FVector Foward = UKismetMathLibrary::Quat_RotateVector(CharacterTopRotation, FVector(1.0f, 0.0f, 0.0f));
+
+		FVector Start = NavLocation.Location;
+		FVector End = (Foward * CoverLength) + Start;
+
+		FHitResult HitResult;
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, COLLISION_COVER);
+
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Cyan, true, 5.0f, 0, 1.0f);
+
+		// get all hit results which hit an obstacle
+		if (!bHit) {
+			continue;
+		}
+
+		// the gap between impact point & the location on the navmesh for the npc to move to.
+		float CoverOffset = 50.f;
+
+		// based on which side the cover point is of the object, the offset will need to be negative or positive.
+		auto DistanceX = HitResult.ImpactNormal.X > 0 ? CoverOffset : -CoverOffset;
+		auto DistanceY = HitResult.ImpactNormal.Y > 0 ? CoverOffset : -CoverOffset;
+
+
+		// add offset to to allow the destination to be reachable on the navmesh 
+		FVector LocationPoint = FVector(
+			HitResult.ImpactPoint.X + DistanceX,
+			HitResult.ImpactPoint.Y + DistanceY,
+			HitResult.ImpactPoint.Z
+		);
+
+		//DrawDebugSphere(GetWorld(), LocationPoint, 5.f, 10.f, FColor::Red, false, 10.f, 0, 2);
+
+		if (LocationPoint.IsZero()) {
+			continue;
+		}
+
+		// has this location already been added to the list?
+		if (CoverLocationPoints.Contains(LocationPoint)) {
+			continue;
+		}
+
+		// is the cover point taken by someone else?
+		if (IsCoverPointTaken(LocationPoint)) {
+			continue;
+		}
+
+		CoverLocationPoints.Add(LocationPoint);
 	}
-
-
-
-
-
-	// create a collision sphere
-	//FCollisionShape MyColSphere = FCollisionShape::MakeSphere(CoverRadius);
-
-	//// create tarray for hit results
-	//TArray<FHitResult> OutHits;
-
-	//// check if something got hit in the sweep
-	//bool isHit = GetWorld()->SweepMultiByChannel(OutHits, GetOwner()->GetActorLocation(), StartLocation, FQuat::Identity, ECC_Visibility, MyColSphere);
-
-
-	//if (isHit)
-	//{
-	//	for (auto& Hit : OutHits)
-	//	{
-	//		//DrawDebugSphere(GetWorld(), Hit.ImpactPoint, CoverRadius, 20, FColor::Purple, false, 100.f, 0, 2);
-
-	//		AActor* DamagedActor = Hit.GetActor();
-
-	//		if (!DamagedActor)
-	//		{
-	//			FNavLocation NavLocation;
-	//			UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-
-	//			bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(Hit.ImpactPoint, NavLocation);
-
-	//			if (bOnNavMesh)
-	//			{
-	//				CoverLocationPoints.Add(NavLocation.Location);
-	//			}
-	//		}
-	//	}
-	//}
 
 
 	if (CoverLocationPoints.Num() > 0)
@@ -160,39 +122,163 @@ FVector UCoverFinderComponent::FindCover(FVector StartLocation)
 		if (!PointLocation.IsZero())
 		{
 			ChosenCoverPoint = PointLocation;
-
-			DrawDebugSphere(GetWorld(), ChosenCoverPoint, 80.f, 20, FColor::Purple, false, 100.f, 0, 2);
 		}
 	}
 
-	return ChosenCoverPoint;
+	return !ChosenCoverPoint.IsZero();
+}
+
+bool UCoverFinderComponent::FindCover(AActor* TargetActor, FVector& ChosenCoverPoint)
+{
+	ChosenCoverPoint = FVector::ZeroVector;
+
+	if (TargetActor == nullptr || TargetActor->GetActorLocation().IsZero()) {
+		return false;
+	}
+
+	Init();
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(Pawn);
+	QueryParams.bTraceComplex = true;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+	TArray<FVector> CoverLocationPoints;
+
+	float factor = 360.f / NumberOfCoverTraces;
+
+	// 360 degrees line trace around character
+	for (int i = 0; i < NumberOfCoverTraces; i++)
+	{
+		FNavLocation NavLocation;
+		bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(Pawn->GetActorLocation(), NavLocation);
+
+		if (!bOnNavMesh) {
+			continue;
+		}
+
+		const FQuat CharacterTopRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, i * factor).Quaternion();
+		FVector Foward = UKismetMathLibrary::Quat_RotateVector(CharacterTopRotation, FVector(1.0f, 0.0f, 0.0f));
+
+		FVector Start = NavLocation.Location;
+		FVector End = (Foward * CoverLength) + Start;
+
+		FHitResult HitResult;
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, COLLISION_COVER);
+
+
+		// get all hit results which hit an obstacle
+		if (!bHit) {
+			continue;
+		}
+
+		// avoid hitpoints at the origin.
+		if (HitResult.ImpactPoint.IsZero()) {
+			continue;
+		}
+
+
+		// the gap between impact point & the location on the navmesh for the npc to move to.
+		float CoverOffset = 50.f;
+
+		// based on which side the cover point is of the object, the offset will need to be negative or positive.
+		auto DistanceX = HitResult.ImpactNormal.X > 0 ? CoverOffset : -CoverOffset;
+		auto DistanceY = HitResult.ImpactNormal.Y > 0 ? CoverOffset : -CoverOffset;
+
+
+		// add offset to to allow the destination to be reachable on the navmesh 
+		FVector LocationPoint = FVector(
+			HitResult.ImpactPoint.X + DistanceX,
+			HitResult.ImpactPoint.Y + DistanceY,
+			HitResult.ImpactPoint.Z
+		);
+
+		// we want cover points which the target actor cannot see while taking cover.
+		if (SharedService::CanSeeTarget(GetWorld(), LocationPoint, TargetActor, Pawn)) {
+			continue;
+		}
+
+
+		// check if offset to cover points can see the target, if not, then ignore this cover point.
+		// This is to allow the character to peak out & shoot the enemy while in cover.
+		float Offset = 150.f;
+		FVector Left = FVector(LocationPoint.X, LocationPoint.Y - Offset, LocationPoint.Z);
+		FVector Right = FVector(LocationPoint.X, LocationPoint.Y + Offset, LocationPoint.Z);
+		FVector Top = FVector(LocationPoint.X, LocationPoint.Y, LocationPoint.Z + Offset);
+
+
+		bool CanSeeTarget =
+			SharedService::CanSeeTarget(GetWorld(), Left, TargetActor, Pawn) ||
+			SharedService::CanSeeTarget(GetWorld(), Right, TargetActor, Pawn) ||
+			SharedService::CanSeeTarget(GetWorld(), Top, TargetActor, Pawn);
+
+
+		// if no line traces can see the target actor, then ignore this cover point.
+		if (!CanSeeTarget) {
+			continue;
+		}
+
+
+		// has this location already been added to the list?
+		if (CoverLocationPoints.Contains(LocationPoint)) {
+			continue;
+		}
+
+		// is the cover point taken by someone else?
+		if (IsCoverPointTaken(LocationPoint)) {
+			continue;
+		}
+
+		CoverLocationPoints.Add(LocationPoint);
+	}
+
+	if (CoverLocationPoints.Num() > 0)
+	{
+		auto PointLocation = GetClosestCoverPoint(CoverLocationPoints);
+
+		if (!PointLocation.IsZero())
+		{
+			ChosenCoverPoint = PointLocation;
+		}
+	}
+
+	return !ChosenCoverPoint.IsZero();
 }
 
 FVector UCoverFinderComponent::GetClosestCoverPoint(TArray<FVector> CoverLocationPoints)
 {
-	FVector ClosestPoint;
+	FVector ClosestPoint = FVector::ZeroVector;
 	float minDist = CoverRadius;
+
+	Init();
 
 	for (int i = 0; i < CoverLocationPoints.Num(); i++)
 	{
 		FVector Point = CoverLocationPoints[i];
 
-		float Distance = FVector::Dist(GetOwner()->GetActorLocation(), Point);
+		float Distance = FVector::Dist(Pawn->GetActorLocation(), Point);
 
-		if (Distance < minDist)
+		if (Distance < minDist || ClosestPoint.IsZero())
 		{
 			ClosestPoint = Point;
 			minDist = Distance;
 		}
 	}
 
+	// ignore origin location
+	if (ClosestPoint.IsZero()) {
+		return ClosestPoint;
+	}
+
 	// update current cover point, 
 	FWorldCoverPoint CoverLocation = FWorldCoverPoint();
-	CoverLocation.Owner = GetOwner();
+	CoverLocation.Owner = Pawn;
 
 	// remove previous cover point from the list
-	//CoverLocation.Location = ChosenCoverPoint;
-	//GameModeManager->RemoveCoverPoint(CoverLocation);
+	CoverLocation.Location = ClosestPoint;
+	GameModeManager->RemoveCoverPoint(CoverLocation);
 
 	// add the new cover point
 	CoverLocation.Location = ClosestPoint;
@@ -203,12 +289,13 @@ FVector UCoverFinderComponent::GetClosestCoverPoint(TArray<FVector> CoverLocatio
 
 bool UCoverFinderComponent::IsCoverPointTaken(FVector PointLocation)
 {
+	Init();
 
 	// check if current cover has been taken,
 	// if so, then find another cover point
 	FWorldCoverPoint CoverLocation = FWorldCoverPoint();
 	CoverLocation.Location = PointLocation;
-	CoverLocation.Owner = GetOwner();
+	CoverLocation.Owner = Pawn;
 
 	return GameModeManager->IsCoverPointTaken(CoverLocation);
 }

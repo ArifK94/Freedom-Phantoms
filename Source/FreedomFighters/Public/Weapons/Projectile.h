@@ -187,8 +187,6 @@ private:
 
 	FHitResult LastHit;
 
-	bool IsDestroyed;
-
 	FRotator CurrentRotation;
 
 

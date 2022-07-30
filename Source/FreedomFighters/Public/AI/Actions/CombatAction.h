@@ -17,7 +17,10 @@ class FREEDOMFIGHTERS_API UCombatAction : public UUtilityAIAction
 private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
-	
+
+	FTimerHandle THandler_Shoot;
+	FTimerHandle THandler_EndShooting;
+
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
 
@@ -28,20 +31,24 @@ public:
 
 	virtual void Spawn(AAIController* Controller, APawn* Pawn) override;
 
-	virtual void Enter(AAIController* Controller, APawn* Pawn) override;
-
 	virtual void Exit(AAIController* Controller, APawn* Pawn) override;
 
 	virtual void Tick(float DeltaTime, AAIController* Controller, APawn* Pawn) override;
 
 private:
+	void FaceTarget();
+
 	void CombatMode();
 
 	void ShootAtEnemy();
+
+	void EndShooting();
 
 	void ThrowGrenade();
 
 	bool CanThrowGrenade();
 
 	void ReloadWeapon();
+
+	void Aim();
 };

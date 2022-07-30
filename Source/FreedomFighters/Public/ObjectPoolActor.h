@@ -16,6 +16,10 @@ private:
 
 	FTimerHandle THandler_LifespanTimer;
 	bool isActive;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Object Pool", meta = (AllowPrivateAccess = "true"))
+		bool IsDestroyed;
 	
 public:	
 	AObjectPoolActor();
@@ -35,4 +39,6 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
+
+	bool GetIsDestroyed() { return IsDestroyed; }
 };

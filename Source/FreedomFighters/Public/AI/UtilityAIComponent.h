@@ -58,8 +58,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Utility AI")
 		bool bCanRunWithoutPawn;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Utility AI")
-		bool EnableUtilityAI;
 
 	UPROPERTY(BlueprintAssignable, Category = "Utility AI", meta = (DisplayName = "On UtilityAI Action Spawned"))
 		FUtilityAIActionSpawned OnUtilityAIActionSpawned;
@@ -128,6 +126,11 @@ public:
 
 	float ScoreFilter_Implementation(UUtilityAIAction* Action, float Score) const { return Score; }
 
+private:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Utility AI", meta = (AllowPrivateAccess = "true"))
+		bool EnableUtilityAI;
+
 protected:
 
 	UUtilityAIAction* LastAction;
@@ -141,4 +144,7 @@ protected:
 
 	bool CheckLowestScore(UUtilityAIAction* Current, UUtilityAIAction* Best) const;
 	bool CheckHighestScore(UUtilityAIAction* Current, UUtilityAIAction* Best) const;
+
+public:
+	void SetEnableUtilityAI(bool Enabled);
 };

@@ -1,5 +1,7 @@
 #include "Managers/GameModeManager.h"
 #include "Managers/LevelManager.h"
+#include "CustomComponents/HealthComponent.h"
+#include "Weapons/Weapon.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -29,20 +31,44 @@ bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 		{
 			FVector CoverPoint = CoverPoints[i].Location;
 
-			if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 2.0f))
-			{
-				DuplicateAmount++;
-			}
+			//if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 2.0f))
+			//{
+			//	DuplicateAmount++;
+			//}
 
-			if (DuplicateAmount > 0)
-			{
-				return true;
-			}
+			//if (DuplicateAmount > 0)
+			//{
+			//	return true;
+			//}
 
 
-			if (CoverLocation.Owner != CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 15.0f)) 
+			// is there a cover location close to this point?
+			if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 5.f)) 
 			{
-				return true;
+				if (CoverPoints[i].Owner)
+				{
+					// is the cover point assigned to a different?
+					if (CoverLocation.Owner != CoverPoints[i].Owner)
+					{
+						// Owner is no longer alive?
+						if (!UHealthComponent::IsAlive(CoverPoints[i].Owner)) {
+
+							// update the owner to this new owner.
+							CoverPoints[i].Owner = CoverLocation.Owner;
+							return false;
+						}
+
+						// if existing owner is still alive then point is taken.
+						return true;
+					}
+				}
+				// if owner is null
+				else
+				{
+					// update the owner to this new owner.
+					CoverPoints[i].Owner = CoverLocation.Owner;
+					return false;
+				}
 			}
 		}
 	}
@@ -66,6 +92,32 @@ void AGameModeManager::RemoveCoverPoint(FWorldCoverPoint CoverLocation)
 			if (CoverLocation.Owner == CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location)) {
 				CoverPoints.RemoveAt(i);
 			}
+		}
+	}
+}
+
+void AGameModeManager::AddDroppedWeapon(AWeapon* Weapon)
+{
+	Weapon->SetOwner(nullptr);
+	DroppedWeapons.Add(Weapon);
+
+	// if dropped list has reached x amoun then remove the first weapon
+	if (DroppedWeapons.Num() > 10) {
+
+		if (DroppedWeapons[0]) 
+		{
+			// weapon can be picked up by player after it has been dropped so need to check if it still has no owner
+			if (DroppedWeapons[0]->GetOwner() == nullptr)
+			{
+				DroppedWeapons[0]->Destroy();
+			}
+
+			DroppedWeapons.RemoveAt(0);
+		}
+		// if weapon returned is null then remove it from the list.
+		else
+		{
+			DroppedWeapons.RemoveAt(0);
 		}
 	}
 }

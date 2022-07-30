@@ -29,13 +29,18 @@ bool URecruitAttackAction::CanRun(AAIController* Controller, APawn* Pawn) const
 		return false;
 	}
 
-	// if near destination to defend, then no need run this action any further.
-	if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetRecruitInfo()->TargetLocation, 2.f)) {
+	// 	No need to go up close to the HVT location, as long as the recruit NPC is within close distance & can see HVT, then this action does not need to run.
+	if (CanSeeHVT()) {
 		return false;
 	}
 
-	// 	No need to go up close to the HVT location, as long as the recruit NPC is within close distance & can see HVT, then this action does not need to run.
-	if (CanSeeHVT()) {
+	// is searching or in cover? To allow AI to find cover once it has its reached order destination.
+	if (CombatAIController->GetIsRunningForCover() || OwningCombatCharacter->IsTakingCover()) {
+		return false;
+	}
+
+	// if near destination to defend, then no need run this action any further.
+	if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetRecruitInfo()->TargetLocation, 200.f)) {
 		return false;
 	}
 

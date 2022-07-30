@@ -11,7 +11,6 @@ UUtilityAIComponent::UUtilityAIComponent()
 	bCanRunWithoutPawn = true;
 }
 
-
 // Called when the game starts
 void UUtilityAIComponent::BeginPlay()
 {
@@ -29,6 +28,93 @@ void UUtilityAIComponent::BeginPlay()
 	}
 
 	OnUtilityAIInitialized.Broadcast();
+}
+
+// Called every frame
+void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (!EnableUtilityAI) {
+		return;
+	}
+
+
+	AAIController* Controller = Cast<AAIController>(GetOwner());
+	if (!Controller) {
+		return;
+	}
+
+	APawn* Pawn = Controller->GetPawn();
+
+	if (!Pawn) {
+		return;
+	}
+
+
+	OnUtilityAIBeforeScoreComputation.Broadcast();
+
+
+	UUtilityAIAction* BestAction = nullptr;
+
+	if (Pawn || bCanRunWithoutPawn)
+	{
+		BestAction = ComputeBestAction(Controller, Pawn);
+	}
+
+	for (UUtilityAIAction* Action : InstancedAsyncActions)
+	{
+		Action->LastCanRun = !Action->IsMarkedForDeath() && Action->CanRun(Controller, Pawn) && Action->CanRunAsynchronously(Controller, Pawn);
+
+		if (!Action->LastCanRun)
+			continue;
+
+		Action->Tick(DeltaTime, Controller, Pawn);
+		OnUtilityAIActionTicked.Broadcast(Action);
+	}
+
+	if (BestAction)
+	{
+		OnUtilityAIActionChoosen.Broadcast(BestAction);
+		if (LastAction != BestAction)
+		{
+			float CurrentTime = GetWorld()->GetTimeSeconds();
+			// avoid too fast action switching
+			if (LastSwitchTime == 0 || CurrentTime - LastSwitchTime > Bounciness)
+			{
+				OnUtilityAIActionChanged.Broadcast(BestAction, LastAction);
+				if (LastAction)
+				{
+					LastAction->Exit(Controller, LastPawn);
+				}
+				BestAction->Enter(Controller, Pawn);
+				LastSwitchTime = CurrentTime;
+			}
+			else
+			{
+				// fast exit if nothing to run
+				if (!LastAction)
+					return;
+				BestAction = LastAction;
+			}
+		}
+		BestAction->Tick(DeltaTime, Controller, Pawn);
+		LastAction = BestAction;
+		LastPawn = Pawn;
+		OnUtilityAIActionTicked.Broadcast(BestAction);
+		return;
+	}
+
+	OnUtilityAIActionNotAvailable.Broadcast();
+	if (LastAction)
+	{
+		OnUtilityAIActionChanged.Broadcast(nullptr, LastAction);
+		LastAction->Exit(Controller, LastPawn);
+		LastAction->Resurrect();
+		LastAction = nullptr;
+		LastPawn = nullptr;
+	}
+
 }
 
 bool UUtilityAIComponent::CanSpawnActionInstance(TSubclassOf<UUtilityAIAction> ActionClass) const
@@ -163,87 +249,6 @@ UUtilityAIAction* UUtilityAIComponent::ReceiveComputeBestAction_Implementation(A
 	return BestAction;
 }
 
-// Called every frame
-void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (!EnableUtilityAI) {
-		return;
-	}
-
-	AAIController* Controller = Cast<AAIController>(GetOwner());
-	if (!Controller)
-		return;
-
-	APawn* Pawn = Controller->GetPawn();
-
-	OnUtilityAIBeforeScoreComputation.Broadcast();
-
-
-
-	UUtilityAIAction* BestAction = nullptr;
-
-	if (Pawn || bCanRunWithoutPawn)
-	{
-		BestAction = ComputeBestAction(Controller, Pawn);
-	}
-
-	for (UUtilityAIAction* Action : InstancedAsyncActions)
-	{
-		Action->LastCanRun = !Action->IsMarkedForDeath() && Action->CanRun(Controller, Pawn) && Action->CanRunAsynchronously(Controller, Pawn);
-
-		if (!Action->LastCanRun)
-			continue;
-
-		Action->Tick(DeltaTime, Controller, Pawn);
-		OnUtilityAIActionTicked.Broadcast(Action);
-	}
-
-	if (BestAction)
-	{
-		OnUtilityAIActionChoosen.Broadcast(BestAction);
-		if (LastAction != BestAction)
-		{
-			float CurrentTime = GetWorld()->GetTimeSeconds();
-			// avoid too fast action switching
-			if (LastSwitchTime == 0 || CurrentTime - LastSwitchTime > Bounciness)
-			{
-				OnUtilityAIActionChanged.Broadcast(BestAction, LastAction);
-				if (LastAction)
-				{
-					LastAction->Exit(Controller, LastPawn);
-				}
-				BestAction->Enter(Controller, Pawn);
-				LastSwitchTime = CurrentTime;
-			}
-			else
-			{
-				// fast exit if nothing to run
-				if (!LastAction)
-					return;
-				BestAction = LastAction;
-			}
-		}
-		BestAction->Tick(DeltaTime, Controller, Pawn);
-		LastAction = BestAction;
-		LastPawn = Pawn;
-		OnUtilityAIActionTicked.Broadcast(BestAction);
-		return;
-	}
-
-	OnUtilityAIActionNotAvailable.Broadcast();
-	if (LastAction)
-	{
-		OnUtilityAIActionChanged.Broadcast(nullptr, LastAction);
-		LastAction->Exit(Controller, LastPawn);
-		LastAction->Resurrect();
-		LastAction = nullptr;
-		LastPawn = nullptr;
-	}
-
-}
-
 TArray<UUtilityAIAction*> UUtilityAIComponent::GetActionInstances() const
 {
 	return InstancedActions.Array();
@@ -283,4 +288,21 @@ FRandomStream UUtilityAIComponent::GetRandomStream() const
 UUtilityAIAction* UUtilityAIComponent::ComputeBestAction(AAIController* Controller, APawn* Pawn)
 {
 	return ReceiveComputeBestAction(Controller, Pawn);
+}
+
+void UUtilityAIComponent::SetEnableUtilityAI(bool Enabled)
+{
+	EnableUtilityAI = Enabled;
+	PrimaryComponentTick.bCanEverTick = Enabled;
+
+	// if not enabled, then do not tick
+	if (!Enabled) {
+
+		if (LastAction) 
+		{
+			LastAction->Kill();
+			LastAction->Exit(nullptr, nullptr);
+			LastAction = nullptr;
+		}
+	}
 }

@@ -92,6 +92,8 @@ public:
 
 	void AddIgnoreActor(AActor* Actor) { IgnoreActors.Add(Actor); }
 
+	bool CanSeeTarget(AActor* TargetActor, FVector& TargetLocation);
+
 	UFUNCTION(BlueprintCallable)
 		static void AddIgnoreClass(AActor* InOwner, TSubclassOf<AActor> InClass);
 

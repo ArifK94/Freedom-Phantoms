@@ -87,7 +87,7 @@ void ACustomPlayerController::InitInputComponent()
 
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::ToggleCrouch);
 
-	//InputComponent->BindAction("TakeCover", IE_Pressed, this, &ACustomPlayerController::TakeCover);
+	InputComponent->BindAction("TakeCover", IE_Pressed, this, &ACustomPlayerController::TakeCover);
 
 	InputComponent->BindAction("Fire", IE_Pressed, this, &ACustomPlayerController::BeginFire);
 	InputComponent->BindAction("Fire", IE_Released, this, &ACustomPlayerController::EndFire);
@@ -786,6 +786,8 @@ void ACustomPlayerController::MoveForward(float Value)
 	if (!OwningCombatCharacter) {
 		return;
 	}
+
+	OwningCombatCharacter->SetForwardInputValue(Value);
 
 	if (Value == 0.0f) {
 		return;
