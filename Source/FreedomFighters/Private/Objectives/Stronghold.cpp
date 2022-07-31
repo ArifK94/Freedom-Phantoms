@@ -190,20 +190,28 @@ void AStronghold::SpawnDefender()
 	// check if location is on the navmesh
 	FNavLocation NavLocation;
 	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-	//bool navResult = NavigationArea->ProjectPointToNavigation(Location, NavLocation);
 	bool navResult = NavigationArea->GetRandomReachablePointInRadius(Location, 500.f, NavLocation);
 
-	if (navResult)
-	{
-		auto Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionDataSet->OperativeCharacterClass, NavLocation.Location, SpawnArea->GetComponentRotation(), SpawnParams);
-
-		if (Character)
-		{
-			UStrongholdDefenderComponent::SetDefender(Character, this);
-
-			DefendingCombatatants.Add(Cast<ACombatCharacter>(Character));
-		}
+	if (!navResult) {
+		return;
 	}
+
+	FNavLocation NewNavLocation;
+	navResult = NavigationArea->ProjectPointToNavigation(NavLocation.Location, NewNavLocation);
+
+	if (!navResult) {
+		return;
+	}
+
+	auto Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionDataSet->OperativeCharacterClass, NewNavLocation.Location, SpawnArea->GetComponentRotation(), SpawnParams);
+
+	if (!Character) {
+		return;
+	}
+
+	UStrongholdDefenderComponent::SetDefender(Character, this);
+
+	DefendingCombatatants.Add(Cast<ACombatCharacter>(Character));
 }
 
 void AStronghold::UpdateTotalOccupants()

@@ -73,6 +73,12 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 	{
 		CombatAIController->SetIsRunningForCover(false);
 
+		// AI can focus point on the enemy if taking cover.
+		if (!CombatAIController->GetIgnoreFocusOnEnemy()) {
+			CombatAIController->SetIgnoreFocusOnEnemy(false);
+		}
+
+
 		// is the enemy behind the NPC?
 		// can the enemy see the cover point?
 		// stop using this cover & search for another cover point.
@@ -162,9 +168,6 @@ void UCoverAction::TakeCover()
 	CombatAIController->SetFocalPosition(CoverLocation);
 
 	OwningCombatCharacter->TakeCover();
-
-
-	CombatAIController->SetIgnoreFocusOnEnemy(false);
 }
 
 void UCoverAction::BeginCoverPeak()
