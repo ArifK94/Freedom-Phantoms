@@ -401,10 +401,12 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 		
 		auto IsTargetClose = SharedService::IsNearTargetPosition(OwningCombatCharacter, EnemyActor, EnemyCloseRange);
 
+		bool IsEnemyAlive = UHealthComponent::IsAlive(EnemyCharacter);
+
 		// is enemy alive?
 		// AI can still see enemy if either enemy.
 		// or is my AI taking cover & the enemy is close? Should not be able to 
-		if (UHealthComponent::IsAlive(EnemyCharacter) && EnemyCharacter->IsTakingCover() || (OwningCombatCharacter->IsTakingCover() && IsTargetClose))
+		if (IsEnemyAlive && EnemyCharacter->IsTakingCover() || (OwningCombatCharacter->IsTakingCover() && IsTargetClose))
 		{
 			TimeSpentOnEnemy++;
 			return;
@@ -412,8 +414,12 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 		// otherwise enemy is unreachable.
 		else
 		{
-			LastSeenEnemyActor = EnemyActor;
-			LastSeenLocation = EnemyActor->GetActorLocation();
+			// if enemy is still alive, then this is the last seen enemy.
+			if (IsEnemyAlive)
+			{
+				LastSeenEnemyActor = EnemyActor;
+				LastSeenLocation = EnemyActor->GetActorLocation();
+			}
 			EnemyActor = nullptr;
 		}
 	}

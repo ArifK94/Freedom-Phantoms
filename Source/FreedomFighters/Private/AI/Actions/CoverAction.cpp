@@ -114,7 +114,15 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 			MoveToResult = CombatAIController->GetAIMovementComponent()->MoveToDestination(CoverLocation, 10.f, AIBehaviourState::PriorityOrdersCommander);
 			CombatAIController->SetCoverFound(true);
 		}
+	}
 
+	// Change stance if no cover found & enemy is present.
+	if (!CombatAIController->GetCoverFound() && CombatAIController->GetEnemyActor())
+	{
+		if (!THandler_Stance.IsValid())
+		{
+			OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_Stance, this, &UCoverAction::ChangeStance, 1.f, true, FMath::RandRange(2.f, 5.f));
+		}
 	}
 }
 
@@ -183,7 +191,7 @@ void UCoverAction::BeginCoverPeak()
 
 			if (!THandler_EndPeaking.IsValid()) 
 			{
-				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndPeaking, this, &UCoverAction::EndCoverPeak, 1.f, true, FMath::RandRange(2.f, 5.f));
+				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndPeaking, this, &UCoverAction::EndCoverPeak, 1.f, true, FMath::RandRange(5.f, 10.f));
 			}
 		}
 	}
@@ -202,5 +210,24 @@ void UCoverAction::EndCoverPeak()
 
 void UCoverAction::ChangeStance()
 {
-	OwningCombatCharacter->ToggleCrouch();
+	if (OwningCombatCharacter->IsTakingCover() || CombatAIController->GetCoverFound()) {
+		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Stance);
+		return;
+	}
+
+	// toggle between crouch or stand based on a random bool value.
+	if (UKismetMathLibrary::RandomBool()) {
+		OwningCombatCharacter->ToggleCrouch();
+	}
+
+	if (!THandler_EndStance.IsValid())
+	{
+		OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndStance, this, &UCoverAction::ClearStanceTimer, 1.f, true, FMath::RandRange(5.f, 10.f));
+	}
+}
+
+void UCoverAction::ClearStanceTimer()
+{
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Stance);
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndStance);
 }
