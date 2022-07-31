@@ -14,4 +14,33 @@ class FREEDOMFIGHTERS_API ULastSeenEnemyAction : public UUtilityAIAction
 {
 	GENERATED_BODY()
 	
+private:
+	class ACombatAIController* CombatAIController;
+	class ACombatCharacter* OwningCombatCharacter;
+
+	mutable EPathFollowingRequestResult::Type MoveToResult;
+
+	mutable FTimerHandle THandler_LastSeenEnemy;
+
+	// the radius to which to move to.
+	float Radius;
+
+
+public:
+	virtual float Score(AAIController* Controller, APawn* Pawn) override;
+
+	virtual bool CanRun(AAIController* Controller, APawn* Pawn) const override;
+
+	virtual void Spawn(AAIController* Controller, APawn* Pawn) override;
+
+	virtual void Enter(AAIController* Controller, APawn* Pawn) override;
+
+	virtual void Exit(AAIController* Controller, APawn* Pawn) override;
+
+	virtual void Tick(float DeltaTime, AAIController* Controller, APawn* Pawn) override;
+
+private:
+	void MoveToLastSeen();
+
+	void RemoveLastSeen();
 };

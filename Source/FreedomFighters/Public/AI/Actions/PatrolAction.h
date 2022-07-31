@@ -20,7 +20,7 @@ private:
 
 	mutable EPathFollowingRequestResult::Type MoveToResult;
 
-	mutable  bool IsPatrolling;
+	mutable bool IsPatrolling;
 
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;

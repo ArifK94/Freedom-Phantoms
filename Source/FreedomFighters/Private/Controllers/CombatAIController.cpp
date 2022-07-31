@@ -23,6 +23,7 @@
 #include "AI/Actions/StrongholdAction.h"
 #include "AI/Actions/AvoidanceAction.h"
 #include "AI/Actions/PatrolAction.h"
+#include "AI/Actions/LastSeenEnemyAction.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -168,7 +169,8 @@ void ACombatAIController::Init()
 	}
 
 
-	if (UtilityAIComponent) {
+	if (UtilityAIComponent) 
+	{
 		UtilityAIComponent->SpawnActionInstance(UCombatAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UCoverAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UMountedGunAction::StaticClass());
@@ -178,6 +180,7 @@ void ACombatAIController::Init()
 		UtilityAIComponent->SpawnActionInstance(UStrongholdAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UAvoidanceAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UPatrolAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(ULastSeenEnemyAction::StaticClass());
 	}
 
 }
@@ -299,7 +302,6 @@ void ACombatAIController::ClearTimers()
 	}
 
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
-	GetWorldTimerManager().ClearTimer(THandler_FindCover);
 }
 
 void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourState)
@@ -409,6 +411,8 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 		// otherwise enemy is unreachable.
 		else
 		{
+			LastSeenEnemyActor = EnemyActor;
+			LastSeenLocation = EnemyActor->GetActorLocation();
 			EnemyActor = nullptr;
 		}
 	}
@@ -418,6 +422,11 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 		TimeSpentOnEnemy = EnemyActor == ChosenTarget ? TimeSpentOnEnemy + 1 : .0f;
 
 		EnemyActor = ChosenTarget;
+
+		// if enemy is present, then ignore last seen enemy.
+		if (EnemyActor) {
+			LastSeenEnemyActor = nullptr;
+		}
 	}
 }
 
@@ -446,38 +455,6 @@ void ACombatAIController::UpdatCombatAlert()
 	}
 }
 
-
-void ACombatAIController::UpdateLastSeen()
-{
-	// look straight ahead with the MG direction
-	if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun() && OwningCombatCharacter->GetMountedGun()->GetAdjustBehindMG())
-	{
-		OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(OwningCombatCharacter->GetMountedGun()->GetCharacterStandRot());
-	}
-
-	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() < OwningCombatCharacter->GetCurrentWeapon()->getAmmoPerClip()) // reload clip if finished completely or  reload if not on full clip
-	{
-		OwningCombatCharacter->BeginReload();
-	}
-	else
-	{
-		// switch back to primary
-		if (OwningCombatCharacter->CanSwapWeapon() && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj())
-		{
-			OwningCombatCharacter->BeginWeaponSwap();
-		}
-	}
-
-	// Stop aiming if not combat alert
-	if (!StayCombatAlert)
-	{
-		OwningCombatCharacter->EndAim();
-	}
-
-	LastSeenEnemyActor = nullptr;
-
-	GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
-}
 
 void ACombatAIController::MoveToRandomPoint()
 {

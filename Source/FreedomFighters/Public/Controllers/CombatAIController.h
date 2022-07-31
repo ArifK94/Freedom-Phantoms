@@ -46,7 +46,11 @@ private:
 
 	FVector ChosenCoverPoint;
 	bool CoverFound;
-	FVector LastSeenPosition;
+
+
+	// last location when enemy was seen.
+	FVector LastSeenLocation;
+
 
 	FTargetSearchParameters* TargetSearchParams;
 	FAvoidableParams bAvoidableParams;
@@ -155,8 +159,6 @@ private:
 		bool IsRunningForCover;
 
 	FTimerHandle THandler_CommanderOrders;
-	FTimerHandle THandler_FindCover;
-	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
 
 
@@ -209,8 +211,6 @@ private:
 
 	void UpdatCombatAlert();
 
-	void UpdateLastSeen();
-
 	void CheckCommanderOrder();
 
 	void TargetFound();
@@ -232,6 +232,8 @@ public:
 	AActor* GetEnemyActor() { return EnemyActor; }
 
 	AActor* GetLastSeenEnemyActor() { return LastSeenEnemyActor; }
+
+	void SetLastSeenEnemyActor(AActor* Actor) { LastSeenEnemyActor = Actor; }
 
 	FTargetSearchParameters* GetTargetSearchParams() { return TargetSearchParams; }
 
@@ -281,4 +283,11 @@ public:
 
 	void SetIsRunningForCover(bool Value) { IsRunningForCover = Value; }
 
+	bool GetMoveToLastSeenEnemy() { return MoveToLastSeenEnemy; }
+
+	bool GetStayCombatAlert() { return StayCombatAlert; }
+
+	void SetStayCombatAlert(bool Alert) { StayCombatAlert = Alert; }
+
+	FVector GetLastSeenLocation() { return LastSeenLocation; }
 };
