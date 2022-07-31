@@ -514,34 +514,32 @@ void ACombatAIController::FindMountedGun()
 
 	// if found an MG 
 	// & enemy is not behind the MG
-	if (SelectedMG) {
+	if (SelectedMG) 
+	{
 		bool IsMGValid = true;
 		// Check if AI has a ollow order, if it's defend or attack then the if statement should be ignored
 		// and commander is near the MG,
-		if (Commander &&
-			CurrentCommand == CommanderOrders::Follow &&
-			!IsNearCommander(SelectedMG->GetCharacterStandPos())) {
+		if (Commander && CurrentCommand == CommanderOrders::Follow && !IsNearCommander(SelectedMG->GetCharacterStandPos())) 
+		{
 			IsMGValid = false;
 		}
 
-		if (EnemyActor && IsMGValid) {
+		if (EnemyActor && IsMGValid) 
+		{
 			bool IsInRange = MountedGunFinderComponent->IsInTargetRange(SelectedMG, EnemyActor, OwningCombatCharacter);
 
-			if (!IsInRange) {
-				IsMGValid = false;
-			}
-			else if (SharedService::IsTargetBehind(SelectedMG, EnemyActor)) {
+			if (!IsInRange || SharedService::IsTargetBehind(SelectedMG, EnemyActor))
+			{
 				IsMGValid = false;
 			}
 		}
 
-		if (IsMGValid) {
-
+		if (IsMGValid) 
+		{
 			SelectedMG->SetPotentialOwner(OwningCombatCharacter);
 			OwningCombatCharacter->SetMountedGun(SelectedMG);
 		}
 	}
-
 }
 
 

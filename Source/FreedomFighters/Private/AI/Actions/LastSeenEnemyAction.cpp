@@ -38,7 +38,6 @@ bool ULastSeenEnemyAction::CanRun(AAIController* Controller, APawn* Pawn) const
 
 	// if last seen enemy does not exist then ignore this action.
 	if (CombatAIController->GetLastSeenEnemyActor() == nullptr) {
-		//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("No GetLastSeenEnemyActor!"));
 		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
 		return false;
 	}
@@ -53,7 +52,7 @@ void ULastSeenEnemyAction::Spawn(AAIController* Controller, APawn* Pawn)
 	CombatAIController = Cast<ACombatAIController>(Controller);
 	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
 
-	Radius = FMath::RandRange(1000.f, 2000.f);
+	Radius = FMath::RandRange(1000.f, 1500.f);
 }
 
 void ULastSeenEnemyAction::Enter(AAIController* Controller, APawn* Pawn)
