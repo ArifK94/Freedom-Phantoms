@@ -28,6 +28,9 @@ private:
 	FTimerHandle THandler_Peaking;
 	FTimerHandle THandler_EndPeaking;
 
+	// stance state time handler for when not find a cover e.g. crouch, stand etc.
+	FTimerHandle THandler_Stance;
+
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
 
@@ -49,4 +52,6 @@ private:
 	void BeginCoverPeak();
 
 	void EndCoverPeak();
+
+	void ChangeStance();
 };

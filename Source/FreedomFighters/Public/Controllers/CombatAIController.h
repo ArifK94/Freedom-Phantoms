@@ -47,6 +47,11 @@ private:
 	FVector ChosenCoverPoint;
 	bool CoverFound;
 
+	/**
+	* Some functionalities such as getting into cover requires to focus on the cover location, in this case, focusing on the enemy should be false.
+	*/
+	bool IgnoreFocusOnEnemy;
+
 
 	// last location when enemy was seen.
 	FVector LastSeenLocation;
@@ -290,4 +295,8 @@ public:
 	void SetStayCombatAlert(bool Alert) { StayCombatAlert = Alert; }
 
 	FVector GetLastSeenLocation() { return LastSeenLocation; }
+
+	bool GetIgnoreFocusOnEnemy() { return IgnoreFocusOnEnemy; }
+
+	void SetIgnoreFocusOnEnemy(bool Focus) { IgnoreFocusOnEnemy = Focus; }
 };

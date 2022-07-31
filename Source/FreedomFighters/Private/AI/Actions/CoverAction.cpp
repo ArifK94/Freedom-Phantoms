@@ -59,6 +59,9 @@ void UCoverAction::Exit(AAIController* Controller, APawn* Pawn)
 
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndPeaking);
+
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Stance);
+
 }
 
 void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
@@ -97,7 +100,6 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 	}
 	else if (CombatAIController->GetCoverFound())
 	{
-
 		if (CombatAIController->GetCoverFinderComponent()->IsCoverPointTaken(CoverLocation))
 		{
 			CombatAIController->SetCoverFound(false);
@@ -146,10 +148,15 @@ void UCoverAction::TakeCover()
 		return;
 	}
 
+	CombatAIController->SetIgnoreFocusOnEnemy(true);
+
 	// face the cover location before taking cover.
 	CombatAIController->SetFocalPosition(CoverLocation);
 
 	OwningCombatCharacter->TakeCover();
+
+
+	CombatAIController->SetIgnoreFocusOnEnemy(false);
 }
 
 void UCoverAction::BeginCoverPeak()
@@ -191,4 +198,9 @@ void UCoverAction::EndCoverPeak()
 
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndPeaking);
+}
+
+void UCoverAction::ChangeStance()
+{
+	OwningCombatCharacter->ToggleCrouch();
 }

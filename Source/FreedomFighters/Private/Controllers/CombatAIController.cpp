@@ -94,7 +94,8 @@ void ACombatAIController::Init()
 		return;
 	}
 
-	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
+	IgnoreFocusOnEnemy = false;
+	//OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 	OwningCombatCharacter->SetUseAimCameraSpring(false);
 
 	// Remove sprint by default as the custom move to location will toggle sprint based on distance of the destination
@@ -335,7 +336,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 
 	OwningCombatCharacter->DropMountedGun();
 
-	OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
+	//OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 
 	HasChosenNearTargetDest = false;
 	IsRunningForCover = false;
