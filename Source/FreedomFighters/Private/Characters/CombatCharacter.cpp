@@ -636,6 +636,15 @@ void ACombatCharacter::DisableSprint()
 	}
 }
 
+void ACombatCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
+{
+	Super::StartCover(OutHit, IsCrouchOnly);
+
+	EndFire();
+
+	UpdateCombatMode();
+}
+
 void ACombatCharacter::StopCover()
 {
 	Super::StopCover();

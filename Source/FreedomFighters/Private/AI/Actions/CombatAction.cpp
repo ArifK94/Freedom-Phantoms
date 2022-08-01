@@ -26,6 +26,12 @@ bool UCombatAction::CanRun(AAIController* Controller, APawn* Pawn) const
 {
 	Super::CanRun(Controller, Pawn);
 
+	if (CombatAIController->GetDisableCombat()) {
+		OwningCombatCharacter->EndFire();
+		OwningCombatCharacter->EndAim();
+		return false;
+	}
+
 	return true;
 }
 
@@ -75,7 +81,7 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 
 void UCombatAction::FaceTarget()
 {
-	if (CombatAIController->GetEnemyActor() && !CombatAIController->GetIgnoreFocusOnEnemy())
+	if (CombatAIController->GetEnemyActor())
 	{
 		// if using a mounted gun
 		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())

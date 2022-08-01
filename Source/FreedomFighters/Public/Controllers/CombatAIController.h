@@ -48,9 +48,9 @@ private:
 	bool CoverFound;
 
 	/**
-	* Some functionalities such as getting into cover requires to focus on the cover location, in this case, focusing on the enemy should be false.
+	* Some functionalities such as getting into cover requires to focus on the cover location, in this case, disable combat until in cover. 
 	*/
-	bool IgnoreFocusOnEnemy;
+	bool DisableCombat;
 
 
 	// last location when enemy was seen.
@@ -296,7 +296,7 @@ public:
 
 	FVector GetLastSeenLocation() { return LastSeenLocation; }
 
-	bool GetIgnoreFocusOnEnemy() { return IgnoreFocusOnEnemy; }
+	bool GetDisableCombat() { return DisableCombat; }
 
-	void SetIgnoreFocusOnEnemy(bool Focus) { IgnoreFocusOnEnemy = Focus; }
+	void SetDisableCombat(bool Disable) { DisableCombat = Disable; }
 };

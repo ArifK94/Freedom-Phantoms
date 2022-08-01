@@ -730,6 +730,7 @@ void ABaseCharacter::TakeCover()
 			if (LineTrace && OutHitBelow.bBlockingHit)
 			{
 				StartCover(OutHitBelow, true);
+
 			}
 		}
 		else 
@@ -796,6 +797,8 @@ void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 			LatentInfo
 		);
 	}
+
+	EndAim();
 
 	GetCharacterMovement()->SetPlaneConstraintEnabled(true);
 	GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);

@@ -94,7 +94,7 @@ void ACombatAIController::Init()
 		return;
 	}
 
-	IgnoreFocusOnEnemy = false;
+	DisableCombat = false;
 	//OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 	OwningCombatCharacter->SetUseAimCameraSpring(false);
 

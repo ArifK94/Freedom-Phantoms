@@ -229,6 +229,8 @@ private:
 
 	void UpdateCombatMode();
 
+	virtual void StartCover(FHitResult OutHit, bool IsCrouchOnly) override;
+
 protected:
 	virtual void Init() override;
 	virtual void BeginPlay() override;
