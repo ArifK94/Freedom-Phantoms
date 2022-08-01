@@ -503,7 +503,7 @@ void ABaseCharacter::ToggleCrouch()
 		if (isTakingCover)
 		{
 			// Can stand up while in cover?
-			if (CanCoverStand()) 
+			if (CanCoverStand())
 			{
 				UnCrouch();
 				IsCurrentlyCrouched = false;
@@ -718,7 +718,7 @@ void ABaseCharacter::TakeCover()
 			StartCover(OutHit, false);
 		}
 		// if not found a trace from actor location, then trace from the knees or near bottom of character, but not tracing if currently crouched.
-		else if(!GetCharacterMovement()->IsCrouching())
+		else if (!GetCharacterMovement()->IsCrouching())
 		{
 			FVector StartBelow = Start;
 			StartBelow.Z -= 50.f;
@@ -730,10 +730,9 @@ void ABaseCharacter::TakeCover()
 			if (LineTrace && OutHitBelow.bBlockingHit)
 			{
 				StartCover(OutHitBelow, true);
-
 			}
 		}
-		else 
+		else
 		{
 			StopCover();
 		}
@@ -773,7 +772,7 @@ void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 
 	IsCurrentlyCrouched = IsCrouchOnly;
 
-	if (IsCrouchOnly) 
+	if (IsCrouchOnly)
 	{
 		Crouch();
 
@@ -782,20 +781,22 @@ void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 	}
 	else
 	{
-		FLatentActionInfo LatentInfo;
-		LatentInfo.CallbackTarget = this;
+		SetActorLocationAndRotation(CoverFirstPos, LastCoverRotation);
 
-		UKismetSystemLibrary::MoveComponentTo(
-			GetCapsuleComponent(),
-			CoverFirstPos,
-			LastCoverRotation,
-			false,
-			false,
-			.2f,
-			false,
-			EMoveComponentAction::Type::Move,
-			LatentInfo
-		);
+		//FLatentActionInfo LatentInfo;
+		//LatentInfo.CallbackTarget = this;
+
+		//UKismetSystemLibrary::MoveComponentTo(
+		//	GetCapsuleComponent(),
+		//	CoverFirstPos,
+		//	LastCoverRotation,
+		//	false,
+		//	false,
+		//	.2f,
+		//	false,
+		//	EMoveComponentAction::Type::Move,
+		//	LatentInfo
+		//);
 	}
 
 	EndAim();
@@ -838,17 +839,10 @@ void ABaseCharacter::CoverMovement(float Value)
 {
 	FVector WallDirection = GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f; // get direction towards the cover wall
 
-	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
-	FVector StartRight = GetActorLocation() + RightVector;
-	FVector EndRight = WallDirection * CoverDistance + StartRight;
-	FHitResult OutHitRight;
-	bool LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitRight, StartRight, EndRight, COLLISION_COVER);
+	bool LineTraceRight = false;
+	bool LineTraceLeft = false;
 
-	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->GetPlaneConstraintNormal())) * GetCapsuleComponent()->GetScaledCapsuleRadius();
-	FVector StartLeft = GetActorLocation() + LeftVector;
-	FVector EndLeft = WallDirection * CoverDistance + StartLeft;
-	FHitResult OutHitLeft;
-	bool LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
+	GetCorners(GetCharacterMovement()->GetPlaneConstraintNormal(), LineTraceLeft, LineTraceRight);
 
 	FVector Dir = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotator(0.0f, 0.0f, GetControlRotation().Yaw));
 	LastCoverPosition = GetActorLocation();
@@ -892,15 +886,7 @@ void ABaseCharacter::CoverMovement(float Value)
 			AddMovementInput(Dir, Value);
 		}
 
-		isAtCoverCorner = true;
-		isFacingCoverRHS = true;
-
-		LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(GetCharacterMovement()->GetPlaneConstraintNormal());
-		LastCoverRotation.Yaw += 180.f;
-		LastCoverRotation.Roll = 0.f;
-		LastCoverRotation.Pitch = 0.f;
-		SetActorRotation(LastCoverRotation);
-		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+		RotateToRightCorner();
 	}
 	else if (LineTraceRight) // if reached left corner
 	{
@@ -909,16 +895,53 @@ void ABaseCharacter::CoverMovement(float Value)
 			AddMovementInput(Dir, Value);
 		}
 
-		isAtCoverCorner = true;
-		isFacingCoverRHS = false;
-
-		LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(WallDirection);
-		LastCoverRotation.Yaw -= 180.f;
-		LastCoverRotation.Roll = 0.f;
-		LastCoverRotation.Pitch = 0.f;
-		SetActorRotation(LastCoverRotation);
-		FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+		RotateToLeftCorner();
 	}
+}
+
+void ABaseCharacter::GetCorners(FVector WallNormal, bool& LineTraceLeft, bool& LineTraceRight)
+{
+	FVector WallDirection = WallNormal * -1.0f; // get direction towards the cover wall
+
+	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
+	FVector StartRight = GetActorLocation() + RightVector;
+	FVector EndRight = WallDirection * CoverDistance + StartRight;
+	FHitResult OutHitRight;
+	LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitRight, StartRight, EndRight, COLLISION_COVER);
+
+	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallNormal)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
+	FVector StartLeft = GetActorLocation() + LeftVector;
+	FVector EndLeft = WallDirection * CoverDistance + StartLeft;
+	FHitResult OutHitLeft;
+	LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
+}
+
+void ABaseCharacter::RotateToLeftCorner()
+{
+	FVector WallDirection = GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f; // get direction towards the cover wall
+
+	isAtCoverCorner = true;
+	isFacingCoverRHS = false;
+
+	LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(WallDirection);
+	LastCoverRotation.Yaw -= 180.f;
+	LastCoverRotation.Roll = 0.f;
+	LastCoverRotation.Pitch = 0.f;
+	SetActorRotation(LastCoverRotation);
+	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
+}
+
+void ABaseCharacter::RotateToRightCorner()
+{
+	isAtCoverCorner = true;
+	isFacingCoverRHS = true;
+
+	LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(GetCharacterMovement()->GetPlaneConstraintNormal());
+	LastCoverRotation.Yaw += 180.f;
+	LastCoverRotation.Roll = 0.f;
+	LastCoverRotation.Pitch = 0.f;
+	SetActorRotation(LastCoverRotation);
+	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 }
 
 bool ABaseCharacter::CanAim()

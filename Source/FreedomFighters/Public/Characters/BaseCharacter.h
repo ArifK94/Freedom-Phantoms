@@ -343,6 +343,11 @@ public:
 	void TakeCover();
 	void CoverMovement(float Value);
 	virtual void StopCover();
+	void GetCorners(FVector WallNormal, bool& LineTraceLeft, bool& LineTraceRight);
+
+	// rotate character to correctly face corners.
+	void RotateToLeftCorner();
+	void RotateToRightCorner();
 
 	/**
 	* Can character stand up while in cover?
