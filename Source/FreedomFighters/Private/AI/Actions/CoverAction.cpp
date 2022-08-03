@@ -170,11 +170,6 @@ void UCoverAction::TakeCover()
 	FRotator NewRot = UKismetMathLibrary::RLerp(CharacterRot, CoverPoint.GetRotation().Rotator(), mDeltaTime * 10.f, false);
 	OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(NewRot);
 
-	//OwningCombatCharacter->SetActorRotation(TargetRot);
-
-	// face the cover location before taking cover.
-	//CombatAIController->SetFocalPosition(CoverPoint);
-
 	OwningCombatCharacter->TakeCover();
 
 	// AI can focus point on the enemy if taking cover.
