@@ -45,41 +45,39 @@ void UCoverFinderComponent::Init()
 }
 
 
-bool UCoverFinderComponent::FindCover(FVector StartLocation, FVector& ChosenCoverPoint)
+bool UCoverFinderComponent::FindCover(FVector StartLocation, FTransform& ChosenCoverPoint)
 {
-	ChosenCoverPoint = FVector::ZeroVector;
+	ChosenCoverPoint.SetLocation(FVector::ZeroVector);
 
 	if (StartLocation.IsZero()) {
 		return false;
 	}
 
-	TArray<FVector> CoverLocationPoints = GetCoverPoints();
+	TArray<FTransform> CoverPoints = GetCoverPoints();
 
-	if (CoverLocationPoints.Num() > 0)
+	if (CoverPoints.Num() > 0)
 	{
-		auto PointLocation = GetClosestCoverPoint(CoverLocationPoints);
-
-		if (!PointLocation.IsZero())
-		{
-			ChosenCoverPoint = PointLocation;
-		}
+		auto PointLocation = GetClosestCoverPoint(CoverPoints);
+		ChosenCoverPoint = PointLocation;
 	}
 
-	return !ChosenCoverPoint.IsZero();
+	return !ChosenCoverPoint.GetLocation().IsZero();
 }
 
-bool UCoverFinderComponent::FindCover(AActor* TargetActor, FVector& ChosenCoverPoint)
+bool UCoverFinderComponent::FindCover(AActor* TargetActor, FTransform& ChosenCoverPoint)
 {
-	ChosenCoverPoint = FVector::ZeroVector;
+	ChosenCoverPoint.SetLocation(FVector::ZeroVector);
 
 	if (TargetActor == nullptr || TargetActor->GetActorLocation().IsZero()) {
 		return false;
 	}
 
-	TArray<FVector> CoverLocationPoints = TArray<FVector>();
+	TArray<FTransform> CoverPoints = TArray<FTransform>();
 
-	for (FVector LocationPoint : GetCoverPoints())
+	for (FTransform CoverPoint : GetCoverPoints())
 	{
+		FVector LocationPoint = CoverPoint.GetLocation();
+
 		// we want cover points which the target actor cannot see while taking cover.
 		if (SharedService::CanSeeTarget(GetWorld(), LocationPoint, TargetActor, Character)) {
 			continue;
@@ -104,27 +102,23 @@ bool UCoverFinderComponent::FindCover(AActor* TargetActor, FVector& ChosenCoverP
 			continue;
 		}
 
-		CoverLocationPoints.Add(LocationPoint);
+		CoverPoints.Add(CoverPoint);
 	}
 
-	if (CoverLocationPoints.Num() > 0)
+	if (CoverPoints.Num() > 0)
 	{
-		auto PointLocation = GetClosestCoverPoint(CoverLocationPoints);
-
-		if (!PointLocation.IsZero())
-		{
-			ChosenCoverPoint = PointLocation;
-		}
+		auto PointLocation = GetClosestCoverPoint(CoverPoints);
+		ChosenCoverPoint = PointLocation;
 	}
 
-	return !ChosenCoverPoint.IsZero();
+	return !ChosenCoverPoint.GetLocation().IsZero();
 }
 
-TArray<FVector> UCoverFinderComponent::GetCoverPoints()
+TArray<FTransform> UCoverFinderComponent::GetCoverPoints()
 {
 	Init();
 
-	TArray<FVector> CoverLocationPoints = TArray<FVector>();
+	TArray<FTransform> CoverPoints = TArray<FTransform>();
 
 	float factor = 360.f / NumberOfCoverTraces;
 
@@ -173,11 +167,6 @@ TArray<FVector> UCoverFinderComponent::GetCoverPoints()
 			continue;
 		}
 
-		// has this location already been added to the list?
-		if (CoverLocationPoints.Contains(LocationPoint)) {
-			continue;
-		}
-
 		// is the cover point taken by someone else?
 		if (IsCoverPointTaken(LocationPoint)) {
 			continue;
@@ -187,35 +176,44 @@ TArray<FVector> UCoverFinderComponent::GetCoverPoints()
 			continue;
 		}
 
-		CoverLocationPoints.Add(LocationPoint);
+		FTransform CoverPoint;
+		CoverPoint.SetLocation(LocationPoint);
+		CoverPoint.SetRotation(UKismetMathLibrary::MakeRotFromX(HitResult.ImpactNormal).Quaternion());
+		CoverPoints.Add(CoverPoint);
 	}
 
 
-	return CoverLocationPoints;
+	return CoverPoints;
 }
 
-FVector UCoverFinderComponent::GetClosestCoverPoint(TArray<FVector> CoverLocationPoints)
+FTransform UCoverFinderComponent::GetClosestCoverPoint(TArray<FTransform> CoverLocationPoints)
 {
-	FVector ClosestPoint = FVector::ZeroVector;
+	FTransform ClosestPoint;
+	FVector ClosestLocation = FVector::ZeroVector;
+	ClosestPoint.SetLocation(ClosestLocation);
+
 	float minDist = CoverRadius;
 
 	Init();
 
-	for (int i = 0; i < CoverLocationPoints.Num(); i++)
+	for (FTransform CoverPoint : CoverLocationPoints)
 	{
-		FVector Point = CoverLocationPoints[i];
+		FVector Point = CoverPoint.GetLocation();
 
 		float Distance = FVector::Dist(Character->GetActorLocation(), Point);
 
-		if (Distance < minDist || ClosestPoint.IsZero())
+		if (Distance < minDist || ClosestLocation.IsZero())
 		{
-			ClosestPoint = Point;
+			ClosestLocation = Point;
 			minDist = Distance;
+
+			ClosestPoint.SetLocation(ClosestLocation);
+			CoverPoint.SetRotation(CoverPoint.GetRotation());
 		}
 	}
 
 	// ignore origin location
-	if (ClosestPoint.IsZero()) {
+	if (ClosestLocation.IsZero()) {
 		return ClosestPoint;
 	}
 
@@ -228,10 +226,13 @@ FVector UCoverFinderComponent::GetClosestCoverPoint(TArray<FVector> CoverLocatio
 	GameModeManager->RemoveCoverPoint(CoverLocation);
 
 	// add the new cover point
-	CoverLocation.Location = ClosestPoint;
+	CoverLocation.Location = ClosestLocation;
 	GameModeManager->AddCoverPoint(CoverLocation);
 
-	MyChosenCoverPoint = ClosestPoint;
+	DrawDebugSphere(GetWorld(), ClosestLocation, 5, 1, FColor::Red, false, 2, 0, 2);
+
+
+	MyChosenCoverPoint = ClosestLocation;
 	return ClosestPoint;
 }
 

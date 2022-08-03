@@ -37,15 +37,13 @@ private:
 public:	
 	UCoverFinderComponent();
 
-	bool FindCover(FVector StartLocation, FVector& ChosenCoverPoint);
+	bool FindCover(FVector StartLocation, FTransform& ChosenCoverPoint);
 
 	/**
 	* Find cover around target actor.
 	*/
-	bool FindCover(AActor* TargetActor, FVector& ChosenCoverPoint);
+	bool FindCover(AActor* TargetActor, FTransform& ChosenCoverPoint);
 
-
-	FVector GetClosestCoverPoint(TArray<FVector> CoverLocationPoints);
 
 	bool IsCoverPointTaken(FVector PointLocation);
 
@@ -57,11 +55,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		bool CanCoverPeakUp(FVector WallNormal, FVector CoverLocation);
 
-	/**
-	* Is the cover a corner or can character peak from cover?
-	*/
-	bool IsPreferredCover(FVector WallNormal, FVector CoverLocation);
-
 private:
 	void Init();
 
@@ -70,7 +63,20 @@ private:
 	/**
 	* Get a list of potential cover points
 	*/
-	TArray<FVector> GetCoverPoints();
+	TArray<FTransform> GetCoverPoints();
+
+
+	/**
+	* Get the closest cover point to move to.
+	*/
+	FTransform GetClosestCoverPoint(TArray<FTransform> CoverLocationPoints);
+
+
+	/**
+	* Is the cover a corner or can character peak from cover?
+	*/
+	bool IsPreferredCover(FVector WallNormal, FVector CoverLocation);
+
 
 		
 };

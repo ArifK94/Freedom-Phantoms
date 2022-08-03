@@ -18,9 +18,8 @@ private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
-
-	FVector CoverLocation;
-
+	float mDeltaTime;
+	FTransform CoverPoint;
 	float PeakCountdown;
 
 	EPathFollowingRequestResult::Type MoveToResult;
