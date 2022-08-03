@@ -15,8 +15,9 @@ class FREEDOMFIGHTERS_API UCoverFinderComponent : public UActorComponent
 private:
 	class AGameModeManager* GameModeManager;
 	class AController* Controller;
-	class APawn* Pawn;
+	class ABaseCharacter* Character;
 
+	FVector MyChosenCoverPoint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int NumberOfCoverTraces;
@@ -29,6 +30,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float CoverDistance;
 
 public:	
 	UCoverFinderComponent();
@@ -45,10 +49,28 @@ public:
 
 	bool IsCoverPointTaken(FVector PointLocation);
 
-	virtual void BeginPlay() override;
+	void GetCorners(FVector WallNormal, FVector CoverLocation, bool& LineTraceLeft, bool& LineTraceRight);
+
+	/**
+	* Can character peak up while in cover?
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool CanCoverPeakUp(FVector WallNormal, FVector CoverLocation);
+
+	/**
+	* Is the cover a corner or can character peak from cover?
+	*/
+	bool IsPreferredCover(FVector WallNormal, FVector CoverLocation);
 
 private:
 	void Init();
+
+	virtual void BeginPlay() override;
+
+	/**
+	* Get a list of potential cover points
+	*/
+	TArray<FVector> GetCoverPoints();
 
 		
 };

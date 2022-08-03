@@ -807,6 +807,19 @@ void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 
 	bUseControllerRotationYaw = true;
 	isTakingCover = true;
+
+	bool LineTraceLeft = false;
+	bool LineTraceRight = false;
+	GetCorners(OutHit.Normal, LineTraceLeft, LineTraceRight);
+
+	if (!LineTraceLeft)
+	{
+		RotateToLeftCorner();
+	}
+	else if (!LineTraceRight)
+	{
+		RotateToRightCorner();
+	}
 }
 
 void ABaseCharacter::StopCover()
