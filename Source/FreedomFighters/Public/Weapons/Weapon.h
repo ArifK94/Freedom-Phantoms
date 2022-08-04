@@ -411,6 +411,9 @@ protected:
 	void DelayedInit();
 
 
+	bool IsFacingCrosshair();
+
+
 	virtual void CreateBullet();
 
 	void SpawnProjectile(FVector Locatiom, FRotator Rotation);

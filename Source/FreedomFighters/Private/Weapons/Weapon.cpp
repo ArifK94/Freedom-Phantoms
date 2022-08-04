@@ -332,6 +332,38 @@ void AWeapon::DelayedInit()
 	GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
 }
 
+bool AWeapon::IsFacingCrosshair()
+{
+
+	float TraceLength = 10000.0f;
+
+	FVector EyeLocation;
+	FRotator EyeRotation;
+
+	// Trace world from pawn eyes to cross hair location
+	if (EyeViewPointComponent)
+	{
+		EyeLocation = EyeViewPointComponent->GetComponentLocation();
+		EyeRotation = EyeViewPointComponent->GetComponentRotation();
+	}
+	else
+	{
+		GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	}
+
+	FVector EyeEnd = UKismetMathLibrary::GetForwardVector(EyeRotation) * TraceLength;
+
+	FVector MuzzleStart = getMuzzleLocation();
+	FVector MuzzleEnd = UKismetMathLibrary::GetForwardVector(MeshComp->GetSocketRotation(MuzzleSocket)) * TraceLength;
+
+	UKismetMathLibrary::Vector_Normalize(MuzzleEnd);
+	UKismetMathLibrary::Vector_Normalize(EyeEnd);
+	float Angle = UKismetMathLibrary::Dot_VectorVector(MuzzleEnd, EyeEnd);
+
+	// if dot product is more than x amount, then weapon muzzle is facing in the same direction as the eye location meaning the weapon can fire.
+	return Angle > 0.8f;
+}
+
 void AWeapon::Fire()
 {
 	if (isReloading) {
@@ -362,6 +394,10 @@ void AWeapon::Fire()
 			BurstAmmountCount = 0;
 			return;
 		}
+	}
+
+	if (!IsFacingCrosshair()) {
+		return;
 	}
 
 	isFiring = true;
@@ -468,7 +504,8 @@ void AWeapon::CreateBullet()
 	{
 		FVector TraceEnd = EyeLocation + (ShotDirection * TraceLength);
 
-		if (hasRecoil) {
+		if (hasRecoil)
+		{
 			//if (UseRadialSpread) {
 			//	FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
 			//	TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
@@ -486,18 +523,9 @@ void AWeapon::CreateBullet()
 
 		SpawnProjectile(getMuzzleLocation(), TargetRotation);
 
-		if (DrawDebugShotLine) {
-
-			FCollisionQueryParams QueryParams;
-			QueryParams.AddIgnoredActor(MyOwner);
-			QueryParams.AddIgnoredActor(this);
-			QueryParams.bTraceComplex = true;
-			QueryParams.bReturnPhysicalMaterial = true;
-
-			FHitResult Hit;
-
-			TArray<AActor*> ActorsToIgnore;
-			UKismetSystemLibrary::LineTraceSingle(GetWorld(), EyeLocation, TraceEnd, ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, Hit, true, FLinearColor::Blue, FLinearColor::Green, ShotLineDuration);
+		if (DrawDebugShotLine) 
+		{
+			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Green, true, 1, 0, 2);
 		}
 	}
 

@@ -229,7 +229,7 @@ FTransform UCoverFinderComponent::GetClosestCoverPoint(TArray<FTransform> CoverL
 	CoverLocation.Location = ClosestLocation;
 	GameModeManager->AddCoverPoint(CoverLocation);
 
-	DrawDebugSphere(GetWorld(), ClosestLocation, 5, 1, FColor::Red, false, 2, 0, 2);
+	//DrawDebugSphere(GetWorld(), ClosestLocation, 5, 1, FColor::Red, false, 2, 0, 2);
 
 
 	MyChosenCoverPoint = ClosestLocation;
