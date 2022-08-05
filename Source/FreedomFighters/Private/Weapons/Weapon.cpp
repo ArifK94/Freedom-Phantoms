@@ -348,6 +348,10 @@ bool AWeapon::IsFacingCrosshair()
 	}
 	else
 	{
+		if (!GetOwner()) {
+			return false;
+		}
+
 		GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 	}
 

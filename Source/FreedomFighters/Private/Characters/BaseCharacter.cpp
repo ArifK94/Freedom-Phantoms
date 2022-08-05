@@ -607,9 +607,9 @@ void ABaseCharacter::UpdateDirection()
 {
 	if (IsSprinting())
 	{
-		// We want to character to face towards camera's forward direction rather than actor's position,
+		// We want the character to face towards camera's forward direction rather than actor's position,
 		// this allows run and shoot to rotate towards camera direction
-		auto TargetDirection = FollowCamera->GetComponentRotation() - GetActorRotation();
+		auto TargetDirection =  FollowCamera->GetComponentRotation() - GetCapsuleComponent()->GetComponentRotation();
 		auto Direction = TargetDirection.Yaw;
 		CharacterDirection = Direction;
 	}
