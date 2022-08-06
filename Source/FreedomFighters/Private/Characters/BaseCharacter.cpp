@@ -772,17 +772,14 @@ void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 
 	IsCurrentlyCrouched = IsCrouchOnly;
 
+	SetActorLocationAndRotation(CoverFirstPos, LastCoverRotation);
+
 	if (IsCrouchOnly)
 	{
 		Crouch();
-
-		// Character jumps up when moving to cover using MoveComponentTo when state is crouched, so this SetActorLocationAndRotation fixes it.
-		SetActorLocationAndRotation(CoverFirstPos, LastCoverRotation);
 	}
 	else
 	{
-		SetActorLocationAndRotation(CoverFirstPos, LastCoverRotation);
-
 		//FLatentActionInfo LatentInfo;
 		//LatentInfo.CallbackTarget = this;
 
@@ -832,7 +829,6 @@ void ABaseCharacter::StopCover()
 	isAtCoverCorner = false;
 
 	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
-
 }
 
 bool ABaseCharacter::CanCoverStand()
@@ -915,18 +911,38 @@ void ABaseCharacter::CoverMovement(float Value)
 void ABaseCharacter::GetCorners(FVector WallNormal, bool& LineTraceLeft, bool& LineTraceRight)
 {
 	FVector WallDirection = WallNormal * -1.0f; // get direction towards the cover wall
+	FVector StartActorLocation = GetActorLocation();
 
 	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
-	FVector StartRight = GetActorLocation() + RightVector;
+	FVector StartRight = StartActorLocation + RightVector;
 	FVector EndRight = WallDirection * CoverDistance + StartRight;
 	FHitResult OutHitRight;
 	LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitRight, StartRight, EndRight, COLLISION_COVER);
 
 	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallNormal)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
-	FVector StartLeft = GetActorLocation() + LeftVector;
+	FVector StartLeft = StartActorLocation + LeftVector;
 	FVector EndLeft = WallDirection * CoverDistance + StartLeft;
 	FHitResult OutHitLeft;
 	LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
+
+	// try line tracing for crouching corners if not found line traces for stand state.
+	StartActorLocation.Z -= 50.f;
+
+	if (!LineTraceRight)
+	{
+		StartRight = StartActorLocation + RightVector;
+		EndRight = WallDirection * CoverDistance + StartRight;
+		FHitResult OutHitBelow;
+		LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartRight, EndRight, COLLISION_COVER);
+	}
+
+	if (!LineTraceLeft)
+	{
+		StartLeft = StartActorLocation + LeftVector;
+		EndLeft = WallDirection * CoverDistance + StartLeft;
+		FHitResult OutHitBelow;
+		LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartLeft, EndRight, COLLISION_COVER);
+	}
 }
 
 void ABaseCharacter::RotateToLeftCorner()
