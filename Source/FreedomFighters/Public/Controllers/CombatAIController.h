@@ -36,6 +36,11 @@ private:
 	UCommanderRecruit* bRecruitInfo;
 	ACommanderCharacter* Commander;
 
+	/**
+	* The move to result when moving to an order position
+	*/
+	EPathFollowingRequestResult::Type MoveToOrderResult;
+
 	/** Keep track of time in seconds spent on the enemy. Resets after getting another enemy. */
 	float TimeOnCurrentEnemy;
 
@@ -51,6 +56,7 @@ private:
 	* Some functionalities such as getting into cover requires to focus on the cover location, in this case, disable combat until in cover. 
 	*/
 	bool DisableCombat;
+
 
 
 	// last location when enemy was seen.
@@ -186,6 +192,8 @@ public:
 	*/
 	void SetFocalPosition(FVector TargetLocation);
 
+	void MoveToRandomPoint();
+
 private:
 	void Init();
 
@@ -220,8 +228,6 @@ private:
 
 	void TargetFound();
 
-	void MoveToRandomPoint();
-
 
 protected:
 	virtual void BeginPlay() override;
@@ -233,6 +239,7 @@ protected:
 
 public:
 	AIBehaviourState GetCurrentBehaviourState() { return CurrentBehaviourState; };
+
 
 	AActor* GetEnemyActor() { return EnemyActor; }
 
@@ -266,6 +273,11 @@ public:
 	UPatrolFollowerComponent* GetPatrolFollowerComponent() { return PatrolFollowerComponent; }
 
 
+	EPathFollowingRequestResult::Type GetMoveToOrderResult() { return MoveToOrderResult; }
+
+	void SetMoveToOrderResult(EPathFollowingRequestResult::Type type) { MoveToOrderResult = type; }
+
+
 	CommanderOrders GetCurrentCommand() { return CurrentCommand; };
 
 	ACommanderCharacter* GetCommander() { return Commander; };
@@ -292,7 +304,7 @@ public:
 
 	bool GetStayCombatAlert() { return StayCombatAlert; }
 
-	void SetStayCombatAlert(bool Alert) { StayCombatAlert = Alert; }
+	void SetStayCombatAlert(bool Alert);
 
 	FVector GetLastSeenLocation() { return LastSeenLocation; }
 

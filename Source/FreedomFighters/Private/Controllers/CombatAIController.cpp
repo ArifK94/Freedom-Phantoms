@@ -342,8 +342,9 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	IsRunningForCover = false;
 	CoverFound = false;
 
-	StayCombatAlert = false;
-	UpdatCombatAlert();
+	SetStayCombatAlert(false);
+	
+	MoveToOrderResult = EPathFollowingRequestResult::Failed;
 }
 
 void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
@@ -447,18 +448,6 @@ void ACombatAIController::OnNearbyActorFound_Implementation(FAvoidableParams Avo
 	if (OwningCombatCharacter->GetVoiceAudioComponent()->Sound != OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound ||
 		!OwningCombatCharacter->GetVoiceAudioComponent()->IsPlaying()) {
 		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound);
-	}
-}
-
-void ACombatAIController::UpdatCombatAlert()
-{
-	if (StayCombatAlert)
-	{
-		OwningCombatCharacter->BeginAim();
-	}
-	else
-	{
-		OwningCombatCharacter->EndAim();
 	}
 }
 
@@ -610,6 +599,25 @@ void ACombatAIController::SetBehaviourState(AIBehaviourState State)
 	}
 
 	CurrentBehaviourState = State;
+}
+
+void ACombatAIController::SetStayCombatAlert(bool Alert)
+{
+	StayCombatAlert = Alert;
+
+	UpdatCombatAlert();
+}
+
+void ACombatAIController::UpdatCombatAlert()
+{
+	if (StayCombatAlert)
+	{
+		OwningCombatCharacter->BeginAim();
+	}
+	else
+	{
+		OwningCombatCharacter->EndAim();
+	}
 }
 
 void ACombatAIController::SetFocalPosition(FVector TargetLocation)
