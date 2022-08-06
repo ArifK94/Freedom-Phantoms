@@ -106,6 +106,11 @@ void ACombatCharacter::BeginPlay()
 }
 
 
+bool ACombatCharacter::CanUseWeapon()
+{
+	return currentWeaponObj && !isReloading && hasEquippedWeapon && !isEquippingWeapon && !isSwappingWeapon;
+}
+
 void ACombatCharacter::Init()
 {
 	Super::Init();
@@ -946,7 +951,7 @@ void ACombatCharacter::HolsterWeapon()
 
 void ACombatCharacter::BeginFire()
 {
-	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isSwappingWeapon) {
+	if (!CanUseWeapon()) {
 		return;
 	}
 
@@ -996,7 +1001,7 @@ void ACombatCharacter::EndFire()
 
 void ACombatCharacter::BeginAim()
 {
-	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isSwappingWeapon) {
+	if (!CanUseWeapon()) {
 		return;
 	}
 
@@ -1029,7 +1034,7 @@ void ACombatCharacter::EndAim()
 
 void ACombatCharacter::BeginReload()
 {
-	if (currentWeaponObj == nullptr || isReloading || !hasEquippedWeapon || isSwappingWeapon) {
+	if (!CanUseWeapon()) {
 		return;
 	}
 
