@@ -29,4 +29,11 @@ public:
 	void PlaySuccess();
 
 	void PlayFailed();
+
+private:
+	virtual void BeginPlay() override;
+
+
+	UFUNCTION()
+		void OnCrateHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 };
