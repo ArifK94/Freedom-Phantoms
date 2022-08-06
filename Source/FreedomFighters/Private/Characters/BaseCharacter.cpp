@@ -911,26 +911,26 @@ void ABaseCharacter::CoverMovement(float Value)
 void ABaseCharacter::GetCorners(FVector WallNormal, bool& LineTraceLeft, bool& LineTraceRight)
 {
 	FVector WallDirection = WallNormal * -1.0f; // get direction towards the cover wall
-	FVector StartActorLocation = GetActorLocation();
+	FVector StartLocation = GetActorLocation();
 
 	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
-	FVector StartRight = StartActorLocation + RightVector;
+	FVector StartRight = StartLocation + RightVector;
 	FVector EndRight = WallDirection * CoverDistance + StartRight;
 	FHitResult OutHitRight;
 	LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitRight, StartRight, EndRight, COLLISION_COVER);
 
 	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallNormal)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
-	FVector StartLeft = StartActorLocation + LeftVector;
+	FVector StartLeft = StartLocation + LeftVector;
 	FVector EndLeft = WallDirection * CoverDistance + StartLeft;
 	FHitResult OutHitLeft;
 	LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
 
 	// try line tracing for crouching corners if not found line traces for stand state.
-	StartActorLocation.Z -= 50.f;
+	StartLocation.Z -= 50.f;
 
 	if (!LineTraceRight)
 	{
-		StartRight = StartActorLocation + RightVector;
+		StartRight = StartLocation + RightVector;
 		EndRight = WallDirection * CoverDistance + StartRight;
 		FHitResult OutHitBelow;
 		LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartRight, EndRight, COLLISION_COVER);
@@ -938,7 +938,7 @@ void ABaseCharacter::GetCorners(FVector WallNormal, bool& LineTraceLeft, bool& L
 
 	if (!LineTraceLeft)
 	{
-		StartLeft = StartActorLocation + LeftVector;
+		StartLeft = StartLocation + LeftVector;
 		EndLeft = WallDirection * CoverDistance + StartLeft;
 		FHitResult OutHitBelow;
 		LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartLeft, EndRight, COLLISION_COVER);

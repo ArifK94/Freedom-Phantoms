@@ -239,27 +239,38 @@ FTransform UCoverFinderComponent::GetClosestCoverPoint(TArray<FTransform> CoverL
 void UCoverFinderComponent::GetCorners(FVector WallNormal, FVector CoverLocation, bool& LineTraceLeft, bool& LineTraceRight)
 {
 	FVector WallDirection = WallNormal * -1.0f; // get direction towards the cover wall
+	FVector StartLocation = CoverLocation;
 
 	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection)) * Character->GetCapsuleComponent()->GetScaledCapsuleRadius() + 50.f;
-	FVector StartRight = CoverLocation + RightVector;
+	FVector StartRight = StartLocation + RightVector;
 	FVector EndRight = WallDirection * CoverDistance + StartRight;
 	FHitResult OutHitRight;
 	LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitRight, StartRight, EndRight, COLLISION_COVER);
 
-
-	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallNormal)) * Character->GetCapsuleComponent()->GetScaledCapsuleRadius() + 50.f;
-	FVector StartLeft = CoverLocation + LeftVector;
+	FVector LeftVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallNormal)) * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	FVector StartLeft = StartLocation + LeftVector;
 	FVector EndLeft = WallDirection * CoverDistance + StartLeft;
 	FHitResult OutHitLeft;
 	LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitLeft, StartLeft, EndLeft, COLLISION_COVER);
 
-	//DrawDebugSphere(GetWorld(), EndLeft, 5, 1, FColor::Red, false, 2, 0, 2);
+	// try line tracing for crouching corners if not found line traces for stand state.
+	StartLocation.Z -= 50.f;
 
-	//if (LineTraceRight)
-	//DrawDebugSphere(GetWorld(), OutHitRight.ImpactPoint, 5, 1, FColor::Yellow, false, 2, 0, 2);
+	if (!LineTraceRight)
+	{
+		StartRight = StartLocation + RightVector;
+		EndRight = WallDirection * CoverDistance + StartRight;
+		FHitResult OutHitBelow;
+		LineTraceRight = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartRight, EndRight, COLLISION_COVER);
+	}
 
-	//DrawDebugLine(GetWorld(), StartRight, EndRight, FColor::Red, true, 1, 0, 1);
-	//DrawDebugLine(GetWorld(), StartLeft, EndLeft, FColor::Yellow, true, 1, 0, 1);
+	if (!LineTraceLeft)
+	{
+		StartLeft = StartLocation + LeftVector;
+		EndLeft = WallDirection * CoverDistance + StartLeft;
+		FHitResult OutHitBelow;
+		LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartLeft, EndRight, COLLISION_COVER);
+	}
 }
 
 bool UCoverFinderComponent::CanCoverPeakUp(FVector WallNormal, FVector CoverLocation)
