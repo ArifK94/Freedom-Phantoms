@@ -51,6 +51,8 @@ void AGameStateBaseCustom::OnObjectiveUpdate(ABaseObjective* Objective, float Pr
 
 	// update the music state
 	MusicStateTarget = totalProgress / TotalObjectives;
+
+	PlayMusic(NearEndMusic);
 }
 
 void AGameStateBaseCustom::CalculateTotalProgression()
@@ -100,7 +102,7 @@ void AGameStateBaseCustom::EndGame(bool MissionPassed)
 
 void AGameStateBaseCustom::PlayMusic(USoundBase* Music)
 {
-	if (!Music || HasGameEnded) {
+	if (!Music || HasGameEnded || MusicAudioComponent->GetSound() == Music) {
 		return;
 	}
 
@@ -108,7 +110,7 @@ void AGameStateBaseCustom::PlayMusic(USoundBase* Music)
 	MusicAudioComponent->Play();
 }
 
-AObjectPoolActor* AGameStateBaseCustom::GetPoolActorAvailable(TSubclassOf<AActor> ActorClass)
+AObjectPoolActor* AGameStateBaseCustom::GetAvailablePoolActor(TSubclassOf<AActor> ActorClass)
 {
 	for (int i = 0; i < ProjectilesPool.Num(); i++)
 	{

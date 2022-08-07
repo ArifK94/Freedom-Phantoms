@@ -47,108 +47,6 @@ ACustomPlayerController::ACustomPlayerController()
 	HasGameEnded = false;
 }
 
-void ACustomPlayerController::SetupInputComponent()
-{
-	Super::SetupInputComponent();
-
-	InitInputComponent();
-}
-
-void ACustomPlayerController::InitInputComponent()
-{
-	FInputActionBinding& PauseInput = InputComponent->BindAction("Pause", IE_Pressed, this, &ACustomPlayerController::PauseGame);
-	PauseInput.bExecuteWhenPaused = true;
-
-	InputComponent->BindAxis("Turn", this, &ACustomPlayerController::AddControllerYawInput);
-	InputComponent->BindAxis("TurnRate", this, &ACustomPlayerController::TurnAtRate);
-
-	InputComponent->BindAxis("LookUp", this, &ACustomPlayerController::AddControllerPitchInput);
-	InputComponent->BindAxis("LookUpRate", this, &ACustomPlayerController::LookUpAtRate);
-
-	FInputAxisBinding& MoveForwardInput = InputComponent->BindAxis("MoveForward", this, &ACustomPlayerController::MoveForward);
-	MoveForwardInput.bExecuteWhenPaused = true;
-	FInputAxisBinding& MoveRightInput = InputComponent->BindAxis("MoveRight", this, &ACustomPlayerController::MoveRight);
-	MoveRightInput.bExecuteWhenPaused = true;
-
-	FInputActionBinding& ZoomInInput = InputComponent->BindAction("ZoomIn", IE_Pressed, this, &ACustomPlayerController::ZoomIn);
-	ZoomInInput.bExecuteWhenPaused = true;
-
-	FInputActionBinding& ZoomOutInput = InputComponent->BindAction("ZoomOut", IE_Pressed, this, &ACustomPlayerController::ZoomOut);
-	ZoomOutInput.bExecuteWhenPaused = true;
-
-
-	InputComponent->BindAction("Jump", IE_Pressed, this, &ACustomPlayerController::BeginJump);
-	InputComponent->BindAction("Jump", IE_Released, this, &ACustomPlayerController::EndJump);
-
-	InputComponent->BindAction("Aim", IE_Pressed, this, &ACustomPlayerController::BeginAim);
-	InputComponent->BindAction("Aim", IE_Released, this, &ACustomPlayerController::EndAim);
-
-	InputComponent->BindAction("Sprint", IE_Pressed, this, &ACustomPlayerController::ToggleSprint);
-
-	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::ToggleCrouch);
-
-	InputComponent->BindAction("TakeCover", IE_Pressed, this, &ACustomPlayerController::TakeCover);
-
-	InputComponent->BindAction("Fire", IE_Pressed, this, &ACustomPlayerController::BeginFire);
-	InputComponent->BindAction("Fire", IE_Released, this, &ACustomPlayerController::EndFire);
-
-	InputComponent->BindAction("Reload", IE_Pressed, this, &ACustomPlayerController::BeginReload);
-
-	// number keys
-	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
-
-	InputComponent->BindAction("InventoryToggle", IE_Pressed, this, &ACustomPlayerController::OpenRadialMenu);
-	InputComponent->BindAction("InventoryToggle", IE_Released, this, &ACustomPlayerController::CloseRadialMenu);
-
-	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
-
-	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
-
-	InputComponent->BindAction("UseInteractable", IE_Pressed, this, &ACustomPlayerController::UseInteractableActor);
-
-	// Commander Input
-	InputComponent->BindAction("Recruit", IE_Pressed, this, &ACustomPlayerController::Recruit);
-
-	InputComponent->BindAction("Attack", IE_Pressed, this, &ACustomPlayerController::BeginAttackCommand);
-	InputComponent->BindAction("Attack", IE_Released, this, &ACustomPlayerController::EndAttackCommand);
-
-	InputComponent->BindAction("Defend", IE_Pressed, this, &ACustomPlayerController::BeginDefendCommand);
-	InputComponent->BindAction("Defend", IE_Released, this, &ACustomPlayerController::EndDefendCommand);
-
-	InputComponent->BindAction("Follow", IE_Pressed, this, &ACustomPlayerController::BeginFollowCommand);
-	InputComponent->BindAction("Follow", IE_Released, this, &ACustomPlayerController::EndFollowCommand);
-}
-
-
-void ACustomPlayerController::OnPossess(APawn* InPawn)
-{
-	Super::OnPossess(InPawn);
-
-	OwningPawn = InPawn;
-
-	OwningCombatCharacter = Cast<ACombatCharacter>(OwningPawn);
-	OwningCommander = Cast<ACommanderCharacter>(OwningPawn);
-
-	// no point running this script if no player found
-	if (OwningCombatCharacter == nullptr && OwningCommander == nullptr) {
-		DisableInput(this);
-		return;
-	}
-
-	if (OwningCombatCharacter) {
-		// Grab the "Pickup Key" for it to be displayed on the UI 
-		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-		TArray <FInputActionKeyMapping> OutMappings;
-		Settings->GetActionMappingByName("Pickup", OutMappings);
-		if (OutMappings.Num() > 0)
-		{
-			InteractKeyDisplayName = UKismetInputLibrary::Key_GetDisplayName(OutMappings[0].Key).ToString();
-		}
-	}
-
-	IsShowingRadialMenu = false;
-}
-
 void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -258,6 +156,108 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 	}
 
 
+}
+
+void ACustomPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	InitInputComponent();
+}
+
+void ACustomPlayerController::InitInputComponent()
+{
+	FInputActionBinding& PauseInput = InputComponent->BindAction("Pause", IE_Pressed, this, &ACustomPlayerController::PauseGame);
+	PauseInput.bExecuteWhenPaused = true;
+
+	InputComponent->BindAxis("Turn", this, &ACustomPlayerController::AddControllerYawInput);
+	InputComponent->BindAxis("TurnRate", this, &ACustomPlayerController::TurnAtRate);
+
+	InputComponent->BindAxis("LookUp", this, &ACustomPlayerController::AddControllerPitchInput);
+	InputComponent->BindAxis("LookUpRate", this, &ACustomPlayerController::LookUpAtRate);
+
+	FInputAxisBinding& MoveForwardInput = InputComponent->BindAxis("MoveForward", this, &ACustomPlayerController::MoveForward);
+	MoveForwardInput.bExecuteWhenPaused = true;
+	FInputAxisBinding& MoveRightInput = InputComponent->BindAxis("MoveRight", this, &ACustomPlayerController::MoveRight);
+	MoveRightInput.bExecuteWhenPaused = true;
+
+	FInputActionBinding& ZoomInInput = InputComponent->BindAction("ZoomIn", IE_Pressed, this, &ACustomPlayerController::ZoomIn);
+	ZoomInInput.bExecuteWhenPaused = true;
+
+	FInputActionBinding& ZoomOutInput = InputComponent->BindAction("ZoomOut", IE_Pressed, this, &ACustomPlayerController::ZoomOut);
+	ZoomOutInput.bExecuteWhenPaused = true;
+
+
+	InputComponent->BindAction("Jump", IE_Pressed, this, &ACustomPlayerController::BeginJump);
+	InputComponent->BindAction("Jump", IE_Released, this, &ACustomPlayerController::EndJump);
+
+	InputComponent->BindAction("Aim", IE_Pressed, this, &ACustomPlayerController::BeginAim);
+	InputComponent->BindAction("Aim", IE_Released, this, &ACustomPlayerController::EndAim);
+
+	InputComponent->BindAction("Sprint", IE_Pressed, this, &ACustomPlayerController::ToggleSprint);
+
+	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::ToggleCrouch);
+
+	InputComponent->BindAction("TakeCover", IE_Pressed, this, &ACustomPlayerController::TakeCover);
+
+	InputComponent->BindAction("Fire", IE_Pressed, this, &ACustomPlayerController::BeginFire);
+	InputComponent->BindAction("Fire", IE_Released, this, &ACustomPlayerController::EndFire);
+
+	InputComponent->BindAction("Reload", IE_Pressed, this, &ACustomPlayerController::BeginReload);
+
+	// number keys
+	InputComponent->BindAction("SwitchWeapons", IE_Pressed, this, &ACustomPlayerController::SwitchWeapon);
+
+	InputComponent->BindAction("InventoryToggle", IE_Pressed, this, &ACustomPlayerController::OpenRadialMenu);
+	InputComponent->BindAction("InventoryToggle", IE_Released, this, &ACustomPlayerController::CloseRadialMenu);
+
+	InputComponent->BindAction("ToggleNightVision", IE_Pressed, this, &ACustomPlayerController::ToggleThermalVision);
+
+	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
+
+	InputComponent->BindAction("UseInteractable", IE_Pressed, this, &ACustomPlayerController::UseInteractableActor);
+
+	// Commander Input
+	InputComponent->BindAction("Recruit", IE_Pressed, this, &ACustomPlayerController::Recruit);
+
+	InputComponent->BindAction("Attack", IE_Pressed, this, &ACustomPlayerController::BeginAttackCommand);
+	InputComponent->BindAction("Attack", IE_Released, this, &ACustomPlayerController::EndAttackCommand);
+
+	InputComponent->BindAction("Defend", IE_Pressed, this, &ACustomPlayerController::BeginDefendCommand);
+	InputComponent->BindAction("Defend", IE_Released, this, &ACustomPlayerController::EndDefendCommand);
+
+	InputComponent->BindAction("Follow", IE_Pressed, this, &ACustomPlayerController::BeginFollowCommand);
+	InputComponent->BindAction("Follow", IE_Released, this, &ACustomPlayerController::EndFollowCommand);
+}
+
+
+void ACustomPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	OwningPawn = InPawn;
+
+	OwningCombatCharacter = Cast<ACombatCharacter>(OwningPawn);
+	OwningCommander = Cast<ACommanderCharacter>(OwningPawn);
+
+	// no point running this script if no player found
+	if (OwningCombatCharacter == nullptr && OwningCommander == nullptr) {
+		DisableInput(this);
+		return;
+	}
+
+	if (OwningCombatCharacter) {
+		// Grab the "Pickup Key" for it to be displayed on the UI 
+		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+		TArray <FInputActionKeyMapping> OutMappings;
+		Settings->GetActionMappingByName("Pickup", OutMappings);
+		if (OutMappings.Num() > 0)
+		{
+			InteractKeyDisplayName = UKismetInputLibrary::Key_GetDisplayName(OutMappings[0].Key).ToString();
+		}
+	}
+
+	IsShowingRadialMenu = false;
 }
 
 void ACustomPlayerController::SpawnPlayer()

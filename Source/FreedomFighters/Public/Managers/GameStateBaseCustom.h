@@ -29,6 +29,7 @@ private:
 	float TotalObjectiveFactor;
 	TArray<ABaseObjective*> Objectives;
 
+	bool HasGameEnded;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* MusicAudioComponent;
@@ -41,7 +42,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MusicChangeInterpolation;
 
-	bool HasGameEnded;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsMissionPassed;
@@ -69,7 +69,7 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnGameEndedSignature OnGameEnded;
 
-	AObjectPoolActor* GetPoolActorAvailable(TSubclassOf<AActor> ActorClass);
+	AObjectPoolActor* GetAvailablePoolActor(TSubclassOf<AActor> ActorClass);
 
 	void AddPoolActor(FObjectPoolParameters* PoolableActor);
 

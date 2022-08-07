@@ -113,7 +113,7 @@ AObjectPoolActor* UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> A
 {
 	if (UseGameState && GameStateBaseCustom)
 	{
-		auto Actor = GameStateBaseCustom->GetPoolActorAvailable(ActorClass);
+		auto Actor = GameStateBaseCustom->GetAvailablePoolActor(ActorClass);
 
 		if (Actor) {
 			Actor->SetOwner(Owner);

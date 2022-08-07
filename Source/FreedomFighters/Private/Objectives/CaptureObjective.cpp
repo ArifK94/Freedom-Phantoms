@@ -103,12 +103,12 @@ void ACaptureObjective::UpdateCaptureProgress()
 
 	if (Progress >= 1.0f) // Objective Complete!
 	{
-		GetWorldTimerManager().ClearTimer(THandler_CaptureProgress);
-
 		Progress = 1.0f;
 		IsPlayerCapturing = false;
 
 		ObjectiveComplete();
+
+		GetWorldTimerManager().ClearTimer(THandler_CaptureProgress);
 	}
 
 	OnObjectiveUpdate.Broadcast(this, Progress);
