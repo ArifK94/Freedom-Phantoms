@@ -98,6 +98,7 @@ void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 				BestAction = LastAction;
 			}
 		}
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *BestAction->GetClass()->GetName()));
 		BestAction->Tick(DeltaTime, Controller, Pawn);
 		LastAction = BestAction;
 		LastPawn = Pawn;

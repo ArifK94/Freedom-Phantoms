@@ -286,6 +286,11 @@ protected:
 
 	void AimOffset();
 
+	/**
+	* Is the cover crouch only will only allow character to crouch but not stand in cover.
+	*/
+	virtual void StartCover(FHitResult OutHit, bool IsCrouchOnly);
+
 	virtual	void UpdateCharacterMovement();
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
@@ -301,11 +306,6 @@ private:
 	void SpawnOverheadIcon();
 
 	void UpdateDirection();
-
-	/**
-	* Is the cover crouch only will only allow character to crouch but not stand in cover.
-	*/
-	void StartCover(FHitResult OutHit, bool IsCrouchOnly);
 
 	void StartDestroy();
 	void DetroyChildActor(TArray<AActor*> ParentActor);
@@ -343,6 +343,11 @@ public:
 	void TakeCover();
 	void CoverMovement(float Value);
 	virtual void StopCover();
+	void GetCorners(FVector WallNormal, bool& LineTraceLeft, bool& LineTraceRight);
+
+	// rotate character to correctly face corners.
+	void RotateToLeftCorner();
+	void RotateToRightCorner();
 
 	/**
 	* Can character stand up while in cover?

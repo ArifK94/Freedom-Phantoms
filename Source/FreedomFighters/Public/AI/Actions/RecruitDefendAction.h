@@ -18,6 +18,11 @@ private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
+	EPathFollowingRequestResult::Type MoveToRandomPointResult;
+
+	bool HasFoundRandomPoint;
+	bool IsCompelete;
+
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
 
@@ -33,4 +38,8 @@ public:
 
 private:
 	void MoveToDefend();
+
+	void StayInRandomPoint();
+
+	void FindRandomPoint();
 };

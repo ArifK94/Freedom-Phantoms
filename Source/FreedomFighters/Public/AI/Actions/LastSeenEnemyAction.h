@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "AI/UtilityAIAction.h"
-#include "CoverAction.generated.h"
+#include "LastSeenEnemyAction.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class FREEDOMFIGHTERS_API UCoverAction : public UUtilityAIAction
+class FREEDOMFIGHTERS_API ULastSeenEnemyAction : public UUtilityAIAction
 {
 	GENERATED_BODY()
 	
@@ -18,18 +18,12 @@ private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
-	float mDeltaTime;
-	FTransform CoverPoint;
-	float PeakCountdown;
+	mutable EPathFollowingRequestResult::Type MoveToResult;
 
-	EPathFollowingRequestResult::Type MoveToResult;
+	mutable FTimerHandle THandler_LastSeenEnemy;
 
-	FTimerHandle THandler_Peaking;
-	FTimerHandle THandler_EndPeaking;
-
-	// stance state time handler for when not find a cover e.g. crouch, stand etc.
-	FTimerHandle THandler_Stance;
-	FTimerHandle THandler_EndStance;
+	// the radius to which to move to.
+	float Radius;
 
 
 public:
@@ -46,15 +40,7 @@ public:
 	virtual void Tick(float DeltaTime, AAIController* Controller, APawn* Pawn) override;
 
 private:
-	void FindCover();
+	void MoveToLastSeen();
 
-	void TakeCover();
-
-	void BeginCoverPeak();
-
-	void EndCoverPeak();
-
-	void ChangeStance();
-
-	void ClearStanceTimer();
+	void RemoveLastSeen();
 };

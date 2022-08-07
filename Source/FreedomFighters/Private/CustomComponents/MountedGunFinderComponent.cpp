@@ -21,6 +21,8 @@ void UMountedGunFinderComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	DefaultSearchRadius = SearchRadius;
+
 	Init();
 }
 
@@ -146,4 +148,9 @@ void UMountedGunFinderComponent::FocusTarget(AMountedGun* MG, FVector Location)
 
 	auto TargetRot = UKismetMathLibrary::RInterpTo(MG->GetRotationInput(), TargetRotation, GetWorld()->DeltaTimeSeconds, 1.5f);
 	MG->SetRotationInput(TargetRot);
+}
+
+void UMountedGunFinderComponent::ResetSearchRadius()
+{
+	SearchRadius = DefaultSearchRadius;
 }

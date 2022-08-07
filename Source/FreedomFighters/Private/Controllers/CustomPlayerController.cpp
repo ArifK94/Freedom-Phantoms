@@ -173,7 +173,6 @@ void ACustomPlayerController::InitBeginPlayCommon()
 
 	if (OwningCombatCharacter)
 	{
-		OwningCombatCharacter->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACustomPlayerController::OnCharacterHit);
 		OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
 		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
 
@@ -502,37 +501,6 @@ void ACustomPlayerController::OnHealthUpdate(FHealthParameters InHealthParameter
 void ACustomPlayerController::PostDeath()
 {
 	//OwningCombatCharacter->DetachFromControllerPendingDestroy();
-}
-
-void ACustomPlayerController::OnCharacterHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-	if (OtherActor == NULL || OtherActor == OwningCombatCharacter) {
-		return;
-	}
-
-	// if hit an ammo create
-	AAmmoCrate* AmmoCrate = Cast<AAmmoCrate>(OtherActor);
-	if (AmmoCrate)
-	{
-		bool HasPrimaryReplenished = OwningCombatCharacter->GetPrimaryWeapon() && OwningCombatCharacter->GetPrimaryWeapon()->ReplenishAmmo();
-
-		bool HasSecondaryReplenished = OwningCombatCharacter->GetSecondaryWeaponObj() && OwningCombatCharacter->GetSecondaryWeaponObj()->ReplenishAmmo();
-
-		bool SuccessfulReplenish = false;
-		if (HasPrimaryReplenished || HasSecondaryReplenished)
-		{
-			SuccessfulReplenish = true;
-		}
-
-		if (SuccessfulReplenish)
-		{
-			AmmoCrate->PlaySuccess();
-		}
-		else
-		{
-			AmmoCrate->PlayFailed();
-		}
-	}
 }
 
 void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

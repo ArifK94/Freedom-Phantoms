@@ -2,6 +2,7 @@
 #include "Managers/LevelManager.h"
 #include "CustomComponents/HealthComponent.h"
 #include "Weapons/Weapon.h"
+#include "Services/SharedService.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -43,7 +44,7 @@ bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 
 
 			// is there a cover location close to this point?
-			if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 5.f)) 
+			if (SharedService::IsNearTargetPosition(CoverPoint, CoverLocation.Location, 10.f))
 			{
 				if (CoverPoints[i].Owner)
 				{

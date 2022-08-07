@@ -64,7 +64,7 @@ void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedC
 	{
 		auto TriggerLocation = OtherActor->GetActorLocation();
 
-	//	DrawDebugSphere(GetWorld(), TriggerLocation, 30.f, 20, FColor::Red, false, 20.f, 0, 2);
+		//	DrawDebugSphere(GetWorld(), TriggerLocation, 30.f, 20, FColor::Red, false, 20.f, 0, 2);
 
 		if (DestinationTrigger) {
 
@@ -166,6 +166,8 @@ FVector UAIMovementComponent::FindNearbyDestinationPoint(FVector TargetDestinati
 	// create tarray for hit results
 	TArray<FHitResult> OutHits;
 
+	IgnoreActors.Add(Character);
+
 	// check if something got hit in the sweep
 	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, TargetDest, TargetDest, FQuat::Identity, ECC_Visibility, MyColSphere);
 
@@ -181,14 +183,10 @@ FVector UAIMovementComponent::FindNearbyDestinationPoint(FVector TargetDestinati
 			{
 				if (UHealthComponent::IsAlive(HitActor))
 				{
-					for (int i = 0; i < IgnoreActors.Num(); i++)
+					// hit actor is meant to be ignored then ignore this.
+					if (!IgnoreActors.Contains(HitActor))
 					{
-						auto Actor = IgnoreActors[i];
-
-						if (Actor != HitActor)
-						{
-							IsPointTaken = true;
-						}
+						IsPointTaken = true;
 					}
 				}
 			}

@@ -9,6 +9,7 @@
 #include "Services/SharedService.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 float UCoverAction::Score(AAIController* Controller, APawn* Pawn)
@@ -59,12 +60,16 @@ void UCoverAction::Exit(AAIController* Controller, APawn* Pawn)
 
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndPeaking);
+
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Stance);
+
 }
 
 void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
 
+	mDeltaTime = DeltaTime;
 
 	if (OwningCombatCharacter->IsTakingCover()) 
 	{
@@ -74,7 +79,7 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 		// can the enemy see the cover point?
 		// stop using this cover & search for another cover point.
 		if (SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor(), .0f) ||
-			SharedService::CanSeeTarget(GetWorld(), CoverLocation, CombatAIController->GetEnemyActor(), OwningCombatCharacter)) 
+			SharedService::CanSeeTarget(GetWorld(), CoverPoint.GetLocation(), CombatAIController->GetEnemyActor(), OwningCombatCharacter))
 		{
 			OwningCombatCharacter->StopCover();
 			CombatAIController->SetCoverFound(false);
@@ -97,8 +102,7 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 	}
 	else if (CombatAIController->GetCoverFound())
 	{
-
-		if (CombatAIController->GetCoverFinderComponent()->IsCoverPointTaken(CoverLocation))
+		if (CombatAIController->GetCoverFinderComponent()->IsCoverPointTaken(CoverPoint.GetLocation()))
 		{
 			CombatAIController->SetCoverFound(false);
 		}
@@ -109,10 +113,18 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 		}
 		else 
 		{
-			MoveToResult = CombatAIController->GetAIMovementComponent()->MoveToDestination(CoverLocation, 10.f, AIBehaviourState::PriorityOrdersCommander);
+			MoveToResult = CombatAIController->GetAIMovementComponent()->MoveToDestination(CoverPoint.GetLocation(), 10.f, AIBehaviourState::PriorityOrdersCommander);
 			CombatAIController->SetCoverFound(true);
 		}
+	}
 
+	// Change stance if no cover found & enemy is present.
+	if (!CombatAIController->GetCoverFound() && CombatAIController->GetEnemyActor())
+	{
+		if (!THandler_Stance.IsValid())
+		{
+			OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_Stance, this, &UCoverAction::ChangeStance, 1.f, true, FMath::RandRange(2.f, 5.f));
+		}
 	}
 }
 
@@ -124,17 +136,17 @@ void UCoverAction::FindCover()
 	// find a cover point around enemy.
 	if (CombatAIController->GetEnemyActor()) 
 	{
-		HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(CombatAIController->GetEnemyActor(), CoverLocation);
+		HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(CombatAIController->GetEnemyActor(), CoverPoint);
 	}
 	else 
 	{
-		HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(OwningCombatCharacter->GetActorLocation(), CoverLocation);
+		HasCoverPoint = CombatAIController->GetCoverFinderComponent()->FindCover(OwningCombatCharacter->GetActorLocation(), CoverPoint);
 	}
 
 	// is there a cover point to go to?
 	if (HasCoverPoint) 
 	{
-		CombatAIController->SetTargetDestination(CoverLocation);
+		CombatAIController->SetTargetDestination(CoverPoint.GetLocation());
 		CombatAIController->SetCoverFound(true);
 	}
 
@@ -146,10 +158,23 @@ void UCoverAction::TakeCover()
 		return;
 	}
 
-	// face the cover location before taking cover.
-	CombatAIController->SetFocalPosition(CoverLocation);
+	// disable combat until in cover.
+	CombatAIController->SetDisableCombat(true);
+
+	auto CharacterRot = OwningCombatCharacter->GetCapsuleComponent()->GetComponentRotation();
+
+	auto TargetRot = UKismetMathLibrary::FindLookAtRotation(OwningCombatCharacter->GetCapsuleComponent()->GetComponentLocation(), CoverPoint.GetLocation());
+	TargetRot.Roll = OwningCombatCharacter->GetActorRotation().Roll;
+	TargetRot.Pitch = OwningCombatCharacter->GetActorRotation().Pitch;
+
+	FRotator NewRot = UKismetMathLibrary::RLerp(CharacterRot, CoverPoint.GetRotation().Rotator(), mDeltaTime * 10.f, false);
+	OwningCombatCharacter->GetCapsuleComponent()->SetWorldRotation(NewRot);
 
 	OwningCombatCharacter->TakeCover();
+
+	// AI can focus point on the enemy if taking cover.
+	CombatAIController->SetDisableCombat(false);
+
 }
 
 void UCoverAction::BeginCoverPeak()
@@ -176,7 +201,7 @@ void UCoverAction::BeginCoverPeak()
 
 			if (!THandler_EndPeaking.IsValid()) 
 			{
-				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndPeaking, this, &UCoverAction::EndCoverPeak, 1.f, true, FMath::RandRange(2.f, 5.f));
+				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndPeaking, this, &UCoverAction::EndCoverPeak, 1.f, true, FMath::RandRange(5.f, 10.f));
 			}
 		}
 	}
@@ -191,4 +216,28 @@ void UCoverAction::EndCoverPeak()
 
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndPeaking);
+}
+
+void UCoverAction::ChangeStance()
+{
+	if (OwningCombatCharacter->IsTakingCover() || CombatAIController->GetCoverFound()) {
+		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Stance);
+		return;
+	}
+
+	// toggle between crouch or stand based on a random bool value.
+	if (UKismetMathLibrary::RandomBool()) {
+		OwningCombatCharacter->ToggleCrouch();
+	}
+
+	if (!THandler_EndStance.IsValid())
+	{
+		OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndStance, this, &UCoverAction::ClearStanceTimer, 1.f, true, FMath::RandRange(5.f, 10.f));
+	}
+}
+
+void UCoverAction::ClearStanceTimer()
+{
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Stance);
+	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndStance);
 }

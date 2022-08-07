@@ -4,33 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "AI/UtilityAIAction.h"
-#include "CoverAction.generated.h"
+#include "PatrolAction.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class FREEDOMFIGHTERS_API UCoverAction : public UUtilityAIAction
+class FREEDOMFIGHTERS_API UPatrolAction : public UUtilityAIAction
 {
 	GENERATED_BODY()
-	
+
 private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
-	float mDeltaTime;
-	FTransform CoverPoint;
-	float PeakCountdown;
+	mutable EPathFollowingRequestResult::Type MoveToResult;
 
-	EPathFollowingRequestResult::Type MoveToResult;
-
-	FTimerHandle THandler_Peaking;
-	FTimerHandle THandler_EndPeaking;
-
-	// stance state time handler for when not find a cover e.g. crouch, stand etc.
-	FTimerHandle THandler_Stance;
-	FTimerHandle THandler_EndStance;
-
+	mutable bool IsPatrolling;
 
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
@@ -46,15 +36,8 @@ public:
 	virtual void Tick(float DeltaTime, AAIController* Controller, APawn* Pawn) override;
 
 private:
-	void FindCover();
+	void StartPatrol();
 
-	void TakeCover();
+	void MoveToNextPatrolPoint();
 
-	void BeginCoverPeak();
-
-	void EndCoverPeak();
-
-	void ChangeStance();
-
-	void ClearStanceTimer();
 };

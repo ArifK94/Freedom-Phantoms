@@ -229,6 +229,13 @@ private:
 
 	void UpdateCombatMode();
 
+	virtual void StartCover(FHitResult OutHit, bool IsCrouchOnly) override;
+
+	/**
+	* Can fire, reload etc. current weapon.
+	*/
+	bool CanUseWeapon();
+
 protected:
 	virtual void Init() override;
 	virtual void BeginPlay() override;

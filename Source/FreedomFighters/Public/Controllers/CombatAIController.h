@@ -36,6 +36,11 @@ private:
 	UCommanderRecruit* bRecruitInfo;
 	ACommanderCharacter* Commander;
 
+	/**
+	* The move to result when moving to an order position
+	*/
+	EPathFollowingRequestResult::Type MoveToOrderResult;
+
 	/** Keep track of time in seconds spent on the enemy. Resets after getting another enemy. */
 	float TimeOnCurrentEnemy;
 
@@ -46,7 +51,17 @@ private:
 
 	FVector ChosenCoverPoint;
 	bool CoverFound;
-	FVector LastSeenPosition;
+
+	/**
+	* Some functionalities such as getting into cover requires to focus on the cover location, in this case, disable combat until in cover. 
+	*/
+	bool DisableCombat;
+
+
+
+	// last location when enemy was seen.
+	FVector LastSeenLocation;
+
 
 	FTargetSearchParameters* TargetSearchParams;
 	FAvoidableParams bAvoidableParams;
@@ -155,10 +170,7 @@ private:
 		bool IsRunningForCover;
 
 	FTimerHandle THandler_CommanderOrders;
-	FTimerHandle THandler_FindCover;
-	FTimerHandle THandler_LastSeenEnemy;
 	FTimerHandle THandler_MoveToNearbyDestination;
-	FTimerHandle THandler_PatrolStart;
 
 
 	bool HasPlayedTargetFoundSound;
@@ -179,6 +191,8 @@ public:
 	* AI SetFocalPoint custom method.
 	*/
 	void SetFocalPosition(FVector TargetLocation);
+
+	void MoveToRandomPoint();
 
 private:
 	void Init();
@@ -210,17 +224,10 @@ private:
 
 	void UpdatCombatAlert();
 
-	void UpdateLastSeen();
-
 	void CheckCommanderOrder();
-
-	void StartPatrol();
 
 	void TargetFound();
 
-	void MoveToRandomPoint();
-
-	void MoveToNextPatrolPoint();
 
 protected:
 	virtual void BeginPlay() override;
@@ -233,7 +240,12 @@ protected:
 public:
 	AIBehaviourState GetCurrentBehaviourState() { return CurrentBehaviourState; };
 
+
 	AActor* GetEnemyActor() { return EnemyActor; }
+
+	AActor* GetLastSeenEnemyActor() { return LastSeenEnemyActor; }
+
+	void SetLastSeenEnemyActor(AActor* Actor) { LastSeenEnemyActor = Actor; }
 
 	FTargetSearchParameters* GetTargetSearchParams() { return TargetSearchParams; }
 
@@ -258,6 +270,13 @@ public:
 
 	UStrongholdDefenderComponent* GetStrongholdDefenderComponent() { return StrongholdDefenderComponent; }
 
+	UPatrolFollowerComponent* GetPatrolFollowerComponent() { return PatrolFollowerComponent; }
+
+
+	EPathFollowingRequestResult::Type GetMoveToOrderResult() { return MoveToOrderResult; }
+
+	void SetMoveToOrderResult(EPathFollowingRequestResult::Type type) { MoveToOrderResult = type; }
+
 
 	CommanderOrders GetCurrentCommand() { return CurrentCommand; };
 
@@ -281,4 +300,15 @@ public:
 
 	void SetIsRunningForCover(bool Value) { IsRunningForCover = Value; }
 
+	bool GetMoveToLastSeenEnemy() { return MoveToLastSeenEnemy; }
+
+	bool GetStayCombatAlert() { return StayCombatAlert; }
+
+	void SetStayCombatAlert(bool Alert);
+
+	FVector GetLastSeenLocation() { return LastSeenLocation; }
+
+	bool GetDisableCombat() { return DisableCombat; }
+
+	void SetDisableCombat(bool Disable) { DisableCombat = Disable; }
 };

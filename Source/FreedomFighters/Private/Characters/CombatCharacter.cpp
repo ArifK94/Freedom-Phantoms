@@ -106,6 +106,11 @@ void ACombatCharacter::BeginPlay()
 }
 
 
+bool ACombatCharacter::CanUseWeapon()
+{
+	return currentWeaponObj && !isReloading && hasEquippedWeapon && !isEquippingWeapon && !isSwappingWeapon;
+}
+
 void ACombatCharacter::Init()
 {
 	Super::Init();
@@ -636,6 +641,15 @@ void ACombatCharacter::DisableSprint()
 	}
 }
 
+void ACombatCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
+{
+	Super::StartCover(OutHit, IsCrouchOnly);
+
+	EndFire();
+
+	UpdateCombatMode();
+}
+
 void ACombatCharacter::StopCover()
 {
 	Super::StopCover();
@@ -937,7 +951,7 @@ void ACombatCharacter::HolsterWeapon()
 
 void ACombatCharacter::BeginFire()
 {
-	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isSwappingWeapon) {
+	if (!CanUseWeapon()) {
 		return;
 	}
 
@@ -987,7 +1001,7 @@ void ACombatCharacter::EndFire()
 
 void ACombatCharacter::BeginAim()
 {
-	if (currentWeaponObj == nullptr || !hasEquippedWeapon || isSwappingWeapon) {
+	if (!CanUseWeapon()) {
 		return;
 	}
 
@@ -1020,7 +1034,7 @@ void ACombatCharacter::EndAim()
 
 void ACombatCharacter::BeginReload()
 {
-	if (currentWeaponObj == nullptr || isReloading || !hasEquippedWeapon || isSwappingWeapon) {
+	if (!CanUseWeapon()) {
 		return;
 	}
 
@@ -1224,30 +1238,37 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 		return;
 	}
 
-	EndFire();
-	EndAim();
+	// prevent drop animations if not using MG.
+	if (isUsingMountedWeapon) 
+	{
+		EndFire();
+		EndAim();
 
-	// Unregister the kill event for the MG
-	RegisterWeaponEvents(MountedGun, false);
+		// Unregister the kill event for the MG
+		RegisterWeaponEvents(MountedGun, false);
 
-	isUsingMountedWeapon = false;
 
-	MountedGun->DropWeapon();
+		MountedGun->DropWeapon();
 
-	// Reassign to collide with the MG again
-	GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, false);
+		// Reassign to collide with the MG again
+		GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, false);
 
-	if (ClearMG) {
+		currentWeaponObj = primaryWeaponObj;
+
+		RetrieveWeaponAnimDataSet();
+		BeginEquipWeapon();
+		GrabWeapon();
+	}
+
+	if (ClearMG) 
+	{
 		MountedGun->SetOwner(nullptr);
 		MountedGun->SetPotentialOwner(nullptr);
 		MountedGun = nullptr;
 	}
 
-	currentWeaponObj = primaryWeaponObj;
+	isUsingMountedWeapon = false;
 
-	RetrieveWeaponAnimDataSet();
-	BeginEquipWeapon();
-	GrabWeapon();
 }
 
 void ACombatCharacter::SetIsExitingVehicle(bool IsExiting)
