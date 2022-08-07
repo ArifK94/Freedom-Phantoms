@@ -24,6 +24,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int SearchLimit;
 
+	float DefaultSearchRadius;
+
 public:	
 	UMountedGunFinderComponent();
 
@@ -40,5 +42,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+public:
+	void ResetSearchRadius();
+
+	void SetSearchRadius(float Radius) { SearchRadius = Radius; }
 		
 };

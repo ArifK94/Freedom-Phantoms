@@ -53,9 +53,10 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	MoveToLastSeenEnemy = true;
 
+	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
 	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
-	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
+	MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
 }
 
 
@@ -77,6 +78,7 @@ void ACombatAIController::Tick(float DeltaTime)
 
 	bDeltaTime = DeltaTime;
 
+
 	if (!GetPawn()) {
 		return;
 	}
@@ -85,7 +87,10 @@ void ACombatAIController::Tick(float DeltaTime)
 		return;
 	}
 
-	FindMountedGun();
+	if (!OwningCombatCharacter->GetMountedGun())
+	{
+		FindMountedGun();
+	}
 }
 
 void ACombatAIController::Init()
@@ -194,6 +199,12 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 		UtilityAIComponent->SetEnableUtilityAI(true);
 	}
 
+	// run behavior tree if specified
+	if (BTAsset)
+	{
+		AAIController::RunBehaviorTree(BTAsset);
+	}
+
 	// get owning character
 	OwningCombatCharacter = Cast<ACombatCharacter>(InPawn);
 
@@ -239,13 +250,11 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 				HealthComp->OnHealthChanged.AddDynamic(this, &ACombatAIController::OnHealthUpdate);
 			}
 		}
+
+		MountedGunFinderComponent->ResetSearchRadius();
+		CoverFinderComponent->ResetSearchRadius();
 	}
 
-	// run behavior tree if specified
-	if (BTAsset)
-	{
-		AAIController::RunBehaviorTree(BTAsset);
-	}
 }
 
 void ACombatAIController::OnUnPossess()
@@ -334,6 +343,18 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 		OwningCombatCharacter->StopCover();
 	}
 
+	if (CurrentCommand == CommanderOrders::Defend)
+	{
+		// Reduce search radius for all components if defending.
+		MountedGunFinderComponent->SetSearchRadius(100.f);
+		CoverFinderComponent->SetSearchRadius(200.f);
+	}
+	else
+	{
+		MountedGunFinderComponent->ResetSearchRadius();
+		CoverFinderComponent->ResetSearchRadius();
+	}
+
 	OwningCombatCharacter->DropMountedGun();
 
 	//OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
@@ -345,6 +366,8 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
 	SetStayCombatAlert(false);
 	
 	MoveToOrderResult = EPathFollowingRequestResult::Failed;
+
+	CoverFinderComponent->RemoveCoverPoint();
 }
 
 void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)

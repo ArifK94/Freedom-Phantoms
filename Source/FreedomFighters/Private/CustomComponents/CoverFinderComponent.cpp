@@ -17,8 +17,7 @@ UCoverFinderComponent::UCoverFinderComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-	CoverRadius = 10.f;
-	CoverLength = 1000.f;
+	CoverRadius = 1000.f;
 	CoverDistance = 150.0f;
 
 	NumberOfCoverTraces = 35;
@@ -27,6 +26,8 @@ UCoverFinderComponent::UCoverFinderComponent()
 void UCoverFinderComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DefaultSearchRadius = CoverRadius;
 
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
 	Controller = Cast<AController>(GetOwner());
@@ -136,7 +137,7 @@ TArray<FTransform> UCoverFinderComponent::GetCoverPoints()
 		FVector Foward = UKismetMathLibrary::Quat_RotateVector(CharacterTopRotation, FVector(1.0f, 0.0f, 0.0f));
 
 		FVector Start = NavLocation.Location;
-		FVector End = (Foward * CoverLength) + Start;
+		FVector End = (Foward * CoverRadius) + Start;
 
 		FHitResult HitResult;
 		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, COLLISION_COVER);
@@ -221,9 +222,7 @@ FTransform UCoverFinderComponent::GetClosestCoverPoint(TArray<FTransform> CoverL
 	FWorldCoverPoint CoverLocation = FWorldCoverPoint();
 	CoverLocation.Owner = Character;
 
-	// remove previous cover point from the list
-	CoverLocation.Location = MyChosenCoverPoint;
-	GameModeManager->RemoveCoverPoint(CoverLocation);
+	RemoveCoverPoint();
 
 	// add the new cover point
 	CoverLocation.Location = ClosestLocation;
@@ -309,6 +308,16 @@ bool UCoverFinderComponent::IsPreferredCover(FVector WallNormal, FVector CoverLo
 	return CanPeakUp || !LineTraceLeft || !LineTraceRight;
 }
 
+void UCoverFinderComponent::RemoveCoverPoint()
+{
+	FWorldCoverPoint CoverLocation = FWorldCoverPoint();
+	CoverLocation.Owner = Character;
+
+	// remove previous cover point from the list
+	CoverLocation.Location = MyChosenCoverPoint;
+	GameModeManager->RemoveCoverPoint(CoverLocation);
+}
+
 bool UCoverFinderComponent::IsCoverPointTaken(FVector PointLocation)
 {
 	Init();
@@ -320,4 +329,9 @@ bool UCoverFinderComponent::IsCoverPointTaken(FVector PointLocation)
 	CoverLocation.Owner = Character;
 
 	return GameModeManager->IsCoverPointTaken(CoverLocation);
+}
+
+void UCoverFinderComponent::ResetSearchRadius()
+{
+	CoverRadius = DefaultSearchRadius;
 }

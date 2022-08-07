@@ -23,13 +23,11 @@ private:
 		int NumberOfCoverTraces;
 
 	/**
-	* The length og the line trace to find cover.
+	* The radius of the line trace to find cover.
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float CoverLength;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverRadius;
+	float DefaultSearchRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CoverDistance;
@@ -55,6 +53,11 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		bool CanCoverPeakUp(FVector WallNormal, FVector CoverLocation);
 
+	/**
+	* Rmoeve cover point regiestered to the owner.
+	*/
+	void RemoveCoverPoint();
+
 private:
 	void Init();
 
@@ -78,5 +81,12 @@ private:
 	bool IsPreferredCover(FVector WallNormal, FVector CoverLocation);
 
 
+public:
+	void SetSearchRadius(float Radius) { CoverRadius = Radius; }
+
+	/**
+	* Sets the cover radius back to default radius.
+	*/
+	void ResetSearchRadius();
 		
 };
