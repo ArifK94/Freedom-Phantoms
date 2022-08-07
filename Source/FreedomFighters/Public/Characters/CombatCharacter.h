@@ -140,8 +140,14 @@ public:
 
 	virtual void SetDefaultState() override;
 
-	FOnCombatUpdatedignature OnCombatUpdated;
-	FOnKillConfirmSignature OnKillConfirm; // to be triggered for commander to recieve when an operative gets a kill
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnCombatUpdatedignature OnCombatUpdated;
+
+	/**
+	* To be triggered for commander to recieve when an operative gets a kill
+	*/
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnKillConfirmSignature OnKillConfirm;
 
 	void SetPrimaryWeapon(AWeapon* Weapon);
 	void SetSecondaryWeapon(AWeapon* Weapon);
@@ -310,7 +316,7 @@ public:
 	}
 
 
-	void SetKillCount(int Amount) {
+	void AddKillCount(int Amount) {
 		KillCounter += Amount;
 	}
 };

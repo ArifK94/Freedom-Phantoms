@@ -371,28 +371,25 @@ void AProjectile::DetectHit()
 
 	FProjectileImpactParameters ProjectileImpactParameters;
 
-	if (KillCount > 0)
+	if (KillCount == 1)
 	{
-		if (KillCount == 1)
-		{
-			ProjectileImpactParameters.IsSingleKill = true;
-		}
-		else if (KillCount == 2)
-		{
-			ProjectileImpactParameters.IsDoubleKill = true;
-		}
-		else if (KillCount > 2)
-		{
-			ProjectileImpactParameters.IsMultiKill = true;
-		}
+		ProjectileImpactParameters.IsSingleKill = true;
+	}
+	else if (KillCount == 2)
+	{
+		ProjectileImpactParameters.IsDoubleKill = true;
+	}
+	else if (KillCount > 2)
+	{
+		ProjectileImpactParameters.IsMultiKill = true;
+	}
 
-		ProjectileImpactParameters.KillCount = KillCount;
-		ProjectileImpactParameters.SetProjectileActor(this);
+	ProjectileImpactParameters.KillCount = KillCount;
+	ProjectileImpactParameters.SetProjectileActor(this);
 
-		if (OwningCombatCharacter)
-		{
-			OwningCombatCharacter->SetKillCount(KillCount);
-		}
+	if (OwningCombatCharacter)
+	{
+		OwningCombatCharacter->AddKillCount(KillCount);
 	}
 
 	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
@@ -595,27 +592,25 @@ void AProjectile::SelfDestruct()
 
 
 	FProjectileImpactParameters ProjectileImpactParameters;
-	if (KillCount > 0)
+
+	if (KillCount == 1)
 	{
-		if (KillCount == 1)
-		{
-			ProjectileImpactParameters.IsSingleKill = true;
-		}
-		else if (KillCount == 2)
-		{
-			ProjectileImpactParameters.IsDoubleKill = true;
-		}
-		else if (KillCount > 2)
-		{
-			ProjectileImpactParameters.IsMultiKill = true;
-		}
+		ProjectileImpactParameters.IsSingleKill = true;
+	}
+	else if (KillCount == 2)
+	{
+		ProjectileImpactParameters.IsDoubleKill = true;
+	}
+	else if (KillCount > 2)
+	{
+		ProjectileImpactParameters.IsMultiKill = true;
+	}
 
-		ProjectileImpactParameters.KillCount = KillCount;
-		ProjectileImpactParameters.SetProjectileActor(this);
+	ProjectileImpactParameters.KillCount = KillCount;
+	ProjectileImpactParameters.SetProjectileActor(this);
 
-		if (OwningCombatCharacter) {
-			OwningCombatCharacter->SetKillCount(KillCount);
-		}
+	if (OwningCombatCharacter) {
+		OwningCombatCharacter->AddKillCount(KillCount);
 	}
 
 	OnProjectileImpact.Broadcast(ProjectileImpactParameters);

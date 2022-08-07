@@ -54,6 +54,7 @@ ACombatCharacter::ACombatCharacter()
 
 	MaxAimYawSprint = 180.0f;
 	HandGuardAlpha = 0.0f;
+	KillCounter = 0;
 
 	WeaponHandSocket = "weapon_hand";
 	WeaponHandThrowablesSocket = "weapon_throwable_hand";
@@ -337,8 +338,6 @@ void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParam
 void ACombatCharacter::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImpactParameters)
 {
 	EnemyKilled();
-
-	//KillCounter += ProjectileImpactParameters.KillCount;
 
 	OnKillConfirm.Broadcast(ProjectileImpactParameters.KillCount);
 }
