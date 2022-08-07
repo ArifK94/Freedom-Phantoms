@@ -14,6 +14,7 @@
 #include "Services/SharedService.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 float UCombatAction::Score(AAIController* Controller, APawn* Pawn)
 {
@@ -68,6 +69,15 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 	Super::Tick(DeltaTime, Controller, Pawn);
 
 	FaceTarget();
+
+	// we do not want the AI to always be standing when throwing grenades.
+	if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon())
+	{
+		if (OwningCombatCharacter->GetCharacterMovement()->IsCrouching())
+		{
+			OwningCombatCharacter->UnCrouch();
+		}
+	}
 
 	if (CombatAIController->GetEnemyActor())
 	{
