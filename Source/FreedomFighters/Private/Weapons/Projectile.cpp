@@ -461,7 +461,6 @@ void AProjectile::Explode(FVector ImpactPoint)
 				// health affected if within inner radius
 				if (Distance <= ExplosiveRadiusInner) 
 				{
-
 					auto newDamage = FMath::Clamp((DamageAmount * ExplosiveRadiusInner) / Distance, 0.f, DamageAmount);
 					newDamage = FMath::Abs(newDamage);
 
@@ -475,8 +474,6 @@ void AProjectile::Explode(FVector ImpactPoint)
 					HealthParameters.Damage = newDamage;
 					HealthParameters.IsExplosive = isAnExplosive;
 					HealthComponent->OnDamage(HealthParameters);
-
-					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *DamagedActor->GetName()));
 
 					auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
 					AddKill(HealthComponent, FactionComp);
