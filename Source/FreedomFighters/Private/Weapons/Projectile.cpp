@@ -456,10 +456,11 @@ void AProjectile::Explode(FVector ImpactPoint)
 
 			if (HealthComponent && HealthComponent->IsAlive())
 			{
-				auto Distance = GetDistanceTo(DamagedActor);
+				float Distance = UKismetMathLibrary::Vector_Distance(DamagedActor->GetActorLocation(), ImpactPoint);
 
 				// health affected if within inner radius
-				if (Distance <= ExplosiveRadiusInner) {
+				if (Distance <= ExplosiveRadiusInner) 
+				{
 
 					auto newDamage = FMath::Clamp((DamageAmount * ExplosiveRadiusInner) / Distance, 0.f, DamageAmount);
 					newDamage = FMath::Abs(newDamage);
@@ -474,6 +475,8 @@ void AProjectile::Explode(FVector ImpactPoint)
 					HealthParameters.Damage = newDamage;
 					HealthParameters.IsExplosive = isAnExplosive;
 					HealthComponent->OnDamage(HealthParameters);
+
+					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *DamagedActor->GetName()));
 
 					auto FactionComp = Cast<UTeamFactionComponent>(DamagedActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
 					AddKill(HealthComponent, FactionComp);
@@ -609,7 +612,8 @@ void AProjectile::SelfDestruct()
 	ProjectileImpactParameters.KillCount = KillCount;
 	ProjectileImpactParameters.SetProjectileActor(this);
 
-	if (OwningCombatCharacter) {
+	if (OwningCombatCharacter) 
+	{
 		OwningCombatCharacter->AddKillCount(KillCount);
 	}
 
@@ -625,7 +629,8 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, ImpactLocation, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
 	}
 
-	if (IsInAir()) {
+	if (IsInAir()) 
+	{
 		if (ImpactSurface.AirParticleEffect)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, ImpactLocation);
@@ -636,7 +641,8 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, ImpactLocation);
 		}
 	}
-	else {
+	else 
+	{
 		if (ImpactSurface.ParticleEffect)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, ImpactLocation);
@@ -648,7 +654,8 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 		}
 	}
 
-	if (ImpactSurface.DecalMaterial) {
+	if (ImpactSurface.DecalMaterial) 
+	{
 		float Size = UKismetMathLibrary::RandomFloatInRange(DecalSizeMin, DecalSizeMax);
 		FVector SizeVector = UKismetMathLibrary::MakeVector(Size, Size, Size);
 		float Rotation = UKismetMathLibrary::RandomFloatInRange(DecalRotationMin, DecalRotationMax);
@@ -657,7 +664,8 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 		DecalComponent->SetFadeOut(DecalLifetime, DecalFadeOutDuration);
 	}
 
-	if (CameraShake) {
+	if (CameraShake) 
+	{
 		UGameplayStatics::PlayWorldCameraShake(GetWorld(), CameraShake, ImpactLocation, CamShakeInnerRadius, CamShakeOuterRadius);
 	}
 }
