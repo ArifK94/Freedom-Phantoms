@@ -66,9 +66,10 @@ void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	{
 		Action->LastCanRun = !Action->IsMarkedForDeath() && Action->CanRun(Controller, Pawn) && Action->CanRunAsynchronously(Controller, Pawn);
 
-		if (!Action->LastCanRun)
+		if (!Action->LastCanRun) {
 			continue;
-
+		}
+		
 		Action->Tick(DeltaTime, Controller, Pawn);
 		OnUtilityAIActionTicked.Broadcast(Action);
 	}

@@ -205,6 +205,7 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 
 		IsInVehicle = true;
 	}
+	// otherwise no seat, in other words, not in a  vehicle
 	else
 	{
 		if (UseAimCameraSpring)
@@ -214,7 +215,9 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
 		GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);
+		
 		IsInVehicle = false;
+		SetIsExitingVehicle(false);
 	}
 
 }
@@ -1047,6 +1050,9 @@ void ABaseCharacter::BeginAim()
 
 void ABaseCharacter::EndAim()
 {
+	if (!isAiming) {
+		return;
+	}
 	isAiming = false;
 
 	if (UseAimCameraSpring && !IsInVehicle)

@@ -18,8 +18,8 @@ private:
 	class ACombatAIController* CombatAIController;
 	class ACombatCharacter* OwningCombatCharacter;
 
-	FTimerHandle THandler_Shoot;
-	FTimerHandle THandler_EndShooting;
+	mutable FTimerHandle THandler_Shoot;
+	mutable FTimerHandle THandler_EndShooting;
 
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;

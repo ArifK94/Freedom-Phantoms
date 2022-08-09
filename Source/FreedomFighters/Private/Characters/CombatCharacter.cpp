@@ -318,8 +318,6 @@ void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParam
 			PlayVoiceSound(GetVoiceClipsSet()->GrenadeThrowSound);
 		}
 
-		EndFire();
-
 		isFiring = false;
 
 		UpdateCombatMode();
@@ -990,7 +988,7 @@ void ACombatCharacter::BeginFire()
 
 void ACombatCharacter::EndFire()
 {
-	if (currentWeaponObj == nullptr) {
+	if (currentWeaponObj == nullptr || !isFiring) {
 		return;
 	}
 
@@ -1274,9 +1272,12 @@ void ACombatCharacter::SetIsExitingVehicle(bool IsExiting)
 {
 	Super::SetIsExitingVehicle(IsExiting);
 
-	EndAim();
-	EndFire();
-	UpdateCombatMode();
+	if (IsExiting)
+	{
+		EndAim();
+		EndFire();
+		UpdateCombatMode();
+	}
 }
 
 void ACombatCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)

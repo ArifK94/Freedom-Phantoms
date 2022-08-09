@@ -23,21 +23,41 @@ float UCombatAction::Score(AAIController* Controller, APawn* Pawn)
 	return .95f;
 }
 
+bool UCombatAction::CanRunAsynchronously(AAIController* Controller, APawn* Pawn) const
+{
+	return true;
+}
+
 bool UCombatAction::CanRun(AAIController* Controller, APawn* Pawn) const
 {
 	Super::CanRun(Controller, Pawn);
 
+	bool CanRun = true;
+
 	if (CombatAIController->GetDisableCombat()) {
+		CanRun = false;
+	}
+
+
+	if (OwningCombatCharacter->GetIsExitingVehicle()) {
+		CanRun = false;
+	}
+
+	if (OwningCombatCharacter->GetIsInVehicle()) {
+		CanRun = false;
+	}
+
+	if (!CanRun)
+	{
+		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Shoot);
+		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndShooting);
+
 		OwningCombatCharacter->EndFire();
 		OwningCombatCharacter->EndAim();
+
 		return false;
 	}
 
-	return true;
-}
-
-bool UCombatAction::CanRunAsynchronously(AAIController* Controller, APawn* Pawn) const
-{
 	return true;
 }
 
@@ -57,16 +77,15 @@ void UCombatAction::Exit(AAIController* Controller, APawn* Pawn)
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndShooting);
 
 	OwningCombatCharacter->EndFire();
-
-	// To avoid MG from contining to charge up.
-	if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun()) {
-		OwningCombatCharacter->EndAim();
-	}
+	OwningCombatCharacter->EndAim();
 }
 
 void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
+
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("Combat Tick")));
+
 
 	FaceTarget();
 
