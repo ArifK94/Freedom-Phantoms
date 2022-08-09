@@ -399,9 +399,15 @@ void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 
 		if (bOnNavMesh)
 		{
-			DestinationRadius = 1000.f;
-			TargetDestination = NavLocation.Location;
-			GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, 1.f, true);
+			DestinationRadius = 500.f;
+			FNavLocation NavLocationTwo;
+			bool bOnNavMeshTwo = NavigationArea->GetRandomReachablePointInRadius(NavLocation.Location, DestinationRadius, NavLocationTwo);
+
+			if (bOnNavMeshTwo)
+			{
+				TargetDestination = NavLocationTwo.Location;
+				GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, 1.f, true);
+			}
 		}
 		else
 		{
@@ -484,9 +490,8 @@ void ACombatAIController::MoveToRandomPoint()
 
 
 	auto Movement = AIMovementComponent->MoveToDestination(TargetDestination, .0f, AIBehaviourState::Normal);
-	//auto Movement = MoveToTarget(0.0f);
 
-	//// Find a random point around destination if has arrived at the original target destination
+	// Find a random point around destination if has arrived at the original target destination
 	if (!HasChosenNearTargetDest && Movement == EPathFollowingRequestResult::AlreadyAtGoal)
 	{
 		TArray<AActor*> IgnoreActors;
@@ -500,7 +505,6 @@ void ACombatAIController::MoveToRandomPoint()
 		if (!NearDestination.IsZero())
 		{
 			TargetDestination = NearDestination; // upate the target destination
-			//Movement = MoveToTarget(0.0f); // Move to new destination
 			AIMovementComponent->MoveToDestination(NearDestination, .0f, AIBehaviourState::Normal);
 			HasChosenNearTargetDest = true;
 			GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
