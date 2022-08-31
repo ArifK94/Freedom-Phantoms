@@ -110,6 +110,20 @@ void AGameStateBaseCustom::PlayMusic(USoundBase* Music)
 	MusicAudioComponent->Play();
 }
 
+void AGameStateBaseCustom::ContinueMusic()
+{
+	if (MusicAudioComponent->GetSound() == nullptr) {
+		return;
+	}
+
+	MusicAudioComponent->Play();
+}
+
+void AGameStateBaseCustom::StopMusic()
+{
+	MusicAudioComponent->Stop();
+}
+
 AObjectPoolActor* AGameStateBaseCustom::GetAvailablePoolActor(TSubclassOf<AActor> ActorClass)
 {
 	for (int i = 0; i < ProjectilesPool.Num(); i++)

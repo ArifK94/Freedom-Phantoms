@@ -595,38 +595,6 @@ public:
 
 };
 
-USTRUCT(BlueprintType)
-struct FAircraftWeapon
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TSubclassOf<AMountedGun> Weapon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		FName WeaponSocketName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float PitchMin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float PitchMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float YawMin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float YawMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TSubclassOf<UUserWidget> HUD;
-
-	FAircraftWeapon()
-	{
-
-	}
-};
 
 USTRUCT(BlueprintType)
 struct FVehicletSeating
@@ -640,10 +608,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ABaseCharacter> CharacterClass;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		ABaseCharacter* Character;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		AVehicleBase* OwningVehicle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -708,7 +676,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<AMountedGun> WeaponClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		AMountedGun* Weapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

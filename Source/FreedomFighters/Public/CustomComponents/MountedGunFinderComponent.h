@@ -35,6 +35,9 @@ public:
 
 	void FocusTarget(AMountedGun* MG, FVector Location);
 
+	UFUNCTION(BlueprintCallable)
+		static void FocusTarget(AActor* Owner, AMountedGun* MG, FVector Location);
+
 	bool IsInTargetRange(AMountedGun* MG, FVector StartLocation, FVector TargetLocation);
 
 	bool IsInTargetRange(AMountedGun* MG, AActor* StartActor, AActor* TargetActor);

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "StructCollection.h"
 #include "TargetFinderComponent.generated.h"
 
 class USphereComponent;

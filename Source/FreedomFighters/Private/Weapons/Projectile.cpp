@@ -499,44 +499,6 @@ void AProjectile::Explode(FVector ImpactPoint)
 	}
 }
 
-
-
-FSurfaceImpactSet AProjectile::CheckSurface(EPhysicalSurface SurfaceType)
-{
-	FSurfaceImpactSet SurfaceImpactSet = SurfaceImpact->Default;
-
-	switch (SurfaceType)
-	{
-	case SURFACE_HEAD:
-	case SURFACE_GROIN:
-	case SURFACE_LEGS:
-	case SURFACE_FLESHDEFAULT:
-	case SURFACE_FLESHVULNERABLE:
-		SurfaceImpactSet = SurfaceImpact->Flesh;
-		break;
-	case SURFACE_WATER:
-		SurfaceImpactSet = SurfaceImpact->Water;
-		break;
-	case SURFACE_GRASS:
-		SurfaceImpactSet = SurfaceImpact->Grass;
-		break;
-	case SURFACE_WOOD:
-		SurfaceImpactSet = SurfaceImpact->Wood;
-		break;
-	case SURFACE_ROCK:
-		SurfaceImpactSet = SurfaceImpact->Rock;
-		break;
-	case SURFACE_SAND:
-		SurfaceImpactSet = SurfaceImpact->Sand;
-		break;
-	default:
-		SurfaceImpactSet = SurfaceImpact->Default;
-		break;
-	}
-
-	return SurfaceImpactSet;
-}
-
 void AProjectile::AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction)
 {
 	// confirm kill if
@@ -617,6 +579,42 @@ void AProjectile::SelfDestruct()
 	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
 
 	Deactivate();
+}
+
+FSurfaceImpactSet AProjectile::CheckSurface(EPhysicalSurface SurfaceType)
+{
+	FSurfaceImpactSet SurfaceImpactSet = SurfaceImpact->Default;
+
+	switch (SurfaceType)
+	{
+	case SURFACE_HEAD:
+	case SURFACE_GROIN:
+	case SURFACE_LEGS:
+	case SURFACE_FLESHDEFAULT:
+	case SURFACE_FLESHVULNERABLE:
+		SurfaceImpactSet = SurfaceImpact->Flesh;
+		break;
+	case SURFACE_WATER:
+		SurfaceImpactSet = SurfaceImpact->Water;
+		break;
+	case SURFACE_GRASS:
+		SurfaceImpactSet = SurfaceImpact->Grass;
+		break;
+	case SURFACE_WOOD:
+		SurfaceImpactSet = SurfaceImpact->Wood;
+		break;
+	case SURFACE_ROCK:
+		SurfaceImpactSet = SurfaceImpact->Rock;
+		break;
+	case SURFACE_SAND:
+		SurfaceImpactSet = SurfaceImpact->Sand;
+		break;
+	default:
+		SurfaceImpactSet = SurfaceImpact->Default;
+		break;
+	}
+
+	return SurfaceImpactSet;
 }
 
 void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation)

@@ -150,6 +150,24 @@ void UMountedGunFinderComponent::FocusTarget(AMountedGun* MG, FVector Location)
 	MG->SetRotationInput(TargetRot);
 }
 
+void UMountedGunFinderComponent::FocusTarget(AActor* Owner, AMountedGun* MG, FVector Location)
+{
+	auto TargetRotation = FRotator::ZeroRotator;
+
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	Owner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+	auto TargetLocation = Location - EyeLocation;
+	auto RootBone = MG->getMeshComp()->GetBoneName(0);
+	auto T = MG->getMeshComp()->GetSocketTransform(RootBone);
+	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(T, TargetLocation);
+	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
+
+	auto TargetRot = UKismetMathLibrary::RInterpTo(MG->GetRotationInput(), TargetRotation, Owner->GetWorld()->DeltaTimeSeconds, 1.5f);
+	MG->SetRotationInput(TargetRot);
+}
+
 void UMountedGunFinderComponent::ResetSearchRadius()
 {
 	SearchRadius = DefaultSearchRadius;

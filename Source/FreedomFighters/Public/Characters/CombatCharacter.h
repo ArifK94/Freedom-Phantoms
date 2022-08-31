@@ -149,8 +149,11 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnKillConfirmSignature OnKillConfirm;
 
-	void SetPrimaryWeapon(AWeapon* Weapon);
-	void SetSecondaryWeapon(AWeapon* Weapon);
+	UFUNCTION(BlueprintCallable)
+		void SetPrimaryWeapon(AWeapon* Weapon);
+
+	UFUNCTION(BlueprintCallable)
+		void SetSecondaryWeapon(AWeapon* Weapon);
 
 	virtual void BeginSprint() override;
 	virtual void EndSprint() override;

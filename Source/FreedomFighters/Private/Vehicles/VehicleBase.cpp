@@ -353,25 +353,23 @@ void AVehicleBase::SpawnVehicleWeapons()
 		SpawnParams.Owner = MyOwner;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		auto Weapon = GetWorld()->SpawnActor<AMountedGun>(VehicleWeapon.WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-		if (Weapon)
+		VehicleWeapons[i].Weapon = GetWorld()->SpawnActor<AMountedGun>(VehicleWeapon.WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		
+		if (VehicleWeapons[i].Weapon)
 		{
-			Weapon->SetOwner(MyOwner);
-			Weapon->SetAdjustBehindMG(false);
-			Weapon->SetCanTraceInteraction(false);
-			Weapon->SetCanExit(false);
+			VehicleWeapons[i].Weapon->SetOwner(MyOwner);
+			VehicleWeapons[i].Weapon->SetAdjustBehindMG(false);
+			VehicleWeapons[i].Weapon->SetCanTraceInteraction(false);
+			VehicleWeapons[i].Weapon->SetCanExit(false);
 
-			Weapon->SetPitchMin(VehicleWeapon.PitchMin);
-			Weapon->SetPitchMax(VehicleWeapon.PitchMax);
-			Weapon->SetYawMin(VehicleWeapon.YawMin);
-			Weapon->SetYawMax(VehicleWeapon.YawMax);
+			VehicleWeapons[i].Weapon->SetPitchMin(VehicleWeapon.PitchMin);
+			VehicleWeapons[i].Weapon->SetPitchMax(VehicleWeapon.PitchMax);
+			VehicleWeapons[i].Weapon->SetYawMin(VehicleWeapon.YawMin);
+			VehicleWeapons[i].Weapon->SetYawMax(VehicleWeapon.YawMax);
 
-			Weapon->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
+			VehicleWeapons[i].Weapon->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
 
-			Weapon->OnKillConfirmed.AddDynamic(this, &AVehicleBase::OnWeaponKillConfirm);
-
-			VehicleWeapon.Weapon = Weapon;
+			VehicleWeapons[i].Weapon->OnKillConfirmed.AddDynamic(this, &AVehicleBase::OnWeaponKillConfirm);
 		}
 
 		auto VehicleWeaponPtr = new FVehicleWeapon();
@@ -379,7 +377,7 @@ void AVehicleBase::SpawnVehicleWeapons()
 		VehicleWeaponPtr->PitchMax = VehicleWeapon.PitchMax;
 		VehicleWeaponPtr->YawMin = VehicleWeapon.YawMin;
 		VehicleWeaponPtr->YawMax = VehicleWeapon.YawMax;
-		VehicleWeaponPtr->Weapon = Weapon;
+		VehicleWeaponPtr->Weapon = VehicleWeapons[i].Weapon;
 		VehicleWeaponPtrList.Add(VehicleWeaponPtr);
 	}
 
@@ -404,45 +402,47 @@ void AVehicleBase::SpawnVehicleSeatings()
 			continue;
 		}
 
-		auto Character = GetWorld()->SpawnActor<ABaseCharacter>(VehicleSeat.CharacterClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		VehicleSeats[i].Character = GetWorld()->SpawnActor<ABaseCharacter>(VehicleSeat.CharacterClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-		if (Character)
-		{
-			Character->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
-
-			// Set to use weapon, usually a mounted gun would be used
-			if (VehicleSeat.AssociatedWeapon > -1)
-			{
-				auto AssociateIndex = VehicleSeat.AssociatedWeapon;
-				auto MG = Cast<AMountedGun>(VehicleWeaponPtrList[VehicleSeat.AssociatedWeapon]->Weapon);
-				if (MG) // if it's a mounted gun
-				{
-					ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
-					CombatCharacter->SetMountedGun(MG);
-					CombatCharacter->UseMountedGun();
-
-					if (VehicleWeapons[AssociateIndex].AttachCharacterToWeapon)
-					{
-						CombatCharacter->AttachToActor(MG, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapons[AssociateIndex].WeaponAttachmentName);
-					}
-
-					// Ignore this vehicle when using target finder component
-					UTargetFinderComponent::AddIgnoreActor(CombatCharacter, this);
-				}
-			}
-
-			VehicleSeat.Character = Character;
-			VehicleSeat.OwningVehicle = this;
-
-			auto VehicleSeatPtr = new FVehicletSeating();
-			VehicleSeatPtr->IsSeatLeftSide = VehicleSeat.IsSeatLeftSide;
-			VehicleSeatPtr->ExitPassengerOnPoint = VehicleSeat.ExitPassengerOnPoint;
-			VehicleSeatPtr->CanCharacterShoot = VehicleSeat.CanCharacterShoot;
-			VehicleSeatPtr->Character = Character;
-			VehicleSeatPtr->OwningVehicle = this;
-			Character->SetVehicleSeat(VehicleSeat);
-			VehicleSeatPtrList.Add(VehicleSeatPtr);
+		if (!VehicleSeats[i].Character) {
+			continue;
 		}
+
+		VehicleSeats[i].Character->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
+
+		// Set to use weapon, usually a mounted gun would be used
+		if (VehicleSeat.AssociatedWeapon > -1)
+		{
+			auto AssociateIndex = VehicleSeat.AssociatedWeapon;
+			auto MG = Cast<AMountedGun>(VehicleWeaponPtrList[VehicleSeat.AssociatedWeapon]->Weapon);
+			if (MG) // if it's a mounted gun
+			{
+				ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(VehicleSeats[i].Character);
+				CombatCharacter->SetMountedGun(MG);
+				CombatCharacter->UseMountedGun();
+
+				if (VehicleWeapons[AssociateIndex].AttachCharacterToWeapon)
+				{
+					CombatCharacter->AttachToActor(MG, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapons[AssociateIndex].WeaponAttachmentName);
+				}
+
+				// Ignore this vehicle when using target finder component
+				UTargetFinderComponent::AddIgnoreActor(CombatCharacter, this);
+			}
+		}
+
+		VehicleSeat.Character = VehicleSeats[i].Character;
+		VehicleSeat.OwningVehicle = this;
+
+		auto VehicleSeatPtr = new FVehicletSeating();
+		VehicleSeatPtr->IsSeatLeftSide = VehicleSeat.IsSeatLeftSide;
+		VehicleSeatPtr->ExitPassengerOnPoint = VehicleSeat.ExitPassengerOnPoint;
+		VehicleSeatPtr->CanCharacterShoot = VehicleSeat.CanCharacterShoot;
+		VehicleSeatPtr->Character = VehicleSeats[i].Character;
+		VehicleSeatPtr->OwningVehicle = this;
+		VehicleSeats[i].Character->SetVehicleSeat(VehicleSeat);
+		VehicleSeatPtrList.Add(VehicleSeatPtr);
+
 
 	}
 }

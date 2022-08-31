@@ -65,6 +65,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void PlayMusic(USoundBase* Music);
 
+	UFUNCTION(BlueprintCallable)
+		void ContinueMusic();
+
+	UFUNCTION(BlueprintCallable)
+		void StopMusic();
+
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnGameEndedSignature OnGameEnded;
