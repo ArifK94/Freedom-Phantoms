@@ -39,18 +39,27 @@ void AMountedGun::SetIsAiming(bool isAiming)
 	Super::SetIsAiming(isAiming);
 
 	// clear Zoom timers if running
-	GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
-	GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
+	if (THandler_ZoomFOVIn.IsValid()) {
+		GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
+	}
+
+	if (THandler_ZoomFOVOut.IsValid()) {
+		GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
+	}
 
 	TargetFOV = isAiming ? ZoomFOV : DefaultFOV;
 
 	if (isAiming)
 	{
-		GetWorldTimerManager().SetTimer(THandler_ZoomFOVIn, this, &AMountedGun::ZoomIn, .01f, true);
+		if (!THandler_ZoomFOVIn.IsValid()) {
+			GetWorldTimerManager().SetTimer(THandler_ZoomFOVIn, this, &AMountedGun::ZoomIn, .01f, true);
+		}
 	}
 	else
 	{
-		GetWorldTimerManager().SetTimer(THandler_ZoomFOVOut, this, &AMountedGun::ZoomOut, .01f, true);
+		if (!THandler_ZoomFOVOut.IsValid()) {
+			GetWorldTimerManager().SetTimer(THandler_ZoomFOVOut, this, &AMountedGun::ZoomOut, .01f, true);
+		}
 	}
 
 }
@@ -224,7 +233,10 @@ void AMountedGun::ZoomIn()
 	else
 	{
 		FollowCamera->SetFieldOfView(TargetFOV);
-		GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
+
+		if (THandler_ZoomFOVIn.IsValid()) {
+			GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
+		}
 	}
 }
 
@@ -237,7 +249,10 @@ void AMountedGun::ZoomOut()
 	else
 	{
 		FollowCamera->SetFieldOfView(TargetFOV);
-		GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
+
+		if (THandler_ZoomFOVOut.IsValid()) {
+			GetWorldTimerManager().ClearTimer(THandler_ZoomFOVOut);
+		}
 	}
 }
 

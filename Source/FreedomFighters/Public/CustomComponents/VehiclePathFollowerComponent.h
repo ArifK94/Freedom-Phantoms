@@ -39,6 +39,8 @@ private:
 
 	FVector PreviousActorLocation;
 
+	bool HasReachedPath;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CollisionDetector;
@@ -74,6 +76,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		EVehicleMovement CurrentVehicleMovement;
+
+
+	/** Smoothly move to first spline point rather than teleport to first spline point. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool TransitionToSplineStart;
+
+	/** Ignoring occupied vehicle paths when searching for vehicle paths. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool IgnoreOccupiedPath;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Specified Target Destination", meta = (AllowPrivateAccess = "true"))
@@ -132,6 +143,8 @@ private:
 
 	void FindPath();
 
+	void StartPath(FString PathMethodName);
+
 	void ResumePath();
 
 	void ExitPassengers();
@@ -159,6 +172,9 @@ public:
 
 	UFUNCTION()
 		void FollowSplinePath(float Value);
+
+	UFUNCTION()
+		void MoveToSplinePathStart(float Value);
 
 	/** Fly to random location, useful for transport aircrafts which would allow characters to rappel down */
 	UFUNCTION()

@@ -752,11 +752,17 @@ void AWeapon::ChargeUp()
 		return;
 	}
 
-	GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
+	if (THandler_ChargeDown.IsValid()) {
+		GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
+	}
+
 
 	IsChargingUp = true;
 
-	GetWorldTimerManager().SetTimer(THandler_ChargeUp, this, &AWeapon::IncreaseCharge, .1f, true);
+	if (!THandler_ChargeUp.IsValid()) {
+		GetWorldTimerManager().SetTimer(THandler_ChargeUp, this, &AWeapon::IncreaseCharge, .1f, true);
+	}
+
 }
 
 void AWeapon::ChargeDown()
@@ -769,11 +775,15 @@ void AWeapon::ChargeDown()
 		return;
 	}
 
-	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
+	if (THandler_ChargeUp.IsValid()) {
+		GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
+	}
 
 	IsChargingUp = false;
 
-	GetWorldTimerManager().SetTimer(THandler_ChargeDown, this, &AWeapon::DecreaseCharge, .1f, true);
+	if (!THandler_ChargeDown.IsValid()) {
+		GetWorldTimerManager().SetTimer(THandler_ChargeDown, this, &AWeapon::DecreaseCharge, .1f, true);
+	}
 }
 
 void AWeapon::IncreaseCharge()
