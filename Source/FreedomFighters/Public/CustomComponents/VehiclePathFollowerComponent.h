@@ -129,6 +129,8 @@ private:
 public:
 	UVehiclePathFollowerComponent();
 
+	void ResumePath();
+
 	/** Stop following path */
 	void Stop();
 
@@ -144,8 +146,6 @@ private:
 	void FindPath();
 
 	void StartPath(FString PathMethodName);
-
-	void ResumePath();
 
 	void ExitPassengers();
 

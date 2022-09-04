@@ -11,6 +11,7 @@
 
 class UCapsuleComponent;
 class UArrowComponent;
+class UBoxComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class UHealthComponent;
@@ -49,6 +50,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ThermalToggleAudio;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UBoxComponent* FrontCollider;
 	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -211,6 +214,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float WheelRPM;
 
+	/** Type of actors to accept. Empty list will return all actor classes */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<TSubclassOf<AActor>> CollisionClassFilters;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool CheckFrontCollision;
+
 public:	
 	AVehicleBase();
 
@@ -259,6 +269,11 @@ private:
 	void ShowOutlines(bool CanShow);
 
 	void SetTargetSystem();
+
+	/**
+	* Has the front collider found any actors?
+	*/
+	bool IsFrontCollisionFound();
 
 	void UpdateMarker(TArray<FTargetSystemNode> TargetSystemNode);
 

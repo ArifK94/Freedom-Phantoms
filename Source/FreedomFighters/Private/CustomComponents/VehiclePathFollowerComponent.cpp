@@ -497,16 +497,31 @@ void UVehiclePathFollowerComponent::SetRopeFree(FVehicletSeating VehicletSeat)
 
 void UVehiclePathFollowerComponent::ResumePath()
 {
-	CurrentVehicleMovement = EVehicleMovement::MovingForward;
+	if (CurveTimeline.IsPlaying()) {
+		return;
+	}
+
+	//CurrentVehicleMovement = EVehicleMovement::MovingForward;
+	
+	if (THandler_ExitPassenger.IsValid()) {
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
+	}
+
+	if (THandler_ResumePath.IsValid()) {
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
+	}
 
 	CurveTimeline.Play();
 
-	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
-	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UVehiclePathFollowerComponent::Stop()
 {
+	if (!CurveTimeline.IsPlaying()) {
+		return;
+	}
+
 	CurveTimeline.Stop();
 	PrimaryComponentTick.bCanEverTick = false;
 }

@@ -16,6 +16,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/AudioComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/PostProcessComponent.h"
@@ -47,6 +48,11 @@ AVehicleBase::AVehicleBase()
 	MeshComponent->SetNotifyRigidBodyCollision(true);
 	MeshComponent->SetupAttachment(RootComponent);
 	MeshComponent->SetCanEverAffectNavigation(true);
+
+	FrontCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("FrontCollider"));
+	FrontCollider->SetCollisionProfileName(TEXT("OverlapAll"));
+	FrontCollider->CanCharacterStepUpOn = ECB_No;
+	FrontCollider->SetupAttachment(RootComponent);
 
 	EyePointComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("EyePointComponent"));
 	EyePointComponent->SetupAttachment(RootComponent);
@@ -104,11 +110,15 @@ AVehicleBase::AVehicleBase()
 	UseFollowCamNavigation = false;
 	HighlightCharacters = false;
 	SimulateExplosionPhysics = false;
+	CheckFrontCollision = true;
 
 	KillConfirmedParamName = "KillConfirmed";
 	SingleKillIndex = 0;
 	DoubleKillIndex = 1;
 	MultiKillIndex = 2;
+
+	// ignore other vehicles by default.
+	CollisionClassFilters.Add(AVehicleBase::StaticClass());
 }
 
 void AVehicleBase::BeginPlay()
@@ -140,6 +150,16 @@ void AVehicleBase::Tick(float DeltaTime)
 	CurrentRotationSpeed = DeltaTime * RotationSpeed;
 
 	SetTargetSystem();
+
+	// stop following path if front collider has detetced something.
+	if (CheckFrontCollision && IsFrontCollisionFound())
+	{
+		VehiclePathFollowerComponent->Stop();
+	}
+	else
+	{
+		VehiclePathFollowerComponent->ResumePath();
+	}
 }
 
 void AVehicleBase::TimerTick()
@@ -745,6 +765,29 @@ void AVehicleBase::SetTargetSystem()
 
 	UpdateMarker(FriendlyMarkerNodes);
 	UpdateMarker(EnemySystemNodes);
+}
+
+bool AVehicleBase::IsFrontCollisionFound()
+{
+	TArray<AActor*> OutOverlappingActors;
+
+	// Get all overlapped actors based that have team faction component attached
+	FrontCollider->GetOverlappingActors(OutOverlappingActors, AActor::StaticClass());
+
+	for (AActor* Actor : OutOverlappingActors)
+	{
+		if (Actor == this) {
+			continue;
+		}
+		for (auto collisionClass : CollisionClassFilters)
+		{
+			if (Actor->IsA(collisionClass)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 // add or update the marker UI
