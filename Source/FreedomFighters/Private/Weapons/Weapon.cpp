@@ -510,14 +510,6 @@ void AWeapon::CreateBullet()
 
 		if (hasRecoil)
 		{
-			//if (UseRadialSpread) {
-			//	FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
-			//	TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
-			//}
-			//else {
-			//	//TraceEnd = BulletSpread(TraceEnd);
-			//	TargetRotation = GetSprayAngle(ShotDirection, BulletSpreadCurrent);
-			//}
 			FVector RandomRadius = BulletSpreadRadial(UKismetMathLibrary::DegTan(BulletSpreadCurrent) * TraceLength);
 			TraceEnd += (UKismetMathLibrary::GetRightVector(EyeRotation) * RandomRadius.X) + (UKismetMathLibrary::GetUpVector(EyeRotation) * RandomRadius.Y);
 		}

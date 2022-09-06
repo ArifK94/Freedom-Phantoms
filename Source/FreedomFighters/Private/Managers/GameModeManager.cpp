@@ -32,17 +32,6 @@ bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 		{
 			FVector CoverPoint = CoverPoints[i].Location;
 
-			//if (UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location, 2.0f))
-			//{
-			//	DuplicateAmount++;
-			//}
-
-			//if (DuplicateAmount > 0)
-			//{
-			//	return true;
-			//}
-
-
 			// is there a cover location close to this point?
 			if (SharedService::IsNearTargetPosition(CoverPoint, CoverLocation.Location, 10.f))
 			{

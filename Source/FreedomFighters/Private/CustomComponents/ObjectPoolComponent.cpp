@@ -115,7 +115,8 @@ AObjectPoolActor* UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> A
 	{
 		auto Actor = GameStateBaseCustom->GetAvailablePoolActor(ActorClass);
 
-		if (Actor) {
+		if (Actor) 
+		{
 			Actor->SetOwner(Owner);
 			Actor->SetActorLocationAndRotation(Location, Rotation.Quaternion());
 			Actor->Activate();
