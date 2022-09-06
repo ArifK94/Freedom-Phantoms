@@ -169,6 +169,18 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsRunningForCover;
 
+	/**
+	* Is there a priority destination to move to?
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool HasPriorityDestination;
+
+	/**
+	* Priority Destination Location.
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FVector PriorityLocation;
+
 	FTimerHandle THandler_CommanderOrders;
 	FTimerHandle THandler_MoveToNearbyDestination;
 
@@ -193,6 +205,12 @@ public:
 	void SetFocalPosition(FVector TargetLocation);
 
 	void MoveToRandomPoint();
+
+	/**
+	* Set Priority Destination for AI to move to.
+	*/
+	UFUNCTION(BlueprintCallable)
+		void SetPriorityDestination(FVector Location);
 
 private:
 	void Init();
@@ -311,4 +329,11 @@ public:
 	bool GetDisableCombat() { return DisableCombat; }
 
 	void SetDisableCombat(bool Disable) { DisableCombat = Disable; }
+
+	bool GetHasPriorityDestination() { return HasPriorityDestination; }
+
+	void SetHasPriorityDestination(bool Value) { HasPriorityDestination = Value; }
+
+	FVector GetPriorityLocation() { return PriorityLocation; };
+
 };

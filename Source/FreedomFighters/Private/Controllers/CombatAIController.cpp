@@ -24,6 +24,7 @@
 #include "AI/Actions/AvoidanceAction.h"
 #include "AI/Actions/PatrolAction.h"
 #include "AI/Actions/LastSeenEnemyAction.h"
+#include "AI/Actions/PriorityDestinationAction.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -187,6 +188,7 @@ void ACombatAIController::Init()
 		UtilityAIComponent->SpawnActionInstance(UAvoidanceAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(UPatrolAction::StaticClass());
 		UtilityAIComponent->SpawnActionInstance(ULastSeenEnemyAction::StaticClass());
+		UtilityAIComponent->SpawnActionInstance(UPriorityDestinationAction::StaticClass());
 	}
 
 }
@@ -663,4 +665,16 @@ void ACombatAIController::SetFocalPosition(FVector TargetLocation)
 	{
 		OwningCombatCharacter->FaceRotation(NewControlRotation, bDeltaTime);
 	}
+}
+
+
+void ACombatAIController::SetPriorityDestination(FVector Location)
+{
+	// ignore if location is zero.
+	if (Location.IsZero()) {
+		return;
+	}
+
+	PriorityLocation = Location;
+	HasPriorityDestination = true;
 }
