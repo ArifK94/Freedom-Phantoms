@@ -124,6 +124,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		bool ShouldWound;
 
+	/**
+	* Can damage friendlies? This override the health component's ignore friendly fire flag.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool CanDamageFriendlies;
+
 	FHealthParameters()
 	{
 		DamagedActor = nullptr;
@@ -143,6 +149,8 @@ public:
 		IsExplosive = false;
 
 		ShouldWound = false;
+
+		CanDamageFriendlies = false;
 	}
 
 	void SetHealthComponent(UHealthComponent* InHealthComponent)

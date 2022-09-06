@@ -93,6 +93,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void OnDamage(FHealthParameters HealthParameters);
 
+	UFUNCTION(BlueprintCallable)
+		static void ApplyDamage(FHealthParameters HealthParameters);
+
 	void Revive();
 
 	float GetCurrentHealth() {

@@ -57,6 +57,16 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 }
 
+void UHealthComponent::ApplyDamage(FHealthParameters HealthParameters)
+{
+	UHealthComponent* HealthComponent = Cast<UHealthComponent>(HealthParameters.DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+	if (HealthComponent)
+	{
+		HealthComponent->OnDamage(HealthParameters);
+	}
+}
+
 
 void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 {
@@ -66,7 +76,7 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 
 	if (HealthParameters.Damage <= 0.0f) return;
 
-	if (IgnoreFriendlyFire)
+	if (IgnoreFriendlyFire && !HealthParameters.CanDamageFriendlies)
 	{
 		if (HealthParameters.DamageCauser != HealthParameters.DamagedActor)
 		{
