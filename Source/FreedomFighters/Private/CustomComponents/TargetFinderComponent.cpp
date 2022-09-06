@@ -7,6 +7,7 @@
 #include "Weapons/Weapon.h"
 #include "Characters/BaseCharacter.h"
 #include "FreedomFighters/FreedomFighters.h"
+#include "Services/SharedService.h"
 
 #include "GameFramework/Character.h"
 #include "Components/SphereComponent.h"
@@ -90,6 +91,27 @@ void UTargetFinderComponent::Init()
 void UTargetFinderComponent::FindTargetUpdate()
 {
 	FindTarget();
+}
+
+bool UTargetFinderComponent::CanSeeLastTarget()
+{
+	if (LastSeenEnemy == nullptr) {
+		return false;
+	}
+
+	FVector TargetLocation;
+	bool HasHitTarget = CanSeeTarget(LastSeenEnemy, TargetLocation);
+
+	if (!HasHitTarget) {
+		return false;
+	}
+
+
+	if (!UHealthComponent::IsAlive(LastSeenEnemy)) {
+		return false;
+	}
+
+	return true;
 }
 
 AActor* UTargetFinderComponent::FindTarget()
@@ -178,34 +200,6 @@ AActor* UTargetFinderComponent::FindTarget()
 
 		FVector EnemyLocation = PotentialEnemy->GetActorLocation();
 
-		// check if can see the target
-		//FHitResult HitTargetResult;
-		//auto Trace = GetTrace(HitTargetResult, EyeLocation, EnemyLocation);
-
-
-		//if (Trace && HitTargetResult.GetActor() == PotentialEnemy)
-		//{
-		//	HasHitTarget = true;
-		//	TargetSearchParameters.TargetLocation = EnemyLocation;
-		//}
-
-		//if (!HasHitTarget)
-		//{
-		//	FVector EnemyEyeLocation;
-		//	FRotator EnemyEyeRotation;
-		//	PotentialEnemy->GetActorEyesViewPoint(EnemyEyeLocation, EnemyEyeRotation);
-
-		//	// check if can see the target
-		//	FHitResult OutHitHead;
-		//	auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation);
-
-		//	if (HeadTrace && OutHitHead.GetActor() == PotentialEnemy)
-		//	{
-		//		HasHitTarget = true;
-		//		TargetSearchParameters.TargetLocation = EnemyEyeLocation;
-		//	}
-		//}
-
 		if (HasHitTarget)
 		{
 			// get closest enemy
@@ -222,6 +216,20 @@ AActor* UTargetFinderComponent::FindTarget()
 
 	}
 
+	// Should the last seen enemy be overriden? 
+	bool CanSeeLast = CanSeeLastTarget();
+
+	// if still can see last target, is the new target closer to the owner?
+	if (CanSeeLast)
+	{
+		// if the new target is not close by, then continue using the last enemy.
+		if (TargetActor && !SharedService::IsNearTargetPosition(GetOwner()->GetActorLocation(), TargetActor->GetActorLocation(), 500.f))
+		{
+			TargetActor = LastSeenEnemy;
+		}
+	}
+
+	LastSeenEnemy = TargetActor;
 	TargetSearchParameters.TargetActor = TargetActor;
 	OnTargetSearch.Broadcast(TargetSearchParameters);
 	return TargetActor;
@@ -253,7 +261,7 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 	}
 
 	// if not hit the target actor yet, try line trace to the actor's head.
-	auto EnemyCharacter  = Cast<ABaseCharacter>(TargetActor);
+	auto EnemyCharacter = Cast<ABaseCharacter>(TargetActor);
 
 	if (EnemyCharacter)
 	{

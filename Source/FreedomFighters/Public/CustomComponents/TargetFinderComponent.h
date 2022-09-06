@@ -20,6 +20,11 @@ private:
 
 	FTimerHandle THandler_TargetSearch;
 
+	/**
+	* Hold the last enemy seen.
+	*/
+	AActor* LastSeenEnemy;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool FindTargetPerFrame;
 
@@ -68,6 +73,8 @@ public:
 
 private:
 	void FindTargetUpdate();
+
+	bool CanSeeLastTarget();
 
 	/** Some actors such as vehicles may have enemy characters attached as children, so would need check if any enemy children exist if parent actor is not an enemy */
 	AActor* GetChildrenTargets(AActor* ParentTarget);
