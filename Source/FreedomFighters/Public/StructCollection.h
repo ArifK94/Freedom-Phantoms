@@ -409,6 +409,9 @@ public:
 		TArray<TSubclassOf<AWeapon>> MachinePistols;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<TSubclassOf<AWeapon>> RPGs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<AThrowableWeapon> GrenadeClass;
 
 
