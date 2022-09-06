@@ -29,6 +29,7 @@ enum class WeaponType : uint8
 	Shotgun		UMETA(DisplayName = "Shotgun"),
 	LMG			UMETA(DisplayName = "LMG"),
 	Pistol		UMETA(DisplayName = "Pistol"),
+	RPG			UMETA(DisplayName = "RPG"),
 	MountedGun	UMETA(DisplayName = "MountedGun"),
 	Throwable	UMETA(DisplayName = "Throwable")
 };

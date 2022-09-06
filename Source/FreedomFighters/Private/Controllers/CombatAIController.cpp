@@ -3,6 +3,7 @@
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
+#include "Vehicles/VehicleBase.h"
 #include "CustomComponents/AIMovementComponent.h"
 #include "CustomComponents/PatrolFollowerComponent.h"
 #include "CustomComponents/CoverFinderComponent.h"
@@ -92,6 +93,16 @@ void ACombatAIController::Tick(float DeltaTime)
 	{
 		FindMountedGun();
 	}
+
+	// AI can take out vehicles if holds an RPG
+	if (OwningCombatCharacter && (OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponType() == WeaponType::RPG || OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponType() == WeaponType::RPG))
+	{
+		if (TargetFinderComponent && !TargetFinderComponent->DoesClassFilterExist(AVehicleBase::StaticClass()))
+		{
+			TargetFinderComponent->AddClassFilter(AVehicleBase::StaticClass());
+		}
+	}
+
 }
 
 void ACombatAIController::Init()

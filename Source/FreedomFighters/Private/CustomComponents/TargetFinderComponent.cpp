@@ -236,6 +236,11 @@ AActor* UTargetFinderComponent::FindTarget()
 }
 
 
+bool UTargetFinderComponent::DoesClassFilterExist(TSubclassOf<AActor> Class)
+{
+	return ClassFilters.Contains(Class);
+}
+
 bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLocation)
 {
 	if (TargetActor == nullptr) {

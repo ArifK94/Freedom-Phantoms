@@ -84,9 +84,6 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
 
-	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("Combat Tick")));
-
-
 	FaceTarget();
 
 	// we do not want the AI to always be standing when throwing grenades.

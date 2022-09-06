@@ -71,6 +71,8 @@ public:
 
 	bool IsTargetBehind(AActor* ActorA, AActor* TargetActor);
 
+	bool DoesClassFilterExist(TSubclassOf<AActor> Class);
+
 private:
 	void FindTargetUpdate();
 
@@ -96,9 +98,10 @@ public:
 
 	void AddClassFilter(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
 	
-	void AddIgnoreClass(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
+	void AddIgnoreClass(TSubclassOf<AActor> Class) { IgnoreActorClasses.Add(Class); }
 
 	void AddIgnoreActor(AActor* Actor) { IgnoreActors.Add(Actor); }
+
 
 	bool CanSeeTarget(AActor* TargetActor, FVector& TargetLocation);
 
