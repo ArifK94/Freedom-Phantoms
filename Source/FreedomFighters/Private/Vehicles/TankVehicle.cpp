@@ -141,9 +141,15 @@ void ATankVehicle::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchPara
 	TargetActor = TargetSearchParameters.TargetActor;
 
 	if (!TargetActor) {
+		VehiclePathFollowerComponent->ResumeNormalSpeed();
 		ShooterComponent->EndFire();
 		GetWorldTimerManager().ClearTimer(THandler_RandomChangeWeapon);
 		return;
+	}
+
+	// slowdown when target actor is found.
+	if (SlowdownOnTargetFound) {
+		VehiclePathFollowerComponent->Slowdown();
 	}
 
 	// Use main weapon on vehicles

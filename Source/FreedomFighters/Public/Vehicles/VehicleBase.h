@@ -151,6 +151,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FRotator RotationInput;
 
+	/** Should the vehicle slowdown when an enemy is detected? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool SlowdownOnTargetFound;
+
 	/** Should the vehicle stop when an enemy is detected? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool StopOnTargetFound;

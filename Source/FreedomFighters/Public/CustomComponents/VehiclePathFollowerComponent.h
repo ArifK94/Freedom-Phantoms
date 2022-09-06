@@ -61,6 +61,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float PathFollowDuration;
 
+	/** The original value sset for the duration */
+	float DefaultPathFollowDuration;
+
 	/** How many laps until complete */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		uint8 TotalLaps;
@@ -133,6 +136,12 @@ public:
 
 	/** Stop following path */
 	void Stop();
+
+	/** Go back to normal follow speed/ */
+	void ResumeNormalSpeed();
+
+	/** Slow the vehicle down. */
+	void Slowdown();
 
 	void ClearPath();
 

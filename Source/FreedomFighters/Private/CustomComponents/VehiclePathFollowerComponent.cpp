@@ -53,6 +53,7 @@ void UVehiclePathFollowerComponent::Init()
 		OwningVehicle = Cast<AVehicleBase>(GetOwner());
 	}
 
+	DefaultPathFollowDuration = PathFollowDuration;
 
 	FindPath();
 }
@@ -331,7 +332,6 @@ void UVehiclePathFollowerComponent::FindNearestNav()
 	}
 }
 
-
 // Free up the path for another vehicle to use
 void UVehiclePathFollowerComponent::ClearPath()
 {
@@ -519,4 +519,14 @@ void UVehiclePathFollowerComponent::Stop()
 
 	CurveTimeline.Stop();
 	PrimaryComponentTick.bCanEverTick = false;
+}
+
+void UVehiclePathFollowerComponent::ResumeNormalSpeed()
+{
+	CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+}
+
+void UVehiclePathFollowerComponent::Slowdown()
+{
+	CurveTimeline.SetPlayRate(1.0f / (PathFollowDuration * 2.f));
 }
