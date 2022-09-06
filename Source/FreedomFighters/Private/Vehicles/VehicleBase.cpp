@@ -160,7 +160,7 @@ void AVehicleBase::Tick(float DeltaTime)
 	SetTargetSystem();
 
 	// stop following path if front collider has detetced something.
-	if (CheckFrontCollision && IsFrontCollisionFound())
+	if (ShouldStopVehicle())
 	{
 		VehiclePathFollowerComponent->Stop();
 	}
@@ -207,6 +207,11 @@ void AVehicleBase::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRota
 		OutLocation = MeshComponent->GetComponentLocation();
 		OutRotation = MeshComponent->GetComponentRotation();
 	}
+}
+
+bool AVehicleBase::ShouldStopVehicle()
+{
+	return CheckFrontCollision && IsFrontCollisionFound();
 }
 
 void AVehicleBase::AddUIWidget()

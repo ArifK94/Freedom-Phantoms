@@ -497,8 +497,6 @@ void UVehiclePathFollowerComponent::ResumePath()
 	if (CurveTimeline.IsPlaying()) {
 		return;
 	}
-
-	//CurrentVehicleMovement = EVehicleMovement::MovingForward;
 	
 	if (THandler_ExitPassenger.IsValid()) {
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);

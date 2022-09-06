@@ -8,6 +8,7 @@
 #include "CustomComponents/TeamFactionComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/VehiclePathFollowerComponent.h"
 
 #include "Components/AudioComponent.h"
 #include "Sound/SoundBase.h"
@@ -97,6 +98,16 @@ void ATankVehicle::Tick(float DeltaTime)
 	m_DeltaTime = DeltaTime;
 
 	Shoot();
+}
+
+bool ATankVehicle::ShouldStopVehicle()
+{
+	if (TargetActor && StopOnTargetFound)
+	{
+		return true;
+	}
+
+	return Super::ShouldStopVehicle();
 }
 
 void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)

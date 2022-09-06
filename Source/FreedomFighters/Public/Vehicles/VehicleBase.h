@@ -151,6 +151,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FRotator RotationInput;
 
+	/** Should the vehicle stop when an enemy is detected? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool StopOnTargetFound;
 
 
 	/** Use aircraft follow camera to navigate weapons, useful for ac130 to navigate all weapons to face in same direction when switching between them */
@@ -300,6 +303,8 @@ private:
 
 protected:
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
+
+	virtual bool ShouldStopVehicle();
 
 //Event Handlers
 public:
