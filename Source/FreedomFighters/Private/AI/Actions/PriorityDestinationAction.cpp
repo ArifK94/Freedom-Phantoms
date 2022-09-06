@@ -51,14 +51,8 @@ void UPriorityDestinationAction::Tick(float DeltaTime, AAIController* Controller
 	switch (MoveToResult)
 	{
 	case EPathFollowingRequestResult::Failed:
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("%s"), *CombatAIController->GetPriorityLocation().ToString()));
-		break;
 	case EPathFollowingRequestResult::AlreadyAtGoal:
-		//CombatAIController->SetHasPriorityDestination(false);
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, FString::Printf(TEXT("AlreadyAtGoal")));
-		break;
-	case EPathFollowingRequestResult::RequestSuccessful:
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("RequestSuccessful")));
+		CombatAIController->SetHasPriorityDestination(false);
 		break;
 	default:
 		break;
