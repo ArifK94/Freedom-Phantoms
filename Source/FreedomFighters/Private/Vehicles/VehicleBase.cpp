@@ -54,6 +54,11 @@ AVehicleBase::AVehicleBase()
 	FrontCollider->CanCharacterStepUpOn = ECB_No;
 	FrontCollider->SetupAttachment(RootComponent);
 
+	FrontKillZoneComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("FrontKillZoneComponent"));
+	FrontKillZoneComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	FrontKillZoneComponent->CanCharacterStepUpOn = ECB_No;
+	FrontKillZoneComponent->SetupAttachment(RootComponent);
+
 	EyePointComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("EyePointComponent"));
 	EyePointComponent->SetupAttachment(RootComponent);
 
@@ -126,6 +131,9 @@ void AVehicleBase::BeginPlay()
 	Super::BeginPlay();
 
 	ThermalVisionPPComp->bEnabled = false;
+
+	FrontKillZoneComponent->OnComponentBeginOverlap.AddDynamic(this, &AVehicleBase::OnVehicleBeginOverlap);
+
 
 	HealthComponent->OnHealthChanged.AddDynamic(this, &AVehicleBase::OnHealthUpdate);
 
@@ -231,6 +239,33 @@ void AVehicleBase::RemoveUIWidget()
 		UWidgetLayoutLibrary::RemoveAllWidgets(World);
 		HUDWidget = nullptr;
 	}
+}
+
+void AVehicleBase::OnVehicleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor == nullptr || OtherActor == this) {
+		return;
+	}
+
+	// apply damage to only characters.
+	if (!OtherActor->IsA(ACharacter::StaticClass())) {
+		return;
+	}
+
+
+	float DamageReduction = 5.f;
+
+	FVector Location = OtherActor->GetActorLocation();
+	Location += OtherActor->GetActorForwardVector() + 50;
+	OtherActor->SetActorLocation(Location);
+
+	FHealthParameters HealthParameters;
+	HealthParameters.DamagedActor = OtherActor;
+	HealthParameters.DamageCauser = this;
+	HealthParameters.InstigatedBy = GetInstigatorController();
+	HealthParameters.Damage = GetVelocity().Size() / DamageReduction;
+	HealthParameters.CanDamageFriendlies = true;
+	UHealthComponent::ApplyDamage(HealthParameters);
 }
 
 void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
@@ -374,7 +409,7 @@ void AVehicleBase::SpawnVehicleWeapons()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 		VehicleWeapons[i].Weapon = GetWorld()->SpawnActor<AMountedGun>(VehicleWeapon.WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-		
+
 		if (VehicleWeapons[i].Weapon)
 		{
 			VehicleWeapons[i].Weapon->SetOwner(MyOwner);

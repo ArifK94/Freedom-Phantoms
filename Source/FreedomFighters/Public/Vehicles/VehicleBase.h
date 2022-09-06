@@ -52,6 +52,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UBoxComponent* FrontCollider;
+
+	/**
+	* The front box component to damage actors when the vehicle is moving.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UBoxComponent* FrontKillZoneComponent;
 	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -297,6 +303,10 @@ protected:
 
 //Event Handlers
 public:
+
+	UFUNCTION()
+		void OnVehicleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	UFUNCTION(BlueprintCallable)
 		virtual void OnHealthUpdate(FHealthParameters InHealthParameters);
 
