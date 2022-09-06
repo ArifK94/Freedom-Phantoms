@@ -230,13 +230,6 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 	FVector TargetLocation = SplinePathComp->GetLocationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
 	FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
 
-	if (TransitionToSplineStart)
-	{
-		TargetLocation = UKismetMathLibrary::VLerp(GetOwner()->GetActorLocation(), TargetLocation, Value);
-		TargetRotation = UKismetMathLibrary::RLerp(GetOwner()->GetActorRotation(), TargetRotation, Value, true);
-	}
-
-
 	GetOwner()->SetActorLocationAndRotation(TargetLocation, TargetRotation);
 
 	// if reached the end
