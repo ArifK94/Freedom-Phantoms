@@ -168,8 +168,6 @@ void AVehicleBase::Tick(float DeltaTime)
 	{
 		VehiclePathFollowerComponent->ResumePath();
 	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *GetName()));
 }
 
 void AVehicleBase::TimerTick()
