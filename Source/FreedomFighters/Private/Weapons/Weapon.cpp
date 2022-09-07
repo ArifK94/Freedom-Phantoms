@@ -96,6 +96,31 @@ AWeapon::AWeapon()
 	ShotLineDuration = 5.0f;
 }
 
+void AWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	MuzzleLightComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+
+	GetWorldTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, true, 1.f);
+
+	SpawnMagazine();
+	ConfigSetup();
+}
+
+void AWeapon::DelayedInit()
+{
+	LoadParentMesh();
+
+	MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+
+	GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
+}
+
 void AWeapon::SetIsAiming(bool isAiming)
 {
 	IsAiming = isAiming;
@@ -305,31 +330,6 @@ void AWeapon::LoadParentMesh()
 			}
 		}
 	}
-}
-
-void AWeapon::BeginPlay()
-{
-	Super::BeginPlay();
-
-	MuzzleLightComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
-
-	GetWorldTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, true, 1.f);
-
-	SpawnMagazine();
-	ConfigSetup();
-}
-
-void AWeapon::DelayedInit()
-{
-	LoadParentMesh();
-
-	MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
-
-	GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
 }
 
 bool AWeapon::IsFacingCrosshair()

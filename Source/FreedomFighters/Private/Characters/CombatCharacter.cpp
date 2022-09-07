@@ -6,6 +6,7 @@
 #include "Weapons/Weapon.h"
 #include "Weapons/Pistol.h"
 #include "Weapons/PumpActionWeapon.h"
+#include "Weapons/ThrowableWeapon.h"
 #include "Weapons/MountedGun.h"
 #include "Weapons/Projectile.h"
 #include "CustomComponents/ObjectPoolComponent.h"
@@ -70,8 +71,20 @@ void ACombatCharacter::BeginPlay()
 	SpawnHelmet();
 	SpawnLoadout();
 
-	if (Loadout && WeaponsDataSet) {
+	if (primaryWeaponObj) {
+		primaryWeaponObj->SetOwner(this);
+	}
 
+	if (secondaryWeaponObj) {
+		secondaryWeaponObj->SetOwner(this);
+	}
+
+	if (GrenadeWeapon) {
+		GrenadeWeapon->SetOwner(this);
+	}
+
+	if (Loadout && WeaponsDataSet) 
+	{
 		// get random weapon if not selected from main menu, this is should be null for AI characters
 		if (primaryWeaponObj == nullptr) {
 			primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
@@ -104,12 +117,6 @@ void ACombatCharacter::BeginPlay()
 		RetrieveWeaponAnimDataSet();
 		BeginEquipWeapon();
 	}
-}
-
-
-bool ACombatCharacter::CanUseWeapon()
-{
-	return currentWeaponObj && !isReloading && hasEquippedWeapon && !isEquippingWeapon && !isSwappingWeapon;
 }
 
 void ACombatCharacter::Init()
@@ -1069,6 +1076,11 @@ void ACombatCharacter::EndReload()
 		StopAnimMontage(WeaponAnimDataSet->Reloading);
 	}
 
+}
+
+bool ACombatCharacter::CanUseWeapon()
+{
+	return currentWeaponObj && !isReloading && hasEquippedWeapon && !isEquippingWeapon && !isSwappingWeapon;
 }
 
 void ACombatCharacter::SetHandGaurdIK(float Alpha)
