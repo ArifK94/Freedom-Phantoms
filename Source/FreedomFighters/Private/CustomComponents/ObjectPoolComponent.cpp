@@ -33,7 +33,7 @@ void UObjectPoolComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 
 		if (PoolableActor)
 		{
-			//PoolableActor->Destroy();
+			PoolableActor->Destroy();
 		}
 	}
 }
@@ -56,6 +56,7 @@ TArray<FObjectPoolParameters*> UObjectPoolComponent::AddToPool(FObjectPoolParame
 			ObjectPoolParameters->PoolSize = ObjectPoolParams->PoolSize;
 			ObjectPoolParameters->PoolableActorClass = ObjectPoolParams->PoolableActorClass;
 			ObjectPoolParameters->PoolableActor = ActorObj;
+			ObjectPoolParameters->MyName = ActorObj->GetName();
 
 			ActorsInObjectPool.Add(ObjectPoolParameters);
 
@@ -73,20 +74,22 @@ AObjectPoolActor* UObjectPoolComponent::ActivatePoolObject(TSubclassOf<AActor> A
 	// Backup param incase an object cannot be found
 	AObjectPoolActor* PoolableActor = nullptr;
 
-	for (int i = 0; i < ActorsInObjectPool.Num(); i++)
+	for (int i = ActorsInObjectPool.Num() - 1; i >= 0; i--)
 	{
 		if (ActorsInObjectPool[i]->PoolableActorClass == ActorClass)
 		{
 			PoolableActor = ActorsInObjectPool[i]->PoolableActor;
 
-			if (PoolableActor == nullptr)
+			TWeakObjectPtr<AActor> TempActor = PoolableActor;
+
+			if (PoolableActor == nullptr || !TempActor.IsValid())
 			{
 				// Actors can be destroyed if reached outside of map
 				ActorsInObjectPool.RemoveAt(i);
 			}
 			else
 			{
-				if (PoolableActor && !PoolableActor->IsActive())
+				if (PoolableActor && TempActor.IsValid() && !PoolableActor->IsActive())
 				{
 					ActorsInObjectPool[i]->PoolableActor->SetOwner(Owner);
 					PoolableActor->SetActorLocationAndRotation(Location, Rotation.Quaternion());

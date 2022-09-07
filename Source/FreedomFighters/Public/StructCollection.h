@@ -83,6 +83,15 @@ public:
 
 	UPROPERTY()
 		int PoolSize;
+
+	FObjectPoolParameters()
+	{
+		PoolableActorClass = nullptr;
+
+		PoolableActor = nullptr;
+
+		PoolSize = 0;
+	}
 };
 
 USTRUCT(BlueprintType)

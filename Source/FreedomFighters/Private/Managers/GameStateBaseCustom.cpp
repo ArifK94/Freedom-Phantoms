@@ -134,6 +134,10 @@ AObjectPoolActor* AGameStateBaseCustom::GetAvailablePoolActor(TSubclassOf<AActor
 			continue;
 		}
 
+		if (!PoolParam->PoolableActor) {
+			continue;
+		}
+
 		if (PoolParam->PoolableActorClass == ActorClass && !PoolParam->PoolableActor->IsActive())
 		{
 			return PoolParam->PoolableActor;
