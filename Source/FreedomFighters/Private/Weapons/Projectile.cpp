@@ -725,6 +725,10 @@ void AProjectile::CheckNearbyActors()
 				continue;
 			}
 
+			if (DamagedActor == this) {
+				continue;
+			}
+
 			if (DetectionActors.Contains(DamagedActor)) {
 				continue;
 			}
@@ -737,7 +741,7 @@ void AProjectile::CheckNearbyActors()
 			if (!DamagedActor->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
 
 				// Does the actor's controller implement the avoidable interface then?
-				if (!DamagedActor->GetInstigatorController()->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
+				if (DamagedActor->GetInstigatorController() && !DamagedActor->GetInstigatorController()->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
 					continue;
 				}
 			}
@@ -752,7 +756,7 @@ void AProjectile::CheckNearbyActors()
 			}
 
 			// Does actor's controller implement the avoidable interface
-			if (DamagedActor->GetInstigatorController()->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
+			if (DamagedActor->GetInstigatorController() && DamagedActor->GetInstigatorController()->GetClass()->ImplementsInterface(UAvoidable::StaticClass())) {
 				IAvoidable::Execute_OnNearbyActorFound(DamagedActor->GetInstigatorController(), AvoidableParams);
 			}
 
