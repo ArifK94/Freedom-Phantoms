@@ -70,11 +70,25 @@ void UHealthComponent::ApplyDamage(FHealthParameters HealthParameters)
 
 void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 {
-	if (HasUnlimitedHealth) return;
+	if (HasUnlimitedHealth) {
+		return;
+	}
 
-	if (!isAlive) return;
+	if (!isAlive) {
+		return;
+	}
 
-	if (HealthParameters.Damage <= 0.0f) return;
+	if (HealthParameters.DamageCauser == nullptr) {
+		return;
+	}
+
+	if (HealthParameters.DamagedActor == nullptr) {
+		return;
+	}
+
+	if (HealthParameters.Damage <= 0.0f) {
+		return;
+	}
 
 	if (IgnoreFriendlyFire)
 	{
@@ -90,12 +104,10 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 
 	if (AcceptOnlyExplosions)
 	{
-		if (!HealthParameters.IsExplosive)
-		{
+		if (!HealthParameters.IsExplosive) {
 			return;
 		}
 	}
-
 
 	auto DamageReduction = HealthParameters.Damage - DamageReduceFactor;
 
@@ -123,6 +135,7 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 			isWounded = true;
 		}
 	}
+
 
 	HealthParameters.SetHealthComponent(this);
 	OnHealthChanged.Broadcast(HealthParameters);
