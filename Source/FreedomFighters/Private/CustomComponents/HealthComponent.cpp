@@ -76,11 +76,13 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 
 	if (HealthParameters.Damage <= 0.0f) return;
 
-	if (IgnoreFriendlyFire && !HealthParameters.CanDamageFriendlies)
+	if (IgnoreFriendlyFire)
 	{
 		if (HealthParameters.DamageCauser != HealthParameters.DamagedActor)
 		{
-			if (UTeamFactionComponent::IsFriendly(HealthParameters.DamagedActor, HealthParameters.DamageCauser)) {
+			// are both actors friendlies?
+			// Does the health param override the damage to friendlies? If not, then ignore this damage.
+			if (UTeamFactionComponent::IsFriendly(HealthParameters.DamagedActor, HealthParameters.DamageCauser) && !HealthParameters.CanDamageFriendlies) {
 				return;
 			}
 		}
@@ -121,7 +123,6 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 			isWounded = true;
 		}
 	}
-
 
 	HealthParameters.SetHealthComponent(this);
 	OnHealthChanged.Broadcast(HealthParameters);
