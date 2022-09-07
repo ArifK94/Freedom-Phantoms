@@ -117,7 +117,6 @@ void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 	if (!HealthComponent->IsAlive())
 	{
 		TargetFinderComponent->SetFindTargetPerFrame(false);
-		PrimaryActorTick.bCanEverTick = false;
 		ShooterComponent->EndFire();
 
 		// Destroy all weapons

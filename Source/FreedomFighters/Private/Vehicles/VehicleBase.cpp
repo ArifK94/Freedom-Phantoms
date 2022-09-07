@@ -168,6 +168,8 @@ void AVehicleBase::Tick(float DeltaTime)
 	{
 		VehiclePathFollowerComponent->ResumePath();
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *GetName()));
 }
 
 void AVehicleBase::TimerTick()
@@ -277,7 +279,7 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (!HealthComponent->IsAlive())
 	{
-		PrimaryActorTick.bCanEverTick = false;
+		SetActorTickEnabled(false);
 		GetWorldTimerManager().ClearTimer(THandler_Update);
 
 		if (VehiclePathFollowerComponent) {
