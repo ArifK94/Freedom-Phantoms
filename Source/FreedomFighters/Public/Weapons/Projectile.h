@@ -219,6 +219,9 @@ private:
 
 	void Explode(FVector ImpactPoint);
 
+
+	bool IsHittingTarget(AActor* TargetActor, FVector ImpactPoint, float Radius);
+
 	FSurfaceImpactSet CheckSurface(EPhysicalSurface SurfaceType);
 
 	void AddKill(UHealthComponent* DamagedActorHealth, UTeamFactionComponent* DamagedActorFaction);

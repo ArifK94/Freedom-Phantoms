@@ -7,6 +7,7 @@
 #include "Characters/CombatCharacter.h"
 #include "Interfaces/Avoidable.h"
 #include "StructCollection.h"
+#include "Services/SharedService.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -287,7 +288,6 @@ void AProjectile::RetrieveSurfaceImpactSet()
 		return;
 	}
 
-
 	static const FString ContextString(TEXT("Surface Impact DataSet"));
 	SurfaceImpact = SurfaceImpactDatatable->FindRow<FSurfaceImpact>(RowName, ContextString, true);
 }
@@ -335,6 +335,7 @@ void AProjectile::DetectHit()
 	{
 		BulletMovementAudio->Stop();
 	}
+
 
 	if (isAnExplosive) {
 		Explode(OutHit.ImpactPoint);
@@ -450,7 +451,7 @@ void AProjectile::Explode(FVector ImpactPoint)
 
 		for (auto i = 0; i < DamagedActors.Num(); i++)
 		{
-			auto DamagedActor = DamagedActors[i];
+			AActor* DamagedActor = DamagedActors[i];
 
 			UHealthComponent* HealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
@@ -459,9 +460,9 @@ void AProjectile::Explode(FVector ImpactPoint)
 				float Distance = UKismetMathLibrary::Vector_Distance(DamagedActor->GetActorLocation(), ImpactPoint);
 
 				// health affected if within inner radius
-				if (Distance <= ExplosiveRadiusInner) 
+				if (IsHittingTarget(DamagedActor, ImpactPoint, ExplosiveRadiusInner))
 				{
-					auto newDamage = FMath::Clamp((DamageAmount * ExplosiveRadiusInner) / Distance, 0.f, DamageAmount);
+					float newDamage = FMath::Clamp((DamageAmount * ExplosiveRadiusInner) / Distance, 0.f, DamageAmount);
 					newDamage = FMath::Abs(newDamage);
 
 					FHealthParameters HealthParameters;
@@ -579,6 +580,38 @@ void AProjectile::SelfDestruct()
 	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
 
 	Deactivate();
+}
+
+bool AProjectile::IsHittingTarget(AActor* TargetActor, FVector ImpactPoint, float Radius)
+{
+	// create a collision sphere
+	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(Radius);
+
+	// create tarray for hit results
+	TArray<FHitResult> OutHits;
+
+	// check if something got hit in the sweep
+	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, ImpactPoint, ImpactPoint, FQuat::Identity, ECC_Visibility, MyColSphere, GetQueryParams());
+
+	if (!isHit) {
+		return false;
+	}
+
+	if (ShowExplosionRadius)
+	{
+		DrawDebugSphere(GetWorld(), ImpactPoint, Radius, 20, FColor::Red, false, DebugExplosionLifeTime, 0, 2);
+	}
+
+	for (auto& Hit : OutHits)
+	{
+		AActor* DamagedActor = Hit.GetActor();
+
+		if (DamagedActor == TargetActor) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 FSurfaceImpactSet AProjectile::CheckSurface(EPhysicalSurface SurfaceType)
