@@ -130,24 +130,21 @@ AObjectPoolActor* AGameStateBaseCustom::GetAvailablePoolActor(TSubclassOf<AActor
 	{
 		auto PoolParam = ProjectilesPool[i];
 
-		if (!PoolParam) {
+		if (!UKismetSystemLibrary::IsValid(PoolParam.PoolableActor)) {
 			continue;
 		}
 
-		if (!PoolParam->PoolableActor) {
-			continue;
-		}
 
-		if (PoolParam->PoolableActorClass == ActorClass && !PoolParam->PoolableActor->IsActive())
+		if (PoolParam.PoolableActorClass == ActorClass && !PoolParam.PoolableActor->IsActive())
 		{
-			return PoolParam->PoolableActor;
+			return PoolParam.PoolableActor;
 		}
 	}
 
 	return nullptr;
 }
 
-void AGameStateBaseCustom::AddPoolActor(FObjectPoolParameters* PoolableActor)
+void AGameStateBaseCustom::AddPoolActor(FObjectPoolParameters PoolableActor)
 {
 	ProjectilesPool.Add(PoolableActor);
 }

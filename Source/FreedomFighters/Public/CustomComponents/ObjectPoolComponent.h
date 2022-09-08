@@ -15,12 +15,14 @@ class FREEDOMFIGHTERS_API UObjectPoolComponent : public UActorComponent
 
 private:
 	AGameStateBaseCustom* GameStateBaseCustom;
-	TArray<FObjectPoolParameters*> ActorsInObjectPool;
+
+	UPROPERTY()
+		TArray<FObjectPoolParameters> ActorsInObjectPool;
 
 public:	
 	UObjectPoolComponent();
 
-	TArray<FObjectPoolParameters*> AddToPool(FObjectPoolParameters* ObjectPoolParams);
+	TArray<FObjectPoolParameters> AddToPool(FObjectPoolParameters ObjectPoolParams);
 
 	AObjectPoolActor* ActivatePoolObject(TSubclassOf<AActor> ActorClass, AActor* Owner, FVector const& Location, FRotator const& Rotation);
 
@@ -33,7 +35,7 @@ protected:
 	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 public:
-	TArray<FObjectPoolParameters*> GetActorsInObjectPool() {
+	TArray<FObjectPoolParameters> GetActorsInObjectPool() {
 		return ActorsInObjectPool;
 	}
 

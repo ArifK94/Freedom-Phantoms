@@ -55,7 +55,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 		USoundBase* NearEndMusic;
 
-	TArray<FObjectPoolParameters*> ProjectilesPool;
+	UPROPERTY()
+		TArray<FObjectPoolParameters> ProjectilesPool;
 
 public:
 	AGameStateBaseCustom();
@@ -77,7 +78,7 @@ public:
 
 	AObjectPoolActor* GetAvailablePoolActor(TSubclassOf<AActor> ActorClass);
 
-	void AddPoolActor(FObjectPoolParameters* PoolableActor);
+	void AddPoolActor(FObjectPoolParameters PoolableActor);
 
 private:
 	UFUNCTION()
