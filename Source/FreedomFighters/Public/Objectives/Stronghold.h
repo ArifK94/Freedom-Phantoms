@@ -15,6 +15,7 @@ class UCoverPointComponent;
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStrongholdCapturedSignature, FOccupiedFaction, OccupiedFaction);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStrongholdDefenderSpawnedSignature, FStrongholdDefender, StrongholdDefender);
 
 
 UCLASS()
@@ -104,8 +105,12 @@ private:
 	
 	void GetHighestFaction();
 
+	
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnStrongholdCapturedSignature OnStrongholdCaptured;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnStrongholdDefenderSpawnedSignature OnStrongholdDefenderSpawned;
 
 protected:
 	virtual void BeginPlay() override;

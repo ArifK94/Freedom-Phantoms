@@ -977,6 +977,16 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FStrongholdDefender
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		ACombatCharacter* CombatCharacter;
+};
+
+USTRUCT(BlueprintType)
 struct FAvoidableParams
 {
 	GENERATED_BODY()

@@ -211,7 +211,12 @@ void AStronghold::SpawnDefender()
 
 	UStrongholdDefenderComponent::SetDefender(Character, this);
 
-	DefendingCombatatants.Add(Cast<ACombatCharacter>(Character));
+	auto CombatCharacter = Cast<ACombatCharacter>(Character);
+	DefendingCombatatants.Add(CombatCharacter);
+
+	auto Defender = FStrongholdDefender();
+	Defender.CombatCharacter = CombatCharacter;
+	OnStrongholdDefenderSpawned.Broadcast(Defender);
 }
 
 void AStronghold::UpdateTotalOccupants()
