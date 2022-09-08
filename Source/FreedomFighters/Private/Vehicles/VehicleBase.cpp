@@ -102,7 +102,7 @@ AVehicleBase::AVehicleBase()
 
 	VehiclePathFollowerComponent = CreateDefaultSubobject<UVehiclePathFollowerComponent>(TEXT("VehiclePathFollowerComponent"));
 
-	EngineSoundParamName = "Speed";
+	EngineSoundParamName = "speed";
 
 	RotationSpeed = 100000.0;
 
