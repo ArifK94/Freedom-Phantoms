@@ -257,6 +257,11 @@ void AVehicleBase::OnVehicleBeginOverlap(UPrimitiveComponent* OverlappedComp, AA
 		return;
 	}
 
+	// ignore vehicle damage is not moving or moving slowly.
+	if (GetVelocity().Size() <= 20.f) {
+		return;
+	}
+
 
 	float DamageReduction = 5.f;
 
@@ -279,6 +284,7 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 	{
 		SetActorTickEnabled(false);
 		GetWorldTimerManager().ClearTimer(THandler_Update);
+		FrontKillZoneComponent->OnComponentBeginOverlap.RemoveDynamic(this, &AVehicleBase::OnVehicleBeginOverlap);
 
 		if (VehiclePathFollowerComponent) {
 			VehiclePathFollowerComponent->Stop();
