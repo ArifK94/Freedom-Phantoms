@@ -232,6 +232,7 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 		primaryWeaponObj->Destroy();
 	}
 
+	Weapon->SetOwner(this);
 	primaryWeaponObj = Weapon;
 	currentWeaponObj = primaryWeaponObj;
 
@@ -262,6 +263,7 @@ void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)
 		secondaryWeaponObj->Destroy();
 	}
 
+	Weapon->SetOwner(this);
 	secondaryWeaponObj = Weapon;
 
 	if (Loadout) {
