@@ -81,9 +81,10 @@ void ACombatAIController::Tick(float DeltaTime)
 	bDeltaTime = DeltaTime;
 
 
-	if (!GetPawn()) {
+	if (!GetPawn() || !OwningCombatCharacter) {
 		return;
 	}
+
 
 	if (!OwningCombatCharacter->GetHealthComp()->IsAlive()) {
 		return;
@@ -103,6 +104,8 @@ void ACombatAIController::Tick(float DeltaTime)
 		}
 	}
 
+	OwningCombatCharacter->bUseControllerRotationYaw = false;
+	OwningCombatCharacter->GetCharacterMovement()->RotationRate = FRotator(0.0f, 250.f, 0.0f); // ...at this rotation rate
 }
 
 void ACombatAIController::Init()
