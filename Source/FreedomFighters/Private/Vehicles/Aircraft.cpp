@@ -178,7 +178,6 @@ void AAircraft::ChangeSecondaryWeapon()
 			if (IsUpdated)
 			{
 				CurrentWeaponIndex = i;
-				GEngine->AddOnScreenDebugMessage(-1, 999.0f, FColor::Green, FString::Printf(TEXT("%s"), *VehicleWeapon.Weapon->GetName()));
 
 				// new weapon can be in use, no need to go further in this method.
 				return;
