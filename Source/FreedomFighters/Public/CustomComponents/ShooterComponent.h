@@ -15,7 +15,7 @@ class FREEDOMFIGHTERS_API UShooterComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	AWeapon* m_Weapon;
+	TArray<AWeapon*> Weapons;
 
 	FTimerHandle THandler_BeginShoot;
 	FTimerHandle THandler_ResumeShoot;
@@ -40,7 +40,7 @@ public:
 		void EndFire();
 
 	UFUNCTION(BlueprintCallable)
-		void SetWeapon(AWeapon* InWeapon);
+		void SetWeapons(TArray<AWeapon*> InWeapon);
 
 protected:
 	virtual void BeginPlay() override;

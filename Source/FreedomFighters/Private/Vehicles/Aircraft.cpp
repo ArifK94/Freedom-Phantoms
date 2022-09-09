@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Vehicles/TankVehicle.h"
+#include "Vehicles/Aircraft.h"
 #include "Weapons/Weapon.h"
 #include "Weapons/MountedGun.h"
 #include "CustomComponents/ShooterComponent.h"
@@ -17,31 +17,7 @@
 #include "Kismet/GameplayStatics.h"
 
 
-FVehicleWeapon ATankVehicle::GetCurrentVehicleWeapon()
-{
-	if (CurrentWeapon == MainWeapon)
-	{
-		return VehicleWeaponMain;
-	}
-	else if (CurrentWeapon == SecondaryWeapons[CurrentWeaponIndex])
-	{
-		return VehicleWeaponTurrets[CurrentWeaponIndex];
-	}
-	return FVehicleWeapon();
-}
-
-
-
-void ATankVehicle::SetCurrentWeapon(AMountedGun* InMountedGun, FVehicleWeapon InVehicleWeapon)
-{
-	CurrentWeapon = InMountedGun;
-
-	TArray<AWeapon*> Weapons;
-	Weapons.Add(CurrentWeapon);
-	ShooterComponent->SetWeapons(Weapons);
-}
-
-ATankVehicle::ATankVehicle()
+AAircraft::AAircraft()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -51,7 +27,7 @@ ATankVehicle::ATankVehicle()
 	TeamFactionComponent = CreateDefaultSubobject<UTeamFactionComponent>(TEXT("TeamFactionComponent"));
 
 	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
-	TargetFinderComponent->AddClassFilter(ATankVehicle::StaticClass());
+	TargetFinderComponent->AddClassFilter(AAircraft::StaticClass());
 
 	ShooterComponent = CreateDefaultSubobject<UShooterComponent>(TEXT("ShooterComponent"));
 
@@ -61,40 +37,20 @@ ATankVehicle::ATankVehicle()
 	TurretRotationErrorTolerance = 5.f;
 }
 
-void ATankVehicle::BeginPlay()
+void AAircraft::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ATankVehicle::OnTargetSearchUpdate);
+	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &AAircraft::OnTargetSearchUpdate);
 	TargetFinderComponent->SetFindTargetPerFrame(true);
 
 	DefaultPitchMin = PitchMin;
 	DefaultPitchMax = PitchMax;
 	DefaultYawMin = YawMin;
 	DefaultYawMax = YawMax;
-
-	MainWeapon = SpawnVehicleWeapon(VehicleWeaponMain);
-
-	for (int i = 0; i < VehicleWeaponTurrets.Num(); i++)
-	{
-		auto Weapon = SpawnVehicleWeapon(VehicleWeaponTurrets[i]);
-
-		if (Weapon) {
-			SecondaryWeapons.Add(Weapon);
-		}
-	}
-
-	if (MainWeapon)
-	{
-		SetCurrentWeapon(MainWeapon, VehicleWeaponMain);
-	}
-	else if (SecondaryWeapons.Num() > 0)
-	{
-		SetCurrentWeapon(SecondaryWeapons[CurrentWeaponIndex], VehicleWeaponTurrets[CurrentWeaponIndex]);
-	}
 }
 
-void ATankVehicle::Tick(float DeltaTime)
+void AAircraft::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -103,7 +59,7 @@ void ATankVehicle::Tick(float DeltaTime)
 	Shoot();
 }
 
-bool ATankVehicle::ShouldStopVehicle()
+bool AAircraft::ShouldStopVehicle()
 {
 	if (TargetActor && StopOnTargetFound)
 	{
@@ -113,7 +69,7 @@ bool ATankVehicle::ShouldStopVehicle()
 	return Super::ShouldStopVehicle();
 }
 
-void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
+void AAircraft::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	Super::OnHealthUpdate(InHealthParameters);
 
@@ -121,24 +77,10 @@ void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 	{
 		TargetFinderComponent->SetFindTargetPerFrame(false);
 		ShooterComponent->EndFire();
-
-		// Destroy all weapons
-		if (MainWeapon) {
-			MainWeapon->Destroy();
-		}
-
-		for (int i = 0; i < SecondaryWeapons.Num(); i++)
-		{
-			auto Weapon = SecondaryWeapons[i];
-
-			if (Weapon) {
-				Weapon->Destroy();
-			}
-		}
 	}
 }
 
-void ATankVehicle::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters)
+void AAircraft::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters)
 {
 	TargetActor = TargetSearchParameters.TargetActor;
 
@@ -154,15 +96,34 @@ void ATankVehicle::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchPara
 		VehiclePathFollowerComponent->Slowdown();
 	}
 
-	// Use main weapon on vehicles
-	if (TargetActor->IsA(AVehicleBase::StaticClass()))
+	bool NewWeaponSet = false;
+
+	if (THandler_RandomChangeWeapon.IsValid())
 	{
-		if (CurrentWeapon != MainWeapon)
+		for (auto VehicleWeapon : VehicleWeapons)
 		{
-			SetCurrentWeapon(MainWeapon, VehicleWeaponMain);
+			if (NewWeaponSet) {
+				break;
+			}
+
+			for (auto PreferredClassTarget : VehicleWeapon.PreferredClassTargets)
+			{
+				if (TargetActor->IsA(PreferredClassTarget) || TargetActor->GetParentActor() && TargetActor->GetParentActor()->IsA(PreferredClassTarget))
+				{
+					NewWeaponSet = UpdateCurrentWeapon(VehicleWeapon);
+
+					if (NewWeaponSet)
+					{
+						break;
+					}
+				}
+			}
 		}
 	}
-	else // else target is most likely infantry
+
+
+
+	if (!NewWeaponSet)
 	{
 		// add more character to tank by radnomly changing weapons at random times
 		if (!THandler_RandomChangeWeapon.IsValid())
@@ -170,14 +131,12 @@ void ATankVehicle::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchPara
 			// Change to secondary weapons at first then randomly change the weapons a few x seconds later
 			ChangeSecondaryWeapon();
 
-			GetWorldTimerManager().SetTimer(THandler_RandomChangeWeapon, this, &ATankVehicle::RandomChangeWeapon, FMath::RandRange(5.f, 10.f), true);
+			GetWorldTimerManager().SetTimer(THandler_RandomChangeWeapon, this, &AAircraft::RandomChangeWeapon, FMath::RandRange(5.f, 10.f), true);
 		}
-
-
 	}
 }
 
-AMountedGun* ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
+AMountedGun* AAircraft::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
 {
 	if (!VehicleWeapon.WeaponClass) {
 		return nullptr;
@@ -201,34 +160,46 @@ AMountedGun* ATankVehicle::SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon)
 	return Weapon;
 }
 
-void ATankVehicle::ChangeSecondaryWeapon()
+void AAircraft::ChangeSecondaryWeapon()
 {
-	if (SecondaryWeapons.Num() <= 0) {
+	if (VehicleWeapons.Num() <= 0) {
 		return;
 	}
 
-	// increment the index if current index is less than the array of weapons
-	// otherwise go back to the first index
-	if (CurrentWeaponIndex < SecondaryWeapons.Num() - 1)
+	for (int i = CurrentWeaponIndex; i < VehicleWeapons.Num(); i++)
 	{
-		CurrentWeaponIndex++;
-	}
-	else
-	{
-		CurrentWeaponIndex = 0;
+		auto VehicleWeapon = VehicleWeapons[i];
+
+		// ignore weapons that are currently in use.
+		if (VehicleWeapon.Weapon && !IsWeaponInUse(VehicleWeapon))
+		{
+			bool IsUpdated = UpdateCurrentWeapon(VehicleWeapon);
+
+			if (IsUpdated)
+			{
+				CurrentWeaponIndex = i;
+				GEngine->AddOnScreenDebugMessage(-1, 999.0f, FColor::Green, FString::Printf(TEXT("%s"), *VehicleWeapon.Weapon->GetName()));
+
+				// new weapon can be in use, no need to go further in this method.
+				return;
+			}
+
+		}
 	}
 
-	SetCurrentWeapon(SecondaryWeapons[CurrentWeaponIndex], VehicleWeaponTurrets[CurrentWeaponIndex]);
+	// if this line of code is run, it means the current weapon index has reached its array size limit so go back to first index.
+	CurrentWeaponIndex = 0;
+	UpdateCurrentWeapon(VehicleWeapons[CurrentWeaponIndex]);
 
 }
 
-void ATankVehicle::RandomChangeWeapon()
+void AAircraft::RandomChangeWeapon()
 {
 	auto RandomBool = UKismetMathLibrary::RandomBool();
 
 	if (RandomBool)
 	{
-		SetCurrentWeapon(MainWeapon, VehicleWeaponMain);
+		//UpdateCurrentWeapon(MainWeapon, VehicleWeaponMain);
 	}
 	else
 	{
@@ -236,7 +207,7 @@ void ATankVehicle::RandomChangeWeapon()
 	}
 }
 
-FRotator ATankVehicle::FaceTarget(AActor* Actor, FRotator& TargetRotation)
+FRotator AAircraft::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 {
 	if (!Actor) {
 		TargetRotation = FRotator::ZeroRotator;
@@ -247,14 +218,18 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 	FRotator EyeRotation;
 	GetActorEyesViewPoint(EyeLocation, EyeRotation); // Grab the camera view points, this is a fail safe if vehicle weapons do not exist for some reason
 
-	auto VehicleWeapon = GetCurrentVehicleWeapon();
 
-	// eye location should be retrieved from weapon socket location as the follow camera shouldn't change as it can be used by another mechanic such as orbiting around the vehicle
-	// check if weapon class was provided as we cannot access the weapon object pointer when it has UPROPERTY attribute
-	if (VehicleWeapon.WeaponClass)
+	for (auto VehicleWeapon : CurrentVehicleWeapons)
 	{
-		EyeLocation = MeshComponent->GetSocketLocation(VehicleWeapon.WeaponSocketName);
+		// eye location should be retrieved from weapon socket location as the follow camera shouldn't change as it can be used by another mechanic such as orbiting around the vehicle
+		// check if weapon class was provided as we cannot access the weapon object pointer when it has UPROPERTY attribute
+		if (VehicleWeapon.Weapon)
+		{
+			EyeLocation = MeshComponent->GetSocketLocation(VehicleWeapon.WeaponSocketName);
+		}
 	}
+
+
 
 	auto TargetLocation = Actor->GetActorLocation() - EyeLocation;
 	auto RootBone = MeshComponent->GetBoneName(0);
@@ -262,10 +237,9 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
 	return UKismetMathLibrary::RInterpTo(RotationInput, TargetRotation, GetWorld()->DeltaTimeSeconds, TurretRotationFactor);
-
 }
 
-void ATankVehicle::Shoot()
+void AAircraft::Shoot()
 {
 	if (!HealthComponent->IsAlive()) {
 		return;
@@ -308,7 +282,7 @@ void ATankVehicle::Shoot()
 	}
 }
 
-void ATankVehicle::ChangePitchValue(float InYawValue)
+void AAircraft::ChangePitchValue(float InYawValue)
 {
 	if (ClampChangePitchValues.Num() <= 0) {
 		return;
@@ -336,4 +310,50 @@ void ATankVehicle::ChangePitchValue(float InYawValue)
 
 	PitchMin = NewPitchMin;
 	PitchMax = NewPitchMax;
+}
+
+bool AAircraft::UpdateCurrentWeapon(FVehicleWeapon InVehicleWeapon)
+{
+	if (IsWeaponInUse(InVehicleWeapon)) {
+		return false;
+	}
+
+	TArray<AWeapon*> Weapons;
+
+	CurrentVehicleWeapons.Empty();
+
+	if (InVehicleWeapon.Weapon) {
+		Weapons.Add(InVehicleWeapon.Weapon);
+		CurrentVehicleWeapons.Add(InVehicleWeapon);
+	}
+
+	for (auto Index : InVehicleWeapon.TwinWeaponIndexes)
+	{
+		if (VehicleWeapons[Index].Weapon && !Weapons.Contains(VehicleWeapons[Index].Weapon))
+		{
+			Weapons.Add(VehicleWeapons[Index].Weapon);
+			CurrentVehicleWeapons.Add(VehicleWeapons[Index]);
+		}
+	}
+
+	CurrentVehicleWeapon = InVehicleWeapon;
+
+	ShooterComponent->SetWeapons(Weapons);
+
+	return true;
+}
+
+bool AAircraft::IsWeaponInUse(FVehicleWeapon InVehicleWeapon)
+{
+	TArray<AWeapon*> Weapons;
+
+	for (auto CurrentVehicleWpn : CurrentVehicleWeapons)
+	{
+		if (CurrentVehicleWpn.Weapon)
+		{
+			Weapons.Add(CurrentVehicleWpn.Weapon);
+		}
+	}
+
+	return Weapons.Contains(InVehicleWeapon.Weapon);
 }

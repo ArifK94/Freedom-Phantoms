@@ -718,12 +718,28 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		bool AttachCharacterToWeapon;
 
+	/** Is this the main weapon? */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool IsMainWeapon;
+
+	/** The twin weapon set that is used to fire at the same time */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<int> TwinWeaponIndexes;
+
 	/** The socket name on the weapon which will allow the character to rotate with the turret, this is usually the socket that get rotated on the Yaw direction when moving th turret */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		FName WeaponAttachmentName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<UUserWidget> HUD;
+
+	/** Class type which this weapon will focus to use against. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<TSubclassOf<AActor>> PreferredClassTargets;
+
+	/** Class type which this weapon will be used less against. e.g. tank main cannon will be less preferred to be used against infantry but sometimes can be used if tank gets more aggressive. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TArray<TSubclassOf<AActor>> LessPreferredClassTargets;
 
 	FVehicleWeapon()
 	{

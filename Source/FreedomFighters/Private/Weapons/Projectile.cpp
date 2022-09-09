@@ -414,6 +414,7 @@ void AProjectile::Explode(FVector ImpactPoint)
 
 	AActor* MyOwner = GetOwner();
 
+
 	// create a collision sphere
 	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadiusOuter);
 
@@ -468,7 +469,7 @@ void AProjectile::Explode(FVector ImpactPoint)
 					FHealthParameters HealthParameters;
 					HealthParameters.DamagedActor = DamagedActor;
 					HealthParameters.DamageCauser = MyOwner;
-					HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
+					HealthParameters.InstigatedBy = MyOwner ? MyOwner->GetInstigatorController() : nullptr;
 					HealthParameters.WeaponCauser = WeaponParent;
 					HealthParameters.Projectile = this;
 					HealthParameters.HitInfo = DamagedActorsHitInfo[i];

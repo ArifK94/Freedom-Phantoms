@@ -5,14 +5,18 @@
 #include "CoreMinimal.h"
 #include "Vehicles/VehicleBase.h"
 #include "StructCollection.h"
-#include "TankVehicle.generated.h"
 
+#include "Aircraft.generated.h"
+
+/**
+ * 
+ */
 class USoundBase;
 UCLASS()
-class FREEDOMFIGHTERS_API ATankVehicle : public AVehicleBase
+class FREEDOMFIGHTERS_API AAircraft : public AVehicleBase
 {
 	GENERATED_BODY()
-
+	
 private:
 	float m_DeltaTime;
 	int CurrentWeaponIndex;
@@ -58,19 +62,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FClampChangePitch> ClampChangePitchValues;
 
-	/** The main cannon */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FVehicleWeapon VehicleWeaponMain;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		AMountedGun* MainWeapon;
-
-	/** Turret weapons */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TArray<FVehicleWeapon> VehicleWeaponTurrets;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		TArray<AMountedGun*> SecondaryWeapons;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TArray<FVehicleWeapon> CurrentVehicleWeapons;
+	FVehicleWeapon CurrentVehicleWeapon;
 
 	/** The speed of the turret when turning */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -88,7 +82,7 @@ private:
 		USoundBase* TurretTurnStopSound;
 
 public:
-	ATankVehicle();
+	AAircraft();
 
 	virtual void OnHealthUpdate(FHealthParameters InHealthParameters) override;
 
@@ -98,7 +92,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void RandomChangeWeapon();
 
-	void SetCurrentWeapon(AMountedGun* InMountedGun, FVehicleWeapon InVehicleWeapon);
+	bool UpdateCurrentWeapon(FVehicleWeapon InVehicleWeapon);
+
+	/** Check if vehicle weapon is currently selected for use. */
+	bool IsWeaponInUse(FVehicleWeapon InVehicleWeapon);
 
 	//Event Handlers
 public:
@@ -109,8 +106,6 @@ private:
 	AMountedGun* SpawnVehicleWeapon(FVehicleWeapon VehicleWeapon);
 
 	FRotator FaceTarget(AActor* Actor, FRotator& TargetRotation);
-
-	FVehicleWeapon GetCurrentVehicleWeapon();
 
 	void Shoot();
 
