@@ -120,7 +120,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FVehicleWeapon> VehicleWeapons;
-	TArray<FVehicleWeapon*> VehicleWeaponPtrList;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int CurrentWeaponIndex;

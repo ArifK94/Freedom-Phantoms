@@ -315,9 +315,9 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 			}
 		}
 
-		for (int i = 0; i < VehicleWeaponPtrList.Num(); i++)
+		for (int i = 0; i < VehicleWeapons.Num(); i++)
 		{
-			auto Weapon = VehicleWeaponPtrList[i]->Weapon;
+			auto Weapon = VehicleWeapons[i].Weapon;
 
 			if (Weapon)
 			{
@@ -444,7 +444,6 @@ void AVehicleBase::SpawnVehicleWeapons()
 		VehicleWeaponPtr->YawMin = VehicleWeapon.YawMin;
 		VehicleWeaponPtr->YawMax = VehicleWeapon.YawMax;
 		VehicleWeaponPtr->Weapon = VehicleWeapons[i].Weapon;
-		VehicleWeaponPtrList.Add(VehicleWeaponPtr);
 	}
 
 	// We need to spawn the weapons before any characters in case any associated weapons have assigned for certain seats like turrets
@@ -480,7 +479,7 @@ void AVehicleBase::SpawnVehicleSeatings()
 		if (VehicleSeat.AssociatedWeapon > -1)
 		{
 			auto AssociateIndex = VehicleSeat.AssociatedWeapon;
-			auto MG = Cast<AMountedGun>(VehicleWeaponPtrList[VehicleSeat.AssociatedWeapon]->Weapon);
+			auto MG = Cast<AMountedGun>(VehicleWeapons[VehicleSeat.AssociatedWeapon].Weapon);
 			if (MG) // if it's a mounted gun
 			{
 				ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(VehicleSeats[i].Character);
@@ -609,7 +608,7 @@ void AVehicleBase::ShowOutlines(bool CanShow)
 
 void AVehicleBase::UpdateWeaponView()
 {
-	if (VehicleWeaponPtrList.Num() <= 0) {
+	if (VehicleWeapons.Num() <= 0) {
 		return;
 	}
 
@@ -629,7 +628,7 @@ void AVehicleBase::UpdateWeaponView()
 		}
 	}
 
-	CurrentWeapon = VehicleWeaponPtrList[CurrentWeaponIndex]->Weapon;
+	CurrentWeapon = VehicleWeapons[CurrentWeaponIndex].Weapon;
 	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeapon);
 
 
@@ -889,7 +888,7 @@ void AVehicleBase::AddControllerPitchInput(float Val)
 {
 	if (UseFollowCamNavigation)
 	{
-		RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, VehicleWeaponPtrList[CurrentWeaponIndex]->PitchMin, VehicleWeaponPtrList[CurrentWeaponIndex]->PitchMax);
+		RotationInput.Pitch = FMath::ClampAngle(RotationInput.Pitch + Val, VehicleWeapons[CurrentWeaponIndex].PitchMin, VehicleWeapons[CurrentWeaponIndex].PitchMax);
 		RotationInput.Pitch = FRotator::ClampAxis(RotationInput.Pitch);
 
 		FollowCamera->SetRelativeRotation(RotationInput);
@@ -904,7 +903,7 @@ void AVehicleBase::AddControllerYawInput(float Val)
 {
 	if (UseFollowCamNavigation)
 	{
-		RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, VehicleWeaponPtrList[CurrentWeaponIndex]->YawMin, VehicleWeaponPtrList[CurrentWeaponIndex]->YawMax);
+		RotationInput.Yaw = FMath::ClampAngle(RotationInput.Yaw + Val, VehicleWeapons[CurrentWeaponIndex].YawMin, VehicleWeapons[CurrentWeaponIndex].YawMax);
 		RotationInput.Yaw = FRotator::ClampAxis(RotationInput.Yaw);
 
 		FollowCamera->SetRelativeRotation(RotationInput);
