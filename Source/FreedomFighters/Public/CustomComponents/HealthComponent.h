@@ -64,8 +64,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool CanBeWounded;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		DeathType deathType;
+	/** Which classes do not affect this health component?  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<TSubclassOf<AActor>> ImmuneActorClasses;
 
 private:
 	bool HasTakenDamage;
@@ -116,11 +117,6 @@ public:
 
 	bool GetDefaulUnlimitedHealth() {
 		return DefaulUnlimitedHealth;
-	}
-
-	void SetDeathType(DeathType type)
-	{
-		deathType = type;
 	}
 
 	void SetHealth(float Value) {

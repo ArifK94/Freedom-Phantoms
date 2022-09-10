@@ -2,6 +2,7 @@
 #include "CustomComponents/TeamFactionComponent.h"
 #include "FreedomFighters/FreedomFighters.h"
 #include "Characters/CombatCharacter.h"
+#include "Weapons/Weapon.h"
 #include "Weapons/Projectile.h"
 
 #include "Kismet/KismetMathLibrary.h"
@@ -105,6 +106,25 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 	if (AcceptOnlyExplosions)
 	{
 		if (!HealthParameters.IsExplosive) {
+			return;
+		}
+	}
+
+	// return function if any immunue actors should be ignored.
+	for (auto ActorClass : ImmuneActorClasses)
+	{
+		if (HealthParameters.Projectile && HealthParameters.Projectile->IsA(ActorClass))
+		{
+			return;
+		}
+
+		if (HealthParameters.DamageCauser && HealthParameters.DamageCauser->IsA(ActorClass))
+		{
+			return;
+		}
+
+		if (HealthParameters.WeaponCauser && HealthParameters.WeaponCauser->IsA(ActorClass))
+		{
 			return;
 		}
 	}
