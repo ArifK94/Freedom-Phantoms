@@ -443,6 +443,7 @@ void ACustomPlayerController::AddUIWidgets()
 		if (InventoryWidget)
 		{
 			InventoryWidget->AddToViewport();
+			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 
@@ -466,16 +467,6 @@ void ACustomPlayerController::AddUIWidgets()
 		{
 			ObjectiveWidget->AddToViewport();
 		}
-	}
-
-	if (RadialMenuWidgetClass) {
-		RadialMenuWidget = CreateWidget<UUserWidget>(World, RadialMenuWidgetClass);
-
-		if (RadialMenuWidget) {
-			RadialMenuWidget->AddToViewport();
-			RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-		}
-
 	}
 
 	// Commander UI
@@ -968,7 +959,7 @@ void ACustomPlayerController::SwitchWeapon()
 void ACustomPlayerController::OpenRadialMenu()
 {
 	// if there is a radial widget created or already showing?
-	if (!RadialMenuWidget || IsShowingRadialMenu) {
+	if (!InventoryWidget || IsShowingRadialMenu) {
 		return;
 	}
 
@@ -980,10 +971,10 @@ void ACustomPlayerController::OpenRadialMenu()
 	SetShowMouseCursor(true);
 	FInputModeGameAndUI InData;
 	InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	InData.SetWidgetToFocus(RadialMenuWidget->TakeWidget());
+	InData.SetWidgetToFocus(InventoryWidget->TakeWidget());
 	SetInputMode(InData);
 
-	RadialMenuWidget->SetVisibility(ESlateVisibility::Visible);
+	InventoryWidget->SetVisibility(ESlateVisibility::Visible);
 }
 
 
@@ -996,14 +987,14 @@ void ACustomPlayerController::CloseRadialMenu()
 	IsShowingRadialMenu = false;
 
 	// remove radial from screen
-	if (RadialMenuWidget->IsInViewport()) {
+	if (InventoryWidget->IsInViewport()) {
 
 		FInputModeGameOnly InputMode;
 		InputMode.SetConsumeCaptureMouseDown(false);
 		SetInputMode(InputMode);
 		SetShowMouseCursor(false);
 
-		RadialMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 		GetWorldTimerManager().SetTimer(THandler_DelayedInput, this, &ACustomPlayerController::EnableInputDelay, 0.1f, true, .1f);
 	}

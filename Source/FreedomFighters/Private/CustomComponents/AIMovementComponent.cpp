@@ -120,6 +120,11 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 
 	if (Character && SprintToTarget)
 	{
+		// break off cover.
+		if (Character->IsTakingCover()) {
+			Character->StopCover();
+		}
+
 		// Walk when close to desination
 		if (WalkNearTarget)
 		{

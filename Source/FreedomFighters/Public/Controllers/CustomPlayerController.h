@@ -105,10 +105,6 @@ private:
 		TSubclassOf<UUserWidget> EndGameWidgetClass;
 	UUserWidget* EndGameWidget;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> RadialMenuWidgetClass;
-	UUserWidget* RadialMenuWidget;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FString InteractKeyDisplayName;
 
