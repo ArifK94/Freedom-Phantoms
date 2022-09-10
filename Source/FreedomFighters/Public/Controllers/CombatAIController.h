@@ -63,8 +63,8 @@ private:
 	FVector LastSeenLocation;
 
 
-	FTargetSearchParameters* TargetSearchParams;
-	FAvoidableParams bAvoidableParams;
+	UPROPERTY()
+		FAvoidableParams bAvoidableParams;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class UUtilityAIComponent* UtilityAIComponent;
@@ -264,8 +264,6 @@ public:
 	AActor* GetLastSeenEnemyActor() { return LastSeenEnemyActor; }
 
 	void SetLastSeenEnemyActor(AActor* Actor) { LastSeenEnemyActor = Actor; }
-
-	FTargetSearchParameters* GetTargetSearchParams() { return TargetSearchParams; }
 
 	FAvoidableParams GetAvoidableParams() { return bAvoidableParams; }
 

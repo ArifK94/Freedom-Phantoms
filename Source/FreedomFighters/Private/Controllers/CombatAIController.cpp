@@ -70,8 +70,6 @@ void ACombatAIController::BeginPlay()
 
 	EnemyCloseRange = FMath::RandRange(500.0f, 1000.0f);
 	TimeSpentOnEnemyRange = FMath::RandRange(10.f, 20.0f);
-
-	TargetSearchParams = new FTargetSearchParameters();
 }
 
 void ACombatAIController::Tick(float DeltaTime)
@@ -436,9 +434,6 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 {
 	AActor* ChosenTarget = TargetSearchParameters.TargetActor;
 
-	TargetSearchParams->TargetActor = TargetSearchParameters.TargetActor;
-	TargetSearchParams->TargetLocation = TargetSearchParameters.TargetLocation;
-
 	// if no new enemy found,
 	// maintain current enemy if enemy or owning AI character are taking cover.
 	if (ChosenTarget == nullptr && EnemyActor) 
@@ -452,7 +447,7 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 		// is enemy alive?
 		// AI can still see enemy if either enemy.
 		// or is my AI taking cover & the enemy is close? Should not be able to 
-		if (IsEnemyAlive && EnemyCharacter->IsTakingCover() || (OwningCombatCharacter->IsTakingCover() && IsTargetClose))
+		if (IsEnemyAlive && (EnemyCharacter && EnemyCharacter->IsTakingCover()) || (OwningCombatCharacter->IsTakingCover() && IsTargetClose))
 		{
 			TimeSpentOnEnemy++;
 			return;

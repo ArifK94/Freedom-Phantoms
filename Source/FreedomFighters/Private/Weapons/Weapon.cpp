@@ -1056,6 +1056,7 @@ void AWeapon::AutoReloadEnd()
 
 bool AWeapon::ReplenishAmmo(int Amount)
 {
+	// If amount is less than zero specified, then replenish to full capactiy.
 	if (Amount < 0)
 	{
 		if (CurrentMaxAmmo < MaxAmmoCapacity)

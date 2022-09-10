@@ -10,6 +10,7 @@
 #include "StructCollection.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "NavigationSystem.h"
 
 float UAvoidanceAction::Score(AAIController* Controller, APawn* Pawn)
@@ -24,14 +25,14 @@ bool UAvoidanceAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	Super::CanRun(Controller, Pawn);
 
 	auto AvoidableActor = CombatAIController->GetAvoidableParams().Actor;
-	if (AvoidableActor == nullptr) {
+	if (!UKismetSystemLibrary::IsValid(AvoidableActor)) {
 		return false;
 	}
 	else {
 
 		auto Poolable = Cast<AObjectPoolActor>(AvoidableActor);
 
-		if (Poolable) {
+		if (UKismetSystemLibrary::IsValid(Poolable)) {
 			if (Poolable->GetIsDestroyed()) {
 				return false;
 			}
