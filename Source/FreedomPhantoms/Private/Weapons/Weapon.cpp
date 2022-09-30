@@ -68,6 +68,8 @@ AWeapon::AWeapon()
 	RateOfFire = 600.0f;
 	CooldownReload = 0.0f;
 
+	CrosshairErrorTolerance = .8f;
+
 	BulletSpreadMin = 2.f;
 	BulletSpreadMax = 5.f;
 	BulletSpreadReduceRate = .1f;
@@ -118,7 +120,10 @@ void AWeapon::DelayedInit()
 	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
-	GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
+	if (THandler_DelayedInit.IsValid()) 
+	{
+		GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
+	}
 }
 
 void AWeapon::SetIsAiming(bool isAiming)
@@ -334,7 +339,6 @@ void AWeapon::LoadParentMesh()
 
 bool AWeapon::IsFacingCrosshair()
 {
-
 	float TraceLength = 10000.0f;
 
 	FVector EyeLocation;
@@ -365,8 +369,9 @@ bool AWeapon::IsFacingCrosshair()
 	float Angle = UKismetMathLibrary::Dot_VectorVector(MuzzleEnd, EyeEnd);
 
 	// if dot product is more than x amount, then weapon muzzle is facing in the same direction as the eye location meaning the weapon can fire.
-	return Angle > 0.8f;
+	return Angle > CrosshairErrorTolerance;
 }
+#include "Weapons/AutoTurretWeapon.h"
 
 void AWeapon::Fire()
 {
@@ -400,7 +405,8 @@ void AWeapon::Fire()
 		}
 	}
 
-	if (!IsFacingCrosshair()) {
+	// check if facing crosshair if tolerance is set to more than zero.
+	if (CrosshairErrorTolerance > 0.f && !IsFacingCrosshair()) {
 		return;
 	}
 
@@ -856,7 +862,10 @@ void AWeapon::DecreaseCharge()
 void AWeapon::DisableMuzzleLight()
 {
 	MuzzleLightComponent->SetVisibility(false);
-	GetWorldTimerManager().ClearTimer(THandler_MuzzleLight);
+
+	if (THandler_MuzzleLight.IsValid()) {
+		GetWorldTimerManager().ClearTimer(THandler_MuzzleLight);
+	}
 }
 
 void AWeapon::OnReload()

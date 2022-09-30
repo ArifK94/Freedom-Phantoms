@@ -651,7 +651,7 @@ void AVehicleBase::UpdateWeaponView()
 
 	if (UseFollowCamNavigation)
 	{
-		FollowCamera->AttachToComponent(CurrentWeapon->getMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeapon->GetCameraPositionSocket());
+		FollowCamera->AttachToComponent(CurrentWeapon->GetMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeapon->GetCameraPositionSocket());
 		CurrentWeapon->GetFollowCamera()->AttachToComponent(FollowCamera, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		FollowCamera->SetRelativeRotation(RotationInput);
 		FollowCamera->SetFieldOfView(CurrentWeapon->GetFollowCamera()->FieldOfView);

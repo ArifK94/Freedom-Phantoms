@@ -181,10 +181,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		float RateOfFire;
 
+	/** How far out should the weapon be allowed to fire, uses dot product ot check if weapon is facing in owner's eye forward direction. Zero means there will be no tolerance  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", ClampMin = 0.0f, ClampMax = 1.0f))
+		float CrosshairErrorTolerance;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ammo")
 		int32 CurrentAmmo;
-
 
 	/** Current max which changes on reload */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ammo")
@@ -440,7 +443,7 @@ public:
 	void setCharacter(USkeletalMeshComponent* mesh) { CharacterReference = mesh; }
 	USkeletalMeshComponent* getCharacter() { return CharacterReference; }
 
-	USkeletalMeshComponent* getMeshComp() { return MeshComp; }
+	USkeletalMeshComponent* GetMeshComp() { return MeshComp; }
 
 	int32 GetCurrentAmmo() { return CurrentAmmo; }
 	int32 getCurrentMaxAmmo() { return CurrentMaxAmmo; }

@@ -141,8 +141,8 @@ void UMountedGunFinderComponent::FocusTarget(AMountedGun* MG, FVector Location)
 	GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 	auto TargetLocation = Location - EyeLocation;
-	auto RootBone = MG->getMeshComp()->GetBoneName(0);
-	auto T = MG->getMeshComp()->GetSocketTransform(RootBone);
+	auto RootBone = MG->GetMeshComp()->GetBoneName(0);
+	auto T = MG->GetMeshComp()->GetSocketTransform(RootBone);
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(T, TargetLocation);
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
@@ -159,8 +159,8 @@ void UMountedGunFinderComponent::FocusTarget(AActor* Owner, AMountedGun* MG, FVe
 	Owner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 	auto TargetLocation = Location - EyeLocation;
-	auto RootBone = MG->getMeshComp()->GetBoneName(0);
-	auto T = MG->getMeshComp()->GetSocketTransform(RootBone);
+	auto RootBone = MG->GetMeshComp()->GetBoneName(0);
+	auto T = MG->GetMeshComp()->GetSocketTransform(RootBone);
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(T, TargetLocation);
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
