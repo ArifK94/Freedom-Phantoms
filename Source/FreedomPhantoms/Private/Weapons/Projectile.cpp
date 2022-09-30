@@ -160,6 +160,88 @@ void AProjectile::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	LastHit = Hit;
 }
 
+void AProjectile::OnImpactHit(FHitResult InHit)
+{
+	AActor* OtherActor = InHit.GetActor();
+
+	float ActualDamage = DamageAmount;
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(InHit.PhysMaterial.Get());
+
+	if (SurfaceType == SURFACE_HEAD)
+	{
+		ActualDamage = 100;
+	}
+	else if (SurfaceType == SURFACE_FLESHVULNERABLE)
+	{
+		ActualDamage *= 2.0f;
+	}
+
+	if (BulletMovementAudio->IsPlaying())
+	{
+		BulletMovementAudio->Stop();
+	}
+
+
+	if (isAnExplosive) {
+		Explode(InHit.ImpactPoint);
+	}
+	else
+	{
+		AActor* MyOwner = GetOwner();
+		if (MyOwner)
+		{
+			UHealthComponent* HealthComponent = Cast<UHealthComponent>(OtherActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			if (HealthComponent && HealthComponent->IsAlive())
+			{
+				FHealthParameters HealthParameters;
+				HealthParameters.DamagedActor = OtherActor;
+				HealthParameters.DamageCauser = MyOwner;
+				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
+				HealthParameters.WeaponCauser = WeaponParent;
+				HealthParameters.Projectile = this;
+				HealthParameters.HitInfo = InHit;
+				HealthParameters.Damage = ActualDamage;
+				HealthComponent->OnDamage(HealthParameters);
+
+				auto FactionComp = Cast<UTeamFactionComponent>(OtherActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
+				AddKill(HealthComponent, FactionComp);
+			}
+		}
+	}
+
+	PlayCollisionSound(InHit.ImpactPoint);
+
+	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
+	SetVFX(ImpactSurface, InHit.ImpactPoint);
+
+	FProjectileImpactParameters ProjectileImpactParameters;
+
+	if (KillCount == 1)
+	{
+		ProjectileImpactParameters.IsSingleKill = true;
+	}
+	else if (KillCount == 2)
+	{
+		ProjectileImpactParameters.IsDoubleKill = true;
+	}
+	else if (KillCount > 2)
+	{
+		ProjectileImpactParameters.IsMultiKill = true;
+	}
+
+	ProjectileImpactParameters.KillCount = KillCount;
+	ProjectileImpactParameters.SetProjectileActor(this);
+
+	if (OwningCombatCharacter)
+	{
+		OwningCombatCharacter->AddKillCount(KillCount);
+	}
+
+	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
+	Deactivate();
+}
+
 void AProjectile::PlayCollisionSound(FVector Position)
 {
 	if (CollisionSound == nullptr) {
@@ -317,84 +399,7 @@ void AProjectile::DetectHit()
 		return;
 	}
 
-	AActor* OtherActor = OutHit.GetActor();
-
-	float ActualDamage = DamageAmount;
-	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(OutHit.PhysMaterial.Get());
-
-	if (SurfaceType == SURFACE_HEAD)
-	{
-		ActualDamage = 100;
-	}
-	else if (SurfaceType == SURFACE_FLESHVULNERABLE)
-	{
-		ActualDamage *= 2.0f;
-	}
-
-	if (BulletMovementAudio->IsPlaying())
-	{
-		BulletMovementAudio->Stop();
-	}
-
-
-	if (isAnExplosive) {
-		Explode(OutHit.ImpactPoint);
-	}
-	else
-	{
-		AActor* MyOwner = GetOwner();
-		if (MyOwner)
-		{
-			UHealthComponent* HealthComponent = Cast<UHealthComponent>(OtherActor->GetComponentByClass(UHealthComponent::StaticClass()));
-
-			if (HealthComponent && HealthComponent->IsAlive())
-			{
-				FHealthParameters HealthParameters;
-				HealthParameters.DamagedActor = OtherActor;
-				HealthParameters.DamageCauser = MyOwner;
-				HealthParameters.InstigatedBy = MyOwner->GetInstigatorController();
-				HealthParameters.WeaponCauser = WeaponParent;
-				HealthParameters.Projectile = this;
-				HealthParameters.HitInfo = OutHit;
-				HealthParameters.Damage = ActualDamage;
-				HealthComponent->OnDamage(HealthParameters);
-
-				auto FactionComp = Cast<UTeamFactionComponent>(OtherActor->GetComponentByClass(UTeamFactionComponent::StaticClass()));
-				AddKill(HealthComponent, FactionComp);
-			}
-		}
-	}
-
-	PlayCollisionSound(OutHit.ImpactPoint);
-
-	FSurfaceImpactSet ImpactSurface = CheckSurface(SurfaceType);
-	SetVFX(ImpactSurface, OutHit.ImpactPoint);
-
-	FProjectileImpactParameters ProjectileImpactParameters;
-
-	if (KillCount == 1)
-	{
-		ProjectileImpactParameters.IsSingleKill = true;
-	}
-	else if (KillCount == 2)
-	{
-		ProjectileImpactParameters.IsDoubleKill = true;
-	}
-	else if (KillCount > 2)
-	{
-		ProjectileImpactParameters.IsMultiKill = true;
-	}
-
-	ProjectileImpactParameters.KillCount = KillCount;
-	ProjectileImpactParameters.SetProjectileActor(this);
-
-	if (OwningCombatCharacter)
-	{
-		OwningCombatCharacter->AddKillCount(KillCount);
-	}
-
-	OnProjectileImpact.Broadcast(ProjectileImpactParameters);
-	Deactivate();
+	OnImpactHit(OutHit);
 }
 
 void AProjectile::Explode(FVector ImpactPoint)

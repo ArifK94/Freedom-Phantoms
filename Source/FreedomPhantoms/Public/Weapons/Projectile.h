@@ -238,6 +238,9 @@ private:
 	UFUNCTION()
 		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION(BlueprintCallable)
+		void OnImpactHit(FHitResult InHit);
+
 protected:
 	virtual void BeginPlay() override;
 
