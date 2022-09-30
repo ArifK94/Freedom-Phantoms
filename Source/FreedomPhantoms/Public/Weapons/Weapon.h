@@ -304,6 +304,12 @@ protected:
 	FTimerHandle THandler_ChargeDown;
 
 
+	/** Can this weapon be used for locking onto target actors? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target Actor", meta = (AllowPrivateAccess = "true"))
+		bool CanLockActors;
+	AActor* TargetActor;
+
+
 	/** Debug */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		bool DrawDebugShotLine;
@@ -485,5 +491,9 @@ public:
 
 	bool GetIsScavenged() { return IsScavenged; }
 	void SetIsScavenged(bool Scavenged) { IsScavenged = Scavenged; }
+
+
+	AActor* GetTargetActor() { return TargetActor; }
+	void SetTargetActor(AActor* Target) { TargetActor = Target; }
 
 };

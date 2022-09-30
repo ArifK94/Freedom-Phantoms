@@ -14,6 +14,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/DecalComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -789,4 +790,22 @@ bool AProjectile::IsInAir()
 		ECC_Visibility,
 		QueryParams
 	);
+}
+
+void AProjectile::FindHomingTarget(AActor* TargetActor)
+{
+	if (TargetActor == nullptr) {
+		return;
+	}
+
+	// Use the projectile movement component homing function to make this work.
+	auto ProjectileMovementComponent = Cast<UProjectileMovementComponent>(GetComponentByClass(UProjectileMovementComponent::StaticClass()));
+
+	// no projectile movment comp?
+	if (!ProjectileMovementComponent) {
+		return;
+	}
+
+	ProjectileMovementComponent->HomingTargetComponent = TargetActor->GetRootComponent();
+	ProjectileMovementComponent->bIsHomingProjectile = true;
 }

@@ -566,6 +566,11 @@ void AWeapon::SpawnProjectile(FVector Locatiom, FRotator Rotation)
 		{
 			Bullet->SetWeaponParent(this);
 
+			if (CanLockActors)
+			{
+				Bullet->FindHomingTarget(TargetActor);
+			}
+
 			if (!Bullet->OnProjectileImpact.IsBound())
 			{
 				Bullet->OnProjectileImpact.AddDynamic(this, &AWeapon::OnProjectileImpacted);

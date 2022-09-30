@@ -202,6 +202,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnProjectileImpactSignature OnProjectileImpact;
 
+	/** Perform a missle target. */
+	void FindHomingTarget(AActor* TargetActor);
 
 private:
 	void Init();
