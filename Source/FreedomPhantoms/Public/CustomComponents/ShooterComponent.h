@@ -56,4 +56,6 @@ public:
 	void SetTimeBetweenShotsMin(float Value) { m_TimeBetweenShotsMin = Value; }
 	void SetTimeBetweenShotsMax(float Value) { m_TimeBetweenShotsMax = Value; }
 
+	TArray<AWeapon*> GetWeapons() { return Weapons; }
+
 };
