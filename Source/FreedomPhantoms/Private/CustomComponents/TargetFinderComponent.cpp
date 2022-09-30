@@ -12,6 +12,7 @@
 #include "GameFramework/Character.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
 
 void UTargetFinderComponent::SetFindTargetPerFrame(bool Value)
@@ -67,16 +68,20 @@ void UTargetFinderComponent::Init()
 	// Alternative to AI Sight Perception in case 360 sight is wanted
 	if (CreateTargetSphere && TargetSightSphere == nullptr)
 	{
-		TargetSightSphere = NewObject<USphereComponent>(GetOwner());
+		/**
+		* Uncomment if TargetSightSphere is needed again if it helps drop FPS.
+		*/
 
-		if (TargetSightSphere)
-		{
-			TargetSightSphere->RegisterComponent();
-			TargetSightSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-			TargetSightSphere->SetSphereRadius(TargetSightRadius);
-			TargetSightSphere->SetCanEverAffectNavigation(false);
-			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
-		}
+		//TargetSightSphere = NewObject<USphereComponent>(GetOwner());
+
+		//if (TargetSightSphere)
+		//{
+		//	TargetSightSphere->RegisterComponent();
+		//	TargetSightSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+		//	TargetSightSphere->SetSphereRadius(TargetSightRadius);
+		//	TargetSightSphere->SetCanEverAffectNavigation(false);
+		//	TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
+		//}
 	}
 
 	if (FindTargetPerFrame)
@@ -120,20 +125,37 @@ AActor* UTargetFinderComponent::FindTarget()
 		return nullptr;
 	}
 
-	if (!TargetSightSphere) {
-		Init();
+	//if (!TargetSightSphere) {
+	//	Init();
 
-		if (!TargetSightSphere) {
-			return nullptr;
+	//	if (!TargetSightSphere) {
+	//		return nullptr;
+	//	}
+	//}
+
+	AActor* TargetActor = nullptr;
+	float TargetSightDistance = TargetSightRadius;
+
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(GetOwner());
+
+	for (int i = 0; i < IgnoreActors.Num(); i++)
+	{
+		auto Actor = IgnoreActors[i];
+
+		if (Actor) {
+			ActorsToIgnore.Add(Actor);
 		}
 	}
 
-	AActor* TargetActor = nullptr;
-	TArray<AActor*> ActorsInSight;
-	float TargetSightDistance = TargetSightRadius;
+	TArray<AActor*> OutActors;
+
+	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetOwner()->GetActorLocation(),
+		TargetSightRadius, CollisionChannels, AActor::StaticClass(), ActorsToIgnore, OutActors);
 
 	// Get all overlapped actors based that have team faction component attached
-	TargetSightSphere->GetOverlappingActors(ActorsInSight, AActor::StaticClass());
+	//TargetSightSphere->GetOverlappingActors(OutActors, AActor::StaticClass());
 
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
 	FVector EyeLocation;
@@ -144,13 +166,13 @@ AActor* UTargetFinderComponent::FindTarget()
 	int CurrentProcessedCharacters = 0;
 	auto TargetSearchParameters = FTargetSearchParameters();
 
-	for (int index = 0; index < ActorsInSight.Num(); index++)
+	for (int index = 0; index < OutActors.Num(); index++)
 	{
 		if (CurrentProcessedCharacters > FinderLimit) {
 			break;
 		}
 
-		AActor* PotentialEnemy = ActorsInSight[index];
+		AActor* PotentialEnemy = OutActors[index];
 
 		if (!PotentialEnemy) {
 			continue;
