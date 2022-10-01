@@ -49,6 +49,9 @@ private:
 		UCurveFloat* CurveFloat;
 	FTimeline CurveTimeline;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		bool IsStopped;
+
 	/** The actor of the path to follow */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AVehicleSplinePath* VehiclePath;

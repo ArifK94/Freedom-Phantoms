@@ -80,6 +80,8 @@ void UVehiclePathFollowerComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	auto Velocity = UKismetMathLibrary::Divide_VectorFloat(Distance, DeltaTime);
 	GetOwner()->GetRootComponent()->ComponentVelocity = Velocity + CurveTimeline.GetPlayRate();
 	PreviousActorLocation = GetOwner()->GetActorLocation();
+
+	IsStopped = !CurveTimeline.IsPlaying();
 }
 
 void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
