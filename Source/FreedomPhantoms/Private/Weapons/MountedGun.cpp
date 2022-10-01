@@ -31,6 +31,8 @@ AMountedGun::AMountedGun()
 
 	StepBackAmount = 50.0f;
 
+	CrosshairErrorTolerance = .0f;
+
 	weaponType = WeaponType::MountedGun;
 }
 
