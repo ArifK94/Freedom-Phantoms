@@ -806,6 +806,32 @@ void AProjectile::FindHomingTarget(AActor* TargetActor)
 		return;
 	}
 
-	ProjectileMovementComponent->HomingTargetComponent = TargetActor->GetRootComponent();
+	USceneComponent* TargetComp = nullptr;
+
+	// Some targets may have meshes that have been translated up or down from the root component such as aircraft, the root component of the aircraft can be below the mesh.
+	// This assumes the skeletal mesh is the main body of the target.
+	auto SkeletalComp = Cast<USkeletalMeshComponent>(TargetActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+
+	if (SkeletalComp)
+	{
+		TargetComp = SkeletalComp;
+	}
+
+
+	// set the to any static mesh comps which the target actor may have if no skeletal mesh exists.
+	auto StaticComp = Cast<UStaticMeshComponent>(TargetActor->GetComponentByClass(UStaticMeshComponent::StaticClass()));
+
+	if (!TargetComp)
+	{
+		TargetComp = StaticComp;
+	}
+
+	// no target comp set? set to root component of actor.
+	if (!TargetComp)
+	{
+		TargetComp = TargetActor->GetRootComponent();
+	}
+
+	ProjectileMovementComponent->HomingTargetComponent = TargetComp;
 	ProjectileMovementComponent->bIsHomingProjectile = true;
 }
