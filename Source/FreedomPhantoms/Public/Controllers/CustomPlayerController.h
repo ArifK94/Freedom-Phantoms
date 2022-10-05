@@ -174,8 +174,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 
-
-	void AddUIWidgets();
+	UFUNCTION(BlueprintCallable)
+		void AddUIWidgets();
 
 
 	UFUNCTION()
