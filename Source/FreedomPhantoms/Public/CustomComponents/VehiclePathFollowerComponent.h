@@ -39,8 +39,6 @@ private:
 
 	FVector PreviousActorLocation;
 
-	bool HasReachedPath;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CollisionDetector;
@@ -91,6 +89,10 @@ private:
 	/** Ignoring occupied vehicle paths when searching for vehicle paths. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IgnoreOccupiedPath;
+
+	/** Continuously find the vehicle path? Only works if IgnoreOccupiedPath is set to false. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool FindPathPerFrame;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Specified Target Destination", meta = (AllowPrivateAccess = "true"))

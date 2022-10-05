@@ -25,6 +25,7 @@ UVehiclePathFollowerComponent::UVehiclePathFollowerComponent()
 	FollowTargetDestination = false;
 	HasInifiteLaps = false;
 	DestroyOnPathComplete = true;
+	FindPathPerFrame = false;
 
 	SpawnLocationMin = FVector(-10.f, -10.f, 10.f);
 	SpawnLocationMax = FVector(10.f, 10.f, 10.f);
@@ -75,6 +76,11 @@ void UVehiclePathFollowerComponent::TickComponent(float DeltaTime, ELevelTick Ti
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CurveTimeline.TickTimeline(DeltaTime);
+
+	if (VehiclePath == nullptr && FindPathPerFrame && !IgnoreOccupiedPath)
+	{
+		FindPath();
+	}
 
 	auto Distance = GetOwner()->GetActorLocation() - PreviousActorLocation;
 	auto Velocity = UKismetMathLibrary::Divide_VectorFloat(Distance, DeltaTime);
@@ -157,46 +163,51 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 
 void UVehiclePathFollowerComponent::FindPath()
 {
-	// if already assigned a path then return
-	if (VehiclePath != nullptr)
-	{
-		return;
-	}
-
 	AVehicleSplinePath* ClosestPath = nullptr;
-	float ClosestDistance = 0.0f;
-	TArray<AActor*> TargetActor;
-	UGameplayStatics::GetAllActorsWithTag(GetWorld(), VehiclePathTagName, TargetActor);
 
-	for (AActor* Actor : TargetActor)
+	// if already assigned a path then return
+	if (VehiclePath == nullptr)
 	{
-		auto Path = Cast<AVehicleSplinePath>(Actor);
+		float ClosestDistance = 0.0f;
+		TArray<AActor*> OutActors;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), VehiclePathTagName, OutActors);
 
-		// check if path is not occupied
-		if (!Path || !IgnoreOccupiedPath && Path->GetOccupiedVehicle()) {
-			continue;
-		}
-
-		float Distance = UKismetMathLibrary::Vector_Distance(TargetDestination, Path->GetActorLocation());
-
-		if (ClosestPath == nullptr)
+		for (AActor* Actor : OutActors)
 		{
-			ClosestPath = Path;
-			ClosestDistance = Distance;
-		}
-		else
-		{
-			if (Distance < ClosestDistance)
+			auto Path = Cast<AVehicleSplinePath>(Actor);
+
+			// check if path is not occupied
+			if (!Path || !IgnoreOccupiedPath && Path->GetOccupiedVehicle()) {
+				continue;
+			}
+
+			float Distance = UKismetMathLibrary::Vector_Distance(TargetDestination, Path->GetActorLocation());
+
+			if (ClosestPath == nullptr)
 			{
 				ClosestPath = Path;
 				ClosestDistance = Distance;
 			}
+			else
+			{
+				if (Distance < ClosestDistance)
+				{
+					ClosestPath = Path;
+					ClosestDistance = Distance;
+				}
+			}
 		}
 	}
-
-	if (ClosestPath)
+	else
 	{
-		VehiclePath = ClosestPath;
+		ClosestPath = VehiclePath;
+	}
+	
+	VehiclePath = ClosestPath;
+
+
+	if (VehiclePath)
+	{
 		VehiclePath->SetOccupantVehicle(GetOwner());
 
 		// setup time line for following the path
@@ -217,6 +228,7 @@ void UVehiclePathFollowerComponent::FindPath()
 
 void UVehiclePathFollowerComponent::StartPath(FString PathMethodName)
 {
+	CurveTimeline = FTimeline();
 	FOnTimelineFloat TimelineProgress;
 	TimelineProgress.BindUFunction(this, FName(PathMethodName));
 	CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
@@ -262,7 +274,6 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 void UVehiclePathFollowerComponent::MoveToSplinePathStart(float Value)
 {
 	USplineComponent* SplinePathComp = VehiclePath->GetSplinePathComp();
-	float Alpha = UKismetMathLibrary::Lerp(0.0f, SplinePathComp->GetSplineLength(), Value);
 
 	FVector TargetLocation = SplinePathComp->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
 	FRotator TargetRotation = SplinePathComp->GetRotationAtSplinePoint(0, ESplineCoordinateSpace::World);
@@ -272,20 +283,11 @@ void UVehiclePathFollowerComponent::MoveToSplinePathStart(float Value)
 
 	GetOwner()->SetActorLocationAndRotation(TargetLocationLerp, TargetRotationLerp);
 
-	if (HasReachedPath)
+	// if reached the end
+	if (UKismetMathLibrary::EqualEqual_VectorVector(GetOwner()->GetActorLocation(), TargetLocation, 20.f))
 	{
-		FollowSplinePath(Value);
+		StartPath("FollowSplinePath");
 	}
-	else
-	{
-		// if reached the end
-		if (UKismetMathLibrary::EqualEqual_VectorVector(GetOwner()->GetActorLocation(), TargetLocation, 20.f))
-		{
-			FollowSplinePath(Value);
-			HasReachedPath = true;
-		}
-	}
-
 }
 
 void UVehiclePathFollowerComponent::MoveToLocation(float Value)
