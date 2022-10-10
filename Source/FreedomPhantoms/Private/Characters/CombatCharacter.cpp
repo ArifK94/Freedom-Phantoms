@@ -255,6 +255,9 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 	SpawnLoadout(LoadoutType, true);
 	RegisterWeaponEvents(primaryWeaponObj, true);
 	RetrieveWeaponAnimDataSet();
+
+	// as the previous loadout will be destroyed, the secondary weapon will be attached to no parent, this is need to be attached to the new loadout.
+	Loadout->HolsterWeapon(secondaryWeaponObj);
 }
 
 void ACombatCharacter::SetSecondaryWeapon(AWeapon* Weapon)

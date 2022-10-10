@@ -39,7 +39,8 @@ public:
 
 	AThrowableWeapon* SpawnGrenade(FWeaponsSet* WeaponsDataSet);
 
-	void HolsterWeapon(AWeapon* Weapon);
+	UFUNCTION(BlueprintCallable)
+		void HolsterWeapon(AWeapon* Weapon);
 
 	USkeletalMeshComponent* GetMesh() { return Mesh; }
 
