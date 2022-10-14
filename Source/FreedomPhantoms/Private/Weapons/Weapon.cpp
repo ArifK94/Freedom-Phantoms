@@ -68,7 +68,7 @@ AWeapon::AWeapon()
 	RateOfFire = 600.0f;
 	CooldownReload = 0.0f;
 
-	CrosshairErrorTolerance = .8f;
+	CrosshairErrorTolerance = .7f;
 
 	BulletSpreadMin = 2.f;
 	BulletSpreadMax = 5.f;

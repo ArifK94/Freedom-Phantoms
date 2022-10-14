@@ -478,6 +478,7 @@ public:
 	USceneComponent* GetEyeViewPointComponent() { return EyeViewPointComponent; }
 	void SetComponentEyeViewPoint(USceneComponent* Comp) { EyeViewPointComponent = Comp; }
 
+	void SetCrosshairErrorTolerance(float Value) { CrosshairErrorTolerance = Value; }
 
 	float GetZoomFOV() { return ZoomFOV; }
 
