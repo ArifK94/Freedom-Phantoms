@@ -157,7 +157,10 @@ void AVehicleBase::Tick(float DeltaTime)
 
 	CurrentRotationSpeed = DeltaTime * RotationSpeed;
 
-	SetTargetSystem();
+	if (ShowTargetSystem)
+	{
+		SetTargetSystem();
+	}
 
 	// stop following path if front collider has detetced something.
 	if (ShouldStopVehicle())
@@ -702,6 +705,8 @@ void AVehicleBase::EndAim()
 
 void AVehicleBase::SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP, bool ShowOutline)
 {
+	ShowTargetSystem = true;
+
 	OurPlayerController->SetViewTargetWithBlend(this, CameraSwitchDelay);
 	UpdateWeaponView();
 
@@ -716,6 +721,22 @@ void AVehicleBase::SetPlayerControl(APlayerController* OurPlayerController, bool
 
 	// Play as soon as the player camera is set to aircraft camera
 	GetWorldTimerManager().SetTimer(THandler_CameraSwitchDelay, this, &AVehicleBase::InitialContolSetup, CameraSwitchDelay, false);
+}
+
+void AVehicleBase::RemovePlayerControl()
+{
+	ShowTargetSystem = false;
+
+	GetWorldTimerManager().ClearTimer(THandler_CameraSwitchDelay);
+
+	ThermalVisionPPComp->bEnabled = false;
+
+	if (ThermalVisionPPComp->bEnabled)
+	{
+		UpdateCurrentThermalVision(1.0f);
+	}
+
+	RemoveTargetSystem();
 }
 
 void AVehicleBase::InitialContolSetup()
@@ -999,6 +1020,35 @@ void AVehicleBase::ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters I
 	}
 }
 
+void AVehicleBase::RemoveTargetSystem()
+{
+	RemoveUIWidget();
+
+	if (HighlightCharacters) {
+		ShowOutlines(false);
+	}
+
+	// destroy markers
+	if (FriendlyMarkerNodes.Num() > 0) {
+		for (auto node : FriendlyMarkerNodes)
+		{
+			if (node.Marker) {
+				node.Marker->Destroy();
+			}
+		}
+	}
+
+	if (FriendlyMarkerNodes.Num() > 0) {
+		for (auto node : EnemySystemNodes)
+		{
+			if (node.Marker) {
+				node.Marker->Destroy();
+			}
+		}
+	}
+
+}
+
 void AVehicleBase::AddComponentToDestroyList(UActorComponent* ActorComponent)
 {
 	if (ActorComponent) {
@@ -1030,30 +1080,7 @@ void AVehicleBase::Destroyed()
 {
 	Super::Destroyed();
 
-	RemoveUIWidget();
-
-	if (HighlightCharacters) {
-		ShowOutlines(false);
-	}
-
-	// destroy markers
-	if (FriendlyMarkerNodes.Num() > 0) {
-		for (auto node : FriendlyMarkerNodes)
-		{
-			if (node.Marker) {
-				node.Marker->Destroy();
-			}
-		}
-	}
-
-	if (FriendlyMarkerNodes.Num() > 0) {
-		for (auto node : EnemySystemNodes)
-		{
-			if (node.Marker) {
-				node.Marker->Destroy();
-			}
-		}
-	}
+	RemoveTargetSystem();
 
 	VehiclePathFollowerComponent->ClearPath();
 

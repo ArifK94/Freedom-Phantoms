@@ -47,7 +47,7 @@ private:
 
 	FTimerHandle THandler_PostDeath;
 	FTimerHandle THandler_DelayedInput;
-
+	FTimerHandle THandler_RemoveVehicleControlPost;
 
 	/** The actor tag of the player start position on the map */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -188,6 +188,9 @@ public:
 		void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION(BlueprintCallable)
+		void OnVehiclePointReached(FVehicleSplinePoint VehicleSplinePoint);
+
+	UFUNCTION(BlueprintCallable)
 		void OnVehicleDestroy(AVehicleBase* CurrentControlledVehicle);
 
 	UFUNCTION()
@@ -273,6 +276,12 @@ public:
 
 	void ShowAircraftView();
 	void HideAircraftView();
+
+	/** Remove vehicle control and regain character controller */
+	void RemoveVehicleControl();
+
+	/** Run after removing vehicle control  method */
+	void RemoveVehicleControlPost();
 
 
 	////////////// -------------------------- Input Functions -------------------------- //////////////

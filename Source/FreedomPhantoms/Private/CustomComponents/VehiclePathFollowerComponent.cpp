@@ -159,6 +159,8 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 
 		break;
 	}
+
+	OnVehiclePointReached.Broadcast(CurrentSplinePoint);
 }
 
 void UVehiclePathFollowerComponent::FindPath()

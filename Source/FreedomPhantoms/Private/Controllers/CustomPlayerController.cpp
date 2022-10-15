@@ -14,6 +14,7 @@
 #include "Interfaces/Interactable.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
+#include "CustomComponents/VehiclePathFollowerComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetInputLibrary.h"
@@ -539,17 +540,20 @@ void ACustomPlayerController::OnOverlapEnd(class UPrimitiveComponent* Overlapped
 	}
 }
 
+void ACustomPlayerController::OnVehiclePointReached(FVehicleSplinePoint VehicleSplinePoint)
+{
+	if (VehicleSplinePoint.RemoveUserControl) {
+		RemoveVehicleControl();
+	}
+}
+
 void ACustomPlayerController::OnVehicleDestroy(AVehicleBase* CurrentControlledVehicle)
 {
-	if (HasGameEnded) {
+	if (ControlledVehicle != CurrentControlledVehicle) {
 		return;
 	}
 
-	AddUIWidgets();
-	ControlledVehicle = nullptr;
-	OwningCombatCharacter->EnableInput(this);
-	BeginCheckInteractable();
-
+	RemoveVehicleControl();
 }
 
 void ACustomPlayerController::OnCombatModeUpdated(ACombatCharacter* CombatCharacter)
@@ -1159,13 +1163,25 @@ void ACustomPlayerController::SetControlledVehicle(AVehicleBase* InVehicle, bool
 
 	if (IsContolled)
 	{
+		// Unbind events of the previous controlled vehicle as they should not affect player anymore. 
+		if (ControlledVehicle)
+		{
+			ControlledVehicle->OnVehicleDestroy.RemoveDynamic(this, &ACustomPlayerController::OnVehicleDestroy);
+			ControlledVehicle->GetVehiclePathFollowerComponent()->OnVehiclePointReached.RemoveDynamic(this, &ACustomPlayerController::OnVehiclePointReached);
+		}
+
+
 		ControlledVehicle = InVehicle;
 
 		// Remove inputs for this controller & character as we will be using aircraft inputs
 		OwningCombatCharacter->DisableInput(this);
 		AutoReceiveInput = EAutoReceiveInput::Disabled;
 		ControlledVehicle->SetPlayerControl(this);
+
+
 		ControlledVehicle->OnVehicleDestroy.AddDynamic(this, &ACustomPlayerController::OnVehicleDestroy);
+
+		ControlledVehicle->GetVehiclePathFollowerComponent()->OnVehiclePointReached.AddDynamic(this, &ACustomPlayerController::OnVehiclePointReached);
 
 		// drop the MG if using it so that the use of the interactable can be played with an animation
 		OwningCombatCharacter->DropMountedGun();
@@ -1292,8 +1308,54 @@ void ACustomPlayerController::HideAircraftView()
 	}
 	else
 	{
-		SetViewTargetWithBlend(OwningCombatCharacter, 0.0f);
+		SetViewTargetWithBlend(OwningCombatCharacter);
 	}
+}
+
+void ACustomPlayerController::RemoveVehicleControl()
+{
+	GetWorldTimerManager().ClearTimer(THandler_RemoveVehicleControlPost);
+
+	if (HasGameEnded) {
+		return;
+	}
+
+	// if the vehicle is destroyed, then the transition of going from vehicle to player camera will not exist and will happen in a sudden moment instead.
+	// In this case, we do not go through the delay of doing RemoveVehicleControlPost().
+	bool CanTransition = UKismetSystemLibrary::IsValid(ControlledVehicle);
+
+	EndAim();
+	EndFire();
+
+	ControlledVehicle->RemovePlayerControl();
+	ControlledVehicle = nullptr;
+
+
+	if (CanTransition)
+	{
+		float Delay = 2.f;
+
+		// Play a smooth transition from aircraft back to player rather than suddenly going back to player.
+		SetViewTargetWithBlend(OwningCombatCharacter, Delay);
+
+		// to renable player controls and other features after transitioning back to player character.
+		GetWorldTimerManager().SetTimer(THandler_RemoveVehicleControlPost, this, &ACustomPlayerController::RemoveVehicleControlPost, Delay, true);
+
+	}
+	else
+	{
+		RemoveVehicleControlPost();
+	}
+}
+
+void ACustomPlayerController::RemoveVehicleControlPost()
+{
+	AddUIWidgets();
+
+	OwningCombatCharacter->EnableInput(this);
+	BeginCheckInteractable();
+
+	GetWorldTimerManager().ClearTimer(THandler_RemoveVehicleControlPost);
 }
 
 #pragma region Commander Functions

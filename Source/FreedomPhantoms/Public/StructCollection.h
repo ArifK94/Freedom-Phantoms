@@ -598,6 +598,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool IsPathFreeToUse;
 
+	/** Remove player control from the aircraft if reached this point. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool RemoveUserControl;
+
 
 	/** Allow vehicle to overlap the collision objects to indicate which point of the path they have reached  */
 	UPROPERTY()

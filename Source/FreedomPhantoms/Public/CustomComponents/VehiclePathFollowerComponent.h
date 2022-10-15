@@ -16,7 +16,9 @@ class ARope;
 
 class UCapsuleComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVehiclePointReachedSignature, FVehicleSplinePoint, VehicleSplinePoint);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathCompleteSignature, AVehicleBase*, Vehicle);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMPHANTOMS_API UVehiclePathFollowerComponent : public UActorComponent
 {
@@ -193,6 +195,9 @@ public:
 	/** Fly to random location, useful for transport aircrafts which would allow characters to rappel down */
 	UFUNCTION()
 		void MoveToLocation(float Value);
+
+	UPROPERTY(BlueprintAssignable)
+		FOnVehiclePointReachedSignature OnVehiclePointReached;
 
 	UPROPERTY(BlueprintAssignable)
 		FOnPathCompleteSignature OnPathComplete;

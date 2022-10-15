@@ -233,6 +233,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool CheckFrontCollision;
 
+	bool ShowTargetSystem;
+
 public:	
 	AVehicleBase();
 
@@ -241,6 +243,7 @@ public:
 	void ChangeThermalVision();
 
 	void SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP = true, bool ShowOutline = true);
+	void RemovePlayerControl();
 
 	void AddControllerPitchInput(float Val);
 	void AddControllerYawInput(float Val);
@@ -299,6 +302,8 @@ private:
 
 	void ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters InHealthParams);
 
+	void RemoveTargetSystem();
+
 	UFUNCTION(BlueprintCallable)
 		void AddComponentToDestroyList(UActorComponent* ActorComponent);
 
@@ -346,5 +351,7 @@ public:
 	TArray<FVehicletSeating> GetVehicleSeats() { return VehicleSeats; }
 
 	AMountedGun* GetCurrentWeaponObj() { return CurrentWeapon; }
+
+	UVehiclePathFollowerComponent* GetVehiclePathFollowerComponent() { return VehiclePathFollowerComponent; }
 
 };
