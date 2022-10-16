@@ -6,6 +6,7 @@
 #include "Weapons/Projectile.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
@@ -206,7 +207,7 @@ void UHealthComponent::Revive()
 
 bool UHealthComponent::IsAlive(AActor* Owner)
 {
-	if (!Owner || Owner->GetName() == "None") {
+	if (!Owner || !UKismetSystemLibrary::IsValid(Owner) || Owner->GetName() == "None") {
 		return false;
 	}
 
