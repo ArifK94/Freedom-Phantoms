@@ -20,6 +20,9 @@ private:
 
 	FTimerHandle THandler_RandomChangeWeapon;
 
+	UPROPERTY()
+		FTargetSearchParameters TargetSearchParams;
+
 	/** The audio to play when main turret is turning */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* TurretAudio;

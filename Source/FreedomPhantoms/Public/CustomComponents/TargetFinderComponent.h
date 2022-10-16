@@ -19,11 +19,15 @@ private:
 	USphereComponent* TargetSightSphere;
 
 	FTimerHandle THandler_TargetSearch;
+	FTimerHandle THandler_CountdownTargetLost;
 
 	/**
 	* Hold the last enemy seen.
 	*/
-	AActor* LastSeenEnemy;
+	AActor* LastSeenTarget;
+
+	UPROPERTY()
+		FTargetSearchParameters LastSeenTargetParam;
 
 	/** Enable to search for all overlapped targets in sphere radius */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -32,9 +36,17 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TargetSightRadius;
 
+	/** Maximum sight distance to see target that has been already seen. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float LoseSightRadius;
+
 	/** Limit the number of targets the component can process */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int FinderLimit;
+
+	/** Cooldown timer for target to disappear if no other target found. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float CountdownTargetLost;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool ShowDebugTrace;
@@ -77,6 +89,8 @@ public:
 private:
 	void FindTargetUpdate();
 
+	TArray<AActor*> GetActorsInRadius(float Radius);
+
 	bool CanSeeLastTarget();
 
 	/** Some actors such as vehicles may have enemy characters attached as children, so would need check if any enemy children exist if parent actor is not an enemy */
@@ -85,6 +99,9 @@ private:
 	bool IsActorFiltered(AActor* Actor);
 
 	bool IsActorToIgnore(AActor* Actor);
+
+	/** Remove last seen target */
+	void ClearLastSeenTarget();
 
 protected:
 	virtual void BeginPlay() override;

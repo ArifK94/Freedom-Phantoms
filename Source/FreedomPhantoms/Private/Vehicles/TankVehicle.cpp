@@ -140,6 +140,8 @@ void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 void ATankVehicle::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters)
 {
+	TargetSearchParams = TargetSearchParameters;
+
 	TargetActor = TargetSearchParameters.TargetActor;
 
 	if (!TargetActor) {
@@ -256,7 +258,7 @@ FRotator ATankVehicle::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 		EyeLocation = MeshComponent->GetSocketLocation(VehicleWeapon.WeaponSocketName);
 	}
 
-	auto TargetLocation = Actor->GetActorLocation() - EyeLocation;
+	auto TargetLocation = TargetSearchParams.TargetLocation - EyeLocation;
 	auto RootBone = MeshComponent->GetBoneName(0);
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComponent->GetSocketTransform(RootBone), TargetLocation);
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);

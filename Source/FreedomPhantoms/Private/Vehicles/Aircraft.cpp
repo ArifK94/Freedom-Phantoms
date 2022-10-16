@@ -86,6 +86,8 @@ void AAircraft::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 void AAircraft::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters)
 {
+	TargetSearchParams = TargetSearchParameters;
+
 	TargetActor = TargetSearchParameters.TargetActor;
 
 	if (!TargetActor) {
@@ -234,7 +236,7 @@ FRotator AAircraft::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 
 
 
-	auto TargetLocation = Actor->GetActorLocation() - EyeLocation;
+	auto TargetLocation = TargetSearchParams.TargetLocation - EyeLocation;
 	auto RootBone = MeshComponent->GetBoneName(0);
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComponent->GetSocketTransform(RootBone), TargetLocation);
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);

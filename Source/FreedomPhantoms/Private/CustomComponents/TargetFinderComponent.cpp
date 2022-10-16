@@ -40,7 +40,10 @@ UTargetFinderComponent::UTargetFinderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	TargetSightRadius = 5000.0f;
+	LoseSightRadius = 5500.f;
 	FinderLimit = 5;
+
+	CountdownTargetLost = 5.f;
 
 	FindTargetPerFrame = false;
 	CreateTargetSphere = true;
@@ -100,21 +103,45 @@ void UTargetFinderComponent::FindTargetUpdate()
 	FindTarget();
 }
 
+TArray<AActor*> UTargetFinderComponent::GetActorsInRadius(float Radius)
+{
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(GetOwner());
+
+	for (int i = 0; i < IgnoreActors.Num(); i++)
+	{
+		auto Actor = IgnoreActors[i];
+
+		if (Actor) {
+			ActorsToIgnore.Add(Actor);
+		}
+	}
+
+	TArray<AActor*> OutActors;
+
+	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetOwner()->GetActorLocation(), Radius, CollisionChannels, AActor::StaticClass(), ActorsToIgnore, OutActors);
+
+	// Get all overlapped actors based that have team faction component attached
+	//TargetSightSphere->GetOverlappingActors(OutActors, AActor::StaticClass());
+
+	return OutActors;
+}
+
 bool UTargetFinderComponent::CanSeeLastTarget()
 {
-	if (LastSeenEnemy == nullptr) {
+	if (LastSeenTarget == nullptr) {
 		return false;
 	}
 
 	FVector TargetLocation;
-	bool HasHitTarget = CanSeeTarget(LastSeenEnemy, TargetLocation);
+	bool HasHitTarget = CanSeeTarget(LastSeenTarget, TargetLocation);
 
 	if (!HasHitTarget) {
 		return false;
 	}
 
 
-	if (!UHealthComponent::IsAlive(LastSeenEnemy)) {
+	if (!UHealthComponent::IsAlive(LastSeenTarget)) {
 		return false;
 	}
 
@@ -135,29 +162,11 @@ AActor* UTargetFinderComponent::FindTarget()
 	//	}
 	//}
 
+	TArray<AActor*> OutActors = GetActorsInRadius(TargetSightRadius);
+
 	AActor* TargetActor = nullptr;
 	float TargetSightDistance = TargetSightRadius;
 
-
-	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(GetOwner());
-
-	for (int i = 0; i < IgnoreActors.Num(); i++)
-	{
-		auto Actor = IgnoreActors[i];
-
-		if (Actor) {
-			ActorsToIgnore.Add(Actor);
-		}
-	}
-
-	TArray<AActor*> OutActors;
-
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetOwner()->GetActorLocation(),
-		TargetSightRadius, CollisionChannels, AActor::StaticClass(), ActorsToIgnore, OutActors);
-
-	// Get all overlapped actors based that have team faction component attached
-	//TargetSightSphere->GetOverlappingActors(OutActors, AActor::StaticClass());
 
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
 	FVector EyeLocation;
@@ -249,12 +258,44 @@ AActor* UTargetFinderComponent::FindTarget()
 		// if the new target is not close by, then continue using the last enemy.
 		if (TargetActor && !SharedService::IsNearTargetPosition(GetOwner()->GetActorLocation(), TargetActor->GetActorLocation(), 500.f))
 		{
-			TargetActor = LastSeenEnemy;
+			TargetActor = LastSeenTarget;
 		}
 	}
 
-	LastSeenEnemy = TargetActor;
+	// If new target found then clear last target.
+	if (TargetActor)
+	{
+		ClearLastSeenTarget();
+	}
+	// if last target is still alive?
+	else if (UHealthComponent::IsAlive(LastSeenTarget))
+	{
+		// begin countdown to clear the last target but stay on the last target until countdown has finished.
+		if (!THandler_CountdownTargetLost.IsValid())
+		{
+			GetOwner()->GetWorldTimerManager().SetTimer(THandler_CountdownTargetLost, this, &UTargetFinderComponent::ClearLastSeenTarget, CountdownTargetLost, true);
+		}
+
+		OnTargetSearch.Broadcast(LastSeenTargetParam);
+
+		return LastSeenTarget;
+	}
+	// otherwise clear the last target.
+	else
+	{
+		ClearLastSeenTarget();
+	}
+
+
+	FVector TargetLoc;
+	CanSeeTarget(TargetActor, TargetLoc);
+
 	TargetSearchParameters.TargetActor = TargetActor;
+	TargetSearchParameters.TargetLocation = TargetLoc;
+
+	LastSeenTargetParam = TargetSearchParameters;
+	LastSeenTarget = TargetActor;
+
 	OnTargetSearch.Broadcast(TargetSearchParameters);
 	return TargetActor;
 }
@@ -267,9 +308,14 @@ bool UTargetFinderComponent::DoesClassFilterExist(TSubclassOf<AActor> Class)
 
 bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLocation)
 {
-	if (TargetActor == nullptr) {
+	if (TargetActor == nullptr || !UKismetSystemLibrary::IsValid(TargetActor)) {
 		return false;
 	}
+
+	// check if target actor within lost sight radius.
+	TArray<AActor*> OutActors = GetActorsInRadius(LoseSightRadius);
+
+	bool IsTargetInRadius = OutActors.Contains(TargetActor);
 
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
 	FVector EyeLocation;
@@ -377,6 +423,13 @@ bool UTargetFinderComponent::IsActorToIgnore(AActor* Actor)
 	return false;
 }
 
+void UTargetFinderComponent::ClearLastSeenTarget()
+{
+	LastSeenTarget = nullptr;
+
+	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_CountdownTargetLost);
+}
+
 bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
 {
 	auto Owner = GetOwner();
@@ -407,14 +460,6 @@ bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector
 
 	// Multi line trace is required as certain actor classes need to be ignored & single trace does not provide functionality to ignore actor classes
 	TArray<FHitResult> OutHits;
-	//auto IsHit = GetWorld()->LineTraceMultiByObjectType(
-	//	OutHits,
-	//	Start,
-	//	End,
-	//	ObjectParams,
-	//	QueryParams
-	//);
-
 	auto IsHit = GetWorld()->LineTraceMultiByChannel(
 		OutHits,
 		Start,
@@ -495,8 +540,6 @@ FRotator UTargetFinderComponent::RotateTowardsTarget(AActor* OwnerActor, AActor*
 		OwnerActor->GetActorEyesViewPoint(EyeLocation, EyeRotation); // Grab actor eye viewpoint
 
 		auto TargetLocation = TargetActor->GetActorLocation() - EyeLocation;
-		//auto RootBone = MeshComp->GetBoneName(0);
-		//auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComp->GetSocketTransform(RootBone), TargetLocation);
 		TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetLocation);
 	}
 
