@@ -794,7 +794,7 @@ bool AProjectile::IsInAir()
 
 void AProjectile::FindHomingTarget(AActor* TargetActor)
 {
-	if (TargetActor == nullptr) {
+	if (TargetActor == nullptr || !UKismetSystemLibrary::IsValid(TargetActor)) {
 		return;
 	}
 
