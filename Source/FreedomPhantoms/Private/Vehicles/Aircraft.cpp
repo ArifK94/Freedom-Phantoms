@@ -28,6 +28,7 @@ AAircraft::AAircraft()
 
 	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
 	TargetFinderComponent->AddClassFilter(AAircraft::StaticClass());
+	TargetFinderComponent->FindTargetPerFrame = true;
 
 	ShooterComponent = CreateDefaultSubobject<UShooterComponent>(TEXT("ShooterComponent"));
 
@@ -42,7 +43,6 @@ void AAircraft::BeginPlay()
 	Super::BeginPlay();
 
 	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &AAircraft::OnTargetSearchUpdate);
-	TargetFinderComponent->SetFindTargetPerFrame(true);
 
 	DefaultPitchMin = PitchMin;
 	DefaultPitchMax = PitchMax;
@@ -56,7 +56,11 @@ void AAircraft::Tick(float DeltaTime)
 
 	m_DeltaTime = DeltaTime;
 
-	Shoot();
+
+	if (UserController == nullptr) 
+	{
+		Shoot();
+	}
 }
 
 bool AAircraft::ShouldStopVehicle()
@@ -210,7 +214,7 @@ FRotator AAircraft::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 {
 	if (!Actor) {
 		TargetRotation = FRotator::ZeroRotator;
-		return  UKismetMathLibrary::RLerp(RotationInput, TargetRotation, m_DeltaTime * TurretRotationFactor, false);
+		return UKismetMathLibrary::RLerp(RotationInput, TargetRotation, m_DeltaTime * TurretRotationFactor, false);
 	}
 
 	FVector EyeLocation;

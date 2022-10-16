@@ -150,6 +150,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FRotator RotationInput;
 
+	/** The controller class that is being used to control the vehicle. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class AController* UserController;
+
 	/** Should the vehicle slowdown when an enemy is detected? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool SlowdownOnTargetFound;
@@ -236,6 +240,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool CheckFrontCollision;
+
+
 
 	bool ShowTargetSystem;
 

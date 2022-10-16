@@ -714,11 +714,13 @@ void AVehicleBase::EndAim()
 	CurrentWeapon->SetIsAiming(false);
 }
 
-void AVehicleBase::SetPlayerControl(APlayerController* OurPlayerController, bool EnableThermalPP, bool ShowOutline)
+void AVehicleBase::SetPlayerControl(APlayerController* OutPlayerController, bool EnableThermalPP, bool ShowOutline)
 {
+	UserController = OutPlayerController;
+
 	ShowTargetSystem = true;
 
-	OurPlayerController->SetViewTargetWithBlend(this, CameraSwitchDelay);
+	OutPlayerController->SetViewTargetWithBlend(this, CameraSwitchDelay);
 	UpdateWeaponView();
 
 	ThermalVisionPPComp->bEnabled = EnableThermalPP;
@@ -736,6 +738,8 @@ void AVehicleBase::SetPlayerControl(APlayerController* OurPlayerController, bool
 
 void AVehicleBase::RemovePlayerControl()
 {
+	UserController = nullptr;
+
 	ShowTargetSystem = false;
 
 	GetWorldTimerManager().ClearTimer(THandler_CameraSwitchDelay);
