@@ -52,6 +52,7 @@ ATankVehicle::ATankVehicle()
 
 	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
 	TargetFinderComponent->AddClassFilter(ATankVehicle::StaticClass());
+	TargetFinderComponent->FindTargetPerFrame = true;
 
 	ShooterComponent = CreateDefaultSubobject<UShooterComponent>(TEXT("ShooterComponent"));
 
@@ -66,7 +67,6 @@ void ATankVehicle::BeginPlay()
 	Super::BeginPlay();
 
 	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &ATankVehicle::OnTargetSearchUpdate);
-	TargetFinderComponent->SetFindTargetPerFrame(true);
 
 	DefaultPitchMin = PitchMin;
 	DefaultPitchMax = PitchMax;

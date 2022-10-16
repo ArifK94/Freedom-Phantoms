@@ -65,6 +65,8 @@ void UTargetFinderComponent::Init()
 		return;
 	}
 
+	SetFindTargetPerFrame(FindTargetPerFrame);
+
 	// Alternative to AI Sight Perception in case 360 sight is wanted
 	if (CreateTargetSphere && TargetSightSphere == nullptr)
 	{

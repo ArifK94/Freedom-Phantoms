@@ -25,9 +25,6 @@ private:
 	*/
 	AActor* LastSeenEnemy;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool FindTargetPerFrame;
-
 	/** Enable to search for all overlapped targets in sphere radius */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool CreateTargetSphere;
@@ -56,6 +53,10 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<TEnumAsByte<EObjectTypeQuery>> CollisionChannels;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool FindTargetPerFrame;
 
 public:	
 	UTargetFinderComponent();
@@ -92,6 +93,7 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnTargetSearchSignature OnTargetSearch;
 
+	/** Do not call this method in the constructor since the timer will be set and it will cause the application to crash. */
 	void SetFindTargetPerFrame(bool Value);
 
 	void SetCreateTargetSphere(bool Value) { CreateTargetSphere = Value; }
