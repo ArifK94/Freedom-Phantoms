@@ -30,8 +30,8 @@ bool UTeamFactionComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 
 	if (ActorComponentA == nullptr || ActorComponentB == nullptr)
 	{
-		// Assume Friendly
-		return true;
+		// Assume Non-Friendly (Neutral included.)
+		return false;
 	}
 
 
