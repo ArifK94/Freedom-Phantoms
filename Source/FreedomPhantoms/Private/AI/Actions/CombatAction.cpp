@@ -147,6 +147,9 @@ void UCombatAction::CombatMode()
 		OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
 	}
 
+	OwningCombatCharacter->GetCurrentWeapon()->SetCrosshairErrorTolerance(0.f);
+
+
 	// reload the weapon
 	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
 	{
@@ -288,16 +291,18 @@ void UCombatAction::ReloadWeapon()
 
 void UCombatAction::Aim()
 {
+	bool CanBlindFire = CombatAIController->CanBlindCoverFire(OwningCombatCharacter->GetCurrentWeapon());
+
 	// always aim towards target :-
-	// can only aim if not spritig,
+	// can only aim if not sprinting,
 	// if not in cover, since the character can do blind fire and no aim.
-	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsTakingCover())
+	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsTakingCover() && !CanBlindFire)
 	{
 		OwningCombatCharacter->BeginAim();
 	}
 	// can do blind fire if in cover without aiming but only if enemy is nearby.
 	else if (SharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange()) &&
-		OwningCombatCharacter->IsTakingCover())
+		OwningCombatCharacter->IsTakingCover() && CanBlindFire)
 	{
 		if (!UKismetMathLibrary::RandomBool() && OwningCombatCharacter->IsAiming())
 		{

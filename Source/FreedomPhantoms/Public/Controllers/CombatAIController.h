@@ -181,6 +181,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FVector PriorityLocation;
 
+	/**
+	* Type of weapons which the AI cannot do blind fire while in cover.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<WeaponType> NonBlindFireWeaponTypes;
+
 	FTimerHandle THandler_CommanderOrders;
 	FTimerHandle THandler_MoveToNearbyDestination;
 
@@ -205,6 +211,9 @@ public:
 	void SetFocalPosition(FVector TargetLocation);
 
 	void MoveToRandomPoint();
+
+	/** Can AI do blind fire from cover without having to peak out? Some weapons such as RPG, can cause suicide to happen or may look unreasonable */
+	bool CanBlindCoverFire(AWeapon* Weapon);
 
 	/**
 	* Set Priority Destination for AI to move to.

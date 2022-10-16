@@ -41,6 +41,11 @@
 
 ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
+	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
+	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
+	MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
+
 	PrimaryActorTick.bCanEverTick = true;
 
 	AcceptanceRadius = 300.0f;
@@ -55,10 +60,8 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	MoveToLastSeenEnemy = true;
 
-	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
-	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
-	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
-	MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
+	NonBlindFireWeaponTypes.Add(WeaponType::Shotgun);
+	NonBlindFireWeaponTypes.Add(WeaponType::RPG);
 }
 
 
@@ -540,6 +543,20 @@ void ACombatAIController::MoveToRandomPoint()
 
 		GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
 	}
+}
+
+bool ACombatAIController::CanBlindCoverFire(AWeapon* Weapon)
+{
+	// if the weapon param has the type which cannot alow blind fire while in cover then return false.
+	for (auto WeaponType : NonBlindFireWeaponTypes)
+	{
+		if (Weapon->GetWeaponType() == WeaponType)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void ACombatAIController::FindMountedGun()
