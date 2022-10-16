@@ -116,6 +116,7 @@ AVehicleBase::AVehicleBase()
 	HighlightCharacters = false;
 	SimulateExplosionPhysics = false;
 	CheckFrontCollision = true;
+	DestroyOnDeath = false;
 
 	KillConfirmedParamName = "KillConfirmed";
 	SingleKillIndex = 0;
@@ -374,6 +375,16 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 		// Apply health damage
 		ApplyExplosionDamage(GetActorLocation(), InHealthParameters);
+
+
+		if (DestroyOnDeath)
+		{
+			// hide actor for now since some other actors may rely on this actor's reference
+			SetActorHiddenInGame(true);
+
+			// then set to destroy the actor after x seconds assuming x is enough time for this actor to no longer be referenced.
+			SetLifeSpan(5.f);
+		}
 	}
 }
 

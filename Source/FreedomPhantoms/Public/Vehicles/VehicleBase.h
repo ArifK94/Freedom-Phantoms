@@ -214,6 +214,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
 		USkeletalMesh* ExplosionMesh;
 
+	/** Should the actor be destroyed from the scene after destroying vehicle? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
+		bool DestroyOnDeath;
+
 	/** Enabled physics during explosion  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
 		bool SimulateExplosionPhysics;
