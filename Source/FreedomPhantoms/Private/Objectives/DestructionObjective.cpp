@@ -41,6 +41,8 @@ AActor* ADestructionObjective::OnPickup_Implementation(APawn* InPawn, AControlle
 	CurrentCountdownTimer = CountdownTimer;
 	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &ADestructionObjective::BeginCountdown, 1.f, true, 0.f);
 
+	OnObjectiveInteracted.Broadcast(this);
+
 	return this;
 }
 

@@ -11,6 +11,7 @@ class UBoxComponent;
 class USoundBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnObjectiveCompletedSignature, ABaseObjective*, Objective);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnObjectiveInteractedSignature, ABaseObjective*, Objective);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnObjectiveUpdateSignature, ABaseObjective*, Objective, float, Progress);
 UCLASS()
 class FREEDOMPHANTOMS_API ABaseObjective : public AActor
@@ -18,8 +19,14 @@ class FREEDOMPHANTOMS_API ABaseObjective : public AActor
 	GENERATED_BODY()
 
 public:
-	FOnObjectiveCompletedSignature OnObjectiveCompleted;
-	FOnObjectiveUpdateSignature OnObjectiveUpdate;
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnObjectiveCompletedSignature OnObjectiveCompleted;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnObjectiveInteractedSignature OnObjectiveInteracted;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnObjectiveUpdateSignature OnObjectiveUpdate;
 
 protected:
 	AGameStateBaseCustom* GameStateBaseCustom;
