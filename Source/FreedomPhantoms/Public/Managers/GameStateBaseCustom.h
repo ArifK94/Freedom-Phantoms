@@ -20,7 +20,8 @@ class FREEDOMPHANTOMS_API AGameStateBaseCustom : public AGameStateBase
 
 private:
 	/** Assigned when the music is changed */
-	float MusicStateTarget;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float MusicStateTarget;
 
 	/** To lerp to music target state */
 	float CurrentMusicState;

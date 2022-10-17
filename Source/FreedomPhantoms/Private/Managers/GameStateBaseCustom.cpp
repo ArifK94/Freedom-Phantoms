@@ -53,10 +53,15 @@ void AGameStateBaseCustom::OnObjectiveUpdate(ABaseObjective* Objective, float Pr
 		}
 	}
 
-	// update the music state
-	MusicStateTarget = totalProgress / TotalObjectives;
+	// update music as near close to completing objectives.
+	if (totalProgress > 0)
+	{
+		// update the music state
+		MusicStateTarget = totalProgress / TotalObjectives;
 
-	PlayMusic(NearEndMusic);
+		PlayMusic(NearEndMusic);
+	}
+
 }
 
 void AGameStateBaseCustom::CalculateTotalProgression()
