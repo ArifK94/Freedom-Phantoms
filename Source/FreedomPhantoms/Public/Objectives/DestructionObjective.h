@@ -25,7 +25,9 @@ private:
 	/** The countdown destruction timer. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CountdownTimer;
-	float CurrentCountdownTimer;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float CurrentCountdownTimer;
 
 	/** Destruction damage applied to nearby health components */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
