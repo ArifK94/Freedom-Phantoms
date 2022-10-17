@@ -46,7 +46,11 @@ void AGameStateBaseCustom::OnObjectiveUpdate(ABaseObjective* Objective, float Pr
 	// calculate the average of the total progress
 	for (int i = 0; i < Objectives.Num(); i++)
 	{
-		totalProgress += Objectives[i]->GetProgress();
+		// only update progress of compulsory objectives.
+		if (!Objectives[i]->GetIsOptional())
+		{
+			totalProgress += Objectives[i]->GetProgress();
+		}
 	}
 
 	// update the music state

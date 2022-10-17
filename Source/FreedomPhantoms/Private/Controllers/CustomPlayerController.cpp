@@ -57,14 +57,7 @@ void ACustomPlayerController::BeginPlay()
 
 void ACustomPlayerController::InitBeginPlayCommon()
 {
-
 	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
-
-	if (GameStateBaseCustom)
-	{
-		MissionObjectives = GameStateBaseCustom->GetObjectives();
-	}
-
 	GameInstanceController = Cast<UGameInstanceController>(UGameplayStatics::GetGameInstance(GetWorld()));
 
 	SpawnPlayer();
@@ -142,21 +135,14 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 	}
 
 
-	// Find & Add the objectives
-	TArray<AActor*> ObjectiveActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseObjective::StaticClass(), ObjectiveActors);
-
-	for (int i = 0; i < ObjectiveActors.Num(); i++)
+	if (GameStateBaseCustom)
 	{
-		auto Objective = Cast<ABaseObjective>(ObjectiveActors[i]);
-
-		if (Objective)
+		// Add the objectives & bind events.
+		for (auto Objective : GameStateBaseCustom->GetObjectives())
 		{
 			AddMissionObjective(Objective);
 		}
 	}
-
-
 }
 
 void ACustomPlayerController::SetupInputComponent()
@@ -587,29 +573,40 @@ void ACustomPlayerController::OnObjectiveCompleted(ABaseObjective* Objective)
 	auto Index = MissionObjectives.Find(Objective);
 	MissionObjectives.RemoveAt(Index);
 
-	// set the next objective
-	if (Index - 1 > -1)
+	// if objective is required, then increment current count.
+	if (!Objective->GetIsOptional())
 	{
-		CurrentMissionObjective = MissionObjectives[Index - 1];
-	}
-	else
-	{
-		CurrentMissionObjective = nullptr;
+		CurrentRequiredObjectivesCompleted++;
 	}
 
-	if (CurrentMissionObjective == nullptr)
+	// if reached total required objective count then the game can end.
+	if (CurrentRequiredObjectivesCompleted >= TotalRequiredObjectives)
 	{
+		CurrentMissionObjective = nullptr;
+
 		GameStateBaseCustom->EndGame(true);
 		DisplayEndGameUMG();
+	}
+	// set the next objective
+	else if (!MissionObjectives.IsEmpty())
+	{
+		CurrentMissionObjective = MissionObjectives[MissionObjectives.Num() - 1];
 	}
 }
 
 void ACustomPlayerController::AddMissionObjective(ABaseObjective* Objective)
 {
 	MissionObjectives.Add(Objective);
+
+	if (!Objective->GetIsOptional())
+	{
+		TotalRequiredObjectives++;
+	}
+
 	Objective->OnObjectiveCompleted.AddDynamic(this, &ACustomPlayerController::OnObjectiveCompleted);
 
-	if (CurrentMissionObjective == nullptr) {
+	if (CurrentMissionObjective == nullptr)
+	{
 		CurrentMissionObjective = Objective;
 	}
 }

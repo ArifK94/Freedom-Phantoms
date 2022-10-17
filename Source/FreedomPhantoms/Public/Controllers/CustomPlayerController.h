@@ -136,6 +136,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<ABaseObjective*> MissionObjectives;
+	int TotalRequiredObjectives;
+	int CurrentRequiredObjectivesCompleted;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		ABaseObjective* CurrentMissionObjective;
