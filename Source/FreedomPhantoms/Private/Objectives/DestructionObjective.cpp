@@ -121,6 +121,7 @@ void ADestructionObjective::ApplyExplosionDamage(FVector ImpactPoint)
 	// check if something got hit in the sweep
 	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, ImpactPoint, ImpactPoint, FQuat::Identity, ECC_Visibility, MyColSphere);
 
+	TArray<AActor*> DamagedActors;
 
 	if (isHit)
 	{
@@ -128,19 +129,24 @@ void ADestructionObjective::ApplyExplosionDamage(FVector ImpactPoint)
 		for (auto& Hit : OutHits)
 		{
 			AActor* DamagedActor = Hit.GetActor();
-			if (DamagedActor)
+			if (DamagedActor && !DamagedActors.Contains(DamagedActor))
 			{
-				UHealthComponent* DamagedHealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+				DamagedActors.Add(DamagedActor);
+			}
+		}
 
-				if (DamagedHealthComponent && DamagedHealthComponent->IsAlive())
-				{
-					FHealthParameters HealthParameters;
-					HealthParameters.Damage = DestructionDamage;
-					HealthParameters.DamagedActor = DamagedActor;
-					HealthParameters.DamageCauser = this;
-					HealthParameters.IsExplosive = true;
-					DamagedHealthComponent->OnDamage(HealthParameters);
-				}
+		for (auto DamagedActor : DamagedActors)
+		{
+			UHealthComponent* DamagedHealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			if (DamagedHealthComponent)
+			{
+				FHealthParameters HealthParameters;
+				HealthParameters.Damage = DestructionDamage;
+				HealthParameters.DamagedActor = DamagedActor;
+				HealthParameters.DamageCauser = this;
+				HealthParameters.IsExplosive = true;
+				DamagedHealthComponent->OnDamage(HealthParameters);
 			}
 		}
 	}
