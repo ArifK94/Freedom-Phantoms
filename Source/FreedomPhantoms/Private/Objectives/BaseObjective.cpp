@@ -12,6 +12,7 @@ ABaseObjective::ABaseObjective()
 	PrimaryActorTick.bCanEverTick = false;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = Root;
 
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
 	BoxCollider->SetCollisionProfileName(TEXT("Objective"));
@@ -23,12 +24,6 @@ ABaseObjective::ABaseObjective()
 
 	Progress = 0.0f;
 }
-
-void ABaseObjective::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 
 void ABaseObjective::ObjectiveComplete()
 {
