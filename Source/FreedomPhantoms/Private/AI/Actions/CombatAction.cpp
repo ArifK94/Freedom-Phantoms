@@ -147,9 +147,6 @@ void UCombatAction::CombatMode()
 		OwningCombatCharacter->GetCurrentWeapon()->SetUnlimitedAmmo(true);
 	}
 
-	OwningCombatCharacter->GetCurrentWeapon()->SetCrosshairErrorTolerance(0.f);
-
-
 	// reload the weapon
 	if (OwningCombatCharacter->GetCurrentWeapon()->GetCurrentAmmo() <= 0 || OwningCombatCharacter->IsReloading())
 	{
