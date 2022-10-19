@@ -41,6 +41,7 @@ AStronghold::AStronghold()
 	FlagClothMaterialIndex = 0;
 
 	StrongholdAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("StrongholdAudio"));
+	StrongholdAudio->SetupAttachment(RootComponent);
 
 	SpawnMax = 5;
 	SpawnRate = 1.f;
