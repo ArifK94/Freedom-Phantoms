@@ -32,17 +32,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float PanningSpeedMultiplier;
 
+	/** Min X and Y Panning */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float PanningMinX;
+		FVector2D PanningMin;
 
+	/** Max X and Y Panning */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float PanningMaxX;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float PanningMinY;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float PanningMaxY;
+		FVector2D PanningMax;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float ZoomSpeedMultiplier;
@@ -82,8 +78,19 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void Zoom(float Value);
 
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DelatTime) override;
+
+
+public:
+	FVector2D GetPanningMin() { return PanningMin; }
+
+	FVector2D GetPanningMax() { return PanningMax; }
+
+	float GetZoomMin() { return ZoomMin; }
+
+	float GetZoomMax() { return ZoomMax; }
 
 };

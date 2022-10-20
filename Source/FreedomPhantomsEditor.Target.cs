@@ -9,6 +9,6 @@ public class FreedomPhantomsEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.AddRange( new string[] { "FreedomPhantoms" } );
+		ExtraModuleNames.AddRange( new string[] { "FreedomPhantoms", "FreedomPhantomsEditor" } );
 	}
 }

@@ -18,11 +18,6 @@ AMapCamera::AMapCamera()
 	PanningSpeedMultiplier = 150.0f;
 	ZoomSpeedMultiplier = 150.0f;
 
-	PanningMinX = 0.0f;
-	PanningMaxX = 0.0f;
-	PanningMinY = 0.0f;
-	PanningMaxY = 0.0f;
-
 	ZoomMin = 0.0f;
 	ZoomMax = 0.0f;
 
@@ -58,7 +53,6 @@ void AMapCamera::Tick(float DelatTime)
 		}
 	}
 }
-
 
 void AMapCamera::Activate()
 {
@@ -114,8 +108,9 @@ void AMapCamera::MoveForward(float Value)
 		Amount *= -1.0f;
 	}
 
-	float Min = PanningMinX - GetActorLocation().Z;
-	float Max = PanningMaxX + GetActorLocation().Z;
+	// The bounds of X are based on the camera default location as the camera is placed and bounds were set based on this location in the editor.
+	float Min = (DefaultLocation.X + PanningMin.X) - (DefaultLocation.Z / GetActorLocation().Z);
+	float Max = (DefaultLocation.X + PanningMax.X) + (DefaultLocation.Z / GetActorLocation().Z);
 
 	LocationInput.X = FMath::Clamp(GetActorLocation().X + Amount, Min, Max);
 	SetActorLocation(LocationInput);
@@ -137,8 +132,9 @@ void AMapCamera::MoveRight(float Value)
 		Amount *= -1.0f;
 	}
 
-	float Min = PanningMinY - GetActorLocation().Z;
-	float Max = PanningMaxY + GetActorLocation().Z;
+	// The bounds of Y are based on the camera default location as the camera is placed and bounds were set based on this location in the editor.
+	float Min = (DefaultLocation.Y + PanningMin.Y) - (DefaultLocation.Z / GetActorLocation().Z);
+	float Max = (DefaultLocation.Y + PanningMax.Y) + (DefaultLocation.Z / GetActorLocation().Z);
 
 	LocationInput.Y = FMath::Clamp(GetActorLocation().Y + Amount, Min, Max);
 	SetActorLocation(LocationInput);

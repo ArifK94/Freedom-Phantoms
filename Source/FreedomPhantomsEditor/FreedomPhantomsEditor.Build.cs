@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class FreedomPhantoms : ModuleRules
+public class FreedomPhantomsEditor : ModuleRules
 {
-	public FreedomPhantoms(ReadOnlyTargetRules Target) : base(Target)
+	public FreedomPhantomsEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
@@ -13,16 +13,8 @@ public class FreedomPhantoms : ModuleRules
             "CoreUObject",
             "Engine",
             "InputCore",
-            "HeadMountedDisplay",
-            "GameplayTasks",
-            "UMG",
-            "AIModule",
-            "NavigationSystem",
-            "PhysicsCore",
-            "MoviePlayer",
-            "Niagara",
-            "AnimGraphRuntime",
-            "UnrealEd"
+			"UnrealEd",
+			"FreedomPhantoms"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
