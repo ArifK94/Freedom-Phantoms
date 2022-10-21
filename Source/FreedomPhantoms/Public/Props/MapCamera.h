@@ -15,6 +15,13 @@ class FREEDOMPHANTOMS_API AMapCamera : public AActor
 	GENERATED_BODY()
 	
 private:
+	FVector LocationInput;
+	bool StartPostTimer;
+	float CurrentPostActivateTimer;
+
+	/** When camera hits a collisiom, the zoom needs to be corrected to move up/ */
+	float ZoomCorrectionZ;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class USceneCaptureComponent2D* SceneCaptureComponent2D;
 
@@ -53,10 +60,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool LockInput;
 
-	FVector LocationInput;
-	bool StartPostTimer;
-	float CurrentPostActivateTimer;
-
 public:	
 	AMapCamera();
 
@@ -78,6 +81,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void Zoom(float Value);
 
+private:
+	void CheckCollision();
 
 protected:
 	virtual void BeginPlay() override;

@@ -48,14 +48,14 @@ void FMapCameraVisualizer::DrawVisualization(const UActorComponent* Component, c
 			PDI->DrawLine(
 				MapCamera->GetActorLocation(),
 				MapCamera->GetActorLocation() + FVector(0.f, 0.f, -MapCamera->GetZoomMax()),
-				FLinearColor::Blue,
+				FLinearColor::Yellow,
 				SDPG_Foreground
 			);
 
 			PDI->DrawLine(
 				MapCamera->GetActorLocation(),
 				MapCamera->GetActorLocation() + FVector(0.f, 0.f, MapCamera->GetZoomMin()),
-				FLinearColor::Blue,
+				FLinearColor::Yellow,
 				SDPG_Foreground
 			);
 		}

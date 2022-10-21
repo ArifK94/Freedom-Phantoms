@@ -2,6 +2,7 @@
 
 #include "Components/SceneCaptureComponent2D.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/Character.h"
 
 AMapCamera::AMapCamera()
@@ -50,6 +51,32 @@ void AMapCamera::Tick(float DelatTime)
 			CurrentPostActivateTimer = 0.f;
 
 			PostActivate();
+		}
+	}
+
+	// Run this code only if game is paused.
+	if (UGameplayStatics::IsGamePaused(GetWorld()))
+	{
+		// Should the zoom value be corrected to avoid go through actors?
+		if (ZoomCorrectionZ != .0f && !UKismetMathLibrary::NearlyEqual_FloatFloat(LocationInput.Z, ZoomCorrectionZ))
+		{
+			LocationInput.Z = UKismetMathLibrary::Lerp(GetActorLocation().Z, ZoomCorrectionZ, DelatTime * 8.f);
+			SetActorLocation(LocationInput);
+		}
+		// Should this actor's Up axis be corrected after correcting the zoom if it is out of zoom bounds?
+		else if (GetActorLocation().Z < ZoomMin || GetActorLocation().Z > ZoomMax)
+		{
+			float ZClamp = FMath::Clamp(GetActorLocation().Z, ZoomMin, ZoomMax);
+
+			LocationInput.Z = UKismetMathLibrary::Lerp(GetActorLocation().Z, ZClamp, DelatTime * 5.f);
+			SetActorLocation(LocationInput);
+
+			ZoomCorrectionZ = .0f;
+		}
+		// Is there no need for zoom correcting? 
+		else
+		{
+			ZoomCorrectionZ = .0f;
 		}
 	}
 }
@@ -114,6 +141,8 @@ void AMapCamera::MoveForward(float Value)
 
 	LocationInput.X = FMath::Clamp(GetActorLocation().X + Amount, Min, Max);
 	SetActorLocation(LocationInput);
+
+	CheckCollision();
 }
 
 void AMapCamera::MoveRight(float Value)
@@ -138,6 +167,8 @@ void AMapCamera::MoveRight(float Value)
 
 	LocationInput.Y = FMath::Clamp(GetActorLocation().Y + Amount, Min, Max);
 	SetActorLocation(LocationInput);
+
+	CheckCollision();
 }
 
 void AMapCamera::Zoom(float Value)
@@ -156,13 +187,83 @@ void AMapCamera::Zoom(float Value)
 		Amount *= -1.0f;
 	}
 
+	ZoomCorrectionZ = .0f;
+
 	LocationInput.Z = FMath::Clamp(GetActorLocation().Z + Amount, ZoomMin, ZoomMax);
 	SetActorLocation(LocationInput);
 
 
-	// Updaye the location limits, add a positive then a negative since the camera can be at the limit for x or y
+	// Update the location limits, add a positive then a negative since the camera can be at the limit for x or y
 	MoveForward(1.0f);
 	MoveForward(-1.0f);
 	MoveRight(1.0f);
 	MoveRight(-1.0f);
+
+	CheckCollision();
+}
+
+/**
+* Check if the camera has hit an actor in multiple directions.
+*/
+void AMapCamera::CheckCollision()
+{
+	float Length = 500.f;
+
+	FVector Start = GetActorLocation();
+
+	FVector CenterEnd = (GetActorForwardVector() * Length) + Start;
+
+	FVector ForwardEnd = (GetActorUpVector() * Length) + Start;
+	FVector BackEnd = (-GetActorUpVector() * Length) + Start;
+
+	FVector LeftEnd = (-GetActorRightVector() * Length) + Start;
+	FVector RightEnd = (GetActorRightVector() * Length) + Start;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+	FHitResult OutHitCenter;
+	if (GetWorld()->LineTraceSingleByObjectType(OutHitCenter, Start, ForwardEnd, ObjectParams))
+	{
+		if (OutHitCenter.bBlockingHit)
+		{
+			ZoomCorrectionZ = GetActorLocation().Z + OutHitCenter.ImpactPoint.Z;
+		}
+	}
+
+	FHitResult OutHitForward;
+	if (GetWorld()->LineTraceSingleByObjectType(OutHitForward, Start, ForwardEnd, ObjectParams))
+	{
+		if (OutHitForward.bBlockingHit)
+		{
+			ZoomCorrectionZ = GetActorLocation().Z + OutHitForward.ImpactPoint.Z;
+		}
+	}
+
+	FHitResult OutHitBack;
+	if (GetWorld()->LineTraceSingleByObjectType(OutHitBack, Start, BackEnd, ObjectParams))
+	{
+		if (OutHitBack.bBlockingHit)
+		{
+			ZoomCorrectionZ = GetActorLocation().Z + OutHitBack.ImpactPoint.Z;
+		}
+	}
+
+	FHitResult OutHitLeft;
+	if (GetWorld()->LineTraceSingleByObjectType(OutHitLeft, Start, LeftEnd, ObjectParams))
+	{
+		if (OutHitLeft.bBlockingHit)
+		{
+			ZoomCorrectionZ = GetActorLocation().Z + OutHitLeft.ImpactPoint.Z;
+		}
+	}
+
+	FHitResult OutHitRight;
+	if (GetWorld()->LineTraceSingleByObjectType(OutHitRight, Start, RightEnd, ObjectParams))
+	{
+		if (OutHitRight.bBlockingHit)
+		{
+			ZoomCorrectionZ = GetActorLocation().Z + OutHitRight.ImpactPoint.Z;
+		}
+	}
 }
