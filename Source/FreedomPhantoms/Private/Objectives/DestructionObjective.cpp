@@ -3,6 +3,8 @@
 
 #include "Objectives/DestructionObjective.h"
 #include "CustomComponents/HealthComponent.h"
+#include "Weapons/Projectile.h"
+#include "Services/SharedService.h"
 
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -38,8 +40,25 @@ AActor* ADestructionObjective::OnPickup_Implementation(APawn* InPawn, AControlle
 		return nullptr;
 	}
 
+	if (DestructiveProjectileClass)
+	{
+		FHitResult OutHit;
+		SharedService::IsInAir(OutHit, InPawn, 1000.f);
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		auto Projectile = GetWorld()->SpawnActor<AProjectile>(DestructiveProjectileClass, OutHit.ImpactPoint, FRotator::ZeroRotator, SpawnParams);
+
+		if (Projectile)
+		{
+			Projectile->SetCountdownTimer(CountdownTimer);
+		}
+	}
+
 	CurrentCountdownTimer = CountdownTimer;
-	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &ADestructionObjective::BeginCountdown, 1.f, true, 0.f);
+	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &ADestructionObjective::BeginCountdown, 1.f, true);
 
 	OnObjectiveInteracted.Broadcast(this);
 
@@ -82,7 +101,6 @@ void ADestructionObjective::OnDestruction()
 
 
 	Progress = 1.f;
-	IsObjectiveComplete = true;
 
 	ObjectiveComplete();
 
@@ -90,8 +108,6 @@ void ADestructionObjective::OnDestruction()
 
 void ADestructionObjective::BeginCountdown()
 {
-	CurrentCountdownTimer -= 1.f;
-
 	// has countdown finished?
 	if (CurrentCountdownTimer <= 0.f)
 	{
@@ -108,6 +124,9 @@ void ADestructionObjective::BeginCountdown()
 			UGameplayStatics::PlaySound2D(GetWorld(), CountdownSound);
 		}
 	}
+
+	CurrentCountdownTimer -= 1.f;
+
 }
 
 void ADestructionObjective::ApplyExplosionDamage(FVector ImpactPoint)
@@ -147,6 +166,11 @@ void ADestructionObjective::ApplyExplosionDamage(FVector ImpactPoint)
 				HealthParameters.DamageCauser = this;
 				HealthParameters.IsExplosive = true;
 				DamagedHealthComponent->OnDamage(HealthParameters);
+			}
+
+			auto HitProjectile = Cast<AProjectile>(DamagedActor);
+			if (HitProjectile && HitProjectile->IsExplosive()) {
+				HitProjectile->SelfDestruct();
 			}
 		}
 	}

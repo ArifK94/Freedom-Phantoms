@@ -48,6 +48,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USoundAttenuation* DestructionAttenuation;
 
+	/** Destruction actor, usually a C4 actor or something similar to be placed on the position of the interaction.  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class AProjectile> DestructiveProjectileClass;
+
 public:
 	ADestructionObjective();
 

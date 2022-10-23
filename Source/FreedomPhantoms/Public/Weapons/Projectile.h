@@ -87,6 +87,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 		bool IgnoreOwner;
 
+	/** Can this projectile be affected by other projectiles? If other explosives detonate while this projectile is within their radius, can this projectile be exploded? Only applies to explosives. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+		bool IgnoreDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		bool ShowExplosionRadius;
@@ -235,7 +238,7 @@ private:
 	void SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation);
 
 	/** Check overalpping using the DetectionSphere */
-	void CheckNearbyActors();
+	void AlertNearbyActors();
 
 	UFUNCTION()
 		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -270,4 +273,7 @@ public:
 		return isAnExplosive;
 	}
 
+	void SetCountdownTimer(float Value) { CountdownTimer = Value; }
+
+	bool GetIgnoreDamage() { return IgnoreDamage; }
 };

@@ -151,7 +151,7 @@ void AProjectile::Tick(float DeltaTime)
 		SpinOnMovement();
 	}
 
-	CheckNearbyActors();
+	AlertNearbyActors();
 }
 
 void AProjectile::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -491,7 +491,7 @@ void AProjectile::Explode(FVector ImpactPoint)
 
 
 			auto HitProjectile = Cast<AProjectile>(DamagedActor);
-			if (HitProjectile && HitProjectile->IsExplosive()) {
+			if (HitProjectile && HitProjectile->IsExplosive() && !HitProjectile->GetIgnoreDamage()) {
 				HitProjectile->SelfDestruct();
 			}
 
@@ -705,7 +705,7 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 	}
 }
 
-void AProjectile::CheckNearbyActors()
+void AProjectile::AlertNearbyActors()
 {
 	// check overlap detection when nearing to a stop
 	if (!DetectNearbyActors || GetVelocity().Size() >= 5.f) {

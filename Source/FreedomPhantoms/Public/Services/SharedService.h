@@ -40,4 +40,9 @@ public:
 	* Can the target actor been seen from a position?
 	*/
 	static bool CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner);
+
+	/**
+	* Check if an actor is in the air.
+	*/
+	static bool IsInAir(struct FHitResult& OutHit, AActor* Actor, float Length = 100.f);
 };

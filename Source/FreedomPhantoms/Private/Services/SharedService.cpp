@@ -157,3 +157,21 @@ bool SharedService::CanSeeTarget(UWorld* World, FVector Start, AActor* TargetAct
 
 	return bHitTarget && OutHitTarget.GetActor() == TargetActor;
 }
+
+bool SharedService::IsInAir(FHitResult& OutHit, AActor* Actor, float Length)
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.bTraceComplex = true;
+	QueryParams.AddIgnoredActor(Actor);
+
+	FVector Start = Actor->GetActorLocation();
+	FVector End = Start + FVector(.0f, .0f, -Length);
+
+	return Actor->GetWorld()->LineTraceSingleByChannel(
+		OutHit,
+		Start,
+		End,
+		ECC_Visibility,
+		QueryParams
+	);
+}

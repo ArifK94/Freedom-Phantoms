@@ -34,6 +34,8 @@ void ABaseObjective::ObjectiveComplete()
 		UGameplayStatics::PlaySound2D(GetWorld(), ObjectiveCompleteSound);
 	}
 
+	IsObjectiveComplete = true;
+
 	OnObjectiveCompleted.Broadcast(this);
 	OnObjectiveUpdate.Broadcast(this, 1.0f);
 }
