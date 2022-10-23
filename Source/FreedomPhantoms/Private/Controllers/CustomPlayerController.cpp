@@ -314,7 +314,7 @@ void ACustomPlayerController::PauseGame()
 		{
 			auto Widget = OnViewWidgets[i];
 
-			if (Widget)
+			if (Widget && Widget != InventoryWidget)
 			{
 				OnViewWidgets[i]->SetVisibility(ESlateVisibility::Visible);
 			}
