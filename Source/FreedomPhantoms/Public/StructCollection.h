@@ -57,11 +57,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<UUserWidget> SatelliteWidget;
 
+	/** Image of the map's bird's eye view which is diplayed in the pause menu using the mapcamera. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UMaterial* RenderTargetMaterial;
 
+	/**
+	* Material of the map's bird's eye view which is diplayed in the deploying map screen.
+	* Since the render target will be black/ blank when the map is not loaded, this material or image, will display the satellite view of the map.
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UTexture2D* SatelliteImage;
+		UMaterial* SatelliteImageryMaterial;
 
 	/** Used for loading screen */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
