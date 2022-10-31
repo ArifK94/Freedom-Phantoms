@@ -20,6 +20,9 @@ void AUnarmedPlayerController::InitInputComponent()
 
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &ACustomPlayerController::ToggleCrouch);
 
+	InputComponent->BindAction("Jump", IE_Pressed, this, &ACustomPlayerController::BeginJump);
+	InputComponent->BindAction("Jump", IE_Released, this, &ACustomPlayerController::EndJump);
+
 	InputComponent->BindAction("Pickup", IE_Pressed, this, &ACustomPlayerController::PickupInteractable);
 }
 
