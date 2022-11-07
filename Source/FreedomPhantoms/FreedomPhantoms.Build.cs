@@ -22,7 +22,6 @@ public class FreedomPhantoms : ModuleRules
             "MoviePlayer",
             "Niagara",
             "AnimGraphRuntime",
-            "UnrealEd"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
