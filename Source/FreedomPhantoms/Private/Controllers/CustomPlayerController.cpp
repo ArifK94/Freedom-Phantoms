@@ -63,44 +63,34 @@ void ACustomPlayerController::InitBeginPlayCommon()
 	SpawnPlayer();
 
 
-	if (OwningCombatCharacter)
-	{
-		OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
-		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
-
-		OnCombatModeUpdated(OwningCombatCharacter);
-
-		if (OwningCombatCharacter->GetMountedGun())
-		{
-			OwningCombatCharacter->GetMountedGun()->SetPlayerControl(this, OwningCombatCharacter);
-		}
-		else if (OwningCombatCharacter->GetVehicletSeat().OwningVehicle)
-		{
-			SetViewTargetWithBlend(OwningCombatCharacter->GetVehicletSeat().OwningVehicle, 0.0f);
-		}
-
-
-		// Character can be spawned in to use MG such as helicopter gunner
-		UseMountedGun();
-
-		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
-		HealthComp->SetRegenerateHealth(true);
-		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthUpdate);
-
-
-		PlayerFaction = OwningCombatCharacter->GetTeamFactionComponent()->GetSelectedFaction();
+	if (!OwningCombatCharacter) {
+		return;
 	}
 
-	InitBeginPlayUncommon();
+	OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
+	OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
 
-	// Get Map camera
-	AActor* MapActor = UGameplayStatics::GetActorOfClass(GetWorld(), AMapCamera::StaticClass());
-	MapCamera = Cast<AMapCamera>(MapActor);
+	OnCombatModeUpdated(OwningCombatCharacter);
 
-	AddUIWidgets();
+	if (OwningCombatCharacter->GetMountedGun())
+	{
+		OwningCombatCharacter->GetMountedGun()->SetPlayerControl(this, OwningCombatCharacter);
+	}
+	else if (OwningCombatCharacter->GetVehicletSeat().OwningVehicle)
+	{
+		SetViewTargetWithBlend(OwningCombatCharacter->GetVehicletSeat().OwningVehicle, 0.0f);
+	}
 
-	BeginCheckInteractable();
 
+	// Character can be spawned in to use MG such as helicopter gunner
+	UseMountedGun();
+
+	UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
+	HealthComp->SetRegenerateHealth(true);
+	HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthUpdate);
+
+
+	PlayerFaction = OwningCombatCharacter->GetTeamFactionComponent()->GetSelectedFaction();
 
 	OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
 	if (OverlapSphere)
@@ -111,6 +101,18 @@ void ACustomPlayerController::InitBeginPlayCommon()
 		OverlapSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
 	}
+
+
+
+	InitBeginPlayUncommon();
+
+	// Get Map camera
+	AActor* MapActor = UGameplayStatics::GetActorOfClass(GetWorld(), AMapCamera::StaticClass());
+	MapCamera = Cast<AMapCamera>(MapActor);
+
+	AddUIWidgets();
+
+	BeginCheckInteractable();
 
 	OnInteractionFound.Broadcast("", "");
 }
