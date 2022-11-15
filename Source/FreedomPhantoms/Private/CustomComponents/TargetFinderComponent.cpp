@@ -39,8 +39,8 @@ UTargetFinderComponent::UTargetFinderComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-	TargetSightRadius = 5000.0f;
-	LoseSightRadius = 5500.f;
+	TargetSightRadius = 7000.0f;
+	LoseSightRadius = 7500.f;
 	FinderLimit = 5;
 
 	CountdownTargetLost = 5.f;
@@ -71,22 +71,22 @@ void UTargetFinderComponent::Init()
 	SetFindTargetPerFrame(FindTargetPerFrame);
 
 	// Alternative to AI Sight Perception in case 360 sight is wanted
-	if (CreateTargetSphere && TargetSightSphere == nullptr)
+	if (TargetSightSphere == nullptr)
 	{
 		/**
 		* Uncomment if TargetSightSphere is needed again if it helps drop FPS.
 		*/
 
-		//TargetSightSphere = NewObject<USphereComponent>(GetOwner());
+		TargetSightSphere = NewObject<USphereComponent>(GetOwner());
 
-		//if (TargetSightSphere)
-		//{
-		//	TargetSightSphere->RegisterComponent();
-		//	TargetSightSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-		//	TargetSightSphere->SetSphereRadius(TargetSightRadius);
-		//	TargetSightSphere->SetCanEverAffectNavigation(false);
-		//	TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
-		//}
+		if (TargetSightSphere)
+		{
+			TargetSightSphere->RegisterComponent();
+			TargetSightSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+			TargetSightSphere->SetSphereRadius(TargetSightRadius);
+			TargetSightSphere->SetCanEverAffectNavigation(false);
+			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
+		}
 	}
 
 	if (FindTargetPerFrame)
@@ -119,10 +119,10 @@ TArray<AActor*> UTargetFinderComponent::GetActorsInRadius(float Radius)
 
 	TArray<AActor*> OutActors;
 
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetOwner()->GetActorLocation(), Radius, CollisionChannels, AActor::StaticClass(), ActorsToIgnore, OutActors);
+	//UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetOwner()->GetActorLocation(), Radius, CollisionChannels, AActor::StaticClass(), ActorsToIgnore, OutActors);
 
 	// Get all overlapped actors based that have team faction component attached
-	//TargetSightSphere->GetOverlappingActors(OutActors, AActor::StaticClass());
+	TargetSightSphere->GetOverlappingActors(OutActors, AActor::StaticClass());
 
 	return OutActors;
 }
@@ -154,13 +154,13 @@ AActor* UTargetFinderComponent::FindTarget()
 		return nullptr;
 	}
 
-	//if (!TargetSightSphere) {
-	//	Init();
+	if (!TargetSightSphere) {
+		Init();
 
-	//	if (!TargetSightSphere) {
-	//		return nullptr;
-	//	}
-	//}
+		if (!TargetSightSphere) {
+			return nullptr;
+		}
+	}
 
 	TArray<AActor*> OutActors = GetActorsInRadius(TargetSightRadius);
 

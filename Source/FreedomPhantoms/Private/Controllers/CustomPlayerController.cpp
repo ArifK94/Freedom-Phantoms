@@ -64,6 +64,7 @@ void ACustomPlayerController::InitBeginPlayCommon()
 
 
 	if (!OwningCombatCharacter) {
+		DisableInput(this);
 		return;
 	}
 

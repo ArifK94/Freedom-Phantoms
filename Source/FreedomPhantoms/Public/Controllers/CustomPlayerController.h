@@ -167,7 +167,8 @@ public:
 	virtual void BeginPlay() override;
 
 	// Rather than copying entire amount of code to be inherited by subclasses, common functionality should be passed here
-	void InitBeginPlayCommon();
+	UFUNCTION(BlueprintCallable)
+		void InitBeginPlayCommon();
 
 	/** This exists to help unarmed controller class not inherit all combat begin play functions */
 	virtual void InitBeginPlayUncommon();
