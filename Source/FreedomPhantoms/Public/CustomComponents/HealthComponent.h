@@ -97,6 +97,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 		static void ApplyDamage(FHealthParameters HealthParameters);
 
+	UFUNCTION(BlueprintCallable)
+		static void ApplyExplosionDamage(AActor* DamageCauser, FVector ImpactPoint, float Radius, float Damage);
+
+
 	void Revive();
 
 	float GetCurrentHealth() {
