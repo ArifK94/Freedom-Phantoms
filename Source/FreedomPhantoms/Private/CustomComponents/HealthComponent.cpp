@@ -69,6 +69,53 @@ void UHealthComponent::ApplyDamage(FHealthParameters HealthParameters)
 	}
 }
 
+void UHealthComponent::ApplyExplosionDamage(AActor* DamageCauser, FVector ImpactPoint, float Radius, float Damage)
+{
+	// create a collision sphere
+	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(Radius);
+
+	// create tarray for hit results
+	TArray<FHitResult> OutHits;
+
+	// check if something got hit in the sweep
+	bool isHit = DamageCauser->GetWorld()->SweepMultiByChannel(OutHits, ImpactPoint, ImpactPoint, FQuat::Identity, ECC_Visibility, MyColSphere);
+
+	TArray<AActor*> DamagedActors;
+
+	if (isHit)
+	{
+		// loop through TArray
+		for (auto& Hit : OutHits)
+		{
+			AActor* DamagedActor = Hit.GetActor();
+			if (DamagedActor && !DamagedActors.Contains(DamagedActor))
+			{
+				DamagedActors.Add(DamagedActor);
+			}
+		}
+
+		for (auto DamagedActor : DamagedActors)
+		{
+			UHealthComponent* DamagedHealthComponent = Cast<UHealthComponent>(DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
+
+			if (DamagedHealthComponent)
+			{
+				FHealthParameters HealthParameters;
+				HealthParameters.Damage = Damage;
+				HealthParameters.DamagedActor = DamagedActor;
+				HealthParameters.DamageCauser = DamageCauser;
+				HealthParameters.IsExplosive = true;
+				DamagedHealthComponent->OnDamage(HealthParameters);
+			}
+
+			auto HitProjectile = Cast<AProjectile>(DamagedActor);
+			if (HitProjectile && HitProjectile->IsExplosive()) {
+				HitProjectile->SelfDestruct();
+			}
+		}
+	}
+}
+
 
 void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 {
