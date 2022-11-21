@@ -1141,7 +1141,7 @@ void ACustomPlayerController::UseInteractableActor()
 		Interactable = CurrentSupportPackage;
 	}
 
-	if (Interactable)
+	if (UKismetSystemLibrary::IsValid(Interactable))
 	{
 		// Can use the interactable?
 		auto CanUseInteractable = IInteractable::Execute_OnUseInteraction(Interactable, OwningCombatCharacter, this);
