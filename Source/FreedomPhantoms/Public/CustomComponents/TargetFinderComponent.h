@@ -26,6 +26,11 @@ private:
 	*/
 	AActor* LastSeenTarget;
 
+	/**
+	* Actors which have been set as non-targets e.g. friendlies should not be processed again to avoid performance issues.
+	*/
+	TArray<AActor*> ProcessedIgnoreActors;
+
 	UPROPERTY()
 		FTargetSearchParameters LastSeenTargetParam;
 
@@ -102,6 +107,8 @@ private:
 
 	/** Remove last seen target */
 	void ClearLastSeenTarget();
+
+	void AddToIgnoreProcessed(AActor* Actor);
 
 protected:
 	virtual void BeginPlay() override;

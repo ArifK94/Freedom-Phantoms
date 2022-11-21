@@ -185,12 +185,18 @@ AActor* UTargetFinderComponent::FindTarget()
 
 		AActor* PotentialEnemy = OutActors[index];
 
-		if (!PotentialEnemy) {
+		if (!UKismetSystemLibrary::IsValid(PotentialEnemy)) {
+			continue;
+		}
+
+		// Do not process the same actors if already added to the ignore list so we can save performance.
+		if (ProcessedIgnoreActors.Contains(PotentialEnemy)) {
 			continue;
 		}
 
 		// is this the owner?
 		if (PotentialEnemy == GetOwner()) {
+			AddToIgnoreProcessed(PotentialEnemy);
 			continue;
 		}
 
@@ -202,6 +208,7 @@ AActor* UTargetFinderComponent::FindTarget()
 
 			// If no children actors are potential targets then skip 
 			if (!PotentialEnemy) {
+				AddToIgnoreProcessed(PotentialEnemy);
 				continue;
 			}
 
@@ -211,6 +218,7 @@ AActor* UTargetFinderComponent::FindTarget()
 
 		// Does not have a faction component or is neutral?
 		if (!TeamFaction || TeamFaction->GetSelectedFaction() == TeamFaction::Neutral) {
+			AddToIgnoreProcessed(PotentialEnemy);
 			continue;
 		}
 
@@ -218,6 +226,7 @@ AActor* UTargetFinderComponent::FindTarget()
 
 		// is target alive
 		if (!IsAlive) {
+			AddToIgnoreProcessed(PotentialEnemy);
 			continue;
 		}
 
@@ -225,6 +234,7 @@ AActor* UTargetFinderComponent::FindTarget()
 
 		// ignore if friendly
 		if (IsFriendly) {
+			AddToIgnoreProcessed(PotentialEnemy);
 			continue;
 		}
 
@@ -428,6 +438,14 @@ void UTargetFinderComponent::ClearLastSeenTarget()
 	LastSeenTarget = nullptr;
 
 	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_CountdownTargetLost);
+}
+
+void UTargetFinderComponent::AddToIgnoreProcessed(AActor* Actor)
+{
+	if (Actor && !ProcessedIgnoreActors.Contains(Actor))
+	{
+		ProcessedIgnoreActors.Add(Actor);
+	}
 }
 
 bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
