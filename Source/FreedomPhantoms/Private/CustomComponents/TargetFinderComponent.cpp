@@ -11,6 +11,7 @@
 
 #include "GameFramework/Character.h"
 #include "Components/SphereComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
@@ -21,7 +22,7 @@ void UTargetFinderComponent::SetFindTargetPerFrame(bool Value)
 	{
 		if (!THandler_TargetSearch.IsValid())
 		{
-			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 1.f, true);
+			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 1.0f, true);
 		}
 	}
 	else
@@ -222,19 +223,18 @@ AActor* UTargetFinderComponent::FindTarget()
 			continue;
 		}
 
-		bool IsAlive = UHealthComponent::IsAlive(PotentialEnemy);
-
-		// is target alive
-		if (!IsAlive) {
-			AddToIgnoreProcessed(PotentialEnemy);
-			continue;
-		}
-
 		bool IsFriendly = UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
 
 		// ignore if friendly
 		if (IsFriendly) {
 			AddToIgnoreProcessed(PotentialEnemy);
+			continue;
+		}
+
+		bool IsAlive = UHealthComponent::IsAlive(PotentialEnemy);
+
+		// is target alive? Do not add this to ignore list as the enemy can be revived if wounded.
+		if (!IsAlive) {
 			continue;
 		}
 
@@ -322,11 +322,6 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 		return false;
 	}
 
-	// check if target actor within lost sight radius.
-	TArray<AActor*> OutActors = GetActorsInRadius(LoseSightRadius);
-
-	bool IsTargetInRadius = OutActors.Contains(TargetActor);
-
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
 	FVector EyeLocation;
 	FRotator EyeRotation;
@@ -337,7 +332,6 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 	// check if can see the target
 	FHitResult HitTargetResult;
 	auto Trace = GetTrace(HitTargetResult, EyeLocation, ActorLocation);
-
 
 	if (Trace && HitTargetResult.GetActor() == TargetActor)
 	{
@@ -363,6 +357,44 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 			TargetLocation = EnemyEyeLocation;
 			return true;
 		}
+	}
+
+
+	// if not hit the target actor yet, line trace any of its child meshes.
+	auto TargetComponents = TargetActor->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
+
+	for (auto TargetComponent : TargetComponents)
+	{
+		auto SkelComp = Cast<USkeletalMeshComponent>(TargetComponent);
+
+		// Find a random bone to trace rather than trace each bone to save a bit of performance. 
+		// Some bones can be trasnformed away from the character mesh and so the trace will return nothing about the target.
+		auto BoneIndex = FMath::RandRange(0, SkelComp->GetNumBones());
+		FHitResult OutHitComponent;
+		auto CompTrace = GetTrace(OutHitComponent, EyeLocation, SkelComp->GetBoneLocation(SkelComp->GetBoneName(BoneIndex)));
+
+		if (CompTrace && (HitTargetResult.GetComponent() == TargetComponent || HitTargetResult.GetActor() == TargetActor))
+		{
+			TargetLocation = SkelComp->GetBoneLocation(SkelComp->GetBoneName(BoneIndex));
+			return true;
+		}
+
+		/**
+		* Uncomment this in the future in case a better solution with good perfomrance is foumd. This code is too expensive and drains the perfomrance.
+		*/
+
+		// iterate each bone to check if any bone can be hit, if so, then target can be seen.
+		//for (auto i = 0; i < SkelComp->GetNumBones(); i++)
+		//{
+		//	FHitResult OutHitComponent;
+		//	auto CompTrace = GetTrace(OutHitComponent, EyeLocation, SkelComp->GetBoneLocation(SkelComp->GetBoneName(i)));
+
+		//	if (CompTrace && (HitTargetResult.GetComponent() == TargetComponent || HitTargetResult.GetActor() == TargetActor))
+		//	{
+		//		TargetLocation = SkelComp->GetBoneLocation(SkelComp->GetBoneName(i));
+		//		return true;
+		//	}
+		//}
 	}
 
 	return false;
