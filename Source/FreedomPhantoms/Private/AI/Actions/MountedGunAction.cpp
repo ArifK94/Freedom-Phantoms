@@ -39,14 +39,14 @@ bool UMountedGunAction::CanRun(AAIController* Controller, APawn* Pawn) const
 
 	if (OwningCombatCharacter->GetMountedGun()) {
 
-		// enemy is behind MG?
-		if (SharedService::IsTargetBehind(OwningCombatCharacter->GetMountedGun(), CombatAIController->GetEnemyActor())) {
+		// Enemy is within MG range?
+		if (!CombatAIController->GetMountedGunFinderComponent()->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
 			OwningCombatCharacter->DropMountedGun();
 			return false;
 		}
 
-		// Enemy is within MG range?
-		if (!CombatAIController->GetMountedGunFinderComponent()->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
+		// if there is an enemy, is the MG able to point at the enemy?
+		if (CombatAIController->GetEnemyActor() && !CombatAIController->GetMountedGunFinderComponent()->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
 			OwningCombatCharacter->DropMountedGun();
 			return false;
 		}
@@ -64,17 +64,24 @@ bool UMountedGunAction::CanRun(AAIController* Controller, APawn* Pawn) const
 			return false;
 		}
 
-		// if there is an enemy, is the MG able to point at the enemy?
-		if (CombatAIController->GetEnemyActor() && !CombatAIController->GetMountedGunFinderComponent()->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
-			OwningCombatCharacter->DropMountedGun();
-			return false;
+		// If near MG
+		if (FVector::Distance(OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos()) < 100.f)
+		{
+			// enemy is behind MG?
+			if (SharedService::IsTargetBehind(OwningCombatCharacter->GetMountedGun(), CombatAIController->GetEnemyActor())) {
+				OwningCombatCharacter->DropMountedGun();
+				return false;
+			}
+
+			// is enemy behind me?
+			if (SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
+				// Still posssess MG when enemy is no longer behing AI
+				OwningCombatCharacter->DropMountedGun(false);
+				return false;
+			}
 		}
 
-		else if (SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
-			// Still posssess MG when enemy is no longer behing AI
-			OwningCombatCharacter->DropMountedGun(false);
-			return false;
-		}
+
 	}
 	else {
 		return false;
