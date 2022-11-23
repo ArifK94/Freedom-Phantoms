@@ -43,8 +43,6 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 {
 	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
-	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
-	MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
 
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -177,7 +175,7 @@ void ACombatAIController::Init()
 
 	if (!MountedGunFinderComponent)
 	{
-		MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(OwningCombatCharacter);
+		MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(this);
 
 		if (MountedGunFinderComponent)
 		{

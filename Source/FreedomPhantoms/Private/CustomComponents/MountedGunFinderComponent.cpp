@@ -21,6 +21,10 @@ void UMountedGunFinderComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (SearchRadius <= 0.f) {
+		SearchRadius = 500.0f;
+	}
+
 	DefaultSearchRadius = SearchRadius;
 
 	Init();
@@ -32,15 +36,28 @@ void UMountedGunFinderComponent::Init()
 		return;
 	}
 
+	AController* Controller = Cast<AController>(GetOwner());
+
+	if (!Controller) {
+		return;
+	}
+
+	OwningPawn = Controller->GetPawn();
+
+	if (!OwningPawn) {
+		return;
+	}
+
 	// Alternative to AI Sight Perception in case 360 sight is wanted
 	if (SearchSphere == nullptr)
 	{
-		SearchSphere = NewObject<USphereComponent>(GetOwner());
+		SearchSphere = NewObject<USphereComponent>(OwningPawn);
 		if (SearchSphere)
 		{
 			SearchSphere->RegisterComponent();
-			SearchSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+			SearchSphere->AttachToComponent(OwningPawn->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 			SearchSphere->SetSphereRadius(SearchRadius);
+			SearchSphere->SetGenerateOverlapEvents(true);
 			SearchSphere->SetCanEverAffectNavigation(false);
 			SearchSphere->SetCollisionProfileName(TEXT("OverlapAll"));
 		}
@@ -50,7 +67,6 @@ void UMountedGunFinderComponent::Init()
 
 AMountedGun* UMountedGunFinderComponent::FindMG()
 {
-	auto owner = GetOwner();
 	AMountedGun* SelectedMG = nullptr;
 
 	if (!SearchSphere) {
@@ -69,13 +85,13 @@ AMountedGun* UMountedGunFinderComponent::FindMG()
 	// The current limit of targets to process
 	int CurrentSearchCount = 0;
 
-	for (int index = 0; index < ActorsInSight.Num(); index++)
+	for (int i = 0; i < ActorsInSight.Num(); i++)
 	{
 		if (CurrentSearchCount > SearchLimit) {
 			break;
 		}
 
-		AMountedGun* PotentialMG = Cast<AMountedGun>(ActorsInSight[index]);
+		AMountedGun* PotentialMG = Cast<AMountedGun>(ActorsInSight[i]);
 
 		if (PotentialMG)
 		{
@@ -84,7 +100,7 @@ AMountedGun* UMountedGunFinderComponent::FindMG()
 
 			if (HasNoOwner && PotentialMG->GetCanTraceInteraction())
 			{
-				float DistanceDiff = FVector::Dist(GetOwner()->GetActorLocation(), PotentialMG->GetActorLocation());
+				float DistanceDiff = FVector::Dist(OwningPawn->GetActorLocation(), PotentialMG->GetActorLocation());
 
 				if (DistanceDiff < TargetSightDistance)
 				{

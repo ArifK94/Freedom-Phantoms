@@ -70,18 +70,25 @@ private:
 		class UUtilityAIComponent* UtilityAIComponent;
 	class UCombatAction* CombatAction;
 
-	UAIMovementComponent* AIMovementComponent;
 
-	UPatrolFollowerComponent* PatrolFollowerComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UAIMovementComponent * AIMovementComponent;
 
-	UCoverFinderComponent* CoverFinderComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UPatrolFollowerComponent * PatrolFollowerComponent;
 
-	UStrongholdDefenderComponent* StrongholdDefenderComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UCoverFinderComponent* CoverFinderComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UStrongholdDefenderComponent* StrongholdDefenderComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UTargetFinderComponent* TargetFinderComponent;
 
-	UMountedGunFinderComponent* MountedGunFinderComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UMountedGunFinderComponent* MountedGunFinderComponent;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))

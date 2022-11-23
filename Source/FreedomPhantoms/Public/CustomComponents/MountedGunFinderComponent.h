@@ -26,6 +26,8 @@ private:
 
 	float DefaultSearchRadius;
 
+	APawn* OwningPawn;
+
 public:	
 	UMountedGunFinderComponent();
 
