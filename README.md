@@ -1,2 +1,7 @@
-# CallOfFreedomPhantoms
-Personal Project
+# Freedom Phantoms
+
+Freedom Phantoms is a third person shooter inspired by Call of Duty: Modern Warfare 2 & Freedom Fighters. With the fusion of audio, 3D models and other resources extracted from Modern Warfare 2 as well as gameplay mechanics from Freedom Fighters, the end result would simulate a similar gameplay experience which I personally enjoyed when playing with these products.
+
+The purpose of creating this game was to gain exposure to Unreal Engine tools as much as possible. As a developer, I looked towards improving my technical & interpersonal skills when developing this project. Given my focus as a programmer, I heavily relied on third party resources such as 3D models, character animations etc. as my skillset outside of a coder is very little. Since my plan was not to make any commercial profit from this personal project, I decided it would not be in my best interest to buy these reources as even buying an character animation or character model pack would be quite expensive. This then drew my attention to extract Modern Warfare 2 models as the resources such as artwork seemed quite impressive.
+
+As mentioned, this is a personal project not used for commerical purposes.
