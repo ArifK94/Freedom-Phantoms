@@ -252,7 +252,7 @@ void UHealthComponent::Revive()
 	HasUnlimitedHealth = DefaulUnlimitedHealth;
 }
 
-bool UHealthComponent::IsAlive(AActor* Owner)
+bool UHealthComponent::IsActorAlive(AActor* Owner)
 {
 	if (!Owner || !UKismetSystemLibrary::IsValid(Owner) || Owner->GetName() == "None") {
 		return false;
@@ -278,7 +278,7 @@ bool UHealthComponent::IsAlive(AActor* Owner)
 	return HealthComponent->IsAlive();
 }
 
-bool UHealthComponent::IsWounded(AActor* Owner)
+bool UHealthComponent::IsActorWounded(AActor* Owner)
 {
 	if (!Owner || Owner->GetName() == "None") {
 		return false;

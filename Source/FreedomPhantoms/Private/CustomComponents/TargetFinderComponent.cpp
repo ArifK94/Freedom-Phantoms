@@ -142,7 +142,7 @@ bool UTargetFinderComponent::CanSeeLastTarget()
 	}
 
 
-	if (!UHealthComponent::IsAlive(LastSeenTarget)) {
+	if (!UHealthComponent::IsActorAlive(LastSeenTarget)) {
 		return false;
 	}
 
@@ -231,7 +231,7 @@ AActor* UTargetFinderComponent::FindTarget()
 			continue;
 		}
 
-		bool IsAlive = UHealthComponent::IsAlive(PotentialEnemy);
+		bool IsAlive = UHealthComponent::IsActorAlive(PotentialEnemy);
 
 		// is target alive? Do not add this to ignore list as the enemy can be revived if wounded.
 		if (!IsAlive) {
@@ -278,7 +278,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		ClearLastSeenTarget();
 	}
 	// if last target is still alive?
-	else if (UHealthComponent::IsAlive(LastSeenTarget))
+	else if (UHealthComponent::IsActorAlive(LastSeenTarget))
 	{
 		// begin countdown to clear the last target but stay on the last target until countdown has finished.
 		if (!THandler_CountdownTargetLost.IsValid())

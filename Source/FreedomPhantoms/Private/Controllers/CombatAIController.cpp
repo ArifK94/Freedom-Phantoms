@@ -443,7 +443,7 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 		
 		auto IsTargetClose = SharedService::IsNearTargetPosition(OwningCombatCharacter, EnemyActor, EnemyCloseRange);
 
-		bool IsEnemyAlive = UHealthComponent::IsAlive(EnemyCharacter);
+		bool IsEnemyAlive = UHealthComponent::IsActorAlive(EnemyCharacter);
 
 		// is enemy alive?
 		// AI can still see enemy if either enemy.

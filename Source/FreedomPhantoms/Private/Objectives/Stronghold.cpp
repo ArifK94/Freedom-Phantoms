@@ -89,7 +89,7 @@ void AStronghold::CheckOverlappingCombatatant()
 			continue;
 		}
 
-		if (!UHealthComponent::IsAlive(CombatCharacter)) {
+		if (!UHealthComponent::IsActorAlive(CombatCharacter)) {
 			continue;
 		}
 
@@ -269,7 +269,7 @@ void AStronghold::UpdateDefenders()
 		auto Character = DefendingCombatatants[i];
 
 		// if dead or has been recruited by commander then it is no longer a stronghold 
-		if (!UHealthComponent::IsAlive(Character) || Character->GetCommander() != nullptr)
+		if (!UHealthComponent::IsActorAlive(Character) || Character->GetCommander() != nullptr)
 		{
 			RemoveDefender(Character);
 		}

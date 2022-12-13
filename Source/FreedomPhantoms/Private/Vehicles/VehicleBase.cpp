@@ -192,7 +192,7 @@ void AVehicleBase::UpdatePassengerSeats()
 	{
 		auto Character = PassengerList[i]->Character;
 
-		if (Character == nullptr || Character->GetName() == "None" || !UHealthComponent::IsAlive(Character))
+		if (Character == nullptr || Character->GetName() == "None" || !UHealthComponent::IsActorAlive(Character))
 		{
 			VehicleSeatPtrList.RemoveAt(i);
 		}
@@ -631,7 +631,7 @@ void AVehicleBase::UpdateWeaponView()
 	{
 		auto Seat = VehicleSeatPtrList[CurrentWeaponIndex - 1];
 
-		if (UHealthComponent::IsAlive(Seat->Character)) {
+		if (UHealthComponent::IsActorAlive(Seat->Character)) {
 
 			Seat->Character->AutoPossessPlayer = EAutoReceiveInput::Disabled;
 			if (Seat->Character->GetDefaultAIController())
@@ -651,7 +651,7 @@ void AVehicleBase::UpdateWeaponView()
 		// Player possessing is required if the character is posseseed by the AI controller
 		auto Seat = VehicleSeatPtrList[CurrentWeaponIndex];
 
-		if (UHealthComponent::IsAlive(Seat->Character)) {
+		if (UHealthComponent::IsActorAlive(Seat->Character)) {
 
 			if (Seat->Character->GetDefaultAIController()) {
 				Seat->Character->GetDefaultAIController()->UnPossess();
@@ -881,7 +881,7 @@ void AVehicleBase::UpdateMarker(TArray<FTargetSystemNode> TargetSystemNodes)
 	for (int i = TargetSystemNodes.Num() - 1; i >= 0; i--)
 	{
 		// if the target is alive
-		if (UHealthComponent::IsAlive(TargetSystemNodes[i].Actor)) {
+		if (UHealthComponent::IsActorAlive(TargetSystemNodes[i].Actor)) {
 
 			// marker to follow the actor location
 			if (TargetSystemNodes[i].Marker) {

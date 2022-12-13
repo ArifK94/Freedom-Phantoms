@@ -131,7 +131,7 @@ void ACommanderCharacter::CheckRecruit()
 	}
 
 	// if not alive
-	if (!UHealthComponent::IsAlive(CurrentTargetActor) && !UHealthComponent::IsWounded(CurrentTargetActor)) {
+	if (!UHealthComponent::IsActorAlive(CurrentTargetActor) && !UHealthComponent::IsActorWounded(CurrentTargetActor)) {
 		return;
 	}
 
@@ -156,7 +156,7 @@ void ACommanderCharacter::CheckRecruit()
 	}
 
 	// check if wounded
-	if (UHealthComponent::IsWounded(CurrentTargetActor))
+	if (UHealthComponent::IsActorWounded(CurrentTargetActor))
 	{
 		CurrentMessage = ReviveMessage;
 		PotentialRecruit = Character;
@@ -177,7 +177,7 @@ void ACommanderCharacter::InteractWithOperative()
 		return;
 	}
 
-	if (UHealthComponent::IsWounded(PotentialRecruit))
+	if (UHealthComponent::IsActorWounded(PotentialRecruit))
 	{
 		ReviveFriendly();
 	}
@@ -334,14 +334,14 @@ void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacte
 		return;
 	}
 
-	if (!UHealthComponent::IsAlive(Recruit->Recruit)) {
+	if (!UHealthComponent::IsActorAlive(Recruit->Recruit)) {
 		return;
 	}
 
 	Recruit->CurrentCommand = CommanderOrders::Attack;
 	Recruit->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Attack);
 
-	if (EnemyCharacter && UHealthComponent::IsAlive(EnemyCharacter) && !UTeamFactionComponent::IsFriendly(this, EnemyCharacter)) // if hit result is an enemy character
+	if (EnemyCharacter && UHealthComponent::IsActorAlive(EnemyCharacter) && !UTeamFactionComponent::IsFriendly(this, EnemyCharacter)) // if hit result is an enemy character
 	{
 		Recruit->HighValueTarget = EnemyCharacter;
 		Recruit->TargetLocation = EnemyCharacter->GetActorLocation();
@@ -386,7 +386,7 @@ void ACommanderCharacter::DefendArea(bool CommandAll)
 
 void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
 {
-	if (!UHealthComponent::IsAlive(Recruit->Recruit)) {
+	if (!UHealthComponent::IsActorAlive(Recruit->Recruit)) {
 		return;
 	}
 
@@ -436,7 +436,7 @@ void ACommanderCharacter::FollowCommander(bool CommandAll)
 
 void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit)
 {
-	if (!UHealthComponent::IsAlive(Recruit->Recruit)) {
+	if (!UHealthComponent::IsActorAlive(Recruit->Recruit)) {
 		return;
 	}
 
@@ -478,7 +478,7 @@ void ACommanderCharacter::UpdateActiveRecruits()
 		UCommanderRecruit* Recruit = ActiveRecruits[i];
 		ACombatCharacter* RecruitCharacter = Recruit->Recruit;
 
-		if (UHealthComponent::IsAlive(RecruitCharacter) || UHealthComponent::IsWounded(RecruitCharacter))
+		if (UHealthComponent::IsActorAlive(RecruitCharacter) || UHealthComponent::IsActorWounded(RecruitCharacter))
 		{
 			ABaseCharacter* TargetCharacter = Recruit->HighValueTarget;
 
@@ -486,7 +486,7 @@ void ACommanderCharacter::UpdateActiveRecruits()
 			// if not, then remove the overhead icon
 			if (TargetCharacter != nullptr)
 			{
-				if (!UHealthComponent::IsAlive(TargetCharacter))
+				if (!UHealthComponent::IsActorAlive(TargetCharacter))
 				{
 					// remove the HVT overhead icon from the target character's head position
 					Recruit->HighValueTargetOverheadIcon->HideIcon();
@@ -580,7 +580,7 @@ void ACommanderCharacter::SortRecruitList()
 
 			// If current recruit is wounded & the next recruit is still alive
 			// swap their index positions
-			if (UHealthComponent::IsWounded(ActiveRecruits[sort]->Recruit) && UHealthComponent::IsAlive(ActiveRecruits[sort + 1]->Recruit)) {
+			if (UHealthComponent::IsActorWounded(ActiveRecruits[sort]->Recruit) && UHealthComponent::IsActorAlive(ActiveRecruits[sort + 1]->Recruit)) {
 				auto temp = ActiveRecruits[sort + 1];
 				ActiveRecruits[sort + 1] = ActiveRecruits[sort];
 				ActiveRecruits[sort] = temp;
@@ -659,7 +659,7 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 	// find next alive recruit 
 	for (int i = CurrentRecruitIndex + 1; i < ActiveRecruits.Num(); i++) {
 
-		if (UHealthComponent::IsAlive(ActiveRecruits[i]->Recruit)) {
+		if (UHealthComponent::IsActorAlive(ActiveRecruits[i]->Recruit)) {
 			TargetIndex = i;
 			break;
 		}
@@ -670,7 +670,7 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 
 		for (int i = 0; i <= CurrentRecruitIndex; i++) {
 
-			if (UHealthComponent::IsAlive(ActiveRecruits[i]->Recruit)) {
+			if (UHealthComponent::IsActorAlive(ActiveRecruits[i]->Recruit)) {
 				TargetIndex = i;
 				break;
 			}

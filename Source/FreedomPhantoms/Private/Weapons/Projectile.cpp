@@ -740,7 +740,7 @@ void AProjectile::AlertNearbyActors()
 				continue;
 			}
 
-			if (!UHealthComponent::IsAlive(DamagedActor)) {
+			if (!UHealthComponent::IsActorAlive(DamagedActor)) {
 				continue;
 			}
 

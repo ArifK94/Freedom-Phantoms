@@ -83,10 +83,10 @@ public:
 		FOnHealthChangedSignature OnHealthChanged;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		static bool IsAlive(AActor* Owner);
+		static bool IsActorAlive(AActor* Owner);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		static bool IsWounded(AActor* Owner);
+		static bool IsActorWounded(AActor* Owner);
 
 	static void SetIsReviving(AActor* Owner, bool Value);
 

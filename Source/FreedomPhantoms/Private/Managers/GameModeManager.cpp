@@ -41,7 +41,7 @@ bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 					if (CoverLocation.Owner != CoverPoints[i].Owner)
 					{
 						// Owner is no longer alive?
-						if (!UHealthComponent::IsAlive(CoverPoints[i].Owner)) {
+						if (!UHealthComponent::IsActorAlive(CoverPoints[i].Owner)) {
 
 							// update the owner to this new owner.
 							CoverPoints[i].Owner = CoverLocation.Owner;

@@ -186,7 +186,7 @@ FVector UAIMovementComponent::FindNearbyDestinationPoint(FVector TargetDestinati
 			AActor* HitActor = Hit.GetActor();
 			if (HitActor)
 			{
-				if (UHealthComponent::IsAlive(HitActor))
+				if (UHealthComponent::IsActorAlive(HitActor))
 				{
 					// hit actor is meant to be ignored then ignore this.
 					if (!IgnoreActors.Contains(HitActor))
