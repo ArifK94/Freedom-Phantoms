@@ -469,7 +469,10 @@ void UTargetFinderComponent::ClearLastSeenTarget()
 {
 	LastSeenTarget = nullptr;
 
-	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_CountdownTargetLost);
+	if (GetOwner() && GetWorld()) 
+	{
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_CountdownTargetLost);
+	}
 }
 
 void UTargetFinderComponent::AddToIgnoreProcessed(AActor* Actor)

@@ -120,7 +120,7 @@ void AWeapon::DelayedInit()
 	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
-	if (THandler_DelayedInit.IsValid()) 
+	if (GetWorld() && THandler_DelayedInit.IsValid())
 	{
 		GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
 	}
