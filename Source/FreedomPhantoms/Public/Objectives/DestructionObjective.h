@@ -22,6 +22,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class URadialForceComponent* RadialForceComp;
 
+	/** The interval amount per countdown x seconds. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float CountdownInterval;
+
 	/** The countdown destruction timer. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float CountdownTimer;
@@ -51,6 +55,10 @@ private:
 	/** Destruction actor, usually a C4 actor or something similar to be placed on the position of the interaction.  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class AProjectile> DestructiveProjectileClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> CountdownWidgetClass;
+	UUserWidget* CountdownWidget;
 
 public:
 	ADestructionObjective();

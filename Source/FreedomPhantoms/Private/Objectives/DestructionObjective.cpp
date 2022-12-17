@@ -8,6 +8,7 @@
 
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 ADestructionObjective::ADestructionObjective()
 {
@@ -19,6 +20,7 @@ ADestructionObjective::ADestructionObjective()
 	RadialForceComp->bIgnoreOwningActor = true; // ignore self
 
 	CountdownTimer = 5.f;
+	CountdownInterval = .1f;
 	DestructionDamage = 500.f;
 
 	ObjectiveMessage = "Begin Destruction";
@@ -57,8 +59,18 @@ AActor* ADestructionObjective::OnPickup_Implementation(APawn* InPawn, AControlle
 		}
 	}
 
+	if (CountdownWidgetClass)
+	{
+		CountdownWidget = CreateWidget<UUserWidget>(GetWorld(), CountdownWidgetClass);
+
+		if (CountdownWidget)
+		{
+			CountdownWidget->AddToViewport();
+		}
+	}
+
 	CurrentCountdownTimer = CountdownTimer;
-	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &ADestructionObjective::BeginCountdown, 1.f, true);
+	GetWorldTimerManager().SetTimer(THandler_Countdown, this, &ADestructionObjective::BeginCountdown, CountdownInterval, true);
 
 	OnObjectiveInteracted.Broadcast(this);
 
@@ -119,13 +131,16 @@ void ADestructionObjective::BeginCountdown()
 	}
 	else
 	{
-		if (CountdownSound)
+		// Play sound when countdown has reached a whole number.
+		auto RoundedCountdown = FMath::Fmod(CurrentCountdownTimer, 1);
+
+		if (CountdownSound && RoundedCountdown < 0.1)
 		{
 			UGameplayStatics::PlaySound2D(GetWorld(), CountdownSound);
 		}
 	}
 
-	CurrentCountdownTimer -= 1.f;
+	CurrentCountdownTimer -= CountdownInterval;
 
 }
 
