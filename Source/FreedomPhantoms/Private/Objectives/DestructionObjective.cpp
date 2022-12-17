@@ -79,7 +79,7 @@ AActor* ADestructionObjective::OnPickup_Implementation(APawn* InPawn, AControlle
 
 bool ADestructionObjective::OnUseInteraction_Implementation(APawn* InPawn, AController* InController)
 {
-	return true;
+	return false;
 }
 
 bool ADestructionObjective::CanInteract_Implementation(APawn* InPawn, AController* InController)

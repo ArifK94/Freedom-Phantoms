@@ -1136,6 +1136,7 @@ void ACustomPlayerController::UseInteractableActor()
 
 	auto Interactable = CollectedInteractableActor;
 
+	// if has no collectable interaction then make the current support package available for interaction.
 	if (!Interactable)
 	{
 		Interactable = CurrentSupportPackage;
@@ -1146,11 +1147,17 @@ void ACustomPlayerController::UseInteractableActor()
 		// Can use the interactable?
 		auto CanUseInteractable = IInteractable::Execute_OnUseInteraction(Interactable, OwningCombatCharacter, this);
 
-		// Can use the interactable?
+		// Cannot interact? 
 		if (!CanUseInteractable)
 		{
 			CollectedInteractableActor = nullptr;
-			return;
+
+			// if the interactable is not the current support package, then try interacting with the support package.
+			// Instances like this can occur if player just interacted with an objective but the objective cannot be used.
+			if (Interactable != CurrentSupportPackage && UKismetSystemLibrary::IsValid(CurrentSupportPackage))
+			{
+				CanUseInteractable = IInteractable::Execute_OnUseInteraction(CurrentSupportPackage, OwningCombatCharacter, this);
+			}
 		}
 	}
 }
