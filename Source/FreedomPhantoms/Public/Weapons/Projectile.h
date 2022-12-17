@@ -205,6 +205,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnProjectileImpactSignature OnProjectileImpact;
 
+	void SetCountdownTimer(float Value);
+
 	/** Perform a missle target. */
 	void FindHomingTarget(AActor* TargetActor);
 
@@ -272,8 +274,6 @@ public:
 	bool IsExplosive() {
 		return isAnExplosive;
 	}
-
-	void SetCountdownTimer(float Value) { CountdownTimer = Value; }
 
 	bool GetIgnoreDamage() { return IgnoreDamage; }
 };

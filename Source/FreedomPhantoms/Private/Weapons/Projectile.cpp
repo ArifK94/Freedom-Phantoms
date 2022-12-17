@@ -792,6 +792,19 @@ bool AProjectile::IsInAir()
 	);
 }
 
+void AProjectile::SetCountdownTimer(float Value)
+{
+	// stop the current countdown if counting down.
+	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
+
+	CountdownTimer = Value;
+
+	// start countdown again with new value.
+	if (CountdownTimer > 0.f) {
+		GetWorldTimerManager().SetTimer(THandler_CountdownTimer, this, &AProjectile::SelfDestruct, 1.f, true, CountdownTimer);
+	}
+}
+
 void AProjectile::FindHomingTarget(AActor* TargetActor)
 {
 	if (TargetActor == nullptr || !UKismetSystemLibrary::IsValid(TargetActor)) {
