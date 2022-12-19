@@ -59,6 +59,12 @@ private:
 	UPROPERTY()
 		TArray<FObjectPoolParameters> ProjectilesPool;
 
+	/** Contains list of music sounds to be played after another. */
+	UPROPERTY()
+		TArray<USoundBase*> MusicQueueList;
+	FTimerHandle THandler_MusicQueue;
+
+
 public:
 	AGameStateBaseCustom();
 
@@ -66,6 +72,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void PlayMusic(USoundBase* Music);
+
+	UFUNCTION(BlueprintCallable)
+		void PlayMusicInQueue();
+
+	UFUNCTION(BlueprintCallable)
+		void AddMusicToQueue(USoundBase* Music);
+
+	UFUNCTION(BlueprintCallable)
+		void ClearMusicQueue();
 
 	UFUNCTION(BlueprintCallable)
 		void ContinueMusic();

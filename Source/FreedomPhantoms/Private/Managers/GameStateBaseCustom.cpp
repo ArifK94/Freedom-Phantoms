@@ -85,6 +85,8 @@ void AGameStateBaseCustom::CalculateTotalProgression()
 
 void AGameStateBaseCustom::EndGame(bool MissionPassed)
 {
+	ClearMusicQueue();
+
 	HasGameEnded = true;
 	IsMissionPassed = MissionPassed;
 
@@ -117,6 +119,38 @@ void AGameStateBaseCustom::PlayMusic(USoundBase* Music)
 
 	MusicAudioComponent->Sound = Music;
 	MusicAudioComponent->Play();
+}
+
+void AGameStateBaseCustom::PlayMusicInQueue()
+{
+	// clear timer if no music in queue.
+	if (MusicQueueList.Num() <= 0) {
+		GetWorldTimerManager().ClearTimer(THandler_MusicQueue);
+	}
+
+	USoundBase* Music = MusicQueueList[0];
+
+	MusicAudioComponent->Sound = Music;
+	MusicAudioComponent->Play();
+
+	MusicQueueList.RemoveAt(0);
+
+	GetWorldTimerManager().SetTimer(THandler_MusicQueue, this, &AGameStateBaseCustom::PlayMusicInQueue, Music->Duration, false);
+}
+
+void AGameStateBaseCustom::AddMusicToQueue(USoundBase* Music)
+{
+	if (!Music) {
+		return;
+	}
+
+	MusicQueueList.Add(Music);
+}
+
+void AGameStateBaseCustom::ClearMusicQueue()
+{
+	GetWorldTimerManager().ClearTimer(THandler_MusicQueue);
+	MusicQueueList.Empty();
 }
 
 void AGameStateBaseCustom::ContinueMusic()
