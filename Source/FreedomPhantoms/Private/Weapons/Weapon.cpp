@@ -128,6 +128,10 @@ void AWeapon::DelayedInit()
 
 void AWeapon::SetIsAiming(bool isAiming)
 {
+	if (!GetWorld()) {
+		return;
+	}
+
 	IsAiming = isAiming;
 
 	if (isAiming)

@@ -95,11 +95,14 @@ void ACombatAIController::Tick(float DeltaTime)
 	}
 
 	// AI can take out vehicles if holds an RPG
-	if (OwningCombatCharacter && TargetFinderComponent && (OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponType() == WeaponType::RPG || OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponType() == WeaponType::RPG))
+	if (OwningCombatCharacter && TargetFinderComponent)
 	{
-		if (!TargetFinderComponent->DoesClassFilterExist(AVehicleBase::StaticClass()))
+		if ((OwningCombatCharacter->GetPrimaryWeapon() && OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponType() == WeaponType::RPG) || (OwningCombatCharacter->GetSecondaryWeaponObj() && OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponType() == WeaponType::RPG))
 		{
-			TargetFinderComponent->AddClassFilter(AVehicleBase::StaticClass());
+			if (!TargetFinderComponent->DoesClassFilterExist(AVehicleBase::StaticClass()))
+			{
+				TargetFinderComponent->AddClassFilter(AVehicleBase::StaticClass());
+			}
 		}
 	}
 

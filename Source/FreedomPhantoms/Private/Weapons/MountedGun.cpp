@@ -40,6 +40,10 @@ void AMountedGun::SetIsAiming(bool isAiming)
 {
 	Super::SetIsAiming(isAiming);
 
+	if (!GetWorld()) {
+		return;
+	}
+
 	// clear Zoom timers if running
 	if (THandler_ZoomFOVIn.IsValid()) {
 		GetWorldTimerManager().ClearTimer(THandler_ZoomFOVIn);
@@ -180,6 +184,10 @@ void AMountedGun::SetRotationInput(FRotator TargetRotation)
 
 void AMountedGun::SetRotationInput(FRotator TargetRotation, float LerpSpeed)
 {
+	if (!GetWorld()) {
+		return;
+	}
+
 	RotationInput = UKismetMathLibrary::RInterpTo(RotationInput, TargetRotation, GetWorld()->DeltaTimeSeconds, LerpSpeed);
 }
 
@@ -228,6 +236,10 @@ void AMountedGun::ResetCamera()
 
 void AMountedGun::ZoomIn()
 {
+	if (!GetWorld()) {
+		return;
+	}
+
 	if (FollowCamera->FieldOfView > TargetFOV)
 	{
 		FollowCamera->FieldOfView--;
@@ -244,6 +256,10 @@ void AMountedGun::ZoomIn()
 
 void AMountedGun::ZoomOut()
 {
+	if (!GetWorld()) {
+		return;
+	}
+
 	if (FollowCamera->FieldOfView < TargetFOV)
 	{
 		FollowCamera->FieldOfView++;
