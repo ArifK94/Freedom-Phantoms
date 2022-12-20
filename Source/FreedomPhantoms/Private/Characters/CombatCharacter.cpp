@@ -1062,7 +1062,7 @@ void ACombatCharacter::BeginReload()
 	}
 
 	// reloading grenades shouldn't require to play reload voice sound.
-	if (currentWeaponObj != Cast<AWeapon>(GrenadeWeapon)) {
+	if (currentWeaponObj != Cast<AWeapon>(GrenadeWeapon) && UKismetMathLibrary::RandomBool()) {
 		PlayVoiceSound(GetVoiceClipsSet()->ReloadingSound);
 	}
 }
@@ -1192,7 +1192,10 @@ void ACombatCharacter::EnemyKilled()
 		return;
 	}
 
-	PlayVoiceSound(GetVoiceClipsSet()->EnemyDownSound);
+	if (UKismetMathLibrary::RandomBool())
+	{
+		PlayVoiceSound(GetVoiceClipsSet()->EnemyDownSound);
+	}
 
 	HasPlayedEnemyKilledSound = true;
 

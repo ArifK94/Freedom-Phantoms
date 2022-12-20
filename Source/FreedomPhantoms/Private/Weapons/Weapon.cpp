@@ -375,7 +375,6 @@ bool AWeapon::IsFacingCrosshair()
 	// if dot product is more than x amount, then weapon muzzle is facing in the same direction as the eye location meaning the weapon can fire.
 	return Angle > CrosshairErrorTolerance;
 }
-#include "Weapons/AutoTurretWeapon.h"
 
 void AWeapon::Fire()
 {
