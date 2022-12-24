@@ -83,18 +83,21 @@ void ACombatCharacter::BeginPlay()
 		GrenadeWeapon->SetOwner(this);
 	}
 
-	if (Loadout && WeaponsDataSet) 
+	if (Loadout)
 	{
 		// get random weapon if not selected from main menu, this is should be null for AI characters
-		if (primaryWeaponObj == nullptr) {
-			primaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, true);
+		if (primaryWeaponObj == nullptr)
+		{
+			primaryWeaponObj = PrimaryWeaponClass ? Loadout->SpawnWeapon(PrimaryWeaponClass, true) : Loadout->SpawnWeapon(WeaponsDataSet, true);
 		}
 
-		if (secondaryWeaponObj == nullptr) {
-			secondaryWeaponObj = Loadout->SpawnWeapon(WeaponsDataSet, false);
+		if (secondaryWeaponObj == nullptr)
+		{
+			secondaryWeaponObj = SecondaryWeaponClass ? Loadout->SpawnWeapon(SecondaryWeaponClass, false) : Loadout->SpawnWeapon(WeaponsDataSet, false);
 		}
 
-		if (GrenadeWeapon == nullptr) {
+		if (GrenadeWeapon == nullptr) 
+		{
 			GrenadeWeapon = Loadout->SpawnGrenade(WeaponsDataSet);
 		}
 	}
@@ -1227,7 +1230,7 @@ void ACombatCharacter::UseMountedGun()
 	EndAim();
 
 	isUsingMountedWeapon = true;
-	
+
 	HolsterWeapon();
 
 	MountedGun->SetOwner(this);
@@ -1256,7 +1259,7 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 	}
 
 	// prevent drop animations if not using MG.
-	if (isUsingMountedWeapon) 
+	if (isUsingMountedWeapon)
 	{
 		EndFire();
 		EndAim();
@@ -1277,7 +1280,7 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 		GrabWeapon();
 	}
 
-	if (ClearMG) 
+	if (ClearMG)
 	{
 		MountedGun->SetOwner(nullptr);
 		MountedGun->SetPotentialOwner(nullptr);

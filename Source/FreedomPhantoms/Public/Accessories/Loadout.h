@@ -34,8 +34,11 @@ public:
 public:	
 	ALoadout();
 
-	// If primary is true, then spawn primary weapon otherwise spawn secondary
+	/** If primary is true, then spawn primary weapon otherwise spawn secondary */
 	AWeapon* SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary);
+
+	/** If primary is true, then spawn primary weapon otherwise spawn secondary */
+	AWeapon* SpawnWeapon(TSubclassOf<AWeapon> WeaponClass, bool IsPrimary);
 
 	AThrowableWeapon* SpawnGrenade(FWeaponsSet* WeaponsDataSet);
 

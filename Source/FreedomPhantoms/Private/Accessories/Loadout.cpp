@@ -45,6 +45,10 @@ void ALoadout::SimlateBones()
 
 AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 {
+	if (!WeaponsDataSet) {
+		return nullptr;
+	}
+
 	int RandomIndex = 0;
 	AWeapon* Weapon = nullptr;
 
@@ -93,6 +97,26 @@ AWeapon* ALoadout::SpawnWeapon(FWeaponsSet* WeaponsDataSet, bool IsPrimary)
 	if (Weapon)
 	{
 		Weapon->SetOwner(GetOwner());
+		HolsterWeapon(Weapon);
+	}
+
+	return Weapon;
+}
+
+AWeapon* ALoadout::SpawnWeapon(TSubclassOf<AWeapon> WeaponClass, bool IsPrimary)
+{
+	if (!WeaponClass) {
+		return nullptr;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (!IsPrimary)
+	{
 		HolsterWeapon(Weapon);
 	}
 

@@ -103,8 +103,16 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* currentWeaponObj;
 
+	/** Attach if specific weapon is to be set. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AWeapon> PrimaryWeaponClass;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* primaryWeaponObj;
+
+	/** Attach if specific weapon is to be set. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AWeapon> SecondaryWeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AWeapon* secondaryWeaponObj;
