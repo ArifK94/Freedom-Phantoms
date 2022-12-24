@@ -24,12 +24,12 @@ AActorSpawner::AActorSpawner()
 	SpawnArea = CreateDefaultSubobject<UBoxComponent>("SpawnArea");
 	SpawnArea->SetCollisionProfileName(TEXT("NoCollision"));
 	SpawnArea->CanCharacterStepUpOn = ECB_No;
-	SpawnArea->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	SpawnArea->SetupAttachment(RootComponent);
 
 	TriggerArea = CreateDefaultSubobject<UBoxComponent>("TriggerArea");
 	TriggerArea->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	TriggerArea->CanCharacterStepUpOn = ECB_No;
-	TriggerArea->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	TriggerArea->SetupAttachment(RootComponent);
 
 	SpawnRate = 1.f;
 }

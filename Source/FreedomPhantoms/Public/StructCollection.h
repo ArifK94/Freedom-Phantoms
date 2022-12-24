@@ -251,7 +251,23 @@ public:
 
 	FVoiceClipSet()
 	{
-
+		TargetFoundSound = nullptr;
+		ReloadingSound = nullptr;
+		FriendlyDownSound = nullptr;
+		EnemyDownSound = nullptr;
+		RecruitSound = nullptr;
+		AcknowledgeSound = nullptr;
+		AcknowledgeCommandSound = nullptr;
+		FollowSound = nullptr;
+		AttackSound = nullptr;
+		DefendSound = nullptr;
+		RevivingSound = nullptr;
+		RevivedSound = nullptr;
+		DeathSound = nullptr;
+		DeathFallSound = nullptr;
+		GrenadeThrowSound = nullptr;
+		GrenadeIncomingSound = nullptr;
+		StrongholdCaptureSound = nullptr;
 	}
 };
 
@@ -280,6 +296,7 @@ public:
 		Audio = nullptr;
 		StartAmount = 0.f;
 		IsLoop = false;
+		AudioComponent = nullptr;
 	}
 };
 
@@ -300,9 +317,9 @@ public:
 
 	FSupportPackageVoiceOverSet()
 	{
+		Faction = TeamFaction::Neutral;
 		AnnoucementReadToUse = nullptr;
 		ReadyToUseSound = nullptr;
-		Faction = TeamFaction::Neutral;
 	}
 };
 
@@ -358,7 +375,14 @@ public:
 
 	FSupportPackageSet()
 	{
+		SupportActorClass = NULL;
+		VehicleClass = NULL;
 		Vehicle = nullptr;
+		IsControllable = false;
+		Icon = nullptr;
+		PreviewImage = nullptr;
+		PickupSound = nullptr;
+		InteractSound = nullptr;
 	}
 };
 
@@ -390,7 +414,6 @@ public:
 
 	FAccessorySet()
 	{
-
 	}
 };
 
@@ -561,7 +584,23 @@ public:
 
 	FWeaponAnimSet()
 	{
-
+		StandArmed = nullptr;
+		CrouchArmed = nullptr;
+		StandAimingBS = nullptr;
+		StartMoveBS = nullptr;
+		StartMoveCombatBS = nullptr;
+		StopMoveBS = nullptr;
+		CrouchAimingBS = nullptr;
+		CrouchStartBS = nullptr;
+		CrouchStopBS = nullptr;
+		ProneAimingBS = nullptr;
+		DrawMontage = nullptr;
+		HolsterMontage = nullptr;
+		Shooting = nullptr;
+		Reloading = nullptr;
+		AimOffsetStanding = nullptr;
+		AimOffsetCrouching = nullptr;
+		AimOffsetProning = nullptr;
 	}
 };
 
