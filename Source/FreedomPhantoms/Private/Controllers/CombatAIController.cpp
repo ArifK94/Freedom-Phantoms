@@ -539,8 +539,7 @@ void ACombatAIController::MoveToRandomPoint()
 			OwningCombatCharacter->ToggleCrouch();
 		}
 
-		StayCombatAlert = true;
-		UpdatCombatAlert();
+		SetStayCombatAlert(true);
 
 		GetWorldTimerManager().ClearTimer(THandler_MoveToNearbyDestination);
 	}
@@ -609,7 +608,7 @@ void ACombatAIController::CheckCommanderOrder()
 
 	// Assign Order Event
 	Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
-	StayCombatAlert = false; // refresh state of behaviour
+	SetStayCombatAlert(false); // refresh state of behaviour
 
 	// if NPC was a stronghold defender, then rmeove the stronghold memory actor & assign the wounded flag to true as it is a now a recruit of the commander.
 	if (StrongholdDefenderComponent->GetStronghold()) {
