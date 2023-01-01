@@ -327,6 +327,7 @@ public:
 	void ShowActorOutlineRecursive(TArray<AActor*> ParentActor, bool CanShow);
 	void SetActorOutline(AActor* Actor, bool CanShow);
 
+	virtual void UnCrouch(bool bClientSimulation = false) override;
 	void ToggleCrouch();
 
 	void ToggleSprint();

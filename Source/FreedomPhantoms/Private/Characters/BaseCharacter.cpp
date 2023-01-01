@@ -24,6 +24,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "KismetAnimationLibrary.h"
 #include "Engine.h"
+#include "AIController.h"
 
 
 ABaseCharacter::ABaseCharacter()
@@ -499,6 +500,13 @@ void ABaseCharacter::EndSprint()
 	isSprinting = false;
 }
 
+void ABaseCharacter::UnCrouch(bool bClientSimulation)
+{
+	Super::UnCrouch(bClientSimulation);
+
+	IsCurrentlyCrouched = false;
+}
+
 void ABaseCharacter::ToggleCrouch()
 {
 	if (GetCharacterMovement()->IsCrouching())
@@ -509,13 +517,11 @@ void ABaseCharacter::ToggleCrouch()
 			if (CanCoverStand())
 			{
 				UnCrouch();
-				IsCurrentlyCrouched = false;
 			}
 		}
 		else
 		{
 			UnCrouch();
-			IsCurrentlyCrouched = false;
 		}
 	}
 	else
@@ -718,7 +724,15 @@ void ABaseCharacter::TakeCover()
 
 		if (LineTrace && OutHit.bBlockingHit)
 		{
-			StartCover(OutHit, false);
+			// since character may already be crouched, set crouch flag to true.
+			if (GetCharacterMovement()->IsCrouching())
+			{
+				StartCover(OutHit, true);
+			}
+			else
+			{
+				StartCover(OutHit, false);
+			}
 		}
 		// if not found a trace from actor location, then trace from the knees or near bottom of character, but not tracing if currently crouched.
 		else if (!GetCharacterMovement()->IsCrouching())
