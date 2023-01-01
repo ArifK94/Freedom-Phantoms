@@ -191,7 +191,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		}
 
 		// Do not process the same actors if already added to the ignore list so we can save performance.
-		if (ProcessedIgnoreActors.Contains(PotentialEnemy)) {
+		if (ProcessedIgnoreActors.Contains(PotentialEnemy->GetName())) {
 			continue;
 		}
 
@@ -361,11 +361,15 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 
 
 	// if not hit the target actor yet, line trace any of its child meshes.
-	auto TargetComponents = TargetActor->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
+	auto TargetComponents = TargetActor->GetComponents();
 
 	for (auto TargetComponent : TargetComponents)
 	{
 		auto SkelComp = Cast<USkeletalMeshComponent>(TargetComponent);
+
+		if (!SkelComp) {
+			continue;
+		}
 
 		// Find a random bone to trace rather than trace each bone to save a bit of performance. 
 		// Some bones can be trasnformed away from the character mesh and so the trace will return nothing about the target.
@@ -477,9 +481,9 @@ void UTargetFinderComponent::ClearLastSeenTarget()
 
 void UTargetFinderComponent::AddToIgnoreProcessed(AActor* Actor)
 {
-	if (Actor && !ProcessedIgnoreActors.Contains(Actor))
+	if (Actor && !ProcessedIgnoreActors.Contains(Actor->GetName()))
 	{
-		ProcessedIgnoreActors.Add(Actor);
+		ProcessedIgnoreActors.Add(Actor->GetName());
 	}
 }
 

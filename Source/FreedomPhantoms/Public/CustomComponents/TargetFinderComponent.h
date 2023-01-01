@@ -29,7 +29,8 @@ private:
 	/**
 	* Actors which have been set as non-targets e.g. friendlies should not be processed again to avoid performance issues.
 	*/
-	TArray<AActor*> ProcessedIgnoreActors;
+	UPROPERTY()
+		TArray<FString> ProcessedIgnoreActors;
 
 	UPROPERTY()
 		FTargetSearchParameters LastSeenTargetParam;
