@@ -97,5 +97,6 @@ void UStrongholdDefenderComponent::RemoveStronghold()
 	}
 
 	Stronghold->RemoveDefender(GetOwner());
+	Stronghold = nullptr;
 	ClearTimer();
 }
