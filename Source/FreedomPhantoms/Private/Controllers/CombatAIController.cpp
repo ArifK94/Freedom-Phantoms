@@ -605,10 +605,13 @@ void ACombatAIController::CheckCommanderOrder()
 
 	OwningCombatCharacter->DropMountedGun();
 
+	CurrentCommand = CommanderOrders::Follow;
 
 	// Assign Order Event
 	Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
-	SetStayCombatAlert(false); // refresh state of behaviour
+
+	// refresh state of behaviour
+	SetStayCombatAlert(false);
 
 	// if NPC was a stronghold defender, then rmeove the stronghold memory actor & assign the wounded flag to true as it is a now a recruit of the commander.
 	if (StrongholdDefenderComponent->GetStronghold()) {
