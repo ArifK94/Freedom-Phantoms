@@ -84,8 +84,6 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 {
 	Super::Tick(DeltaTime, Controller, Pawn);
 
-	FaceTarget();
-
 	// we do not want the AI to always be standing when throwing grenades.
 	if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon())
 	{
@@ -102,41 +100,6 @@ void UCombatAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn
 	else
 	{
 		EndShooting();
-	}
-}
-
-void UCombatAction::FaceTarget()
-{
-	if (CombatAIController->GetEnemyActor())
-	{
-		// if using a mounted gun
-		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
-		{
-			CombatAIController->GetMountedGunFinderComponent()->FocusTarget(OwningCombatCharacter->GetMountedGun(), CombatAIController->GetEnemyActor()->GetActorLocation());
-		}
-		else
-		{
-			FVector TargetLocation;
-			bool HasHitTarget = CombatAIController->GetTargetFinderComponent()->CanSeeTarget(CombatAIController->GetEnemyActor(), TargetLocation);
-
-			if (HasHitTarget)
-			{
-				// use focal point since enemy maybe behind a barrier or cover so only the head would be visible.
-				CombatAIController->SetFocalPosition(TargetLocation);
-			}
-			else
-			{
-				// face towards actor location in case enemy is taking cover.
-				CombatAIController->SetFocus(CombatAIController->GetEnemyActor());
-			}
-		}
-	}
-	else
-	{
-		if (OwningCombatCharacter->IsUsingMountedWeapon())
-		{
-			OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
-		}
 	}
 }
 

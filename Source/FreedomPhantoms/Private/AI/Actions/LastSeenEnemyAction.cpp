@@ -18,12 +18,6 @@ bool ULastSeenEnemyAction::CanRun(AAIController* Controller, APawn* Pawn) const
 {
 	Super::CanRun(Controller, Pawn);
 
-	// if should not move to last seen enemy then ignore this action.
-	if (!CombatAIController->GetMoveToLastSeenEnemy()) {
-		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
-		return false;
-	}
-
 	// if defending stronghold then ignore this action.
 	if (CombatAIController->GetStrongholdDefenderComponent()->GetStronghold()) {
 		OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_LastSeenEnemy);
@@ -74,23 +68,35 @@ void ULastSeenEnemyAction::Tick(float DeltaTime, AAIController* Controller, APaw
 	// focus on last position.
 	CombatAIController->SetFocalPosition(CombatAIController->GetLastSeenLocation());
 
-	// aim weapon to stay alert.
-	if (!OwningCombatCharacter->IsAiming())
+	if (CombatAIController->GetMoveToLastSeenEnemy())
 	{
-		OwningCombatCharacter->BeginAim();
-	}
+		// aim weapon to stay alert.
+		if (!OwningCombatCharacter->IsAiming())
+		{
+			OwningCombatCharacter->BeginAim();
+		}
 
-	if (MoveToResult == EPathFollowingRequestResult::AlreadyAtGoal)
+		if (MoveToResult == EPathFollowingRequestResult::AlreadyAtGoal)
+		{
+			if (!THandler_LastSeenEnemy.IsValid())
+			{
+				OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ULastSeenEnemyAction::RemoveLastSeen, 1.f, true, FMath::RandRange(5.f, 8.f));
+			}
+		}
+		else
+		{
+			MoveToLastSeen();
+		}
+	}
+	else
 	{
 		if (!THandler_LastSeenEnemy.IsValid())
 		{
 			OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_LastSeenEnemy, this, &ULastSeenEnemyAction::RemoveLastSeen, 1.f, true, FMath::RandRange(5.f, 8.f));
 		}
 	}
-	else
-	{
-		MoveToLastSeen();
-	}
+
+
 }
 
 void ULastSeenEnemyAction::MoveToLastSeen()

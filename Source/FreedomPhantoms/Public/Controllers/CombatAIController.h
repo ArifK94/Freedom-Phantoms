@@ -253,6 +253,7 @@ private:
 
 	virtual void OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams) override;
 
+	void FaceTarget();
 
 	void FindMountedGun();
 

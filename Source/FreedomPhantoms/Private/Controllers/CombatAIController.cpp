@@ -108,6 +108,9 @@ void ACombatAIController::Tick(float DeltaTime)
 
 	OwningCombatCharacter->bUseControllerRotationYaw = false;
 	OwningCombatCharacter->GetCharacterMovement()->RotationRate = FRotator(0.0f, 250.f, 0.0f); // ...at this rotation rate
+
+
+	FaceTarget();
 }
 
 void ACombatAIController::Init()
@@ -492,6 +495,46 @@ void ACombatAIController::OnNearbyActorFound_Implementation(FAvoidableParams Avo
 	if (OwningCombatCharacter->GetVoiceAudioComponent()->Sound != OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound ||
 		!OwningCombatCharacter->GetVoiceAudioComponent()->IsPlaying()) {
 		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->GrenadeIncomingSound);
+	}
+}
+
+void ACombatAIController::FaceTarget()
+{
+	if (EnemyActor)
+	{
+		// if using a mounted gun
+		if (OwningCombatCharacter->IsUsingMountedWeapon() && OwningCombatCharacter->GetMountedGun())
+		{
+			MountedGunFinderComponent->FocusTarget(OwningCombatCharacter->GetMountedGun(), EnemyActor->GetActorLocation());
+		}
+		else
+		{
+			FVector TargetLocation;
+			bool HasHitTarget = TargetFinderComponent->CanSeeTarget(EnemyActor, TargetLocation);
+
+			if (HasHitTarget)
+			{
+				// use focal point since enemy maybe behind a barrier or cover so only the head would be visible.
+				SetFocalPosition(TargetLocation);
+			}
+			else
+			{
+				// face towards actor location in case enemy is taking cover.
+				SetFocus(EnemyActor);
+			}
+		}
+	}
+	else
+	{
+		if (OwningCombatCharacter->IsUsingMountedWeapon())
+		{
+			OwningCombatCharacter->GetMountedGun()->SetRotationInput(FRotator::ZeroRotator, 1.5f);
+		}
+		// reset camera focus if no enemies or last enemy to look at.
+		else if (!LastSeenEnemyActor)
+		{
+			SetFocalPosition(FVector::ZeroVector);
+		}
 	}
 }
 

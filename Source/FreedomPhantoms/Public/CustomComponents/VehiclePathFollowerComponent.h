@@ -139,16 +139,20 @@ private:
 public:
 	UVehiclePathFollowerComponent();
 
-	void ResumePath();
+	UFUNCTION(BlueprintCallable)
+		void ResumePath();
 
 	/** Stop following path */
-	void Stop();
+	UFUNCTION(BlueprintCallable)
+		void Stop();
 
 	/** Go back to normal follow speed/ */
-	void ResumeNormalSpeed();
+	UFUNCTION(BlueprintCallable)
+		void ResumeNormalSpeed();
 
 	/** Slow the vehicle down. */
-	void Slowdown();
+	UFUNCTION(BlueprintCallable)
+		void Slowdown();
 
 	void ClearPath();
 
