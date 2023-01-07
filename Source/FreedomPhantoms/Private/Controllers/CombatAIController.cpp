@@ -533,7 +533,7 @@ void ACombatAIController::FaceTarget()
 		// reset camera focus if no enemies or last enemy to look at.
 		else if (!LastSeenEnemyActor)
 		{
-			SetFocalPosition(FVector::ZeroVector);
+			OwningCombatCharacter->FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 		}
 	}
 }
