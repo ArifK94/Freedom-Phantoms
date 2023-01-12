@@ -72,12 +72,8 @@ void UTargetFinderComponent::Init()
 	SetFindTargetPerFrame(FindTargetPerFrame);
 
 	// Alternative to AI Sight Perception in case 360 sight is wanted
-	if (TargetSightSphere == nullptr)
+	if (CreateTargetSphere && TargetSightSphere == nullptr)
 	{
-		/**
-		* Uncomment if TargetSightSphere is needed again if it helps drop FPS.
-		*/
-
 		TargetSightSphere = NewObject<USphereComponent>(GetOwner());
 
 		if (TargetSightSphere)

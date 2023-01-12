@@ -829,6 +829,10 @@ void AWeapon::IncreaseCharge()
 
 void AWeapon::DecreaseCharge()
 {
+	if (!GetWorld()) {
+		return;
+	}
+
 	for (int i = 0; i < ChargeUpSounds.Num(); i++)
 	{
 		auto Sound = ChargeUpSounds[i];
@@ -871,13 +875,17 @@ void AWeapon::DisableMuzzleLight()
 {
 	MuzzleLightComponent->SetVisibility(false);
 
-	if (THandler_MuzzleLight.IsValid()) {
+	if (GetWorld() && THandler_MuzzleLight.IsValid()) {
 		GetWorldTimerManager().ClearTimer(THandler_MuzzleLight);
 	}
 }
 
 void AWeapon::OnReload()
 {
+	if (!GetWorld()) {
+		return;
+	}
+
 	// Do we have ammo in the ammopool?
 	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !HasUnlimitedAmmo) {
 		return;
