@@ -206,6 +206,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnPathCompleteSignature OnPathComplete;
 
+	EVehicleMovement GetCurrentVehicleMovement() { return CurrentVehicleMovement; }
+
 	ARope* GetRopeLeft() { return RopeLeft; }
 	ARope* GetRopeRight() { return RopeRight; }
 
