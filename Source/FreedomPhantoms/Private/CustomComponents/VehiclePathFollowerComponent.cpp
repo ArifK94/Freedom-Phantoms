@@ -150,6 +150,9 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 		break;
 		// Wait for passengers to leave
 	case EVehicleMovement::PassengerExit:
+
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
+
 		// Stop moving
 		CurveTimeline.Stop();
 
@@ -355,6 +358,8 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 	auto VehicleSeats = OwningVehicle->GetVehicleSeatPtrList();
 
 	if (VehicleSeats.Num() <= 0) {
+		CurrentVehicleMovement = EVehicleMovement::MovingForward;
+		ResumePath();
 		return;
 	}
 
@@ -421,6 +426,8 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 		if (RopeRight) {
 			RopeRight->ReleaseRope();
 		}
+
+		CurrentVehicleMovement = EVehicleMovement::MovingForward;
 
 		// Let the ropes fall to the ground then resume path
 		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, 1.f);
