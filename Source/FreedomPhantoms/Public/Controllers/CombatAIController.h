@@ -240,9 +240,6 @@ private:
 		void OnMovementDestinationSet(AIBehaviourState BehaviourState);
 
 	UFUNCTION()
-		void OnMovementDestinationReached(FVector Destination);
-
-	UFUNCTION()
 		void OnRappelUpdated(ABaseCharacter* BaseCharacter);
 
 	UFUNCTION()

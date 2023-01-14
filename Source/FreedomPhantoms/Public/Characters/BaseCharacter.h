@@ -389,6 +389,8 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void Revived();
+
 
 public:
 	AAIController* GetDefaultAIController() {

@@ -176,6 +176,12 @@ void ABaseCharacter::Tick(float DeltaTime)
 	AimOffset();
 }
 
+void ABaseCharacter::Revived()
+{
+	InitTimeHandlers();
+	DefaultController->Possess(this);
+}
+
 void ABaseCharacter::Init()
 {
 	isSprinting = false;
@@ -260,8 +266,7 @@ void ABaseCharacter::SetIsReviving(bool Value)
 	}
 	else // has been revived
 	{
-		InitTimeHandlers();
-		DefaultController->Possess(this);
+		Revived();
 	}
 }
 

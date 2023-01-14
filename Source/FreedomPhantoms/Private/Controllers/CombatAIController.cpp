@@ -254,10 +254,6 @@ void ACombatAIController::OnPossess(APawn* InPawn)
 			if (!AIMovementComponent->OnDestinationSet.IsBound()) {
 				AIMovementComponent->OnDestinationSet.AddDynamic(this, &ACombatAIController::OnMovementDestinationSet);
 			}
-
-			if (!AIMovementComponent->OnDestinationReached.IsBound()) {
-				AIMovementComponent->OnDestinationReached.AddDynamic(this, &ACombatAIController::OnMovementDestinationReached);
-			}
 		}
 
 		if (TargetFinderComponent) {
@@ -300,10 +296,6 @@ void ACombatAIController::OnUnPossess()
 			if (AIMovementComponent->OnDestinationSet.IsBound()) {
 				AIMovementComponent->OnDestinationSet.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationSet);
 			}
-
-			if (AIMovementComponent->OnDestinationReached.IsBound()) {
-				AIMovementComponent->OnDestinationReached.RemoveDynamic(this, &ACombatAIController::OnMovementDestinationReached);
-			}
 		}
 
 
@@ -340,11 +332,6 @@ void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourSta
 	SetBehaviourState(BehaviourState);
 
 	OwningCombatCharacter->StopCover();
-}
-
-void ACombatAIController::OnMovementDestinationReached(FVector Destination)
-{
-
 }
 
 void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
@@ -398,7 +385,6 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 		ClearTimers();
 
 		if (StrongholdDefenderComponent->GetStronghold()) {
-			OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
 			StrongholdDefenderComponent->RemoveStronghold();
 		}
 
@@ -656,9 +642,8 @@ void ACombatAIController::CheckCommanderOrder()
 	// refresh state of behaviour
 	SetStayCombatAlert(false);
 
-	// if NPC was a stronghold defender, then rmeove the stronghold memory actor & assign the wounded flag to true as it is a now a recruit of the commander.
+	// if NPC was a stronghold defender, then rmeove the stronghold actor.
 	if (StrongholdDefenderComponent->GetStronghold()) {
-		OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
 		StrongholdDefenderComponent->RemoveStronghold();
 	}
 

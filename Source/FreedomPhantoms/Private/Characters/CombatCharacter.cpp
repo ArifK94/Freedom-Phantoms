@@ -132,9 +132,7 @@ void ACombatCharacter::Init()
 	isEquippingWeapon = false;
 	hasEquippedWeapon = false;
 	isSwappingWeapon = false;
-	CanAutoReloadWeapon = false;
 	isInCombatMode = false;
-	IsInAimOffSetRotation = false;
 	isUsingMountedWeapon = false;
 }
 
@@ -1313,4 +1311,11 @@ void ACombatCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 	{
 		Super::PlayDeathAnim(InHealthParameters);
 	}
+}
+
+void ACombatCharacter::Revived()
+{
+	Super::Revived();
+
+	BeginEquipWeapon();
 }

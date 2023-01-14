@@ -260,6 +260,8 @@ protected:
 	virtual void OnHealthUpdate(FHealthParameters InHealthParameters) override;
 	virtual void PlayDeathAnim(FHealthParameters InHealthParameters) override;
 
+	virtual void Revived() override;
+
 public:
 	// Interactable interface methods
 	virtual FString GetKeyDisplayName_Implementation() override;
