@@ -15,6 +15,7 @@ class UTargetFinderComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRemoveRecruitSignature, ACommanderCharacter*, Commander, int, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOrderSentSignature, UCommanderRecruit*, RecruitInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRecruitHealthChangeSignature, UCommanderRecruit*, RecruitInfo);
 
 
 UCLASS(Blueprintable)
@@ -115,7 +116,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Commander")
 		UCommanderRecruit* GetRecruitInfo(AActor* TargetActor);
 
-	FOnOrderSentSignature OnOrderSent;
+	UPROPERTY(BlueprintAssignable, Category = "Commander")
+		FOnOrderSentSignature OnOrderSent;
+
+	UPROPERTY(BlueprintAssignable, Category = "Commander")
+		FOnRecruitHealthChangeSignature OnRecruitHealthChange;
 
 	void AddUIWidget();
 

@@ -55,27 +55,27 @@ void ACommanderCharacter::Tick(float DeltaTime)
 
 void ACommanderCharacter::OnRecruitHealthUpdate(FHealthParameters InHealthParameters)
 {
-	if (ActiveRecruits.Num() > 0 && !InHealthParameters.AffectedHealthComponent->IsAlive())
+	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
+		auto AffectedRecruit = CurrentRecruit;
+
 		// If the current recruit is not alive, then move onto the next recruit
 		if (CurrentRecruit->Recruit == InHealthParameters.DamagedActor) {
 			IncrementCurrentRecruit();
 		}
 
-		for (int i = 0; i < ActiveRecruits.Num(); i++)
+		for (auto Recruit : ActiveRecruits)
 		{
-			auto Recruit = ActiveRecruits[i];
 			if (Recruit->Recruit == InHealthParameters.DamagedActor)
 			{
-				if (InHealthParameters.AffectedHealthComponent->GetIsWounded())
-				{
-					WoundedCount++;
-				}
+				AffectedRecruit = Recruit;
 				break;
 			}
 		}
+
 		UpdateActiveRecruits();
-		SortRecruitList();
+
+		OnRecruitHealthChange.Broadcast(AffectedRecruit);
 	}
 }
 
@@ -185,8 +185,7 @@ void ACommanderCharacter::InteractWithOperative()
 	{
 		RecruitFollower();
 	}
-
-	SortRecruitList();
+	UpdateActiveRecruits();
 }
 
 
@@ -221,6 +220,8 @@ void ACommanderCharacter::RecruitFollower()
 
 	follower->OrderIconArray = OrderIconArray;
 
+	follower->Recruit->GetHealthComp()->SetCanBeWounded(true);
+
 	// display the follow overhead icon each time someone has been recruited
 	follower->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Follow);
 	follower->Recruit->GetHealthComp()->OnHealthChanged.AddDynamic(this, &ACommanderCharacter::OnRecruitHealthUpdate);
@@ -237,6 +238,10 @@ void ACommanderCharacter::RecruitFollower()
 	PlayCommunicationSound(GetVoiceClipsSet()->RecruitSound, follower);
 
 	ResetTargetActor();
+
+	UpdateActiveRecruits();
+
+	OnOrderSent.Broadcast(follower);
 }
 
 void ACommanderCharacter::ReviveFriendly()
@@ -248,8 +253,8 @@ void ACommanderCharacter::ReviveFriendly()
 	PotentialRecruit->SetIsReviving(true);
 	PlayVoiceSound(GetVoiceClipsSet()->RevivingSound);
 
-
 	auto Recruit = GetRecruitInfo(PotentialRecruit);
+
 	// If the wounded recruit is already recruited, then return to follow order as default
 	if (Recruit)
 	{
@@ -265,11 +270,21 @@ void ACommanderCharacter::ReviveFriendly()
 			RecruitFollower();
 		}
 	}
+
+	if (CurrentRecruit == nullptr) {
+		CurrentRecruitIndex = 0;
+		CurrentRecruit = ActiveRecruits[CurrentRecruitIndex];
+	}
+
+	UpdateActiveRecruits();
+
+	OnOrderSent.Broadcast(CurrentRecruit);
 }
 
 void ACommanderCharacter::RemoveWounded()
 {
 	WoundedCount--;
+
 	// get the last recruit, this would be the wounded recruit
 	auto Index = ActiveRecruits.Num() - 1;
 
@@ -473,13 +488,22 @@ void ACommanderCharacter::UpdateActiveRecruits()
 		return;
 	}
 
-	for (int i = 0; i < ActiveRecruits.Num(); i++)
+	int CountWounded = 0;
+
+	for (int i = ActiveRecruits.Num() - 1; i > 0; i--)
 	{
 		UCommanderRecruit* Recruit = ActiveRecruits[i];
 		ACombatCharacter* RecruitCharacter = Recruit->Recruit;
 
-		if (UHealthComponent::IsActorAlive(RecruitCharacter) || UHealthComponent::IsActorWounded(RecruitCharacter))
+		bool IsWounded = UHealthComponent::IsActorWounded(RecruitCharacter);
+
+		if (UHealthComponent::IsActorAlive(RecruitCharacter) || IsWounded)
 		{
+			if (IsWounded)
+			{
+				CountWounded++;
+			}
+
 			ABaseCharacter* TargetCharacter = Recruit->HighValueTarget;
 
 			// check if HVT is alive
@@ -522,10 +546,12 @@ void ACommanderCharacter::UpdateActiveRecruits()
 					}
 				}
 			}
-
-			//	SortActiveRecruits(i, true);
 		}
 	}
+
+	WoundedCount = CountWounded;
+
+	SortRecruitList();
 }
 
 /// <summary>
@@ -573,6 +599,10 @@ void ACommanderCharacter::SortActiveRecruits(int StartingPoint, bool RemoveIndex
 	OnRemoveRecruit.Broadcast(this, NewPosition);
 }
 
+/// <summary>
+/// Shift all elements to the left
+/// removing any dead/ empty UI recruit elements by shifting them to the right
+/// </summary>
 void ACommanderCharacter::SortRecruitList()
 {
 	for (int write = 0; write < ActiveRecruits.Num(); write++) {
@@ -580,7 +610,9 @@ void ACommanderCharacter::SortRecruitList()
 
 			// If current recruit is wounded & the next recruit is still alive
 			// swap their index positions
-			if (UHealthComponent::IsActorWounded(ActiveRecruits[sort]->Recruit) && UHealthComponent::IsActorAlive(ActiveRecruits[sort + 1]->Recruit)) {
+			if (!UHealthComponent::IsActorAlive(ActiveRecruits[sort]->Recruit) && 
+				UHealthComponent::IsActorAlive(ActiveRecruits[sort + 1]->Recruit)) 
+			{
 				auto temp = ActiveRecruits[sort + 1];
 				ActiveRecruits[sort + 1] = ActiveRecruits[sort];
 				ActiveRecruits[sort] = temp;
@@ -690,6 +722,10 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 
 void ACommanderCharacter::PlayCommunicationSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit)
 {
+	if (!GetWorld()) {
+		return;
+	}
+
 	// Play acknowledged sound after commander's voice sound has finished playing the order
 	PlayVoiceSound(SoundBase);
 
