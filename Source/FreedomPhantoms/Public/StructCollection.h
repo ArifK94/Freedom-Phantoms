@@ -968,6 +968,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USoundBase* Sound;
 
+	/** Add offset to the particle or niagara systems */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FTransform VFXOffset;
+
 	FSurfaceImpactSet()
 	{
 

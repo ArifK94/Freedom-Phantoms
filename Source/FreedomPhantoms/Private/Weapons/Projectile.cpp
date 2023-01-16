@@ -659,6 +659,9 @@ FSurfaceImpactSet AProjectile::CheckSurface(EPhysicalSurface SurfaceType)
 
 void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation)
 {
+	ImpactLocation = ImpactLocation + ImpactSurface.VFXOffset.GetLocation();
+	FRotator ImpactRotation = ImpactSurface.VFXOffset.GetRotation().Rotator();
+
 	if (ImpactSurface.Sound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, ImpactLocation, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
@@ -668,24 +671,24 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 	{
 		if (ImpactSurface.AirParticleEffect)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, ImpactLocation);
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.AirParticleEffect, ImpactLocation, ImpactRotation);
 		}
 
 		if (ImpactSurface.AirNiagaraEffect)
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, ImpactLocation);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, ImpactLocation, ImpactRotation);
 		}
 	}
 	else 
 	{
 		if (ImpactSurface.ParticleEffect)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, ImpactLocation);
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactSurface.ParticleEffect, ImpactLocation, ImpactRotation);
 		}
 
 		if (ImpactSurface.NiagaraEffect)
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, ImpactLocation);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.NiagaraEffect, ImpactLocation, ImpactRotation);
 		}
 	}
 
