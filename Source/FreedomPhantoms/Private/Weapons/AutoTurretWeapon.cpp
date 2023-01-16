@@ -7,11 +7,13 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
 #include "Weapons/MountedGun.h"
+#include "Managers/GameStateBaseCustom.h"
 
 #include "Components/AudioComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
+#include "Niagara/Public/NiagaraFunctionLibrary.h"
 
 AAutoTurretWeapon::AAutoTurretWeapon()
 {
@@ -38,11 +40,17 @@ AAutoTurretWeapon::AAutoTurretWeapon()
 
 	TurretRotationFactor = 1.5f;
 	TurretRotationErrorTolerance = 5.f;
+
+	SurfaceImpactRowName = "Vehicle_Destruction";
 }
 
 void AAutoTurretWeapon::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
+
+	SurfaceImpactSet = GameStateBaseCustom->RetrieveSurfaceImpactSet(SurfaceImpactRowName);
 
 	HealthComponent->OnHealthChanged.AddDynamic(this, &AAutoTurretWeapon::OnHealthUpdate);
 
@@ -94,16 +102,19 @@ void AAutoTurretWeapon::OnHealthUpdate(FHealthParameters InHealthParameters)
 		}
 
 
-		// Play FX & change self material
-		if (ExplosionEffect)
+		// Play FX
+		if (SurfaceImpactSet)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
-		}
+			if (SurfaceImpactSet->NiagaraEffect)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SurfaceImpactSet->NiagaraEffect, GetActorLocation(), SurfaceImpactSet->VFXOffset.GetRotation().Rotator());
+			}
 
-		// Play explosion sound
-		if (ExplosionSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation(), 1.0f, 1.0f, 0.0f, ExplosionAttenuation);
+			// Play explosion sound
+			if (SurfaceImpactSet->Sound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), SurfaceImpactSet->Sound, GetActorLocation(), 1.0f, 1.0f, 0.0f, ExplosionAttenuation);
+			}
 		}
 
 		if (ExplosionMesh)

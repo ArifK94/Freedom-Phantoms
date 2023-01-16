@@ -5,10 +5,12 @@
 #include "CustomComponents/HealthComponent.h"
 #include "Weapons/Projectile.h"
 #include "Services/SharedService.h"
+#include "Managers/GameStateBaseCustom.h"
 
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Niagara/Public/NiagaraFunctionLibrary.h"
 
 ADestructionObjective::ADestructionObjective()
 {
@@ -24,7 +26,18 @@ ADestructionObjective::ADestructionObjective()
 	DestructionDamage = 500.f;
 
 	ObjectiveMessage = "Begin Destruction";
+	SurfaceImpactRowName = "Objective_Destruction";
 }
+
+void ADestructionObjective::BeginPlay()
+{
+	Super::BeginPlay();
+
+	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
+
+	SurfaceImpactSet = GameStateBaseCustom->RetrieveSurfaceImpactSet(SurfaceImpactRowName);
+}
+
 
 FString ADestructionObjective::GetKeyDisplayName_Implementation()
 {
@@ -93,16 +106,19 @@ bool ADestructionObjective::CanInteract_Implementation(APawn* InPawn, AControlle
 
 void ADestructionObjective::OnDestruction()
 {
-	// Play FX & change self material
-	if (DestructionEffect)
+	// Play FX
+	if (SurfaceImpactSet)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestructionEffect, GetActorLocation());
-	}
+		if (SurfaceImpactSet->NiagaraEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SurfaceImpactSet->NiagaraEffect, GetActorLocation(), SurfaceImpactSet->VFXOffset.GetRotation().Rotator());
+		}
 
-	// Play explosion sound
-	if (DestructionSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), DestructionSound, GetActorLocation(), 1.0f, 1.0f, 0.0f, DestructionAttenuation);
+		// Play explosion sound
+		if (SurfaceImpactSet->Sound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), SurfaceImpactSet->Sound, GetActorLocation(), 1.0f, 1.0f, 0.0f, SurfaceImpactSet->Attenuation);
+		}
 	}
 
 	// Blast away nearby physics actors

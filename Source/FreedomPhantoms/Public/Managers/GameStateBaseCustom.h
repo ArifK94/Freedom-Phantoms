@@ -65,8 +65,20 @@ private:
 	FTimerHandle THandler_MusicQueue;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* SurfaceImpactSetDatatable;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		UDataTable* SurfaceImpactDatatable;
+
+
 public:
 	AGameStateBaseCustom();
+
+	FSurfaceImpactSet* RetrieveSurfaceImpactSet(FName RowName);
+
+	FSurfaceImpact* RetrieveSurfaceImpact(FName RowName);
+
 
 	void EndGame(bool MissionPassed);
 

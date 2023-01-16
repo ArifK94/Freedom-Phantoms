@@ -8,15 +8,16 @@
 #include "StructCollection.h"
 #include "AutoTurretWeapon.generated.h"
 
-/**
- * 
- */
+class AGameStateBaseCustom;
+class UCameraComponent;
 UCLASS()
 class FREEDOMPHANTOMS_API AAutoTurretWeapon : public AActor
 {
 	GENERATED_BODY()
 
 private:
+	AGameStateBaseCustom* GameStateBaseCustom;
+
 	float m_DeltaTime;
 	int CurrentWeaponIndex;
 	AActor* TargetActor;
@@ -71,6 +72,10 @@ private:
 		USoundBase* TurretTurnStopSound;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
+		FName SurfaceImpactRowName;
+	FSurfaceImpactSet* SurfaceImpactSet;
+
 	/** Impulse applied to mesh when it explosed to boost up a little  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
 		float ExplosionImpulse;
@@ -78,14 +83,6 @@ private:
 	/** Explosion damage applied to nearby health components */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
 		float ExplosionDamage;
-
-	/** Particle to play when health reaches zero  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* ExplosionEffect;
-
-	/** Sound to play when health reaches zero  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
-		USoundBase* ExplosionSound;
 
 	/** Explosion sound attentuation  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))

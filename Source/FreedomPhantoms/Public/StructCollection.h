@@ -943,7 +943,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSurfaceImpactSet
+struct FSurfaceImpactSet : public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -967,6 +967,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USoundBase* Sound;
+
+	/** Destruction sound attentuation  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundAttenuation* Attenuation;
 
 	/** Add offset to the particle or niagara systems */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -12,6 +12,7 @@
 #include "CustomComponents/ObjectPoolComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/VehiclePathFollowerComponent.h"
+#include "Managers/GameStateBaseCustom.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -30,6 +31,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AIController.h"
+#include "Niagara/Public/NiagaraFunctionLibrary.h"
 
 AVehicleBase::AVehicleBase()
 {
@@ -123,6 +125,8 @@ AVehicleBase::AVehicleBase()
 	DoubleKillIndex = 1;
 	MultiKillIndex = 2;
 
+	SurfaceImpactRowName = "Vehicle_Destruction";
+
 	// ignore other vehicles by default.
 	CollisionClassFilters.Add(AVehicleBase::StaticClass());
 }
@@ -130,6 +134,10 @@ AVehicleBase::AVehicleBase()
 void AVehicleBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
+
+	SurfaceImpactSet = GameStateBaseCustom->RetrieveSurfaceImpactSet(SurfaceImpactRowName);
 
 	ThermalVisionPPComp->bEnabled = false;
 
@@ -353,17 +361,21 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 		}
 
-		// Play FX & change self material
-		if (ExplosionEffect)
+		// Play FX
+		if (SurfaceImpactSet)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+			if (SurfaceImpactSet->NiagaraEffect)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SurfaceImpactSet->NiagaraEffect, GetActorLocation(), SurfaceImpactSet->VFXOffset.GetRotation().Rotator());
+			}
+
+			// Play explosion sound
+			if (SurfaceImpactSet->Sound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), SurfaceImpactSet->Sound, GetActorLocation(), 1.0f, 1.0f, 0.0f, ExplosionAttenuation);
+			}
 		}
 
-		// Play explosion sound
-		if (ExplosionSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation(), 1.0f, 1.0f, 0.0f, ExplosionAttenuation);
-		}
 
 		if (ExplosionMesh)
 		{

@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Engine/DataTable.h"
 #include "EnumCollection.h"
 #include "StructCollection.h"
 #include "VehicleBase.generated.h"
 
+class AGameStateBaseCustom;
 class UCapsuleComponent;
 class UArrowComponent;
 class UBoxComponent;
@@ -29,6 +29,8 @@ class FREEDOMPHANTOMS_API AVehicleBase : public AActor
 	GENERATED_BODY()
 
 protected:
+	AGameStateBaseCustom* GameStateBaseCustom;
+
 	FTimerHandle THandler_Update;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -193,6 +195,9 @@ protected:
 	FTimerHandle THandler_CameraSwitchDelay;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
+		FName SurfaceImpactRowName;
+	FSurfaceImpactSet* SurfaceImpactSet;
 
 	/** Impulse applied to mesh when it explosed to boost up a little  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
@@ -201,14 +206,6 @@ protected:
 	/** Explosion damage applied to nearby health components */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
 		float ExplosionDamage;
-
-	/** Particle to play when health reaches zero  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* ExplosionEffect;
-
-	/** Sound to play when health reaches zero  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
-		USoundBase* ExplosionSound;
 
 	/** Explosion sound attentuation  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))

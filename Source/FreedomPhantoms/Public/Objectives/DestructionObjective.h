@@ -5,17 +5,21 @@
 #include "CoreMinimal.h"
 #include "Objectives/BaseObjective.h"
 #include "Interfaces/Interactable.h"
+#include "StructCollection.h"
 #include "DestructionObjective.generated.h"
 
 /**
  * Objectives which involve destorying something, eg. destroying a bridge.
  */
+class AGameStateBaseCustom;
 UCLASS()
 class FREEDOMPHANTOMS_API ADestructionObjective : public ABaseObjective, public IInteractable
 {
 	GENERATED_BODY()
 	
 private:
+	AGameStateBaseCustom* GameStateBaseCustom;
+
 	FTimerHandle THandler_Countdown;
 
 
@@ -40,17 +44,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USoundBase* CountdownSound;
 
-	/** Particle to play when health reaches zero  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* DestructionEffect;
-
-	/** Sound to play when health reaches zero  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		USoundBase* DestructionSound;
-
-	/** Destruction sound attentuation  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		USoundAttenuation* DestructionAttenuation;
+		FName SurfaceImpactRowName;
+	FSurfaceImpactSet* SurfaceImpactSet;
 
 	/** Destruction actor, usually a C4 actor or something similar to be placed on the position of the interaction.  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -71,6 +67,9 @@ public:
 	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 
 	void OnDestruction();
+
+protected:
+	virtual void BeginPlay() override;
 
 private:
 	void BeginCountdown();
