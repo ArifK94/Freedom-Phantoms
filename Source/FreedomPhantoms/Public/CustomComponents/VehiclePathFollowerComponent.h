@@ -171,6 +171,8 @@ private:
 
 	void SpawnRope();
 
+	void ReleaseRopes();
+
 	UFUNCTION(BlueprintCallable)
 		void SpawnRandomLocation();
 

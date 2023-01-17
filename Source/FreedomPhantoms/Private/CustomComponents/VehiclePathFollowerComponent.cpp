@@ -341,18 +341,6 @@ void UVehiclePathFollowerComponent::FindNearestNav()
 	}
 }
 
-// Free up the path for another vehicle to use
-void UVehiclePathFollowerComponent::ClearPath()
-{
-	if (VehiclePath && VehiclePath->GetOccupiedVehicle() == GetOwner())
-	{
-		VehiclePath->SetOccupantVehicle(nullptr);
-		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
-		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
-	}
-}
-
-
 void UVehiclePathFollowerComponent::ExitPassengers()
 {
 	auto VehicleSeats = OwningVehicle->GetVehicleSeatPtrList();
@@ -419,13 +407,7 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 
 	if (!HasRemainingPassengers)
 	{
-		if (RopeLeft) {
-			RopeLeft->ReleaseRope();
-		}
-
-		if (RopeRight) {
-			RopeRight->ReleaseRope();
-		}
+		ReleaseRopes();
 
 		CurrentVehicleMovement = EVehicleMovement::MovingForward;
 
@@ -469,6 +451,17 @@ void UVehiclePathFollowerComponent::SpawnRope()
 	}
 
 
+}
+
+void UVehiclePathFollowerComponent::ReleaseRopes()
+{
+	if (RopeLeft) {
+		RopeLeft->ReleaseRope();
+	}
+
+	if (RopeRight) {
+		RopeRight->ReleaseRope();
+	}
 }
 
 void UVehiclePathFollowerComponent::SetVehicleExit(ABaseCharacter* Character)
@@ -519,6 +512,8 @@ void UVehiclePathFollowerComponent::ResumePath()
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
 	}
 
+	ReleaseRopes();
+
 	CurveTimeline.Play();
 
 	PrimaryComponentTick.bCanEverTick = true;
@@ -542,4 +537,17 @@ void UVehiclePathFollowerComponent::ResumeNormalSpeed()
 void UVehiclePathFollowerComponent::Slowdown()
 {
 	CurveTimeline.SetPlayRate(1.0f / (PathFollowDuration * 2.f));
+}
+
+// Free up the path for another vehicle to use
+void UVehiclePathFollowerComponent::ClearPath()
+{
+	if (VehiclePath && VehiclePath->GetOccupiedVehicle() == GetOwner())
+	{
+		VehiclePath->SetOccupantVehicle(nullptr);
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
+
+		ReleaseRopes();
+	}
 }

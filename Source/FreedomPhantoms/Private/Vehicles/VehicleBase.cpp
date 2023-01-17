@@ -391,8 +391,12 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 		if (DestroyOnDeath)
 		{
+			VehiclePathFollowerComponent->ClearPath();
+
 			// hide actor for now since some other actors may rely on this actor's reference
 			SetActorHiddenInGame(true);
+
+			SetActorEnableCollision(false);
 
 			// then set to destroy the actor after x seconds assuming x is enough time for this actor to no longer be referenced.
 			SetLifeSpan(5.f);
@@ -1108,9 +1112,6 @@ void AVehicleBase::Destroyed()
 	Super::Destroyed();
 
 	RemoveTargetSystem();
-
-	VehiclePathFollowerComponent->ClearPath();
-
 
 	// destroy all attached actors to this aircraft
 	TArray<AActor*> AttachedActors;
