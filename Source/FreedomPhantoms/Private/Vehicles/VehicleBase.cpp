@@ -223,7 +223,7 @@ void AVehicleBase::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRota
 
 bool AVehicleBase::ShouldStopVehicle()
 {
-	return (CheckFrontCollision && IsFrontCollisionFound()) || VehiclePathFollowerComponent->GetCurrentVehicleMovement() == EVehicleMovement::PassengerExit;
+	return (CheckFrontCollision && IsFrontCollisionFound()) || VehiclePathFollowerComponent->GetCurrentVehicleMovement() == EVehicleMovement::PassengerExit || !VehiclePathFollowerComponent->GetCurveFloat();
 }
 
 void AVehicleBase::AddUIWidget()

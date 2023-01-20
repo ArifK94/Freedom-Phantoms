@@ -210,6 +210,9 @@ public:
 
 	EVehicleMovement GetCurrentVehicleMovement() { return CurrentVehicleMovement; }
 
+	UCurveFloat* GetCurveFloat() { return CurveFloat; }
+
+
 	ARope* GetRopeLeft() { return RopeLeft; }
 	ARope* GetRopeRight() { return RopeRight; }
 
