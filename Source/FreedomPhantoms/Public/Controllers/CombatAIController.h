@@ -206,6 +206,11 @@ private:
 public:
 	ACombatAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	/**
+	* Is AI near its target destination?
+	*/
+	bool IsNearTargetDestination();
+
 	bool IsNearCommander();
 
 	bool IsNearCommander(FVector Location);

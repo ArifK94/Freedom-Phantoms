@@ -62,7 +62,6 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 	NonBlindFireWeaponTypes.Add(WeaponType::RPG);
 }
 
-
 void ACombatAIController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -673,6 +672,14 @@ bool ACombatAIController::IsNearCommander()
 bool ACombatAIController::IsNearCommander(FVector Location)
 {
 	if (Commander && FVector::Distance(Commander->GetActorLocation(), Location) <= AcceptanceRadius) {
+		return true;
+	}
+	return false;
+}
+
+bool ACombatAIController::IsNearTargetDestination()
+{
+	if (FVector::Distance(OwningCombatCharacter->GetActorLocation(), TargetDestination) <= AcceptanceRadius) {
 		return true;
 	}
 	return false;

@@ -256,7 +256,7 @@ void UCombatAction::Aim()
 	// always aim towards target :-
 	// can only aim if not sprinting,
 	// if not in cover, since the character can do blind fire and no aim.
-	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsTakingCover() && !CanBlindFire)
+	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsTakingCover() && !CanBlindFire && !CombatAIController->IsNearTargetDestination())
 	{
 		OwningCombatCharacter->BeginAim();
 	}
@@ -268,6 +268,10 @@ void UCombatAction::Aim()
 		{
 			OwningCombatCharacter->EndAim();
 		}
+	}
+	else
+	{
+		OwningCombatCharacter->EndAim();
 	}
 }
 
