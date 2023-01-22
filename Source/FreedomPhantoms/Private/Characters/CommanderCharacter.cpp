@@ -57,25 +57,33 @@ void ACommanderCharacter::OnRecruitHealthUpdate(FHealthParameters InHealthParame
 {
 	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
-		auto AffectedRecruit = CurrentRecruit;
+		UCommanderRecruit* AffectedRecruit = nullptr;
+		int RecruitIndex = 0;
 
-		// If the current recruit is not alive, then move onto the next recruit
-		if (CurrentRecruit->Recruit == InHealthParameters.DamagedActor) {
-			IncrementCurrentRecruit();
-		}
 
-		for (auto Recruit : ActiveRecruits)
+		for (int i = 0; i < ActiveRecruits.Num(); i++)
 		{
+			auto Recruit = ActiveRecruits[i];
+
 			if (Recruit->Recruit == InHealthParameters.DamagedActor)
 			{
 				AffectedRecruit = Recruit;
+				RecruitIndex = i;
 				break;
 			}
 		}
 
-		UpdateActiveRecruits();
+		if (AffectedRecruit) {
 
-		OnRecruitHealthChange.Broadcast(AffectedRecruit);
+			UpdateActiveRecruits();
+
+			// If the current recruit is not alive, then move onto the next recruit
+			if (CurrentRecruit->Recruit == InHealthParameters.DamagedActor) {
+				IncrementCurrentRecruit();
+			}
+
+			OnRecruitHealthChange.Broadcast(AffectedRecruit, RecruitIndex);
+		}
 	}
 }
 
@@ -197,10 +205,8 @@ void ACommanderCharacter::RecruitFollower()
 
 	// remove wounded recruit and replace with the new recruit
 	if (ActiveRecruits.Num() >= MaxRecruits) {
-
 		RemoveWounded();
 	}
-
 
 	UCommanderRecruit* follower = NewObject<UCommanderRecruit>(this);
 	follower->Recruit = PotentialRecruit;
@@ -219,8 +225,6 @@ void ACommanderCharacter::RecruitFollower()
 	OrderIconArray.Add(follower->HighValueTargetOverheadIcon);
 
 	follower->OrderIconArray = OrderIconArray;
-
-	follower->Recruit->GetHealthComp()->SetCanBeWounded(true);
 
 	// display the follow overhead icon each time someone has been recruited
 	follower->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Follow);
@@ -241,7 +245,7 @@ void ACommanderCharacter::RecruitFollower()
 
 	UpdateActiveRecruits();
 
-	OnOrderSent.Broadcast(follower);
+	OnOrderSent.Broadcast(follower, ActiveRecruits.Num() - 1);
 }
 
 void ACommanderCharacter::ReviveFriendly()
@@ -278,7 +282,7 @@ void ACommanderCharacter::ReviveFriendly()
 
 	UpdateActiveRecruits();
 
-	OnOrderSent.Broadcast(CurrentRecruit);
+	OnOrderSent.Broadcast(CurrentRecruit, ActiveRecruits.Num() - 1);
 }
 
 void ACommanderCharacter::RemoveWounded()
@@ -373,7 +377,7 @@ void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacte
 		DisplayPositionIcon(Recruit->AttackPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
 	}
 
-	OnOrderSent.Broadcast(Recruit);
+	OnOrderSent.Broadcast(Recruit, CurrentRecruitIndex);
 }
 
 void ACommanderCharacter::DefendArea(bool CommandAll)
@@ -422,7 +426,7 @@ void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
 	DisplayPositionIcon(Recruit->DefendPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
 	Recruit->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Defend);
 
-	OnOrderSent.Broadcast(Recruit);
+	OnOrderSent.Broadcast(Recruit, CurrentRecruitIndex);
 }
 
 
@@ -461,7 +465,7 @@ void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit)
 
 	Recruit->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Follow);
 
-	OnOrderSent.Broadcast(Recruit);
+	OnOrderSent.Broadcast(Recruit, CurrentRecruitIndex);
 }
 
 /// <summary>

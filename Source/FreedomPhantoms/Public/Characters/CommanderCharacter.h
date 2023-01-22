@@ -13,9 +13,9 @@ class AOrderIcon;
 class UUserWidget;
 class UTargetFinderComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRemoveRecruitSignature, ACommanderCharacter*, Commander, int, Index);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOrderSentSignature, UCommanderRecruit*, RecruitInfo);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRecruitHealthChangeSignature, UCommanderRecruit*, RecruitInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRemoveRecruitSignature, ACommanderCharacter*, Commander, int, RecruitIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnOrderSentSignature, UCommanderRecruit*, RecruitInfo, int, RecruitIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRecruitHealthChangeSignature, UCommanderRecruit*, RecruitInfo, int, RecruitIndex);
 
 
 UCLASS(Blueprintable)

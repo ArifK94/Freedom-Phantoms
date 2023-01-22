@@ -243,7 +243,7 @@ private:
 		void OnRappelUpdated(ABaseCharacter* BaseCharacter);
 
 	UFUNCTION()
-		void OnOrderReceived(UCommanderRecruit* RecruitInfo);
+		void OnOrderReceived(UCommanderRecruit* RecruitInfo, int RecruitIndex);
 
 	UFUNCTION()
 		void OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters);

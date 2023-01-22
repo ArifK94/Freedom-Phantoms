@@ -334,7 +334,7 @@ void ACombatAIController::OnMovementDestinationSet(AIBehaviourState BehaviourSta
 	OwningCombatCharacter->StopCover();
 }
 
-void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo)
+void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo, int RecruitIndex)
 {
 	// ensure the owning character received the order
 	if (RecruitInfo->Recruit != OwningCombatCharacter) {
@@ -641,11 +641,11 @@ void ACombatAIController::CheckCommanderOrder()
 
 	// refresh state of behaviour
 	SetStayCombatAlert(false);
-
+	
 	// if NPC was a stronghold defender, then rmeove the stronghold actor.
-	if (StrongholdDefenderComponent->GetStronghold()) {
-		StrongholdDefenderComponent->RemoveStronghold();
-	}
+	StrongholdDefenderComponent->RemoveStronghold();
+
+	OwningCombatCharacter->GetHealthComp()->SetCanBeWounded(true);
 
 	SetBehaviourState(AIBehaviourState::PriorityOrdersCommander);
 
