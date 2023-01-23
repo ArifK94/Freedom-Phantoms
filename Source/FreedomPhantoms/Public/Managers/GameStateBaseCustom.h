@@ -33,6 +33,9 @@ private:
 	bool HasGameEnded;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		USceneComponent* Root;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* MusicAudioComponent;
 
 	/** Defined in Sound Cue */

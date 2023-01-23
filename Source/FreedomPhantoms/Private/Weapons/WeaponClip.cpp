@@ -20,6 +20,7 @@ AWeaponClip::AWeaponClip()
 	clipMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClipMeshComp"));
 	clipMeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	clipMeshComp->CanCharacterStepUpOn = ECB_No;
+	RootComponent = clipMeshComp;
 
 	ammoCapacity = 30;
 

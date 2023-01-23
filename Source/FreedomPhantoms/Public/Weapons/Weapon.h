@@ -438,6 +438,8 @@ protected:
 
 	virtual FVector getMuzzleLocation();
 
+	FRotator GetMuzzleRotation();
+
 	void BeginShellEffect();
 
 	void PlayShotEffect(FVector EyeLocation);

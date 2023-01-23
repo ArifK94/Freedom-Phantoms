@@ -7,6 +7,7 @@ ARope::ARope()
 	PrimaryActorTick.bCanEverTick = false;
 
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RopeMeshComp"));
+	RootComponent = MeshComponent;
 
 	IsRopeOccupied = false;
 	IsRopeLeft = false;

@@ -12,6 +12,9 @@ AGameStateBaseCustom::AGameStateBaseCustom()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = Root;
+
 	MusicAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("MusicAudioComponent"));
 
 	MusicChangeInterpolation = 5.0f;

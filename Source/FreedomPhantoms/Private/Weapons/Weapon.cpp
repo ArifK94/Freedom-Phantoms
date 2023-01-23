@@ -266,27 +266,6 @@ void AWeapon::ConfigSetup()
 	}
 }
 
-void AWeapon::SpawnScopeAttachment()
-{
-	if (ScopeAttachmentClasses.Num() <= 0) {
-		return;
-	}
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	auto RandomIndex = rand() % ScopeAttachmentClasses.Num();
-
-	ScopeAttachment = GetWorld()->SpawnActor<AWeaponAttachment>(ScopeAttachmentClasses[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-	if (ScopeAttachment)
-	{
-		ScopeAttachment->GetRootComponent()->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ScopeAttachment->GetParentSocket());
-	}
-
-}
-
 void AWeapon::ConvertWeaponName()
 {
 	if (WeaponName != "None")
@@ -307,10 +286,21 @@ FVector AWeapon::getMuzzleLocation()
 	if (ParentMesh) {
 		return ParentMesh->GetSocketLocation(MuzzleSocket);
 	}
-	else if (MeshComp) {
+	else if (MeshComp && MeshComp->SkeletalMesh) {
 		return MeshComp->GetSocketLocation(MuzzleSocket);
 	}
 	return GetActorLocation();
+}
+
+FRotator AWeapon::GetMuzzleRotation()
+{
+	if (ParentMesh) {
+		return ParentMesh->GetSocketRotation(MuzzleSocket);
+	}
+	else if (MeshComp && MeshComp->SkeletalMesh) {
+		return MeshComp->GetSocketRotation(MuzzleSocket);
+	}
+	return GetActorRotation();
 }
 
 void AWeapon::LoadParentMesh()
@@ -366,7 +356,7 @@ bool AWeapon::IsFacingCrosshair()
 	FVector EyeEnd = UKismetMathLibrary::GetForwardVector(EyeRotation) * TraceLength;
 
 	FVector MuzzleStart = getMuzzleLocation();
-	FVector MuzzleEnd = UKismetMathLibrary::GetForwardVector(MeshComp->GetSocketRotation(MuzzleSocket)) * TraceLength;
+	FVector MuzzleEnd = UKismetMathLibrary::GetForwardVector(GetMuzzleRotation()) * TraceLength;
 
 	UKismetMathLibrary::Vector_Normalize(MuzzleEnd);
 	UKismetMathLibrary::Vector_Normalize(EyeEnd);
@@ -588,12 +578,12 @@ void AWeapon::PlayShotEffect(FVector EyeLocation)
 
 	if (MuzzleEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleEffect, getMuzzleLocation(), MeshComp->GetSocketRotation(MuzzleSocket));
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleEffect, getMuzzleLocation(), GetMuzzleRotation());
 	}
 
 	if (MuzzleFlashNiagara)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MuzzleFlashNiagara, getMuzzleLocation(), MeshComp->GetSocketRotation(MuzzleSocket));
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MuzzleFlashNiagara, getMuzzleLocation(), GetMuzzleRotation());
 	}
 
 	LastFireTime = GetWorld()->TimeSeconds;
@@ -1018,6 +1008,26 @@ void AWeapon::SpawnMagazine()
 	}
 }
 
+void AWeapon::SpawnScopeAttachment()
+{
+	if (ScopeAttachmentClasses.Num() <= 0) {
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	auto RandomIndex = rand() % ScopeAttachmentClasses.Num();
+
+	ScopeAttachment = GetWorld()->SpawnActor<AWeaponAttachment>(ScopeAttachmentClasses[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (ScopeAttachment)
+	{
+		ScopeAttachment->GetRootComponent()->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ScopeAttachment->GetParentSocket());
+	}
+
+}
 
 void AWeapon::SetMagazineSocket()
 {
