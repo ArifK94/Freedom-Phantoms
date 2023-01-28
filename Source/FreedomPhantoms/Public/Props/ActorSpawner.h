@@ -8,6 +8,8 @@
 #include "StructCollection.h"
 #include "ActorSpawner.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorSpawnedSignature, AActor*, Actor);
+
 class UBoxComponent;
 class AWeapon;
 UCLASS()
@@ -47,6 +49,19 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool ConstantSpawning;
 
+	/** Spawn actor navmesh? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool SpawnOnNav;
+
+	/** Spawn actor without having to go to a target point */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool FreeSpawn;
+
+	/** Limit the number of spawns if using Free Spawn. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int FreeSpawnLimit;
+	int CurrentSpawnCount;
+
 	/** Prevent from triggering more than once. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool HasInitiatedSpawn;
@@ -57,6 +72,9 @@ private:
 
 public:	
 	AActorSpawner();
+
+	UPROPERTY(BlueprintAssignable)
+		FOnActorSpawnedSignature OnActorSpawned;
 
 protected:
 	virtual void BeginPlay() override;
@@ -82,6 +100,9 @@ private:
 	bool IsTargetPointValid(AActor* TargetPointActor);
 
 	bool HasFreeTargetPoints();
+
+	/** Has the spawn limit been reached? If using Free Spawn. */
+	bool HasReachedSpawnLimit();
 
 	TArray<AActor*> GetTargetPoints();
 

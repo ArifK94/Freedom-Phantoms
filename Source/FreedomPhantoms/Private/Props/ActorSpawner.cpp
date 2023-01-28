@@ -32,11 +32,17 @@ AActorSpawner::AActorSpawner()
 	TriggerArea->SetupAttachment(RootComponent);
 
 	SpawnRate = 1.f;
+	FreeSpawnLimit = 1;
+
+	SpawnOnNav = true;
+	FreeSpawn = false;
 }
 
 void AActorSpawner::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CurrentSpawnCount = 0;
 
 	SetActorTickEnabled(false);
 
@@ -55,6 +61,7 @@ void AActorSpawner::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
+		CurrentSpawnCount--;
 		StartSpawnTimer();
 	}
 }
@@ -77,41 +84,60 @@ void AActorSpawner::BeginSpawn()
 	if (!GetWorld()) {
 		return;
 	}
-
-	TArray<AActor*> OutActors = GetTargetPoints();
-
-	if (OutActors.Num() <= 0) {
+	
+	// Stop timer if spawn limit reached.
+	if (HasReachedSpawnLimit()) {
 		StopSpawnTimer();
-		return;
-	}
-
-	AActor* Actor = OutActors[FMath::RandRange(0, OutActors.Num() - 1)];
-
-	if (!IsTargetPointValid(Actor)) {
 		return;
 	}
 
 	AActor* SpawnedActor = SpawnActor();
 
+	AActor* TargetPoint = nullptr;
+
 	if (!SpawnedActor) {
 		return;
 	}
+	CurrentSpawnCount++;
 
-	AController* Controller = SpawnedActor->GetInstigator()->GetController();
+	// If no free spawn, then this means the actor will have a target point to go to after spawning.
+	if (!FreeSpawn)
+	{
+		TArray<AActor*> OutActors = GetTargetPoints();
 
-	ACombatAIController* AIController = Cast<ACombatAIController>(Controller);
+		if (OutActors.Num() <= 0) {
+			StopSpawnTimer();
+			return;
+		}
 
-	if (!AIController) {
-		return;
+		TargetPoint = OutActors[FMath::RandRange(0, OutActors.Num() - 1)];
+
+		if (!IsTargetPointValid(TargetPoint)) {
+			return;
+		}
+
+		// Set NPC to target destination.
+		AController* Controller = SpawnedActor->GetInstigator()->GetController();
+
+		if (Controller)
+		{
+			ACombatAIController* AIController = Cast<ACombatAIController>(Controller);
+
+			if (!AIController)
+			{
+				AIController->SetPriorityDestination(TargetPoint->GetActorLocation());
+			}
+		}
 	}
-
-	AIController->SetPriorityDestination(Actor->GetActorLocation());
 
 	// Destroy the target point as it will not longer be needed if not constantly spawning
 	// otherwise set the owner of the target point to prevent this target point from being assigned more than once.
 	if (ConstantSpawning)
 	{
-		Actor->SetOwner(SpawnedActor);
+		if (TargetPoint)
+		{
+			TargetPoint->SetOwner(SpawnedActor);
+		}
 
 		auto ActorComponent = SpawnedActor->GetComponentByClass(UHealthComponent::StaticClass());
 
@@ -128,8 +154,18 @@ void AActorSpawner::BeginSpawn()
 	}
 	else
 	{
-		Actor->Destroy();
+		if (TargetPoint)
+		{
+			TargetPoint->Destroy();
+		}
 	}
+
+	// Stop timer if spawn limit reached.
+	if (HasReachedSpawnLimit()) {
+		StopSpawnTimer();
+	}
+
+	OnActorSpawned.Broadcast(SpawnedActor);
 }
 
 AActor* AActorSpawner::SpawnActor()
@@ -160,11 +196,20 @@ void AActorSpawner::LoadSpawnLocation(FVector& Location, bool& IsValid)
 {
 	FVector PointLocation = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
 
-	FNavLocation NavLocation;
-	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-	IsValid = NavigationArea->ProjectPointToNavigation(PointLocation, NavLocation);
+	if (SpawnOnNav)
+	{
+		FNavLocation NavLocation;
+		UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+		IsValid = NavigationArea->ProjectPointToNavigation(PointLocation, NavLocation);
 
-	Location = NavLocation.Location;
+		Location = NavLocation.Location;
+	}
+	else
+	{
+		IsValid = true;
+		Location = PointLocation;
+	}
+
 }
 
 void AActorSpawner::SpawnWeapon(AActor* Actor)
@@ -226,6 +271,11 @@ bool AActorSpawner::HasFreeTargetPoints()
 	}
 
 	return false;
+}
+
+bool AActorSpawner::HasReachedSpawnLimit()
+{
+	return FreeSpawn && CurrentSpawnCount >= FreeSpawnLimit;
 }
 
 TArray<AActor*> AActorSpawner::GetTargetPoints()
