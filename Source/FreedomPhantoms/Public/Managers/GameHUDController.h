@@ -17,25 +17,23 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Interactive")
 		TSubclassOf<UUserWidget> NVGWidgetClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Vehicles")
-		TSubclassOf<UUserWidget> AC130WidgetClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Stats")
+		TSubclassOf<UUserWidget> GameStatsWidgetClass;
 private:
 	UUserWidget* NVGWidget;
-	UUserWidget* AC130Widget;
+	UUserWidget* GameStatWidget;
 
 
 public:
 	AGameHUDController();
 
+	UUserWidget* AddWidgetToViewport(TSubclassOf<UUserWidget> WidgetClass);
+
 	void CreateNVGWidget();
 	
-	void AddAC130ViewPort();
-	void RemoveAC130ViewPort();
+	void AddGameStatsViewPort();
 
 private:
 	virtual void BeginPlay() override;
-
-	void CreateAC130Widget();
-
 
 };
