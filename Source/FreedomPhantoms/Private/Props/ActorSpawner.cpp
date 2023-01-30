@@ -123,7 +123,7 @@ void AActorSpawner::BeginSpawn()
 		{
 			ACombatAIController* AIController = Cast<ACombatAIController>(Controller);
 
-			if (!AIController)
+			if (AIController)
 			{
 				AIController->SetPriorityDestination(TargetPoint->GetActorLocation());
 			}
