@@ -52,7 +52,7 @@ void AActorSpawner::BeginPlay()
 	}
 	else
 	{
-		TriggerArea->SetCollisionProfileName(TEXT("NoCollision"));
+		TriggerArea->DestroyComponent();
 		StartSpawnTimer();
 	}
 }
@@ -72,10 +72,11 @@ void AActorSpawner::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
 		return;
 	}
 
+
 	if (IsEnemyFaction(OtherActor))
 	{
 		StartSpawnTimer();
-		TriggerArea->SetCollisionProfileName(TEXT("NoCollision"));
+		TriggerArea->DestroyComponent();
 	}
 }
 
@@ -91,14 +92,8 @@ void AActorSpawner::BeginSpawn()
 		return;
 	}
 
-	AActor* SpawnedActor = SpawnActor();
-
+	AActor* SpawnedActor = nullptr;
 	AActor* TargetPoint = nullptr;
-
-	if (!SpawnedActor) {
-		return;
-	}
-	CurrentSpawnCount++;
 
 	// If no free spawn, then this means the actor will have a target point to go to after spawning.
 	if (!FreeSpawn)
@@ -113,6 +108,13 @@ void AActorSpawner::BeginSpawn()
 		TargetPoint = OutActors[FMath::RandRange(0, OutActors.Num() - 1)];
 
 		if (!IsTargetPointValid(TargetPoint)) {
+			return;
+		}
+
+
+		SpawnedActor = SpawnActor();
+
+		if (!SpawnedActor) {
 			return;
 		}
 
@@ -134,6 +136,14 @@ void AActorSpawner::BeginSpawn()
 	// otherwise set the owner of the target point to prevent this target point from being assigned more than once.
 	if (ConstantSpawning)
 	{
+		if (!SpawnedActor) {
+			SpawnedActor = SpawnActor();
+		}
+
+		if (!SpawnedActor) {
+			return;
+		}
+
 		if (TargetPoint)
 		{
 			TargetPoint->SetOwner(SpawnedActor);
@@ -160,10 +170,7 @@ void AActorSpawner::BeginSpawn()
 		}
 	}
 
-	// Stop timer if spawn limit reached.
-	if (HasReachedSpawnLimit()) {
-		StopSpawnTimer();
-	}
+	CurrentSpawnCount++;
 
 	OnActorSpawned.Broadcast(SpawnedActor);
 }
