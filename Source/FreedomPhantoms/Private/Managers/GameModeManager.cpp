@@ -33,7 +33,7 @@ bool AGameModeManager::IsCoverPointTaken(FWorldCoverPoint CoverLocation)
 			FVector CoverPoint = CoverPoints[i].Location;
 
 			// is there a cover location close to this point?
-			if (SharedService::IsNearTargetPosition(CoverPoint, CoverLocation.Location, 10.f))
+			if (USharedService::IsNearTargetPosition(CoverPoint, CoverLocation.Location, 10.f))
 			{
 				if (CoverPoints[i].Owner)
 				{

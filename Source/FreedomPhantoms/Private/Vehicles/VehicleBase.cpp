@@ -13,6 +13,7 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/VehiclePathFollowerComponent.h"
 #include "Managers/GameStateBaseCustom.h"
+#include "Services/SharedService.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -274,6 +275,10 @@ void AVehicleBase::OnVehicleBeginOverlap(UPrimitiveComponent* OverlappedComp, AA
 		return;
 	}
 
+	// ignore other actor if not in sight.
+	if (!USharedService::CanSeeTarget(GetWorld(), GetActorLocation(), OtherActor, this)) {
+		return;
+	}
 
 	float DamageReduction = 5.f;
 

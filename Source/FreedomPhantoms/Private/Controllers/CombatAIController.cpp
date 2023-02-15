@@ -432,7 +432,7 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	{
 		auto EnemyCharacter = Cast<ACombatCharacter>(EnemyActor);
 		
-		auto IsTargetClose = SharedService::IsNearTargetPosition(OwningCombatCharacter, EnemyActor, EnemyCloseRange);
+		auto IsTargetClose = USharedService::IsNearTargetPosition(OwningCombatCharacter, EnemyActor, EnemyCloseRange);
 
 		bool IsEnemyAlive = UHealthComponent::IsActorAlive(EnemyCharacter);
 
@@ -607,7 +607,7 @@ void ACombatAIController::FindMountedGun()
 		{
 			bool IsInRange = MountedGunFinderComponent->IsInTargetRange(SelectedMG, EnemyActor, OwningCombatCharacter);
 
-			if (!IsInRange || SharedService::IsTargetBehind(SelectedMG, EnemyActor))
+			if (!IsInRange || USharedService::IsTargetBehind(SelectedMG, EnemyActor))
 			{
 				IsMGValid = false;
 			}

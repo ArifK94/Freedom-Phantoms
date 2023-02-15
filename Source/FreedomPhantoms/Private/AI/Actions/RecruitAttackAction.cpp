@@ -40,7 +40,7 @@ bool URecruitAttackAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	}
 
 	// if near destination to defend, then no need run this action any further.
-	if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetRecruitInfo()->TargetLocation, 200.f)) {
+	if (USharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetRecruitInfo()->TargetLocation, 200.f)) {
 		return false;
 	}
 
@@ -103,7 +103,7 @@ bool URecruitAttackAction::CanSeeHVT() const
 	auto Range = FMath::RandRange(800.f, 2000.f);
 	
 	// check if within close range to target. 
-	auto IsNearTarget = SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), TargetActor->GetActorLocation(), Range);
+	auto IsNearTarget = USharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), TargetActor->GetActorLocation(), Range);
 
 	if (!IsNearTarget) {
 		return false;

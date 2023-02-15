@@ -78,8 +78,8 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 		// is the enemy behind the NPC?
 		// can the enemy see the cover point?
 		// stop using this cover & search for another cover point.
-		if (SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor(), .0f) ||
-			SharedService::CanSeeTarget(GetWorld(), CoverPoint.GetLocation(), CombatAIController->GetEnemyActor(), OwningCombatCharacter))
+		if (USharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor(), .0f) ||
+			USharedService::CanSeeTarget(GetWorld(), CoverPoint.GetLocation(), CombatAIController->GetEnemyActor(), OwningCombatCharacter))
 		{
 			OwningCombatCharacter->StopCover();
 			CombatAIController->SetCoverFound(false);

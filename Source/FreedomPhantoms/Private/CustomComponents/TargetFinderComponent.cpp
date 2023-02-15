@@ -262,7 +262,7 @@ AActor* UTargetFinderComponent::FindTarget()
 	if (CanSeeLast)
 	{
 		// if the new target is not close by, then continue using the last enemy.
-		if (TargetActor && !SharedService::IsNearTargetPosition(GetOwner()->GetActorLocation(), TargetActor->GetActorLocation(), 500.f))
+		if (TargetActor && !USharedService::IsNearTargetPosition(GetOwner()->GetActorLocation(), TargetActor->GetActorLocation(), 500.f))
 		{
 			TargetActor = LastSeenTarget;
 		}

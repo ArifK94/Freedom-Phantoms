@@ -4,9 +4,14 @@
 #include "Services/SharedService.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
-bool SharedService::ThrowRotationAngle(FVector Start, FVector End, FRotator& TargetRotation)
+USharedService::USharedService()
+{
+}
+
+bool USharedService::ThrowRotationAngle(FVector Start, FVector End, FRotator& TargetRotation)
 {
 	float Gravity = 980.f;
 
@@ -86,7 +91,7 @@ bool SharedService::ThrowRotationAngle(FVector Start, FVector End, FRotator& Tar
 	return true;
 }
 
-bool SharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor, float Amount)
+bool USharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor, float Amount)
 {
 	if (ActorA == nullptr || TargetActor == nullptr) {
 		return false;
@@ -105,7 +110,7 @@ bool SharedService::IsTargetBehind(AActor* ActorA, AActor* TargetActor, float Am
 	return false;
 }
 
-bool SharedService::IsNearTargetPosition(FVector Start, FVector Location, float Radius)
+bool USharedService::IsNearTargetPosition(FVector Start, FVector Location, float Radius)
 {
 	// if zero, then this is assumed a target destination has not been set, therefore it is near target.
 	if (Location.IsZero()) {
@@ -126,7 +131,7 @@ bool SharedService::IsNearTargetPosition(FVector Start, FVector Location, float 
 	return false;
 }
 
-bool SharedService::IsNearTargetPosition(AActor* ActorA, AActor* ActorB, float Radius)
+bool USharedService::IsNearTargetPosition(AActor* ActorA, AActor* ActorB, float Radius)
 {
 	if (ActorA == nullptr || ActorB == nullptr) {
 		return false;
@@ -135,7 +140,7 @@ bool SharedService::IsNearTargetPosition(AActor* ActorA, AActor* ActorB, float R
 	return IsNearTargetPosition(ActorA->GetActorLocation(), ActorB->GetActorLocation(), Radius);
 }
 
-bool SharedService::CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner)
+bool USharedService::CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner)
 {
 	if (World == nullptr || TargetActor == nullptr) {
 		return false;
@@ -158,7 +163,7 @@ bool SharedService::CanSeeTarget(UWorld* World, FVector Start, AActor* TargetAct
 	return bHitTarget && OutHitTarget.GetActor() == TargetActor;
 }
 
-bool SharedService::IsInAir(FHitResult& OutHit, AActor* Actor, float Length)
+bool USharedService::IsInAir(FHitResult& OutHit, AActor* Actor, float Length)
 {
 	FCollisionQueryParams QueryParams;
 	QueryParams.bTraceComplex = true;

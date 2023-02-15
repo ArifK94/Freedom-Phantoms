@@ -58,7 +58,7 @@ AActor* ADestructionObjective::OnPickup_Implementation(APawn* InPawn, AControlle
 	if (DestructiveProjectileClass)
 	{
 		FHitResult OutHit;
-		SharedService::IsInAir(OutHit, InPawn, 1000.f);
+		USharedService::IsInAir(OutHit, InPawn, 1000.f);
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;

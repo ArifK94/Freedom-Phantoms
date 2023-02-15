@@ -57,7 +57,7 @@ void UAvoidanceAction::Tick(float DeltaTime, AAIController* Controller, APawn* P
 	if (CombatAIController->GetAvoidableParams().Actor) {
 
 		// is still near avoid actor?
-		if (SharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetAvoidableParams().Actor->GetActorLocation(), CombatAIController->GetAvoidableParams().AvoidableDistance)) {
+		if (USharedService::IsNearTargetPosition(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetAvoidableParams().Actor->GetActorLocation(), CombatAIController->GetAvoidableParams().AvoidableDistance)) {
 			Flee();
 		}
 		else {

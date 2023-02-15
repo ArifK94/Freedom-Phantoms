@@ -80,7 +80,7 @@ bool UCoverFinderComponent::FindCover(AActor* TargetActor, FTransform& ChosenCov
 		FVector LocationPoint = CoverPoint.GetLocation();
 
 		// we want cover points which the target actor cannot see while taking cover.
-		if (SharedService::CanSeeTarget(GetWorld(), LocationPoint, TargetActor, Character)) {
+		if (USharedService::CanSeeTarget(GetWorld(), LocationPoint, TargetActor, Character)) {
 			continue;
 		}
 
@@ -93,9 +93,9 @@ bool UCoverFinderComponent::FindCover(AActor* TargetActor, FTransform& ChosenCov
 
 
 		bool CanSeeTarget =
-			SharedService::CanSeeTarget(GetWorld(), Left, TargetActor, Character) ||
-			SharedService::CanSeeTarget(GetWorld(), Right, TargetActor, Character) ||
-			SharedService::CanSeeTarget(GetWorld(), Top, TargetActor, Character);
+			USharedService::CanSeeTarget(GetWorld(), Left, TargetActor, Character) ||
+			USharedService::CanSeeTarget(GetWorld(), Right, TargetActor, Character) ||
+			USharedService::CanSeeTarget(GetWorld(), Top, TargetActor, Character);
 
 
 		// if no line traces can see the target actor, then ignore this cover point.

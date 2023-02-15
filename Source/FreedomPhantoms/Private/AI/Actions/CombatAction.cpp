@@ -156,7 +156,7 @@ void UCombatAction::ShootAtEnemy()
 	}
 
 	// check if enemy distance is close, if so then pull out pistol
-	bool IsTargetClose = SharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange());
+	bool IsTargetClose = USharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange());
 
 	// if target is not close, then switch back to primary
 	if (!IsTargetClose && OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetSecondaryWeaponObj() && !OwningCombatCharacter->GetIsInVehicle())
@@ -209,7 +209,7 @@ void UCombatAction::ReloadWeapon()
 	OwningCombatCharacter->EndAim();
 
 	// check if enemy distance is close, if so then pull out pistol
-	bool IsTargetClose = SharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange());
+	bool IsTargetClose = USharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange());
 
 	auto PumpActionWeapon = Cast<APumpActionWeapon>(OwningCombatCharacter->GetCurrentWeapon());
 
@@ -261,7 +261,7 @@ void UCombatAction::Aim()
 		OwningCombatCharacter->BeginAim();
 	}
 	// can do blind fire if in cover without aiming but only if enemy is nearby.
-	else if (SharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange()) &&
+	else if (USharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange()) &&
 		OwningCombatCharacter->IsTakingCover() && CanBlindFire)
 	{
 		if (!UKismetMathLibrary::RandomBool() && OwningCombatCharacter->IsAiming())
@@ -278,7 +278,7 @@ void UCombatAction::Aim()
 void UCombatAction::ThrowGrenade()
 {
 	FRotator TargetRotation;
-	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetEnemyActor()->GetActorLocation(), TargetRotation);
+	bool IsReachable = USharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetEnemyActor()->GetActorLocation(), TargetRotation);
 
 	if (IsReachable)
 	{
@@ -298,7 +298,7 @@ bool UCombatAction::CanThrowGrenade()
 	}
 
 	// is enemy close? if so, then do not throw grenade.
-	if (SharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange())) {
+	if (USharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange())) {
 		return false;
 	}
 
@@ -308,6 +308,6 @@ bool UCombatAction::CanThrowGrenade()
 	}
 
 	FRotator TargetRotation;
-	bool IsReachable = SharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetEnemyActor()->GetActorLocation(), TargetRotation);
+	bool IsReachable = USharedService::ThrowRotationAngle(OwningCombatCharacter->GetActorLocation(), CombatAIController->GetEnemyActor()->GetActorLocation(), TargetRotation);
 	return IsReachable;
 }

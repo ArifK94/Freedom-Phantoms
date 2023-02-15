@@ -68,13 +68,13 @@ bool UMountedGunAction::CanRun(AAIController* Controller, APawn* Pawn) const
 		if (FVector::Distance(OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos()) < 100.f)
 		{
 			// enemy is behind MG?
-			if (SharedService::IsTargetBehind(OwningCombatCharacter->GetMountedGun(), CombatAIController->GetEnemyActor())) {
+			if (USharedService::IsTargetBehind(OwningCombatCharacter->GetMountedGun(), CombatAIController->GetEnemyActor())) {
 				OwningCombatCharacter->DropMountedGun();
 				return false;
 			}
 
 			// is enemy behind me?
-			if (SharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
+			if (USharedService::IsTargetBehind(OwningCombatCharacter, CombatAIController->GetEnemyActor())) {
 				// Still posssess MG when enemy is no longer behing AI
 				OwningCombatCharacter->DropMountedGun(false);
 				return false;
@@ -132,7 +132,7 @@ void UMountedGunAction::FindMountedGun()
 			if (!IsInRange) {
 				IsMGValid = false;
 			}
-			else if (SharedService::IsTargetBehind(SelectedMG, EnemyActor)) {
+			else if (USharedService::IsTargetBehind(SelectedMG, EnemyActor)) {
 				IsMGValid = false;
 			}
 		}
@@ -158,7 +158,7 @@ void UMountedGunAction::MaintainMG()
 
 	if (!OwningCombatCharacter->IsReloading()
 		&& !OwningCombatCharacter->IsUsingMountedWeapon()
-		&& !SharedService::IsTargetBehind(OwningCombatCharacter, EnemyActor)
+		&& !USharedService::IsTargetBehind(OwningCombatCharacter, EnemyActor)
 		&& CombatAIController->GetMountedGunFinderComponent()->IsInTargetRange(OwningCombatCharacter->GetMountedGun(), OwningCombatCharacter, EnemyActor)) {
 		// Don't want AI to teleport to the MG, needs to be close enough to use it
 		auto DistanceToMG = FVector::Distance(OwningCombatCharacter->GetActorLocation(), OwningCombatCharacter->GetMountedGun()->GetCharacterStandPos());

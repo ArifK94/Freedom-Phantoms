@@ -4,31 +4,41 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Engine/World.h"
+
+#include "SharedService.generated.h"
 
 /**
  * Any shared functions which can be used across any class.
  */
-class FREEDOMPHANTOMS_API SharedService
+UCLASS(Blueprintable)
+class FREEDOMPHANTOMS_API USharedService : public UObject
 {
+	GENERATED_BODY()
+	
 public:
+	USharedService();
 
 	/**
 	* To help AI throw projectiles at an angle to the target. This is done by adjusting the pitch accordingly.
 	* Returns a bool to check if angle to target is reachable
 	*/
-	static bool ThrowRotationAngle(FVector Start, FVector End, FRotator& TargetRotation);
+	UFUNCTION(BlueprintCallable)
+		static bool ThrowRotationAngle(FVector Start, FVector End, FRotator& TargetRotation);
 
 
 	/**
 	* Check if TargetActor is behind ActorA
 	*/
-	static bool IsTargetBehind(AActor* ActorA, AActor* TargetActor, float Amount = -.7f);
+	UFUNCTION(BlueprintCallable)
+		static bool IsTargetBehind(AActor* ActorA, AActor* TargetActor, float Amount = -.7f);
 
 	/**
 	* Is an actor near a location?
 	* Radius is how many far apart should be considered nearby to the location.
 	*/
-	static bool IsNearTargetPosition(FVector Start, FVector Location, float Radius);
+	UFUNCTION(BlueprintCallable)
+		static bool IsNearTargetPosition(FVector Start, FVector Location, float Radius);
 
 	/**
 	* are actors near each other?
@@ -39,10 +49,14 @@ public:
 	/**
 	* Can the target actor been seen from a position?
 	*/
-	static bool CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner);
+	UFUNCTION(BlueprintCallable)
+		static bool CanSeeTarget(UWorld* World, FVector Start, AActor* TargetActor, AActor* Owner);
 
 	/**
 	* Check if an actor is in the air.
 	*/
-	static bool IsInAir(struct FHitResult& OutHit, AActor* Actor, float Length = 100.f);
+	UFUNCTION(BlueprintCallable)
+		static bool IsInAir(struct FHitResult& OutHit, AActor* Actor, float Length = 100.f);
+
+
 };
