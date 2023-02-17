@@ -100,6 +100,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		static void ApplyExplosionDamage(AActor* DamageCauser, FVector ImpactPoint, float Radius, float Damage);
 
+	void SetCanBeWounded(bool Value);
+
 
 	void Revive();
 
@@ -137,7 +139,6 @@ public:
 
 	void SetDamageReduceFactor(float Value) { DamageReduceFactor = Value; }
 
-	void SetCanBeWounded(bool Value) { CanBeWounded = Value; }
 
 	bool GetCanBeWounded() { return CanBeWounded; }
 

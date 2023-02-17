@@ -116,6 +116,16 @@ void UHealthComponent::ApplyExplosionDamage(AActor* DamageCauser, FVector Impact
 	}
 }
 
+void UHealthComponent::SetCanBeWounded(bool Value)
+{
+	CanBeWounded = Value;
+
+	if (!isAlive)
+	{
+		isWounded = CanBeWounded;
+	}
+}
+
 
 void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 {

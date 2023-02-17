@@ -305,6 +305,11 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (!HealthComp->IsAlive())
 	{
+		if (IsInVehicle)
+		{
+			HealthComp->SetCanBeWounded(false);
+		}
+
 		VoiceAudioComponent->Stop();
 
 		ClearTimeHandlers();
@@ -318,6 +323,8 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 		// Custom collision profile to allow remove capsule collision but still run root motion
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Death"));
+
+
 
 		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(InHealthParameters.HitInfo.PhysMaterial.Get());
 
