@@ -43,7 +43,7 @@ bool UCombatAction::CanRun(AAIController* Controller, APawn* Pawn) const
 		CanRun = false;
 	}
 
-	if (OwningCombatCharacter->GetIsInVehicle()) {
+	if (OwningCombatCharacter->GetIsInVehicle() && !OwningCombatCharacter->GetVehicletSeat().CanCharacterShoot) {
 		CanRun = false;
 	}
 
