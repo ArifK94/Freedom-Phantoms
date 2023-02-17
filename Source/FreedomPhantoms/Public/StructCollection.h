@@ -697,6 +697,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		FName SeatingSocketName;
 
+	/** If there is a door for this seat. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FName SeatDoorSocketName;
+
 	/** FVehicleWeapon list index, leave as -1 meaning passenger seat does not have a weapon */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		int32 AssociatedWeapon;

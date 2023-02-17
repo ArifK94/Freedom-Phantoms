@@ -7,6 +7,7 @@
 #include "Accessories/Rope.h"
 #include "Vehicles/VehicleBase.h"
 #include "Characters/BaseCharacter.h"
+#include "CustomComponents/HealthComponent.h"
 
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -26,6 +27,8 @@ UVehiclePathFollowerComponent::UVehiclePathFollowerComponent()
 	HasInifiteLaps = false;
 	DestroyOnPathComplete = true;
 	FindPathPerFrame = false;
+	SimultaneousExit = false;
+	RequiresPilot = false;
 
 	SpawnLocationMin = FVector(-10.f, -10.f, 10.f);
 	SpawnLocationMax = FVector(10.f, 10.f, 10.f);
@@ -88,6 +91,11 @@ void UVehiclePathFollowerComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	PreviousActorLocation = GetOwner()->GetActorLocation();
 
 	IsStopped = !CurveTimeline.IsPlaying();
+}
+
+bool UVehiclePathFollowerComponent::ShouldStopVehicle()
+{
+	return CurrentVehicleMovement == EVehicleMovement::PassengerExit || !CurveFloat || !CanFollowPath();
 }
 
 void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -343,7 +351,7 @@ void UVehiclePathFollowerComponent::FindNearestNav()
 
 void UVehiclePathFollowerComponent::ExitPassengers()
 {
-	auto VehicleSeats = OwningVehicle->GetVehicleSeatPtrList();
+	auto VehicleSeats = OwningVehicle->GetVehicleSeats();
 
 	if (VehicleSeats.Num() <= 0) {
 		CurrentVehicleMovement = EVehicleMovement::MovingForward;
@@ -356,20 +364,20 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 	for (int i = 0; i < VehicleSeats.Num(); i++)
 	{
 		auto VehicleSeat = VehicleSeats[i];
-		auto Character = VehicleSeat->Character;
+		auto Character = VehicleSeat.Character;
 
 		if (!Character) {
 			OwningVehicle->RemovePassenger(i);
 			continue;
 		}
 
-		if (!VehicleSeat->OwningVehicle) {
+		if (!VehicleSeat.OwningVehicle) {
 			OwningVehicle->RemovePassenger(i);
 			continue;
 		}
 
 		// Cannot exit from vehicle?
-		if (!VehicleSeat->ExitPassengerOnPoint) {
+		if (!VehicleSeat.ExitPassengerOnPoint) {
 			continue;
 		}
 
@@ -381,25 +389,42 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 		else
 		{
 			HasRemainingPassengers = true;
+			bool IsExiting = false;
 
 			if (!Character->GetIsExitingVehicle())
 			{
-				if (VehicleSeat->IsSeatLeftSide)
+				if (SimultaneousExit)
 				{
-					if (RopeLeft && !RopeLeft->GetIsRopeOccupied())
-					{
-						RopeLeft->AttachActorToRope(Character);
-						Character->SetIsExitingVehicle(true);
-					}
+					Character->SetIsExitingVehicle(true);
+					IsExiting = true;
 				}
 				else
 				{
-					if (RopeRight && !RopeRight->GetIsRopeOccupied())
+					if (VehicleSeat.IsSeatLeftSide)
 					{
-						RopeRight->AttachActorToRope(Character);
-						Character->SetIsExitingVehicle(true);
+						if (RopeLeft && !RopeLeft->GetIsRopeOccupied())
+						{
+							RopeLeft->AttachActorToRope(Character);
+							Character->SetIsExitingVehicle(true);
+							IsExiting = true;
+						}
+					}
+					else
+					{
+						if (RopeRight && !RopeRight->GetIsRopeOccupied())
+						{
+							RopeRight->AttachActorToRope(Character);
+							Character->SetIsExitingVehicle(true);
+							IsExiting = true;
+						}
 					}
 				}
+
+				if (IsExiting)
+				{
+					OnPasengerExit.Broadcast(VehicleSeat);
+				}
+
 			}
 		}
 
@@ -464,6 +489,29 @@ void UVehiclePathFollowerComponent::ReleaseRopes()
 	}
 }
 
+bool UVehiclePathFollowerComponent::CanFollowPath()
+{
+	if (!RequiresPilot) {
+		return true;
+	}
+
+	auto VehicleSeats = OwningVehicle->GetVehicleSeats();
+
+	// Check if pilot is still present in the vehicle.
+	for (auto VehicleSeat : VehicleSeats)
+	{
+		if (VehicleSeat.Role == EVehicleRole::Pilot)
+		{
+			if (UHealthComponent::IsActorAlive(VehicleSeat.Character))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 void UVehiclePathFollowerComponent::SetVehicleExit(ABaseCharacter* Character)
 {
 	auto VehicleSeats = Character->GetVehicletSeat();
@@ -523,6 +571,14 @@ void UVehiclePathFollowerComponent::Stop()
 {
 	if (!CurveTimeline.IsPlaying()) {
 		return;
+	}
+
+	if (THandler_ExitPassenger.IsValid()) {
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
+	}
+
+	if (THandler_ResumePath.IsValid()) {
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
 	}
 
 	CurveTimeline.Stop();

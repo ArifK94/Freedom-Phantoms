@@ -254,7 +254,7 @@ void UHealthComponent::Revive()
 
 bool UHealthComponent::IsActorAlive(AActor* Owner)
 {
-	if (!Owner || !UKismetSystemLibrary::IsValid(Owner) || Owner->GetName() == "None") {
+	if (!UKismetSystemLibrary::IsValid(Owner)) {
 		return false;
 	}
 
@@ -280,7 +280,7 @@ bool UHealthComponent::IsActorAlive(AActor* Owner)
 
 bool UHealthComponent::IsActorWounded(AActor* Owner)
 {
-	if (!Owner || Owner->GetName() == "None") {
+	if (!UKismetSystemLibrary::IsValid(Owner)) {
 		return false;
 	}
 

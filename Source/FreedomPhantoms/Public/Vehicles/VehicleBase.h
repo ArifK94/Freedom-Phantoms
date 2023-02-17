@@ -132,7 +132,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<FVehicletSeating> VehicleSeats;
-	TArray<FVehicletSeating*> VehicleSeatPtrList;
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -352,8 +351,6 @@ public:
 
 
 	USkeletalMeshComponent* GetMeshComponent() { return MeshComponent; }
-
-	TArray<FVehicletSeating*> GetVehicleSeatPtrList() { return VehicleSeatPtrList; }
 
 	TArray<FVehicletSeating> GetVehicleSeats() { return VehicleSeats; }
 

@@ -354,6 +354,8 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		if (GetController()) {
 			GetController()->UnPossess();
 		}
+
+		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	}
 }
 

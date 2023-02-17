@@ -18,6 +18,7 @@ class UCapsuleComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVehiclePointReachedSignature, FVehicleSplinePoint, VehicleSplinePoint);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathCompleteSignature, AVehicleBase*, Vehicle);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPasengerExitSignature, FVehicletSeating, VehicletSeat);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMPHANTOMS_API UVehiclePathFollowerComponent : public UActorComponent
@@ -96,6 +97,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool FindPathPerFrame;
 
+	/** If vehicle path requires pilot character, then the vehicle will not follow path if no pilot exists or is alive in the vehicle. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passenger Exit", meta = (AllowPrivateAccess = "true"))
+		bool RequiresPilot;
+
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Specified Target Destination", meta = (AllowPrivateAccess = "true"))
 		FVector TargetDestination;
@@ -130,7 +137,9 @@ private:
 	ARope* RopeLeft;
 	ARope* RopeRight;
 
-
+	/** Do all passengers exit the vehicle at the same time? eg. a car/ */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passenger Exit", meta = (AllowPrivateAccess = "true"))
+		bool SimultaneousExit;
 
 	/** Might want to destroy after completing the path */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -173,6 +182,8 @@ private:
 
 	void ReleaseRopes();
 
+	bool CanFollowPath();
+
 	UFUNCTION(BlueprintCallable)
 		void SpawnRandomLocation();
 
@@ -186,6 +197,7 @@ protected:
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	bool ShouldStopVehicle();
 
 	//Event Handlers
 public:
@@ -207,6 +219,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 		FOnPathCompleteSignature OnPathComplete;
+
+	UPROPERTY(BlueprintAssignable)
+		FOnPasengerExitSignature OnPasengerExit;
 
 	EVehicleMovement GetCurrentVehicleMovement() { return CurrentVehicleMovement; }
 

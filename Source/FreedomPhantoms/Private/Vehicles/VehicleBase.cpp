@@ -149,11 +149,11 @@ void AVehicleBase::BeginPlay()
 
 	CameraBoom->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraSocket);
 
-	GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::TimerTick, .2f, true);
-
 	SpawnVehicleWeapons();
 
 	CreateThermalMatInstances();
+
+	GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::TimerTick, .2f, true, 2.f);
 }
 
 void AVehicleBase::Tick(float DeltaTime)
@@ -190,20 +190,20 @@ void AVehicleBase::TimerTick()
 
 void AVehicleBase::UpdatePassengerSeats()
 {
-	auto PassengerList = VehicleSeatPtrList;
-
-	if (PassengerList.Num() <= 0) {
+	if (VehicleSeats.Num() <= 0) {
 		return;
 	}
+
+	auto PassengerList = VehicleSeats;
 
 	// Remove passengers if not alive
 	for (int i = PassengerList.Num() - 1; i >= 0; i--)
 	{
-		auto Character = PassengerList[i]->Character;
+		auto Character = PassengerList[i].Character;
 
-		if (Character == nullptr || Character->GetName() == "None" || !UHealthComponent::IsActorAlive(Character))
+		if (!UHealthComponent::IsActorAlive(Character))
 		{
-			VehicleSeatPtrList.RemoveAt(i);
+			VehicleSeats.RemoveAt(i);
 		}
 	}
 }
@@ -224,7 +224,7 @@ void AVehicleBase::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRota
 
 bool AVehicleBase::ShouldStopVehicle()
 {
-	return (CheckFrontCollision && IsFrontCollisionFound()) || VehiclePathFollowerComponent->GetCurrentVehicleMovement() == EVehicleMovement::PassengerExit || !VehiclePathFollowerComponent->GetCurveFloat();
+	return (CheckFrontCollision && IsFrontCollisionFound()) || VehiclePathFollowerComponent->ShouldStopVehicle();
 }
 
 void AVehicleBase::AddUIWidget()
@@ -310,9 +310,9 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 		EngineAudio->Stop();
 
 		// Remove all passengers
-		for (int i = 0; i < VehicleSeatPtrList.Num(); i++)
+		for (int i = 0; i < VehicleSeats.Num(); i++)
 		{
-			auto Character = VehicleSeatPtrList[i]->Character;
+			auto Character = VehicleSeats[i].Character;
 
 			if (Character)
 			{
@@ -472,13 +472,6 @@ void AVehicleBase::SpawnVehicleWeapons()
 
 			VehicleWeapons[i].Weapon->OnKillConfirmed.AddDynamic(this, &AVehicleBase::OnWeaponKillConfirm);
 		}
-
-		auto VehicleWeaponPtr = new FVehicleWeapon();
-		VehicleWeaponPtr->PitchMin = VehicleWeapon.PitchMin;
-		VehicleWeaponPtr->PitchMax = VehicleWeapon.PitchMax;
-		VehicleWeaponPtr->YawMin = VehicleWeapon.YawMin;
-		VehicleWeaponPtr->YawMax = VehicleWeapon.YawMax;
-		VehicleWeaponPtr->Weapon = VehicleWeapons[i].Weapon;
 	}
 
 	// We need to spawn the weapons before any characters in case any associated weapons have assigned for certain seats like turrets
@@ -502,13 +495,13 @@ void AVehicleBase::SpawnVehicleSeatings()
 			continue;
 		}
 
-		VehicleSeats[i].Character = GetWorld()->SpawnActor<ABaseCharacter>(VehicleSeat.CharacterClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		auto Character = GetWorld()->SpawnActor<ABaseCharacter>(VehicleSeat.CharacterClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-		if (!VehicleSeats[i].Character) {
+		if (!Character) {
 			continue;
 		}
 
-		VehicleSeats[i].Character->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
+		Character->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleSeat.SeatingSocketName);
 
 		// Set to use weapon, usually a mounted gun would be used
 		if (VehicleSeat.AssociatedWeapon > -1)
@@ -517,7 +510,7 @@ void AVehicleBase::SpawnVehicleSeatings()
 			auto MG = Cast<AMountedGun>(VehicleWeapons[VehicleSeat.AssociatedWeapon].Weapon);
 			if (MG) // if it's a mounted gun
 			{
-				ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(VehicleSeats[i].Character);
+				ACombatCharacter* CombatCharacter = Cast<ACombatCharacter>(Character);
 				CombatCharacter->SetMountedGun(MG);
 				CombatCharacter->UseMountedGun();
 
@@ -531,25 +524,18 @@ void AVehicleBase::SpawnVehicleSeatings()
 			}
 		}
 
-		VehicleSeat.Character = VehicleSeats[i].Character;
 		VehicleSeat.OwningVehicle = this;
+		VehicleSeat.Character = Character;
 
-		auto VehicleSeatPtr = new FVehicletSeating();
-		VehicleSeatPtr->IsSeatLeftSide = VehicleSeat.IsSeatLeftSide;
-		VehicleSeatPtr->ExitPassengerOnPoint = VehicleSeat.ExitPassengerOnPoint;
-		VehicleSeatPtr->CanCharacterShoot = VehicleSeat.CanCharacterShoot;
-		VehicleSeatPtr->Character = VehicleSeats[i].Character;
-		VehicleSeatPtr->OwningVehicle = this;
-		VehicleSeats[i].Character->SetVehicleSeat(VehicleSeat);
-		VehicleSeatPtrList.Add(VehicleSeatPtr);
+		Character->SetVehicleSeat(VehicleSeat);
 
-
+		VehicleSeats[i] = VehicleSeat;
 	}
 }
 
 void AVehicleBase::RemovePassenger(int Index)
 {
-	VehicleSeatPtrList.RemoveAt(Index);
+	VehicleSeats.RemoveAt(Index);
 }
 
 void AVehicleBase::CreateThermalMatInstances()
@@ -648,18 +634,18 @@ void AVehicleBase::UpdateWeaponView()
 	}
 
 	// return previous characters back to AI posession
-	if (VehicleSeatPtrList.Num() > 0 && CurrentWeaponIndex - 1 >= 0)
+	if (VehicleSeats.Num() > 0 && CurrentWeaponIndex - 1 >= 0)
 	{
-		auto Seat = VehicleSeatPtrList[CurrentWeaponIndex - 1];
+		auto Seat = VehicleSeats[CurrentWeaponIndex - 1];
 
-		if (UHealthComponent::IsActorAlive(Seat->Character)) {
+		if (UHealthComponent::IsActorAlive(Seat.Character)) {
 
-			Seat->Character->AutoPossessPlayer = EAutoReceiveInput::Disabled;
-			if (Seat->Character->GetDefaultAIController())
+			Seat.Character->AutoPossessPlayer = EAutoReceiveInput::Disabled;
+			if (Seat.Character->GetDefaultAIController())
 			{
-				Seat->Character->GetDefaultAIController()->Possess(Seat->Character);
+				Seat.Character->GetDefaultAIController()->Possess(Seat.Character);
 			}
-			Seat->Character->SetVehicleSeat(VehicleSeats[CurrentWeaponIndex - 1]); // so AI does not fall to the ground when repossessed
+			Seat.Character->SetVehicleSeat(VehicleSeats[CurrentWeaponIndex - 1]); // so AI does not fall to the ground when repossessed
 		}
 	}
 
@@ -667,18 +653,18 @@ void AVehicleBase::UpdateWeaponView()
 	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeapon);
 
 
-	if (VehicleSeatPtrList.Num() > 0)
+	if (VehicleSeats.Num() > 0)
 	{
 		// Player possessing is required if the character is posseseed by the AI controller
-		auto Seat = VehicleSeatPtrList[CurrentWeaponIndex];
+		auto Seat = VehicleSeats[CurrentWeaponIndex];
 
-		if (UHealthComponent::IsActorAlive(Seat->Character)) {
+		if (UHealthComponent::IsActorAlive(Seat.Character)) {
 
-			if (Seat->Character->GetDefaultAIController()) {
-				Seat->Character->GetDefaultAIController()->UnPossess();
+			if (Seat.Character->GetDefaultAIController()) {
+				Seat.Character->GetDefaultAIController()->UnPossess();
 			}
 
-			Seat->Character->AutoPossessPlayer = EAutoReceiveInput::Player0;
+			Seat.Character->AutoPossessPlayer = EAutoReceiveInput::Player0;
 		}
 	}
 
