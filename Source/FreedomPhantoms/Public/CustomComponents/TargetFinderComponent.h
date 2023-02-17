@@ -92,6 +92,8 @@ public:
 
 	bool DoesClassFilterExist(TSubclassOf<AActor> Class);
 
+	void RemoveClassFilter(TSubclassOf<AActor> Class);
+
 private:
 	void FindTargetUpdate();
 

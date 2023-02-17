@@ -96,11 +96,20 @@ void ACombatAIController::Tick(float DeltaTime)
 	// AI can take out vehicles if holds an RPG
 	if (OwningCombatCharacter && TargetFinderComponent)
 	{
-		if ((OwningCombatCharacter->GetPrimaryWeapon() && OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponType() == WeaponType::RPG) || (OwningCombatCharacter->GetSecondaryWeaponObj() && OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponType() == WeaponType::RPG))
+		if ((OwningCombatCharacter->GetPrimaryWeapon() && OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponType() == WeaponType::RPG) 
+			|| (OwningCombatCharacter->GetSecondaryWeaponObj() && OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponType() == WeaponType::RPG)
+			|| (OwningCombatCharacter->GetCurrentWeapon() && OwningCombatCharacter->GetCurrentWeapon()->GetWeaponType() == WeaponType::MountedGun))
 		{
 			if (!TargetFinderComponent->DoesClassFilterExist(AVehicleBase::StaticClass()))
 			{
 				TargetFinderComponent->AddClassFilter(AVehicleBase::StaticClass());
+			}
+		}
+		else
+		{
+			if (TargetFinderComponent->DoesClassFilterExist(AVehicleBase::StaticClass()))
+			{
+				TargetFinderComponent->RemoveClassFilter(AVehicleBase::StaticClass());
 			}
 		}
 	}
@@ -396,12 +405,13 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 {
-	// Find a random point when landed after rappellinh so upcoming characters rapelling down do not stand in the same spot
+	// Find a random point when landed after rappelling so upcoming characters rapelling down do not stand in the same spot
 	if (!OwningCombatCharacter->GetIsExitingVehicle())
 	{
 		FNavLocation NavLocation;
 		UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
 		bool bOnNavMesh = UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(OwningCombatCharacter->GetActorLocation(), NavLocation);
+
 
 		if (bOnNavMesh)
 		{
@@ -420,6 +430,8 @@ void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 			DestinationRadius = DefaultDestinationRadius;
 		}
 	}
+
+	SetStayCombatAlert(true);
 }
 
 void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters)

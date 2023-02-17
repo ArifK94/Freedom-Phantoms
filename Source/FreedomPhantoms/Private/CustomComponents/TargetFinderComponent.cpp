@@ -312,6 +312,19 @@ bool UTargetFinderComponent::DoesClassFilterExist(TSubclassOf<AActor> Class)
 	return ClassFilters.Contains(Class);
 }
 
+void UTargetFinderComponent::RemoveClassFilter(TSubclassOf<AActor> Class)
+{
+	for (int i = 0; i < ClassFilters.Num(); i++)
+	{
+		auto Filter = ClassFilters[i];
+		if (Filter == Class)
+		{
+			ClassFilters.RemoveAt(i);
+			break;
+		}
+	}
+}
+
 bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLocation)
 {
 	if (TargetActor == nullptr || !UKismetSystemLibrary::IsValid(TargetActor)) {
