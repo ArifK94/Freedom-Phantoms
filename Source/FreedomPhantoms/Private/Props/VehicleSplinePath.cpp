@@ -173,7 +173,7 @@ void AVehicleSplinePath::UpdatePoints()
 		case EVehicleMovement::MovingForward:
 			ColliderColour = FColor(0, 0, 255, 255);
 			break;
-		case EVehicleMovement::Rappel:
+		case EVehicleMovement::PassengerExit:
 			ColliderColour = FColor(0, 255, 0, 255);
 			break;
 		default:

@@ -73,9 +73,6 @@ UENUM(BlueprintType)
 enum class EVehicleMovement : uint8
 {
 	Grounded		UMETA(DisplayName = "Grounded"),
-	Hovering		UMETA(DisplayName = "Hovering"),
-	Rappel			UMETA(DisplayName = "Rappel"),
-	Stopping 		UMETA(DisplayName = "Stopping"),
 	MovingForward	UMETA(DisplayName = "MovingForward"),
 	Waiting			UMETA(DisplayName = "Waiting"),
 	PassengerExit	UMETA(DisplayName = "PassengerExit")
