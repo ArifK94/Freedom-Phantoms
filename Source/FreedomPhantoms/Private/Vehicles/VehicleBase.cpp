@@ -37,6 +37,7 @@
 AVehicleBase::AVehicleBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	CanActorTick = true;
 
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
 	CapsuleComponent->SetCollisionProfileName(TEXT("OverlapAll"));
@@ -144,7 +145,6 @@ void AVehicleBase::BeginPlay()
 
 	FrontKillZoneComponent->OnComponentBeginOverlap.AddDynamic(this, &AVehicleBase::OnVehicleBeginOverlap);
 
-
 	HealthComponent->OnHealthChanged.AddDynamic(this, &AVehicleBase::OnHealthUpdate);
 
 	CameraBoom->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraSocket);
@@ -153,7 +153,13 @@ void AVehicleBase::BeginPlay()
 
 	CreateThermalMatInstances();
 
-	GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::TimerTick, .2f, true, 2.f);
+	SetActorTickEnabled(CanActorTick);
+
+	if (CanActorTick)
+	{
+		GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::TimerTick, .2f, true, 2.f);
+	}
+
 }
 
 void AVehicleBase::Tick(float DeltaTime)

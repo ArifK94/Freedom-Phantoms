@@ -33,6 +33,10 @@ protected:
 
 	FTimerHandle THandler_Update;
 
+	/** Save performance if vehicle does not require any tick or timer functions. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool CanActorTick;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCapsuleComponent* CapsuleComponent;
 
