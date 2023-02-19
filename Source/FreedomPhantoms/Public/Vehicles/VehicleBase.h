@@ -214,6 +214,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
 		USkeletalMesh* ExplosionMesh;
 
+	/** Due to some imported models having different forward rotation, the explosion mesh should be the same rotation as the normal vehicle mesh.
+	So adding extra transform should solve this issue if cannot reimport mesh with same rotation. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
+		FTransform ExplosionMeshTransformOffset;
+
 	/** Should the actor be destroyed from the scene after destroying vehicle? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
 		bool DestroyOnDeath;

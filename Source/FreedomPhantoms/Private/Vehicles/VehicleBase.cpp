@@ -301,10 +301,12 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 	{
 		SetActorTickEnabled(false);
 		GetWorldTimerManager().ClearTimer(THandler_Update);
+
 		FrontKillZoneComponent->OnComponentBeginOverlap.RemoveDynamic(this, &AVehicleBase::OnVehicleBeginOverlap);
 
 		if (VehiclePathFollowerComponent) {
 			VehiclePathFollowerComponent->Stop();
+			VehiclePathFollowerComponent->ClearPath();
 		}
 
 		EngineAudio->Stop();
@@ -385,6 +387,7 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 		if (ExplosionMesh)
 		{
 			MeshComponent->SetSkeletalMesh(ExplosionMesh, false);
+			MeshComponent->AddWorldTransform(ExplosionMeshTransformOffset);
 		}
 
 		// Blast away nearby physics actors
@@ -393,11 +396,8 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 		// Apply health damage
 		ApplyExplosionDamage(GetActorLocation(), InHealthParameters);
 
-
 		if (DestroyOnDeath)
 		{
-			VehiclePathFollowerComponent->ClearPath();
-
 			// hide actor for now since some other actors may rely on this actor's reference
 			SetActorHiddenInGame(true);
 
@@ -535,7 +535,10 @@ void AVehicleBase::SpawnVehicleSeatings()
 
 void AVehicleBase::RemovePassenger(int Index)
 {
-	VehicleSeats.RemoveAt(Index);
+	if (VehicleSeats.Num() > 0 && Index < VehicleSeats.Num())
+	{
+		VehicleSeats.RemoveAt(Index);
+	}
 }
 
 void AVehicleBase::CreateThermalMatInstances()

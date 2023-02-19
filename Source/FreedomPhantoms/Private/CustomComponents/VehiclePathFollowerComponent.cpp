@@ -93,11 +93,6 @@ void UVehiclePathFollowerComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	IsStopped = !CurveTimeline.IsPlaying();
 }
 
-bool UVehiclePathFollowerComponent::ShouldStopVehicle()
-{
-	return CurrentVehicleMovement == EVehicleMovement::PassengerExit || !CurveFloat || !CanFollowPath();
-}
-
 void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (VehiclePath == nullptr || OtherActor == nullptr) {
@@ -150,12 +145,14 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 	{
 		// Wait at current point
 	case EVehicleMovement::Waiting:
+
 		// Stop moving
 		CurveTimeline.Stop();
 
 		// Start timer & set the delay based on the duration
 		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, CurrentSplinePoint.WaitingDuration);
 		break;
+		
 		// Wait for passengers to leave
 	case EVehicleMovement::PassengerExit:
 
@@ -585,6 +582,12 @@ void UVehiclePathFollowerComponent::Stop()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+bool UVehiclePathFollowerComponent::ShouldStopVehicle()
+{
+	return !CurveFloat || !CurveTimeline.IsPlaying() || !CanFollowPath();
+}
+
+
 void UVehiclePathFollowerComponent::ResumeNormalSpeed()
 {
 	CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
@@ -598,7 +601,7 @@ void UVehiclePathFollowerComponent::Slowdown()
 // Free up the path for another vehicle to use
 void UVehiclePathFollowerComponent::ClearPath()
 {
-	if (VehiclePath && VehiclePath->GetOccupiedVehicle() == GetOwner())
+	if (GetWorld() && VehiclePath && VehiclePath->GetOccupiedVehicle() == GetOwner())
 	{
 		VehiclePath->SetOccupantVehicle(nullptr);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);

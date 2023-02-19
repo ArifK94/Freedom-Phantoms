@@ -29,7 +29,10 @@ void ARope::ReleaseRope()
 
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 
-	GetOwner()->GetWorldTimerManager().SetTimer(THandler_Destroy, this, &ARope::DestroyRope, 1.f, false, 10.f);
+	if (GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(THandler_Destroy, this, &ARope::DestroyRope, 1.f, false, 10.f);
+	}
 }
 
 void ARope::DestroyRope()
