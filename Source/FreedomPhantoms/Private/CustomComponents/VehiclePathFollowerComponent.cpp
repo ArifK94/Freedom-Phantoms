@@ -147,19 +147,18 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 	case EVehicleMovement::Waiting:
 
 		// Stop moving
-		CurveTimeline.Stop();
+		Stop();
 
 		// Start timer & set the delay based on the duration
 		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, CurrentSplinePoint.WaitingDuration);
+		
 		break;
 		
 		// Wait for passengers to leave
 	case EVehicleMovement::PassengerExit:
 
-		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
-
 		// Stop moving
-		CurveTimeline.Stop();
+		Stop();
 
 		SpawnRope();
 
@@ -173,6 +172,10 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 
 void UVehiclePathFollowerComponent::FindPath()
 {
+	if (!CurveFloat) {
+		return;
+	}
+
 	AVehicleSplinePath* ClosestPath = nullptr;
 
 	// if already assigned a path then return

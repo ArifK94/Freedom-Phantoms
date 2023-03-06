@@ -1329,7 +1329,7 @@ void ACustomPlayerController::RemoveVehicleControl()
 
 	// if the vehicle is destroyed, then the transition of going from vehicle to player camera will not exist and will happen in a sudden moment instead.
 	// In this case, we do not go through the delay of doing RemoveVehicleControlPost().
-	bool CanTransition = UKismetSystemLibrary::IsValid(ControlledVehicle);
+	bool CanTransition = UHealthComponent::IsActorAlive(ControlledVehicle);
 
 	EndAim();
 	EndFire();
