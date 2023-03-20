@@ -61,6 +61,10 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::ApplyDamage(FHealthParameters HealthParameters)
 {
+	if (!UKismetSystemLibrary::IsValid(HealthParameters.DamagedActor)) {
+		return;
+	}
+
 	UHealthComponent* HealthComponent = Cast<UHealthComponent>(HealthParameters.DamagedActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
 	if (HealthComponent)

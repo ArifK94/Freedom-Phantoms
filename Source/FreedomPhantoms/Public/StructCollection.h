@@ -72,6 +72,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UTexture2D* Thumbnail;
 
+	FMapDetail()
+	{
+
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -108,34 +112,34 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UHealthComponent* AffectedHealthComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		AActor* DamagedActor;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		AActor* DamageCauser;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		const class UDamageType* DamageType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class AController* InstigatedBy;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		AWeapon* WeaponCauser;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		AProjectile* Projectile;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FHitResult HitInfo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float Damage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool IsExplosive;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool ShouldWound;
 
 	/**
@@ -661,6 +665,11 @@ public:
 	UPROPERTY()
 		class UTextRenderComponent* TextRenderComponent;
 
+	FVehicleSplinePoint()
+	{
+
+	}
+
 };
 
 
@@ -944,6 +953,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<UAnimSequence*> StandExplosionsRight;
 
+	FDeathAnimation()
+	{
+
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -982,7 +995,13 @@ public:
 
 	FSurfaceImpactSet()
 	{
-
+		ParticleEffect = nullptr;
+		NiagaraEffect = nullptr;
+		AirParticleEffect = nullptr;
+		AirNiagaraEffect = nullptr;
+		DecalMaterial = nullptr;
+		Sound = nullptr;
+		Attenuation = nullptr;
 	}
 };
 
@@ -1032,6 +1051,11 @@ public:
 	/** The point which the defender should go to. */
 	UPROPERTY()
 		FVector TargetPoint;
+
+	FStrongholdDefenderParams()
+	{
+		TargetPoint = FVector::ZeroVector;
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -1050,6 +1074,13 @@ public:
 		UMaterialInterface* FlagMaterial;
 
 	FFaction* FactionDataSet;
+
+	FOccupiedFaction()
+	{
+		FactionCount = 0;
+		Faction = TeamFaction::Neutral;
+		FlagMaterial = nullptr;
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -1060,6 +1091,11 @@ struct FStrongholdDefender
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		ACombatCharacter* CombatCharacter;
+
+	FStrongholdDefender()
+	{
+		CombatCharacter = nullptr;
+	}
 };
 
 USTRUCT(BlueprintType)

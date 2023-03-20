@@ -454,7 +454,7 @@ void ACombatCharacter::RetrieveWeaponAnimDataSet()
 	// then try find the row based on the weapon type
 	if (AnimSet == nullptr)
 	{
-		const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("WeaponType"), true);
+		const UEnum* EnumPtr = FindObject<UEnum>(nullptr, TEXT("/Script/FreedomPhantoms.WeaponType"), true);
 		WeaponTypeName = EnumPtr->GetNameByValue((int64)currentWeaponObj->GetWeaponType());
 
 		FString Left, Right;
@@ -591,7 +591,7 @@ void ACombatCharacter::SpawnLoadout(LoadoutType LoadoutType, bool SpecifyType)
 		Loadout->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 		if (Loadout->IsUseMasterPoseComponent()) {
-			Loadout->GetMesh()->SetMasterPoseComponent(GetMesh());
+			Loadout->GetMesh()->SetLeaderPoseComponent(GetMesh());
 		}
 	}
 
