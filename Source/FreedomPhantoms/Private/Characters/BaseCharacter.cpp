@@ -1068,6 +1068,10 @@ void ABaseCharacter::BeginAim()
 				}
 			}
 		}
+		else
+		{
+			FollowCamera->AttachToComponent(AimCameraRightSpring, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
 
 
 		FLatentActionInfo LatentInfo;
