@@ -962,18 +962,19 @@ void ACombatCharacter::HolsterWeapon()
 void ACombatCharacter::BeginFire()
 {
 	if (!CanUseWeapon()) {
-		return;
-	}
 
-	if (isReloading) {
-		// Pump Action Weapons can fire if there is ammo
-		if (Cast<APumpActionWeapon>(currentWeaponObj) && currentWeaponObj->GetCurrentAmmo() > 0) {
-			isReloading = false;
-			EndReload();
+		if (isReloading) {
+			// Pump Action Weapons can fire if there is ammo
+			if (Cast<APumpActionWeapon>(currentWeaponObj) && currentWeaponObj->GetCurrentAmmo() > 0) {
+				isReloading = false;
+				EndReload();
+			}
+			else {
+				return;
+			}
 		}
-		else {
-			return;
-		}
+
+		return;
 	}
 
 	// can shoot from cover?
