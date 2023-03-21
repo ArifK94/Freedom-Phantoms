@@ -1,5 +1,6 @@
 #include "Managers/GameInstanceController.h"
 #include "Managers/CustomSaveGame.h"
+#include "Characters/CombatCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Props/SupportPackage.h"
 
@@ -7,6 +8,7 @@
 #include "Components/Widget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
+#include "Blueprint/UserWidget.h"
 
 
 void UGameInstanceController::SetPrimaryWeaponClass(TSubclassOf<AWeapon> WeaponClass)

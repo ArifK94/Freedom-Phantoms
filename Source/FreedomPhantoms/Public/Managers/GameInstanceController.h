@@ -48,6 +48,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FVector2D MenuNavbarSize;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Saved Slots", meta = (AllowPrivateAccess = "true"))
+		FString FirstTimeSaveSlotName;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 		FString AudioSettingsSaveSlotName;
