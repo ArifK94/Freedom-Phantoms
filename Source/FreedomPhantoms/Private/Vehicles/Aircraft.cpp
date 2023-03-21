@@ -69,6 +69,10 @@ bool AAircraft::ShouldStopVehicle()
 	{
 		return true;
 	}
+	else if (!TargetActor && StopOnTargetFound) 
+	{
+		VehiclePathFollowerComponent->ResumePath();
+	}
 
 	return Super::ShouldStopVehicle();
 }
