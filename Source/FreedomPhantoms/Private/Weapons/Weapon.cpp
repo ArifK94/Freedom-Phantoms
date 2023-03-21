@@ -273,7 +273,7 @@ void AWeapon::ConvertWeaponName()
 		return;
 	}
 
-	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("WeaponType"), true);
+	const UEnum* EnumPtr = FindObject<UEnum>(nullptr, TEXT("/Script/FreedomPhantoms.WeaponType"), true);
 	FName WeaponTypeName = EnumPtr->GetNameByValue((int64)weaponType);
 
 	FString Left, Right;
@@ -286,7 +286,7 @@ FVector AWeapon::getMuzzleLocation()
 	if (ParentMesh) {
 		return ParentMesh->GetSocketLocation(MuzzleSocket);
 	}
-	else if (MeshComp && MeshComp->SkeletalMesh) {
+	else if (MeshComp && MeshComp->GetSkeletalMeshAsset()) {
 		return MeshComp->GetSocketLocation(MuzzleSocket);
 	}
 	return GetActorLocation();
@@ -297,7 +297,7 @@ FRotator AWeapon::GetMuzzleRotation()
 	if (ParentMesh) {
 		return ParentMesh->GetSocketRotation(MuzzleSocket);
 	}
-	else if (MeshComp && MeshComp->SkeletalMesh) {
+	else if (MeshComp && MeshComp->GetSkeletalMeshAsset()) {
 		return MeshComp->GetSocketRotation(MuzzleSocket);
 	}
 	return GetActorRotation();
