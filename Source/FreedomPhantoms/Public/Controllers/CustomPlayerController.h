@@ -8,7 +8,6 @@
 
 class UGameInstanceController;
 class AGameStateBaseCustom;
-class AGameStateBaseCustom;
 class ABaseCharacter;
 class ACommanderCharacter;
 class ABaseObjective;
@@ -134,14 +133,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float InteractionLength;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TArray<ABaseObjective*> MissionObjectives;
-	int TotalRequiredObjectives;
-	int CurrentRequiredObjectivesCompleted;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		ABaseObjective* CurrentMissionObjective;
-
 	/** To help overlap interactables such as weapons */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float OverlapSpehereRadius;
@@ -203,10 +194,7 @@ public:
 		void OnRappelUpdated(ABaseCharacter* BaseCharacter);
 
 	UFUNCTION()
-		void OnObjectiveCompleted(ABaseObjective* Objective);
-
-	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
-		void AddMissionObjective(ABaseObjective* Objective);
+		void OnGameEnded(bool hasMissionPassed);
 
 	void SpawnPlayer();
 
@@ -318,11 +306,5 @@ private:
 	void Follow();
 	void BeginFollowCommand();
 	void EndFollowCommand();
-
-public:
-	void SetCurrentMissionObjective(ABaseObjective* Objective) {
-		CurrentMissionObjective = Objective;
-	}
-
 
 };

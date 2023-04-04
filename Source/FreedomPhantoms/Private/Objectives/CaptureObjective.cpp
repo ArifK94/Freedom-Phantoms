@@ -4,8 +4,11 @@
 #include "Objectives/CaptureObjective.h"
 #include "Controllers/CustomPlayerController.h"
 #include "CustomComponents/HealthComponent.h"
+#include "Managers/GameStateBaseCustom.h"
+#include "Managers/ObjectiveManager.h"
 
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ACaptureObjective::ACaptureObjective()
 {
@@ -17,6 +20,8 @@ ACaptureObjective::ACaptureObjective()
 void ACaptureObjective::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
 
 	BoxCollider->OnComponentBeginOverlap.AddDynamic(this, &ACaptureObjective::OnOverlapBegin);
 	BoxCollider->OnComponentEndOverlap.AddDynamic(this, &ACaptureObjective::OnOverlapEnd);
@@ -51,7 +56,7 @@ void ACaptureObjective::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 
 				if (CustomPlayerController)
 				{
-					CustomPlayerController->SetCurrentMissionObjective(this);
+					GameStateBaseCustom->GetObjectiveManager()->SetCurrentMissionObjective(this);
 					IsPlayerCapturing = true;
 				}
 

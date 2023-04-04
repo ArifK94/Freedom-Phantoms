@@ -7,6 +7,8 @@
 #include "StructCollection.h"
 #include "GameStateBaseCustom.generated.h"
 
+class UObjectiveManager;
+
 class UAudioComponent;
 class ABaseObjective;
 class USoundBase;
@@ -26,11 +28,10 @@ private:
 	/** To lerp to music target state */
 	float CurrentMusicState;
 
-	int TotalObjectives;
-	float TotalObjectiveFactor;
-	TArray<ABaseObjective*> Objectives;
-
 	bool HasGameEnded;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UObjectiveManager* ObjectiveManager;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* Root;
@@ -111,11 +112,15 @@ public:
 
 	void AddPoolActor(FObjectPoolParameters PoolableActor);
 
+	UFUNCTION(BlueprintCallable)
+		void LoadObjectives();
+
 private:
 	UFUNCTION()
 		void OnObjectiveUpdate(ABaseObjective* Objective, float Progress);
 
-	void CalculateTotalProgression();
+	UFUNCTION()
+		void OnMissionCompleted(bool HasCompleted);
 
 protected:
 	virtual void BeginPlay() override;
@@ -124,12 +129,8 @@ private:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	TArray<ABaseObjective*> GetObjectives() {
-		return Objectives;
-	}
+	UObjectiveManager* GetObjectiveManager() { return ObjectiveManager; }
 
-	bool GetHasGameEnded() {
-		return HasGameEnded;
-	}
+	bool GetHasGameEnded() { return HasGameEnded; }
 
 };

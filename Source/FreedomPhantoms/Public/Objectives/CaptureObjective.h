@@ -6,6 +6,7 @@
 #include "Objectives/BaseObjective.h"
 #include "CaptureObjective.generated.h"
 
+class AGameStateBaseCustom;
 class UHealthComponent;
 UCLASS()
 class FREEDOMPHANTOMS_API ACaptureObjective : public ABaseObjective
@@ -21,6 +22,7 @@ private:
 
 	FTimerHandle THandler_CaptureProgress;
 
+	AGameStateBaseCustom* GameStateBaseCustom;
 	UHealthComponent* HealthComponent;
 
 public:

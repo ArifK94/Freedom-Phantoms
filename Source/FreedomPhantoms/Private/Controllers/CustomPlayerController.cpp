@@ -10,7 +10,6 @@
 #include "Vehicles/VehicleBase.h"
 #include "Props/SupportPackage.h"
 #include "Props/MapCamera.h"
-#include "Objectives/BaseObjective.h"
 #include "Interfaces/Interactable.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
@@ -140,11 +139,7 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 
 	if (GameStateBaseCustom)
 	{
-		// Add the objectives & bind events.
-		for (auto Objective : GameStateBaseCustom->GetObjectives())
-		{
-			AddMissionObjective(Objective);
-		}
+		GameStateBaseCustom->OnGameEnded.AddDynamic(this, &ACustomPlayerController::OnGameEnded);
 	}
 }
 
@@ -571,47 +566,10 @@ void ACustomPlayerController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 	}
 }
 
-void ACustomPlayerController::OnObjectiveCompleted(ABaseObjective* Objective)
+void ACustomPlayerController::OnGameEnded(bool hasMissionPassed)
 {
-	auto Index = MissionObjectives.Find(Objective);
-	MissionObjectives.RemoveAt(Index);
-
-	// if objective is required, then increment current count.
-	if (!Objective->GetIsOptional())
-	{
-		CurrentRequiredObjectivesCompleted++;
-	}
-
-	// if reached total required objective count then the game can end.
-	if (CurrentRequiredObjectivesCompleted >= TotalRequiredObjectives)
-	{
-		CurrentMissionObjective = nullptr;
-
-		GameStateBaseCustom->EndGame(true);
-		DisplayEndGameUMG();
-	}
-	// set the next objective
-	else if (!MissionObjectives.IsEmpty())
-	{
-		CurrentMissionObjective = MissionObjectives[MissionObjectives.Num() - 1];
-	}
-}
-
-void ACustomPlayerController::AddMissionObjective(ABaseObjective* Objective)
-{
-	MissionObjectives.Add(Objective);
-
-	if (!Objective->GetIsOptional())
-	{
-		TotalRequiredObjectives++;
-	}
-
-	Objective->OnObjectiveCompleted.AddDynamic(this, &ACustomPlayerController::OnObjectiveCompleted);
-
-	if (CurrentMissionObjective == nullptr)
-	{
-		CurrentMissionObjective = Objective;
-	}
+	GameStateBaseCustom->EndGame(true);
+	DisplayEndGameUMG();
 }
 
 void ACustomPlayerController::DisplayEndGameUMG()

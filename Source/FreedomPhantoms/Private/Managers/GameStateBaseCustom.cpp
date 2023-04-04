@@ -2,11 +2,12 @@
 
 
 #include "Managers/GameStateBaseCustom.h"
+#include "Managers/ObjectiveManager.h"
 #include "Objectives/BaseObjective.h"
 #include "ObjectPoolActor.h"
 
 #include "Components/AudioComponent.h"
-#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 AGameStateBaseCustom::AGameStateBaseCustom()
 {
@@ -19,8 +20,6 @@ AGameStateBaseCustom::AGameStateBaseCustom()
 
 	MusicChangeInterpolation = 5.0f;
 	MusicStateParamName = "State";
-
-	TotalObjectives = 0;
 
 	HasGameEnded = false;
 	IsMissionPassed = false;
@@ -50,7 +49,10 @@ void AGameStateBaseCustom::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CalculateTotalProgression();
+	ObjectiveManager = NewObject<UObjectiveManager>(this);
+	ObjectiveManager->OnMissionCompleted.AddDynamic(this, &AGameStateBaseCustom::OnMissionCompleted);
+
+	LoadObjectives();
 }
 
 void AGameStateBaseCustom::Tick(float DeltaTime)
@@ -67,47 +69,50 @@ void AGameStateBaseCustom::OnObjectiveUpdate(ABaseObjective* Objective, float Pr
 	float totalProgress = 0.0f;
 
 	// calculate the average of the total progress
-	for (int i = 0; i < Objectives.Num(); i++)
+	for (int i = 0; i < ObjectiveManager->GetObjectives().Num(); i++)
 	{
 		// only update progress of compulsory objectives.
-		if (!Objectives[i]->GetIsOptional())
+		if (!ObjectiveManager->GetObjectives()[i]->GetIsOptional())
 		{
-			totalProgress += Objectives[i]->GetProgress();
+			totalProgress += ObjectiveManager->GetObjectives()[i]->GetProgress();
 		}
 	}
 
-	// update music as near close to completing objectives.
+	// update music as near to completing level.
 	if (totalProgress > 0)
 	{
 		// update the music state
-		MusicStateTarget = totalProgress / TotalObjectives;
+		MusicStateTarget = totalProgress / ObjectiveManager->GetTotalRequiredObjectives();
 
 		PlayMusic(NearEndMusic);
 	}
-
 }
 
-void AGameStateBaseCustom::CalculateTotalProgression()
+void AGameStateBaseCustom::OnMissionCompleted(bool HasCompleted)
 {
-	TArray<AActor*> ObjectiveActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseObjective::StaticClass(), ObjectiveActors);
+	EndGame(true);
+}
 
-	TotalObjectives = ObjectiveActors.Num();
-	// get the total factor as the max music state will be at 1.0f
-	TotalObjectiveFactor = 1.0f / TotalObjectives;
+void AGameStateBaseCustom::LoadObjectives()
+{
+	ObjectiveManager->LoadObjectives();
 
-	for (int i = 0; i < TotalObjectives; i++)
+	for (int i = 0; i < ObjectiveManager->GetTotalObjectives(); i++)
 	{
-		ABaseObjective* Objective = Cast<ABaseObjective>(ObjectiveActors[i]);
+		ABaseObjective* Objective = Cast<ABaseObjective>(ObjectiveManager->GetObjectives()[i]);
 
 		Objective->OnObjectiveUpdate.AddDynamic(this, &AGameStateBaseCustom::OnObjectiveUpdate);
-
-		Objectives.Add(Objective);
 	}
 }
 
+
 void AGameStateBaseCustom::EndGame(bool MissionPassed)
 {
+	// prevent iteration if already ended.
+	if (HasGameEnded) {
+		return;
+	}
+
 	ClearMusicQueue();
 
 	HasGameEnded = true;
