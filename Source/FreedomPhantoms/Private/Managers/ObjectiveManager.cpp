@@ -49,6 +49,9 @@ void UObjectiveManager::OnObjectiveCompleted(ABaseObjective* Objective)
 	}
 }
 
+/**
+* Reset certain variables as this function can be repeatedly called.
+*/
 void UObjectiveManager::LoadObjectives()
 {
 	TArray<AActor*> ObjectiveActors = GetObjectiveActors();
@@ -57,6 +60,10 @@ void UObjectiveManager::LoadObjectives()
 
 	for (int i = 0; i < TotalObjectives; i++)
 	{
+		if (Objectives.Contains(ObjectiveActors[i])) {
+			continue;
+		}
+
 		ABaseObjective* Objective = Cast<ABaseObjective>(ObjectiveActors[i]);
 
 		// increment the total required objectives.
@@ -71,7 +78,7 @@ void UObjectiveManager::LoadObjectives()
 		}
 
 		Objective->OnObjectiveCompleted.AddDynamic(this, &UObjectiveManager::OnObjectiveCompleted);
-
+		
 		Objectives.Add(Objective);
 	}
 }
