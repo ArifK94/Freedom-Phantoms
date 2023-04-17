@@ -687,9 +687,7 @@ void AWeapon::StartFire()
 		}
 		break;
 	case SelectiveFire::SemiAutomatic:
-		if (!THandler_TimeBetweenShots.IsValid()) {
 			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, false, FirstDelay);
-		}
 		break;
 	case SelectiveFire::Burst:
 		if (!THandler_BurstFire.IsValid()) {
