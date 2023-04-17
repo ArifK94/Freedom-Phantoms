@@ -37,7 +37,7 @@ void UObjectiveManager::OnObjectiveCompleted(ABaseObjective* Objective)
 	}
 
 	// if reached total required objective count then the game can end.
-	if (CurrentRequiredObjectivesCompleted >= TotalRequiredObjectives)
+	if (TotalRequiredObjectives > 0 && CurrentRequiredObjectivesCompleted >= TotalRequiredObjectives)
 	{
 		CurrentMissionObjective = nullptr;
 		OnMissionCompleted.Broadcast(true);
