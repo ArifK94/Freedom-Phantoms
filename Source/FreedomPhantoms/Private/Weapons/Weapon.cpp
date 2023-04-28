@@ -704,7 +704,7 @@ void AWeapon::StartFire()
 
 void AWeapon::StopFire()
 {
-	if (!HasFiredFirstShot) {
+	if (!GetWorld() || !HasFiredFirstShot) {
 		ShouldStopFiring = true;
 		return;
 	}

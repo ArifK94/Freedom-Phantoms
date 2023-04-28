@@ -4,6 +4,8 @@
 #include "CustomComponents/ShooterComponent.h"
 #include "Weapons/Weapon.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+
 UShooterComponent::UShooterComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -76,6 +78,9 @@ void UShooterComponent::EndFire()
 	// stop firing weapons
 	for (auto Weapon : Weapons)
 	{
-		Weapon->StopFire();
+		if (UKismetSystemLibrary::IsValid(Weapon))
+		{
+			Weapon->StopFire();
+		}
 	}
 }
