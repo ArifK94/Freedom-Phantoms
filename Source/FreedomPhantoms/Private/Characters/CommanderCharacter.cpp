@@ -479,7 +479,7 @@ FNavLocation ACommanderCharacter::GetPositionToNav(FVector Position)
 
 	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
 
-	bool navResult = NavigationArea->ProjectPointToNavigation(Position, NavLocation);
+	bool navResult = NavigationArea->ProjectPointToNavigation(Position, NavLocation, FVector(100.f, 100.f, 1000.f));
 
 	return NavLocation;
 }
