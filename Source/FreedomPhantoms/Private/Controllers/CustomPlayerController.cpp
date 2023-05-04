@@ -1,6 +1,7 @@
 #include "Controllers/CustomPlayerController.h"
 #include "Managers/GameInstanceController.h"
 #include "Managers/GameStateBaseCustom.h"
+#include "Managers/GameHUDController.h"
 #include "Characters/CombatCharacter.h"
 #include "Characters/CommanderCharacter.h"
 #include "Weapons/Weapon.h"
@@ -58,6 +59,7 @@ void ACustomPlayerController::InitBeginPlayCommon()
 {
 	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
 	GameInstanceController = Cast<UGameInstanceController>(UGameplayStatics::GetGameInstance(GetWorld()));
+	GameHUDController = Cast<AGameHUDController>(GetHUD());
 
 	SpawnPlayer();
 
@@ -66,9 +68,6 @@ void ACustomPlayerController::InitBeginPlayCommon()
 		DisableInput(this);
 		return;
 	}
-
-	OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
-	OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
 
 	OnCombatModeUpdated(OwningCombatCharacter);
 
@@ -85,24 +84,8 @@ void ACustomPlayerController::InitBeginPlayCommon()
 	// Character can be spawned in to use MG such as helicopter gunner
 	UseMountedGun();
 
-	UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
-	HealthComp->SetRegenerateHealth(true);
-	HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthUpdate);
-
 
 	PlayerFaction = OwningCombatCharacter->GetTeamFactionComponent()->GetSelectedFaction();
-
-	OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
-	if (OverlapSphere)
-	{
-		OverlapSphere->RegisterComponent();
-		OverlapSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-		OverlapSphere->SetSphereRadius(OverlapSpehereRadius);
-		OverlapSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
-	}
-
-
 
 	InitBeginPlayUncommon();
 
@@ -110,7 +93,7 @@ void ACustomPlayerController::InitBeginPlayCommon()
 	AActor* MapActor = UGameplayStatics::GetActorOfClass(GetWorld(), AMapCamera::StaticClass());
 	MapCamera = Cast<AMapCamera>(MapActor);
 
-	AddUIWidgets();
+	GameHUDController->AddPlayerWidgets();
 
 	BeginCheckInteractable();
 
@@ -247,6 +230,8 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 
 void ACustomPlayerController::SpawnPlayer()
 {
+	DisableInput(this);
+
 	if (GameInstanceController == nullptr) {
 		return;
 	}
@@ -277,6 +262,25 @@ void ACustomPlayerController::SpawnPlayer()
 
 		// posses the player character
 		Possess(OwningCombatCharacter);
+
+		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
+		HealthComp->SetRegenerateHealth(true);
+		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthUpdate);
+
+		OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
+		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
+
+		OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+		if (OverlapSphere)
+		{
+			OverlapSphere->RegisterComponent();
+			OverlapSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+			OverlapSphere->SetSphereRadius(OverlapSpehereRadius);
+			OverlapSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+			OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
+		}
+
+		EnableInput(this);
 	}
 
 }
@@ -312,7 +316,7 @@ void ACustomPlayerController::PauseGame()
 		{
 			auto Widget = OnViewWidgets[i];
 
-			if (Widget && Widget != InventoryWidget)
+			if (Widget && Widget != GameHUDController->GetInventoryWidget())
 			{
 				OnViewWidgets[i]->SetVisibility(ESlateVisibility::Visible);
 			}
@@ -366,100 +370,6 @@ void ACustomPlayerController::Tick(float DeltaTime)
 	}
 }
 
-void ACustomPlayerController::AddUIWidgets()
-{
-	UWorld* World = GetWorld();
-
-	if (!World) {
-		return;
-	}
-
-
-	if (WeaponAmmoWidgetClass)
-	{
-		WeaponAmmoWidget = CreateWidget<UUserWidget>(World, WeaponAmmoWidgetClass);
-
-		if (WeaponAmmoWidget)
-		{
-			WeaponAmmoWidget->AddToViewport();
-		}
-	}
-
-	// Weapon Crosshairs
-	if (WeaponCrosshairhWidgetClass)
-	{
-		WeaponCrosshairWidget = CreateWidget<UUserWidget>(World, WeaponCrosshairhWidgetClass);
-
-		if (WeaponCrosshairWidget)
-		{
-			WeaponCrosshairWidget->AddToViewport();
-		}
-	}
-
-
-	if (HealthWidgetClass)
-	{
-		HealthWidget = CreateWidget<UUserWidget>(World, HealthWidgetClass);
-
-		if (HealthWidget)
-		{
-			HealthWidget->AddToViewport();
-		}
-	}
-
-
-
-	if (InteractWidgetClass)
-	{
-		InteractWidget = CreateWidget<UUserWidget>(World, InteractWidgetClass);
-
-		if (InteractWidget)
-		{
-			InteractWidget->AddToViewport();
-		}
-	}
-
-
-
-	if (InventoryWidgetClass)
-	{
-		InventoryWidget = CreateWidget<UUserWidget>(World, InventoryWidgetClass);
-
-		if (InventoryWidget)
-		{
-			InventoryWidget->AddToViewport();
-			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
-
-
-
-	if (SupportPackageWidgetClass)
-	{
-		SupportPackageWidget = CreateWidget<UUserWidget>(World, SupportPackageWidgetClass);
-
-		if (SupportPackageWidget)
-		{
-			SupportPackageWidget->AddToViewport();
-		}
-	}
-
-	if (ObjectiveWidgetClass)
-	{
-		ObjectiveWidget = CreateWidget<UUserWidget>(World, ObjectiveWidgetClass);
-
-		if (ObjectiveWidget)
-		{
-			ObjectiveWidget->AddToViewport();
-		}
-	}
-
-	// Commander UI
-	if (OwningCommander) {
-		OwningCommander->AddUIWidget();
-	}
-}
-
 void ACustomPlayerController::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (HasGameEnded) {
@@ -471,12 +381,6 @@ void ACustomPlayerController::OnHealthUpdate(FHealthParameters InHealthParameter
 		GameStateBaseCustom->EndGame(false);
 		DisplayEndGameUMG();
 	}
-}
-
-
-void ACustomPlayerController::PostDeath()
-{
-	//OwningCombatCharacter->DetachFromControllerPendingDestroy();
 }
 
 void ACustomPlayerController::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -591,23 +495,12 @@ void ACustomPlayerController::DisplayEndGameUMG()
 
 	UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
 
-	GetWorldTimerManager().SetTimer(THandler_PostDeath, this, &ACustomPlayerController::PostDeath, 0.2f, false);
-
-	if (EndGameWidgetClass)
-	{
-		EndGameWidget = CreateWidget<UUserWidget>(GetWorld(), EndGameWidgetClass);
-
-		if (EndGameWidget)
-		{
-			EndGameWidget->AddToViewport();
-
-			SetShowMouseCursor(true);
-			FInputModeUIOnly InData;
-			InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			InData.SetWidgetToFocus(EndGameWidget->TakeWidget());
-			SetInputMode(InData);
-		}
-	}
+	GameHUDController->AddEndGameWidget();
+	SetShowMouseCursor(true);
+	FInputModeUIOnly InData;
+	InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InData.SetWidgetToFocus(GameHUDController->GetEndGameWidget()->TakeWidget());
+	SetInputMode(InData);
 }
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
@@ -921,7 +814,7 @@ void ACustomPlayerController::SwitchWeapon()
 void ACustomPlayerController::OpenRadialMenu()
 {
 	// if there is a radial widget created or already showing?
-	if (!InventoryWidget || IsShowingRadialMenu) {
+	if (!GameHUDController->GetInventoryWidget() || IsShowingRadialMenu) {
 		return;
 	}
 
@@ -933,10 +826,10 @@ void ACustomPlayerController::OpenRadialMenu()
 	SetShowMouseCursor(true);
 	FInputModeGameAndUI InData;
 	InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	InData.SetWidgetToFocus(InventoryWidget->TakeWidget());
+	InData.SetWidgetToFocus(GameHUDController->GetInventoryWidget()->TakeWidget());
 	SetInputMode(InData);
 
-	InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+	GameHUDController->GetInventoryWidget()->SetVisibility(ESlateVisibility::Visible);
 }
 
 
@@ -949,14 +842,14 @@ void ACustomPlayerController::CloseRadialMenu()
 	IsShowingRadialMenu = false;
 
 	// remove radial from screen
-	if (InventoryWidget->IsInViewport()) {
+	if (GameHUDController->GetInventoryWidget()->IsInViewport()) {
 
 		FInputModeGameOnly InputMode;
 		InputMode.SetConsumeCaptureMouseDown(false);
 		SetInputMode(InputMode);
 		SetShowMouseCursor(false);
 
-		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+		GameHUDController->GetInventoryWidget()->SetVisibility(ESlateVisibility::Collapsed);
 
 		GetWorldTimerManager().SetTimer(THandler_DelayedInput, this, &ACustomPlayerController::EnableInputDelay, 0.1f, true, .1f);
 	}
@@ -1315,7 +1208,7 @@ void ACustomPlayerController::RemoveVehicleControl()
 
 void ACustomPlayerController::RemoveVehicleControlPost()
 {
-	AddUIWidgets();
+	GameHUDController->AddPlayerWidgets();
 
 	OwningCombatCharacter->EnableInput(this);
 	BeginCheckInteractable();

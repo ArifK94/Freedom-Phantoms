@@ -8,6 +8,7 @@
 
 class UGameInstanceController;
 class AGameStateBaseCustom;
+class AGameHUDController;
 class ABaseCharacter;
 class ACommanderCharacter;
 class ABaseObjective;
@@ -30,6 +31,11 @@ protected:
 
 	FTimerHandle THandler_CheckInteractable;
 private:
+	UGameInstanceController* GameInstanceController;
+	AGameStateBaseCustom* GameStateBaseCustom;
+	AGameHUDController* GameHUDController;
+
+
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnInteractiveFoundSignature OnInteractionFound;
 
@@ -38,13 +44,11 @@ private:
 
 
 	APawn* OwningPawn;
-	UGameInstanceController* GameInstanceController;
-	AGameStateBaseCustom* GameStateBaseCustom;
+
 	TeamFaction PlayerFaction;
 
 	USphereComponent* OverlapSphere;
 
-	FTimerHandle THandler_PostDeath;
 	FTimerHandle THandler_DelayedInput;
 	FTimerHandle THandler_RemoveVehicleControlPost;
 
@@ -71,38 +75,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float BaseLookUpRate;
 
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> HealthWidgetClass;
-	UUserWidget* HealthWidget;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> WeaponAmmoWidgetClass;
-	UUserWidget* WeaponAmmoWidget;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> WeaponCrosshairhWidgetClass;
-	UUserWidget* WeaponCrosshairWidget;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> InventoryWidgetClass;
-	UUserWidget* InventoryWidget;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> SupportPackageWidgetClass;
-	UUserWidget* SupportPackageWidget;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> InteractWidgetClass;
-	UUserWidget* InteractWidget;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> ObjectiveWidgetClass;
-	UUserWidget* ObjectiveWidget;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> EndGameWidgetClass;
-	UUserWidget* EndGameWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FString InteractKeyDisplayName;
@@ -141,8 +113,6 @@ private:
 	bool IsShowingRadialMenu;
 
 private:
-	void PostDeath();
-
 	void DisplayEndGameUMG();
 
 public:
@@ -166,10 +136,6 @@ public:
 
 
 	virtual void Tick(float DeltaTime) override;
-
-
-	UFUNCTION(BlueprintCallable)
-		void AddUIWidgets();
 
 
 	UFUNCTION()
