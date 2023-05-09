@@ -170,7 +170,7 @@ void ACommanderCharacter::ChangeCommander(ACommanderCharacter* NewCommander)
 
 	for (auto Recruit : ActiveRecruits)
 	{
-		Recruit->Recruit->setCommandingOfficer(Commander);
+		Recruit->Recruit->setCommandingOfficer(NewCommander);
 	}
 
 	NewCommander->SetActiveRecruits(ActiveRecruits);
