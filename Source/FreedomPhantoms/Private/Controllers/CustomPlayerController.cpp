@@ -46,6 +46,7 @@ ACustomPlayerController::ACustomPlayerController()
 	MaxSupportPackages = 4;
 
 	HasGameEnded = false;
+	ShouldRespawn = false;
 }
 
 void ACustomPlayerController::BeginPlay()
@@ -214,7 +215,8 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 		return;
 	}
 
-	if (OwningCombatCharacter) {
+	if (OwningCombatCharacter) 
+	{
 		// Grab the "Pickup Key" for it to be displayed on the UI 
 		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 		TArray <FInputActionKeyMapping> OutMappings;
@@ -230,6 +232,8 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 
 void ACustomPlayerController::SpawnPlayer()
 {
+	GetWorldTimerManager().ClearTimer(THandler_RespawnDelay);
+
 	DisableInput(this);
 
 	if (GameInstanceController == nullptr) {
@@ -243,46 +247,49 @@ void ACustomPlayerController::SpawnPlayer()
 		return;
 	}
 
-	auto CombatCharacter = GameInstanceController->SpawnCombatCharacter(TargetActor[0]->GetActorLocation(), TargetActor[0]->GetActorRotation());
+	OwningCombatCharacter = GameInstanceController->SpawnCombatCharacter(TargetActor[0]->GetActorLocation(), TargetActor[0]->GetActorRotation());
 
-	if (CombatCharacter)
+	if (!OwningCombatCharacter) {
+		return;
+	}
+
+	OwningCombatCharacter->SetPrimaryWeapon(GameInstanceController->SpawnPrimaryWeapon(OwningCombatCharacter));
+	OwningCombatCharacter->SetSecondaryWeapon(GameInstanceController->SpawnSecondaryWeapon(OwningCombatCharacter));
+	OwningCombatCharacter->AutoPossessAI = EAutoPossessAI::Disabled;
+	OwningCombatCharacter->SetUseAimCameraSpring(true);
+
+	// enable game controls, this will be needed after restarting a level 
+	FInputModeGameOnly InputMode;
+	InputMode.SetConsumeCaptureMouseDown(false);
+	SetInputMode(InputMode);
+	SetShowMouseCursor(false);
+
+	// posses the player character
+	Possess(OwningCombatCharacter);
+
+	UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
+	HealthComp->SetRegenerateHealth(true);
+	HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthUpdate);
+
+	OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
+	OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
+
+
+	if (!OverlapSphere)
 	{
-		OwningCombatCharacter = CombatCharacter;
-
-		CombatCharacter->SetPrimaryWeapon(GameInstanceController->SpawnPrimaryWeapon(CombatCharacter));
-		CombatCharacter->SetSecondaryWeapon(GameInstanceController->SpawnSecondaryWeapon(CombatCharacter));
-		CombatCharacter->AutoPossessAI = EAutoPossessAI::Disabled;
-		CombatCharacter->SetUseAimCameraSpring(true);
-
-		// enable game controls, this will be needed after restarting a level 
-		FInputModeGameOnly InputMode;
-		InputMode.SetConsumeCaptureMouseDown(false);
-		SetInputMode(InputMode);
-		SetShowMouseCursor(false);
-
-		// posses the player character
-		Possess(OwningCombatCharacter);
-
-		UHealthComponent* HealthComp = OwningCombatCharacter->GetHealthComp();
-		HealthComp->SetRegenerateHealth(true);
-		HealthComp->OnHealthChanged.AddDynamic(this, &ACustomPlayerController::OnHealthUpdate);
-
-		OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
-		OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
-
 		OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+
 		if (OverlapSphere)
 		{
 			OverlapSphere->RegisterComponent();
-			OverlapSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 			OverlapSphere->SetSphereRadius(OverlapSpehereRadius);
 			OverlapSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 			OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
+			OverlapSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 		}
-
-		EnableInput(this);
 	}
 
+	EnableInput(this);
 }
 
 void ACustomPlayerController::PauseGame()
@@ -360,16 +367,6 @@ void ACustomPlayerController::PauseGame()
 	}
 }
 
-void ACustomPlayerController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (OwningCombatCharacter == nullptr) {
-		PrimaryActorTick.bCanEverTick = false;
-		return;
-	}
-}
-
 void ACustomPlayerController::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (HasGameEnded) {
@@ -378,8 +375,31 @@ void ACustomPlayerController::OnHealthUpdate(FHealthParameters InHealthParameter
 
 	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
-		GameStateBaseCustom->EndGame(false);
-		DisplayEndGameUMG();
+		PreviousCombatCharacter = OwningCombatCharacter;
+		PreviousOwningCommander = OwningCommander;
+
+		OverlapSphere->DestroyComponent();
+		OverlapSphere = nullptr;
+
+		if (GameStateBaseCustom->GetCanPlayerRespawn())
+		{
+			GameHUDController->RemoveAllWidgets();
+
+			// if not controlling a vehicle / support package, then respawn player.
+			if (!ControlledVehicle)
+			{
+				GetWorldTimerManager().SetTimer(THandler_RespawnDelay, this, &ACustomPlayerController::RespawnPlayer, 1.f, false, 2.f);
+			}
+			else
+			{
+				ShouldRespawn = true;
+			}
+		}
+		else
+		{
+			GameStateBaseCustom->EndGame(false);
+			DisplayEndGameUMG();
+		}
 	}
 }
 
@@ -442,6 +462,12 @@ void ACustomPlayerController::OnVehicleDestroy(AVehicleBase* CurrentControlledVe
 	}
 
 	RemoveVehicleControl();
+
+	if (ShouldRespawn)
+	{
+		RespawnPlayer();
+		ShouldRespawn = false;
+	}
 }
 
 void ACustomPlayerController::OnCombatModeUpdated(ACombatCharacter* CombatCharacter)
@@ -501,6 +527,16 @@ void ACustomPlayerController::DisplayEndGameUMG()
 	InData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	InData.SetWidgetToFocus(GameHUDController->GetEndGameWidget()->TakeWidget());
 	SetInputMode(InData);
+}
+
+void ACustomPlayerController::RespawnPlayer()
+{
+	SpawnPlayer();
+
+	PreviousCombatCharacter->CloneCharacter(OwningCombatCharacter);
+	PreviousOwningCommander->ChangeCommander(OwningCommander);
+
+	GameHUDController->AddPlayerWidgets();
 }
 
 void ACustomPlayerController::AddControllerPitchInput(float Val)
@@ -724,7 +760,8 @@ void ACustomPlayerController::ToggleSprint()
 
 void ACustomPlayerController::BeginAim()
 {
-	if (ControlledVehicle) {
+	if (ControlledVehicle) 
+	{
 		ControlledVehicle->BeginAim();
 	}
 	else
@@ -940,6 +977,10 @@ void ACustomPlayerController::DetectInteractableByTrace()
 
 AActor* ACustomPlayerController::DetectInteractableByOverlap()
 {
+	if (!OverlapSphere) {
+		return nullptr;
+	}
+
 	AActor* ChosenActor = nullptr;
 	TArray<AActor*> OverlappedActors;
 	float TargetSightDistance = OverlapSpehereRadius;
@@ -1034,6 +1075,7 @@ void ACustomPlayerController::SetControlledVehicle(AVehicleBase* InVehicle, bool
 		// Remove inputs for this controller & character as we will be using aircraft inputs
 		OwningCombatCharacter->DisableInput(this);
 		AutoReceiveInput = EAutoReceiveInput::Disabled;
+		GameHUDController->RemoveAllWidgets();
 		ControlledVehicle->SetPlayerControl(this);
 
 
@@ -1208,7 +1250,9 @@ void ACustomPlayerController::RemoveVehicleControl()
 
 void ACustomPlayerController::RemoveVehicleControlPost()
 {
-	GameHUDController->AddPlayerWidgets();
+	if (!ShouldRespawn) {
+		GameHUDController->AddPlayerWidgets();
+	}
 
 	OwningCombatCharacter->EnableInput(this);
 	BeginCheckInteractable();

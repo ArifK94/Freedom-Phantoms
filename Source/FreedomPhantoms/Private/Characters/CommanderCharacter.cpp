@@ -29,23 +29,6 @@ bool ACommanderCharacter::GetCanRecruit()
 	return CanSearchRecruits && (ActiveRecruits.Num() - WoundedCount) < MaxRecruits;
 }
 
-void ACommanderCharacter::AddUIWidget()
-{
-	UWorld* World = GetWorld();
-
-	if (!World) return;
-
-	if (CommanderHUDWidgetClass)
-	{
-		CommanderHUDWidget = CreateWidget<UUserWidget>(World, CommanderHUDWidgetClass);
-
-		if (CommanderHUDWidget)
-		{
-			CommanderHUDWidget->AddToViewport();
-		}
-	}
-}
-
 void ACommanderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -177,6 +160,23 @@ void ACommanderCharacter::CheckRecruit()
 		PotentialRecruit = Character;
 		PotentialRecruit->ShowCharacterOutline(true);
 	}
+}
+
+void ACommanderCharacter::ChangeCommander(ACommanderCharacter* NewCommander)
+{
+	if (!NewCommander) {
+		return;
+	}
+
+	for (auto Recruit : ActiveRecruits)
+	{
+		Recruit->Recruit->setCommandingOfficer(Commander);
+	}
+
+	NewCommander->SetActiveRecruits(ActiveRecruits);
+	NewCommander->SetCurrentRecruit(CurrentRecruit);
+	NewCommander->SetCurrentRecruitIndex(CurrentRecruitIndex);
+	NewCommander->SetWoundedCount(WoundedCount);
 }
 
 void ACommanderCharacter::InteractWithOperative()
@@ -484,8 +484,8 @@ FNavLocation ACommanderCharacter::GetPositionToNav(FVector Position)
 	return NavLocation;
 }
 
-// Remove dead recuits
-// Remove any icons if recuit or HVT character are dead
+// Remove dead recruits
+// Remove any icons if recruit or HVT character are dead
 void ACommanderCharacter::UpdateActiveRecruits()
 {
 	if (ActiveRecruits.Num() <= 0) {

@@ -93,10 +93,6 @@ private:
 		FName ReviveMessage;
 	FName CurrentMessage;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> CommanderHUDWidgetClass;
-	UUserWidget* CommanderHUDWidget;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commander Orders", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AOrderIcon> AttackPositionIconClass;
@@ -122,8 +118,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Commander")
 		FOnRecruitHealthChangeSignature OnRecruitHealthChange;
 
-	void AddUIWidget();
-
 	void InteractWithOperative();
 
 	void Attack(bool CommandAll = false);
@@ -133,6 +127,9 @@ public:
 	void FollowCommander(bool CommandAll = false);
 
 	void CheckRecruit();
+
+	void ChangeCommander(ACommanderCharacter* NewCommander);
+
 
 private:
 
@@ -188,6 +185,15 @@ protected:
 
 public:
 	void SetCanSearchRecruits(bool Value) { CanSearchRecruits = Value; }
+
+	void SetActiveRecruits(TArray<UCommanderRecruit*> Recruits) { ActiveRecruits = Recruits; }
+
+	void SetCurrentRecruit(UCommanderRecruit* Recruit) { CurrentRecruit = Recruit; }
+
+	void SetCurrentRecruitIndex(uint8 Index) { CurrentRecruitIndex = Index; }
+
+	void SetWoundedCount(int Count) { WoundedCount = Count; }
+
 
 	bool GetCanSearchRecruits() { return CanSearchRecruits; }
 

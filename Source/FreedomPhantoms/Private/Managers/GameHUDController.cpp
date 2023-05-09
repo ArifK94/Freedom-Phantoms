@@ -4,7 +4,6 @@
 
 AGameHUDController::AGameHUDController()
 {
-
 }
 
 void AGameHUDController::BeginPlay()
@@ -15,7 +14,7 @@ void AGameHUDController::BeginPlay()
 //	AddGameStatsViewPort();
 }
 
-UUserWidget* AGameHUDController::AddWidgetToViewport(TSubclassOf<UUserWidget> WidgetClass)
+UUserWidget* AGameHUDController::AddWidgetToViewport(TSubclassOf<UUserWidget> WidgetClass, bool AddToArray)
 {
 	if (WidgetClass)
 	{
@@ -23,13 +22,65 @@ UUserWidget* AGameHUDController::AddWidgetToViewport(TSubclassOf<UUserWidget> Wi
 
 		if (Widget)
 		{
+			UUserWidget* ViewportWidget;
+			if (IsWidgetInViewport(Widget, ViewportWidget)) {
+				return ViewportWidget;
+			}
+
 			Widget->AddToViewport();
+
+			if (AddToArray)
+			{
+				ViewportWidgets.Add(Widget);
+			}
 		}
 
 		return Widget;
 	}
 
 	return nullptr;
+}
+
+void AGameHUDController::ShowAllWidgets()
+{
+	for (auto Widget : ViewportWidgets)
+	{
+		if (Widget != InventoryWidget)
+		{
+			Widget->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
+}
+
+void AGameHUDController::HideAllWidgets()
+{
+	for (auto Widget : ViewportWidgets)
+	{
+		Widget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void AGameHUDController::RemoveAllWidgets()
+{
+	for (auto Widget : ViewportWidgets)
+	{
+		Widget->RemoveFromViewport();
+	}
+
+	ViewportWidgets.Empty();
+}
+
+bool AGameHUDController::IsWidgetInViewport(UUserWidget* Widget, UUserWidget*& ViewportWidget)
+{
+	for (auto W : ViewportWidgets)
+	{
+		if (W->GetClass()->GetName() == Widget->GetClass()->GetName())
+		{
+			ViewportWidget = Widget;
+			return true;
+		}
+	}
+	return false;
 }
 
 void AGameHUDController::CreateNVGWidget()
@@ -53,7 +104,10 @@ void AGameHUDController::AddPlayerWidgets()
 	ObjectiveWidget = AddWidgetToViewport(ObjectiveWidgetClass);
 
 	InventoryWidget = AddWidgetToViewport(InventoryWidgetClass);
-	InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+	if (InventoryWidget) {
+		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 void AGameHUDController::AddEndGameWidget()

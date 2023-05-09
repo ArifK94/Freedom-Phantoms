@@ -240,6 +240,8 @@ public:
 
 	virtual void SetIsExitingVehicle(bool IsExiting) override;
 
+	void CloneCharacter(ACombatCharacter* NewCharacter);
+
 private:
 	void SpawnHelmet();
 	void SpawnLoadout(LoadoutType LoadoutType = LoadoutType::Assault, bool SpecifyType = false);
@@ -327,7 +329,6 @@ public:
 	ACommanderCharacter* GetCommander() {
 		return CommandingOfficer;
 	}
-
 
 	void AddKillCount(int Amount) {
 		KillCounter += Amount;

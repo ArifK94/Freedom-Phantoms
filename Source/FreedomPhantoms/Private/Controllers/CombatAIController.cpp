@@ -117,6 +117,7 @@ void ACombatAIController::Tick(float DeltaTime)
 	OwningCombatCharacter->bUseControllerRotationYaw = false;
 	OwningCombatCharacter->GetCharacterMovement()->RotationRate = FRotator(0.0f, 250.f, 0.0f); // ...at this rotation rate
 
+	Commander = OwningCombatCharacter->GetCommander();
 
 	FaceTarget();
 }
@@ -637,8 +638,6 @@ void ACombatAIController::FindMountedGun()
 
 void ACombatAIController::CheckCommanderOrder()
 {
-	Commander = OwningCombatCharacter->GetCommander();
-
 	if (Commander == nullptr) {
 		return;
 	}

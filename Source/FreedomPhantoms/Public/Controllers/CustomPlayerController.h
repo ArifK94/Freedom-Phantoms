@@ -27,7 +27,9 @@ class FREEDOMPHANTOMS_API ACustomPlayerController : public APlayerController
 
 protected:
 	ACombatCharacter* OwningCombatCharacter;
+	ACombatCharacter* PreviousCombatCharacter;
 	ACommanderCharacter* OwningCommander;
+	ACommanderCharacter* PreviousOwningCommander;
 
 	FTimerHandle THandler_CheckInteractable;
 private:
@@ -50,7 +52,10 @@ private:
 	USphereComponent* OverlapSphere;
 
 	FTimerHandle THandler_DelayedInput;
+	FTimerHandle THandler_RespawnDelay;
 	FTimerHandle THandler_RemoveVehicleControlPost;
+
+	bool ShouldRespawn;
 
 	/** The actor tag of the player start position on the map */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -115,8 +120,12 @@ private:
 private:
 	void DisplayEndGameUMG();
 
+	void RespawnPlayer();
+
 public:
 	ACustomPlayerController();
+
+	virtual void BeginPlay() override;
 
 	virtual void SetupInputComponent() override;
 
@@ -125,7 +134,6 @@ public:
 
 	virtual void OnPossess(APawn* InPawn) override;
 
-	virtual void BeginPlay() override;
 
 	// Rather than copying entire amount of code to be inherited by subclasses, common functionality should be passed here
 	UFUNCTION(BlueprintCallable)
@@ -133,9 +141,6 @@ public:
 
 	/** This exists to help unarmed controller class not inherit all combat begin play functions */
 	virtual void InitBeginPlayUncommon();
-
-
-	virtual void Tick(float DeltaTime) override;
 
 
 	UFUNCTION()

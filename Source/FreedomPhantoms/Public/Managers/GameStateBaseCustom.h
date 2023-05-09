@@ -68,6 +68,9 @@ private:
 		TArray<USoundBase*> MusicQueueList;
 	FTimerHandle THandler_MusicQueue;
 
+	/** Can Player respawn in current level? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player", meta = (AllowPrivateAccess = "true"))
+		bool CanPlayerRespawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
 		UDataTable* SurfaceImpactSetDatatable;
@@ -132,5 +135,7 @@ public:
 	UObjectiveManager* GetObjectiveManager() { return ObjectiveManager; }
 
 	bool GetHasGameEnded() { return HasGameEnded; }
+
+	bool GetCanPlayerRespawn() { return CanPlayerRespawn; }
 
 };

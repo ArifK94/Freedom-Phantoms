@@ -1302,6 +1302,11 @@ void ACombatCharacter::SetIsExitingVehicle(bool IsExiting)
 	}
 }
 
+void ACombatCharacter::CloneCharacter(ACombatCharacter* NewCharacter)
+{
+	NewCharacter->AddKillCount(KillCounter);
+}
+
 void ACombatCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 {
 	if (isUsingMountedWeapon && !InHealthParameters.IsExplosive)

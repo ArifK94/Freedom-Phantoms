@@ -21,6 +21,8 @@ AGameStateBaseCustom::AGameStateBaseCustom()
 	MusicChangeInterpolation = 5.0f;
 	MusicStateParamName = "State";
 
+	CanPlayerRespawn = false;
+
 	HasGameEnded = false;
 	IsMissionPassed = false;
 }
