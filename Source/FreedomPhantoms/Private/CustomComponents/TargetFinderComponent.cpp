@@ -22,7 +22,7 @@ void UTargetFinderComponent::SetFindTargetPerFrame(bool Value)
 	{
 		if (!THandler_TargetSearch.IsValid())
 		{
-			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 1.0f, true);
+			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 5.0f, true);
 		}
 	}
 	else
@@ -69,8 +69,6 @@ void UTargetFinderComponent::Init()
 		return;
 	}
 
-	SetFindTargetPerFrame(FindTargetPerFrame);
-
 	// Alternative to AI Sight Perception in case 360 sight is wanted
 	if (CreateTargetSphere && TargetSightSphere == nullptr)
 	{
@@ -83,16 +81,12 @@ void UTargetFinderComponent::Init()
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
 			TargetSightSphere->SetCanEverAffectNavigation(false);
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
+			TargetSightSphere->OnComponentBeginOverlap.AddDynamic(this, &UTargetFinderComponent::OnOverlapBegin);
+			TargetSightSphere->OnComponentEndOverlap.AddDynamic(this, &UTargetFinderComponent::OnOverlapEnd);
 		}
 	}
 
-	if (FindTargetPerFrame)
-	{
-		if (!THandler_TargetSearch.IsValid())
-		{
-			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 1.f, true);
-		}
-	}
+	SetFindTargetPerFrame(FindTargetPerFrame);
 }
 
 void UTargetFinderComponent::FindTargetUpdate()
@@ -100,23 +94,20 @@ void UTargetFinderComponent::FindTargetUpdate()
 	FindTarget();
 }
 
+void UTargetFinderComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	FindTarget();
+}
+
+void UTargetFinderComponent::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	FindTarget();
+}
+
+
 TArray<AActor*> UTargetFinderComponent::GetActorsInRadius(float Radius)
 {
-	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(GetOwner());
-
-	for (int i = 0; i < IgnoreActors.Num(); i++)
-	{
-		auto Actor = IgnoreActors[i];
-
-		if (Actor) {
-			ActorsToIgnore.Add(Actor);
-		}
-	}
-
 	TArray<AActor*> OutActors;
-
-	//UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetOwner()->GetActorLocation(), Radius, CollisionChannels, AActor::StaticClass(), ActorsToIgnore, OutActors);
 
 	// Get all overlapped actors based that have team faction component attached
 	TargetSightSphere->GetOverlappingActors(OutActors, AActor::StaticClass());
@@ -147,7 +138,12 @@ bool UTargetFinderComponent::CanSeeLastTarget()
 
 AActor* UTargetFinderComponent::FindTarget()
 {
+	if (IsSearching) {
+		return nullptr;
+	}
+
 	if (!GetOwner()) {
+		IsSearching = false;
 		return nullptr;
 	}
 
@@ -155,9 +151,12 @@ AActor* UTargetFinderComponent::FindTarget()
 		Init();
 
 		if (!TargetSightSphere) {
+			IsSearching = false;
 			return nullptr;
 		}
 	}
+
+	IsSearching = true;
 
 	TArray<AActor*> OutActors = GetActorsInRadius(TargetSightRadius);
 
@@ -283,7 +282,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		}
 
 		OnTargetSearch.Broadcast(LastSeenTargetParam);
-
+		IsSearching = false;
 		return LastSeenTarget;
 	}
 	// otherwise clear the last target.
@@ -301,6 +300,8 @@ AActor* UTargetFinderComponent::FindTarget()
 
 	LastSeenTargetParam = TargetSearchParameters;
 	LastSeenTarget = TargetActor;
+
+	IsSearching = false;
 
 	OnTargetSearch.Broadcast(TargetSearchParameters);
 	return TargetActor;

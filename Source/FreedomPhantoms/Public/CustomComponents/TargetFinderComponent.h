@@ -21,6 +21,8 @@ private:
 	FTimerHandle THandler_TargetSearch;
 	FTimerHandle THandler_CountdownTargetLost;
 
+	bool IsSearching;
+
 	/**
 	* Hold the last enemy seen.
 	*/
@@ -95,6 +97,13 @@ public:
 	void RemoveClassFilter(TSubclassOf<AActor> Class);
 
 private:
+
+	UFUNCTION()
+		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+		void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 	void FindTargetUpdate();
 
 	TArray<AActor*> GetActorsInRadius(float Radius);
