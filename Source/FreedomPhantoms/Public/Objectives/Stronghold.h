@@ -105,7 +105,7 @@ private:
 	void GetHighestFaction();
 
 	/** Does the stronghold have enemy opponents in its area? */
-	UPROPERTY(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 		bool IsUnderAttack();
 	
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
