@@ -51,6 +51,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float SpawnRate;
+	float DefaultSpawnRate;
 	FTimerHandle THandler_SpawnDelay;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -97,14 +98,15 @@ private:
 
 	void UpdateDefenders();
 	
-	void AddFaction(ACombatCharacter* Character, TeamFaction Faction);
+	FOccupiedFaction* AddFaction(ACombatCharacter* Character, TeamFaction Faction);
 	
-	FOccupiedFaction* DoesFactionExist(TeamFaction Faction);
-	
-	bool DoesOccupantExist(ACombatCharacter* Occupant);
-	
+	FOccupiedFaction* GetFaction(TArray<FOccupiedFaction*> Factions, TeamFaction Faction);
+		
 	void GetHighestFaction();
 
+	/** Does the stronghold have enemy opponents in its area? */
+	UPROPERTY(BlueprintCallable)
+		bool IsUnderAttack();
 	
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnStrongholdCapturedSignature OnStrongholdCaptured;
