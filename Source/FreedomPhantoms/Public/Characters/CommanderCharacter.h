@@ -42,6 +42,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		FTimerHandle THandler_ResponseSound;
 
+	/** Handler delay when an order is carried out. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		FTimerHandle THandler_OrderDelay;
+
 
 	// the array will contain all the order icons so only one icon is displayed at a time
 	// the arrays will be seperated between overhead and posotion icons as the expected result can have both types of icons displaying at the same time
@@ -139,6 +143,9 @@ private:
 	UFUNCTION(BlueprintCallable)
 		void OnRecruitHealthUpdate(FHealthParameters InHealthParameters);
 
+	UPROPERTY(BlueprintAssignable, Category = "Commander")
+		FOnRemoveRecruitSignature OnRemoveRecruit;
+
 	FHitResult GetCurrentTraceHit(float Length = 500.0f);
 
 	void RecruitFollower();
@@ -147,14 +154,15 @@ private:
 
 	void RemoveWounded();
 
-	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult);
+	void AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult, float Delay = 0.f);
 
-	void DefendAreaSingle(UCommanderRecruit* Recruit);
+	void DefendAreaSingle(UCommanderRecruit* Recruit, float Delay = 0.f);
 
-	void FollowSingle(UCommanderRecruit* Recruit);
+	void FollowSingle(UCommanderRecruit* Recruit, float Delay = 0.f);
 
-	UPROPERTY(BlueprintAssignable, Category = "Commander")
-		FOnRemoveRecruitSignature OnRemoveRecruit;
+	void OrderRecruit(UCommanderRecruit* RecruitInfo, float Delay = 0.f);
+
+	void BroadcastOrderDelay(UCommanderRecruit* RecruitInfo);
 
 	void ResetTargetActor();
 

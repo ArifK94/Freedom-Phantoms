@@ -332,9 +332,11 @@ void ACommanderCharacter::Attack(bool CommandAll)
 
 		if (CommandAll)
 		{
+			float Delay = 1.f;
 			for (int i = 0; i < ActiveRecruits.Num(); i++)
 			{
-				AttackSingle(ActiveRecruits[i], EnemyCharacter, HitResult);
+				AttackSingle(ActiveRecruits[i], EnemyCharacter, HitResult, Delay);
+				Delay++;
 			}
 		}
 		else
@@ -347,7 +349,7 @@ void ACommanderCharacter::Attack(bool CommandAll)
 	PlayCommunicationSound(GetVoiceClipsSet()->AttackSound, CurrentRecruit);
 }
 
-void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult)
+void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacter* EnemyCharacter, FHitResult HitResult, float Delay)
 {
 	if (!Recruit) {
 		return;
@@ -377,7 +379,7 @@ void ACommanderCharacter::AttackSingle(UCommanderRecruit* Recruit, ABaseCharacte
 		DisplayPositionIcon(Recruit->AttackPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
 	}
 
-	OnOrderSent.Broadcast(Recruit, CurrentRecruitIndex);
+	OrderRecruit(Recruit, Delay);
 }
 
 void ACommanderCharacter::DefendArea(bool CommandAll)
@@ -388,9 +390,11 @@ void ACommanderCharacter::DefendArea(bool CommandAll)
 
 	if (CommandAll)
 	{
+		float Delay = 1.f;
 		for (int i = 0; i < ActiveRecruits.Num(); i++)
 		{
-			DefendAreaSingle(ActiveRecruits[i]);
+			DefendAreaSingle(ActiveRecruits[i], Delay);
+			Delay++;
 		}
 	}
 	else
@@ -403,7 +407,7 @@ void ACommanderCharacter::DefendArea(bool CommandAll)
 	PlayCommunicationSound(GetVoiceClipsSet()->DefendSound, CurrentRecruit);
 }
 
-void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
+void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit, float Delay)
 {
 	if (!UHealthComponent::IsActorAlive(Recruit->Recruit)) {
 		return;
@@ -426,7 +430,7 @@ void ACommanderCharacter::DefendAreaSingle(UCommanderRecruit* Recruit)
 	DisplayPositionIcon(Recruit->DefendPositionIcon, Recruit->OrderIconArray, Recruit->TargetLocation);
 	Recruit->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Defend);
 
-	OnOrderSent.Broadcast(Recruit, CurrentRecruitIndex);
+	OrderRecruit(Recruit, Delay);
 }
 
 
@@ -438,9 +442,11 @@ void ACommanderCharacter::FollowCommander(bool CommandAll)
 
 	if (CommandAll)
 	{
+		float Delay = 1.f;
 		for (int i = 0; i < ActiveRecruits.Num(); i++)
 		{
-			FollowSingle(ActiveRecruits[i]);
+			FollowSingle(ActiveRecruits[i], Delay);
+			Delay++;
 		}
 	}
 	else
@@ -453,7 +459,7 @@ void ACommanderCharacter::FollowCommander(bool CommandAll)
 }
 
 
-void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit)
+void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit, float Delay)
 {
 	if (!UHealthComponent::IsActorAlive(Recruit->Recruit)) {
 		return;
@@ -465,7 +471,22 @@ void ACommanderCharacter::FollowSingle(UCommanderRecruit* Recruit)
 
 	Recruit->Recruit->GetOverheadIcon()->ShowIcon(EIconType::Follow);
 
-	OnOrderSent.Broadcast(Recruit, CurrentRecruitIndex);
+	GetWorldTimerManager().ClearTimer(Recruit->THandler_OrderDelay);
+
+	OrderRecruit(Recruit, Delay);
+}
+
+void ACommanderCharacter::OrderRecruit(UCommanderRecruit* RecruitInfo, float Delay)
+{
+	GetWorldTimerManager().ClearTimer(RecruitInfo->THandler_OrderDelay);
+	FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(this, &ACommanderCharacter::BroadcastOrderDelay, RecruitInfo);
+	GetWorldTimerManager().SetTimer(RecruitInfo->THandler_OrderDelay, RespawnDelegate, 1.0f, false, Delay);
+}
+
+void ACommanderCharacter::BroadcastOrderDelay(UCommanderRecruit* RecruitInfo)
+{
+	OnOrderSent.Broadcast(RecruitInfo, CurrentRecruitIndex);
+	GetWorldTimerManager().ClearTimer(RecruitInfo->THandler_OrderDelay);
 }
 
 /// <summary>
@@ -614,8 +635,8 @@ void ACommanderCharacter::SortRecruitList()
 
 			// If current recruit is wounded & the next recruit is still alive
 			// swap their index positions
-			if (!UHealthComponent::IsActorAlive(ActiveRecruits[sort]->Recruit) && 
-				UHealthComponent::IsActorAlive(ActiveRecruits[sort + 1]->Recruit)) 
+			if (!UHealthComponent::IsActorAlive(ActiveRecruits[sort]->Recruit) &&
+				UHealthComponent::IsActorAlive(ActiveRecruits[sort + 1]->Recruit))
 			{
 				auto temp = ActiveRecruits[sort + 1];
 				ActiveRecruits[sort + 1] = ActiveRecruits[sort];
