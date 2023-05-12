@@ -1,0 +1,78 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Props/CharacterSpawner.h"
+
+#include "Components/ArrowComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+// Sets default values
+ACharacterSpawner::ACharacterSpawner()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = false;
+	
+#if WITH_EDITORONLY_DATA
+
+	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
+	CapsuleComponent->InitCapsuleSize(34.0f, 88.0f);
+	CapsuleComponent->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+
+	CapsuleComponent->CanCharacterStepUpOn = ECB_No;
+	CapsuleComponent->SetShouldUpdatePhysicsVolume(false);
+	CapsuleComponent->SetCanEverAffectNavigation(false);
+	CapsuleComponent->bDynamicObstacle = false;
+	RootComponent = CapsuleComponent;
+
+	ArrowComponent = CreateEditorOnlyDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
+	if (ArrowComponent)
+	{
+		ArrowComponent->ArrowColor = FColor(150, 200, 255);
+		ArrowComponent->bTreatAsASprite = true;
+		ArrowComponent->SetupAttachment(CapsuleComponent);
+		ArrowComponent->bIsScreenSizeScaled = true;
+		ArrowComponent->SetSimulatePhysics(false);
+	}
+#endif // WITH_EDITORONLY_DATA
+
+	Priority = 0;
+}
+
+void ACharacterSpawner::BeginPlay()
+{
+	Super::BeginPlay();
+
+	DefaultPriority = Priority;
+}
+
+void ACharacterSpawner::SetDefaultPriority()
+{
+	Priority = DefaultPriority;
+}
+
+void ACharacterSpawner::GetSpawnTransform(UWorld* World, FVector& OutLocation, FRotator& OutRotation)
+{
+	TArray<AActor*> OutActors;
+	UGameplayStatics::GetAllActorsOfClass(World, ACharacterSpawner::StaticClass(), OutActors);
+
+	ACharacterSpawner* HighestPriority = nullptr;
+
+	for (AActor* OutActor : OutActors)
+	{
+		ACharacterSpawner* CharacterSpawner = Cast<ACharacterSpawner>(OutActor);
+
+		if (!HighestPriority)
+		{
+			HighestPriority = CharacterSpawner;
+		}
+		// if current iteration has higher priority than the current highest priority spawner.
+		else if (CharacterSpawner->GetPriority() > HighestPriority->GetPriority())
+		{
+			HighestPriority = CharacterSpawner;
+		}
+	}
+
+	OutLocation = HighestPriority->GetActorLocation();
+	OutRotation = HighestPriority->GetActorRotation();
+}

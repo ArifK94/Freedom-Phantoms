@@ -9,6 +9,7 @@
 #include "Weapons/Projectile.h"
 #include "Weapons/AmmoCrate.h"
 #include "Vehicles/VehicleBase.h"
+#include "Props/CharacterSpawner.h"
 #include "Props/SupportPackage.h"
 #include "Props/MapCamera.h"
 #include "Interfaces/Interactable.h"
@@ -240,14 +241,11 @@ void ACustomPlayerController::SpawnPlayer()
 		return;
 	}
 
-	TArray<AActor*> TargetActor;
-	UGameplayStatics::GetAllActorsWithTag(GetWorld(), PlayerStartTagName, TargetActor);
+	FVector OutLocation;
+	FRotator OutRotation;
+	ACharacterSpawner::GetSpawnTransform(GetWorld(), OutLocation, OutRotation);
 
-	if (TargetActor.Num() <= 0) {
-		return;
-	}
-
-	OwningCombatCharacter = GameInstanceController->SpawnCombatCharacter(TargetActor[0]->GetActorLocation(), TargetActor[0]->GetActorRotation());
+	OwningCombatCharacter = GameInstanceController->SpawnCombatCharacter(OutLocation, OutRotation);
 
 	if (!OwningCombatCharacter) {
 		return;
