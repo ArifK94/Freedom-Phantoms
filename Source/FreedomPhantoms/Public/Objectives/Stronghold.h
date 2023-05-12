@@ -16,6 +16,7 @@ class UCoverPointComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStrongholdCapturedSignature, FOccupiedFaction, OccupiedFaction);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStrongholdDefenderSpawnedSignature, FStrongholdDefender, StrongholdDefender);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStrongholdUnderAttackSignature, bool, IsUnderAttack);
 
 
 UCLASS()
@@ -113,6 +114,9 @@ private:
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnStrongholdDefenderSpawnedSignature OnStrongholdDefenderSpawned;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnStrongholdUnderAttackSignature OnStrongholdUnderAttack;
 
 protected:
 	virtual void BeginPlay() override;

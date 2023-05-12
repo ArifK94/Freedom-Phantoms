@@ -308,6 +308,7 @@ void AStronghold::UpdateTotalOccupants()
 		}
 	}
 
+	OnStrongholdUnderAttack.Broadcast(IsUnderAttack());
 }
 
 void AStronghold::UpdateDefenders()
