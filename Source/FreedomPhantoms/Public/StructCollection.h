@@ -1080,6 +1080,7 @@ public:
 		FactionCount = 0;
 		Faction = TeamFaction::Neutral;
 		FlagMaterial = nullptr;
+		FactionDataSet = nullptr;
 	}
 };
 

@@ -55,11 +55,7 @@ void AStronghold::BeginPlay()
 
 	DefaultSpawnRate = SpawnRate;
 
-	DominantFaction = new FOccupiedFaction();
-	DominantFaction->Faction = TeamFaction::Neutral;
-	DominantFaction->FlagMaterial = NeutralFlagMaterial;
-	DominantFaction->FactionCount = 0;
-	DominantFaction->FactionDataSet = nullptr;
+	DominantFaction = FOccupiedFaction();
 
 	GetSpawnAreas();
 	LoadCoverPoints();
@@ -180,7 +176,7 @@ UCoverPointComponent* AStronghold::GetCoverPoint(AActor* OwningCharacter)
 void AStronghold::SpawnDefender()
 {
 	// check if captured by a faction
-	if (DominantFaction->Faction == TeamFaction::Neutral) {
+	if (DominantFaction.Faction == TeamFaction::Neutral) {
 		return;
 	}
 
@@ -189,11 +185,11 @@ void AStronghold::SpawnDefender()
 		return;
 	}
 
-	if (DominantFaction->FactionDataSet == nullptr) {
+	if (DominantFaction.FactionDataSet == nullptr) {
 		return;
 	}
 
-	if (DominantFaction->FactionDataSet->OperativeCharacterClass == nullptr) {
+	if (DominantFaction.FactionDataSet->OperativeCharacterClass == nullptr) {
 		return;
 	}
 
@@ -223,7 +219,7 @@ void AStronghold::SpawnDefender()
 		return;
 	}
 
-	auto Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction->FactionDataSet->OperativeCharacterClass, NewNavLocation.Location, SpawnArea->GetComponentRotation(), SpawnParams);
+	auto Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction.FactionDataSet->OperativeCharacterClass, NewNavLocation.Location, SpawnArea->GetComponentRotation(), SpawnParams);
 
 	if (!Character) {
 		return;
@@ -246,7 +242,7 @@ void AStronghold::UpdateTotalOccupants()
 	}
 
 	TMap<TeamFaction, int> FactionMap;
-	TArray<FOccupiedFaction*> NewOccupiedFactions;
+	TArray<FOccupiedFaction> NewOccupiedFactions;
 
 	for (int i = TotalOccupyingCombatants.Num() - 1; i >= 0; i--)
 	{
@@ -261,7 +257,7 @@ void AStronghold::UpdateTotalOccupants()
 				TeamFaction Faction = TeamFactionComp->GetSelectedFaction();
 
 				// add faction to local array.
-				if (GetFaction(NewOccupiedFactions, Faction) == nullptr)
+				if (GetFaction(NewOccupiedFactions, Faction).FactionDataSet == nullptr)
 				{
 					NewOccupiedFactions.Add(AddFaction(Character, Faction));
 				}
@@ -299,12 +295,12 @@ void AStronghold::UpdateTotalOccupants()
 
 	for (TeamFaction Faction : OutKeys)
 	{
-		FOccupiedFaction* OccupiedFaction = GetFaction(OccupiedFactions, Faction);
+		FOccupiedFaction OccupiedFaction = GetFaction(OccupiedFactions, Faction);
 
-		if (OccupiedFaction != nullptr)
+		if (OccupiedFaction.FactionDataSet != nullptr)
 		{
 			auto Count = FactionMap[Faction];
-			OccupiedFaction->FactionCount = Count;
+			OccupiedFaction.FactionCount = Count;
 		}
 	}
 
@@ -329,31 +325,31 @@ void AStronghold::UpdateDefenders()
 	}
 }
 
-FOccupiedFaction* AStronghold::AddFaction(ACombatCharacter* Character, TeamFaction Faction)
+FOccupiedFaction AStronghold::AddFaction(ACombatCharacter* Character, TeamFaction Faction)
 {
-	FOccupiedFaction* OccupyingFaction = new FOccupiedFaction;
-	OccupyingFaction->Faction = Faction;
-	OccupyingFaction->FactionCount = 1;
-	OccupyingFaction->FactionDataSet = Character->GetFactionDataSet();
-	OccupyingFaction->FlagMaterial = OccupyingFaction->FactionDataSet->FlagMaterial;
+	FOccupiedFaction OccupyingFaction = FOccupiedFaction();
+	OccupyingFaction.Faction = Faction;
+	OccupyingFaction.FactionCount = 1;
+	OccupyingFaction.FactionDataSet = Character->GetFactionDataSet();
+	OccupyingFaction.FlagMaterial = OccupyingFaction.FactionDataSet->FlagMaterial;
 	return OccupyingFaction;
 }
 
-FOccupiedFaction* AStronghold::GetFaction(TArray<FOccupiedFaction*> Factions, TeamFaction Faction)
+FOccupiedFaction AStronghold::GetFaction(TArray<FOccupiedFaction> Factions, TeamFaction Faction)
 {
 	if (Factions.Num() <= 0) {
-		return nullptr;
+		return FOccupiedFaction();
 	}
 
-	for (FOccupiedFaction* OccupiedFaction : Factions)
+	for (FOccupiedFaction OccupiedFaction : Factions)
 	{
-		if (OccupiedFaction->Faction == Faction)
+		if (OccupiedFaction.Faction == Faction)
 		{
 			return OccupiedFaction;
 		}
 	}
 
-	return nullptr;
+	return FOccupiedFaction();
 }
 
 void AStronghold::GetHighestFaction()
@@ -362,41 +358,31 @@ void AStronghold::GetHighestFaction()
 		return;
 	}
 
-	FOccupiedFaction* OwningFaction = new FOccupiedFaction;
-	OwningFaction->Faction = TeamFaction::Neutral;
-	OwningFaction->FlagMaterial = NeutralFlagMaterial;
-	OwningFaction->FactionCount = 0;
+	FOccupiedFaction OwningFaction = FOccupiedFaction();
 
-	for (FOccupiedFaction* OccupiedFaction : OccupiedFactions)
+	for (FOccupiedFaction OccupiedFaction : OccupiedFactions)
 	{
-		if (OccupiedFaction->FactionCount > OwningFaction->FactionCount)
+		if (OccupiedFaction.FactionCount > OwningFaction.FactionCount)
 		{
 			OwningFaction = OccupiedFaction;
 		}
 	}
 
-	FOccupiedFaction OccupiedFaction = FOccupiedFaction();
-	OccupiedFaction.FactionCount = OwningFaction->FactionCount;
-	OccupiedFaction.Faction = OwningFaction->Faction;
-	OccupiedFaction.FlagMaterial = OwningFaction->FlagMaterial;
-	OccupiedFaction.FactionDataSet = OwningFaction->FactionDataSet;
-
 	// play the capture sound
-	if (DominantFaction->Faction == TeamFaction::Neutral) 
+	if (DominantFaction.Faction == TeamFaction::Neutral) 
 	{
-
 		if (CaptureSound != NULL)
 		{
 			StrongholdAudio->Sound = CaptureSound;
 			StrongholdAudio->Play();
 		}
 
-		OnStrongholdCaptured.Broadcast(OccupiedFaction);
+		OnStrongholdCaptured.Broadcast(OwningFaction);
 	}
 	else
 	{
 		// Stronghold has been overrun if the dominant faction is no longer the same
-		if (DominantFaction->Faction != OwningFaction->Faction)
+		if (DominantFaction.Faction != OwningFaction.Faction)
 		{
 			if (OverrunSound != NULL)
 			{
@@ -404,13 +390,13 @@ void AStronghold::GetHighestFaction()
 				StrongholdAudio->Play();
 			}
 
-			OnStrongholdCaptured.Broadcast(OccupiedFaction);
+			OnStrongholdCaptured.Broadcast(OwningFaction);
 		}
 	}
 
 	// update the dominant faction
 	DominantFaction = OwningFaction;
-	FactionFlag->SetMaterial(FlagClothMaterialIndex, DominantFaction->FlagMaterial);
+	FactionFlag->SetMaterial(FlagClothMaterialIndex, DominantFaction.FlagMaterial);
 }
 
 bool AStronghold::IsUnderAttack()

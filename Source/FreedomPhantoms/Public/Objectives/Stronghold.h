@@ -64,20 +64,22 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int32 FlagClothMaterialIndex;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		FOccupiedFaction DominantFaction;
 
-private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TArray<FOccupiedFaction> OccupiedFactions;
+
+
 	FTimerHandle THandler_OverlappingCombatatant;
 
 	TArray<UBoxComponent*> SpawnAreas;
 
 	TArray<UCoverPointComponent*> CoverPoints;
 
-	FOccupiedFaction* DominantFaction;
-
 	TArray<ACombatCharacter*> TotalOccupyingCombatants;
 	TArray<ACombatCharacter*> DefendingCombatatants;
 
-	TArray<FOccupiedFaction*> OccupiedFactions;
 
 public:	
 	AStronghold();
@@ -99,9 +101,9 @@ private:
 
 	void UpdateDefenders();
 	
-	FOccupiedFaction* AddFaction(ACombatCharacter* Character, TeamFaction Faction);
+	FOccupiedFaction AddFaction(ACombatCharacter* Character, TeamFaction Faction);
 	
-	FOccupiedFaction* GetFaction(TArray<FOccupiedFaction*> Factions, TeamFaction Faction);
+	FOccupiedFaction GetFaction(TArray<FOccupiedFaction> Factions, TeamFaction Faction);
 		
 	void GetHighestFaction();
 
