@@ -84,9 +84,26 @@ private:
 public:	
 	AStronghold();
 
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnStrongholdCapturedSignature OnStrongholdCaptured;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnStrongholdDefenderSpawnedSignature OnStrongholdDefenderSpawned;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnStrongholdUnderAttackSignature OnStrongholdUnderAttack;
+
+	UFUNCTION(BlueprintCallable)
+		bool GetRandomSpawnPoint(FVector& OutLocation, FRotator& OutRotation);
+
+	/** Does the stronghold have enemy opponents in its area? */
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool IsUnderAttack();
+
 	UCoverPointComponent* GetCoverPoint(AActor* OwningCharacter);
 
-	void RemoveDefender(AActor* Actor);
+	UFUNCTION(BlueprintCallable)
+		void RemoveDefender(AActor* Actor);
 
 private:
 	void CheckOverlappingCombatatant();
@@ -106,19 +123,6 @@ private:
 	FOccupiedFaction GetFaction(TArray<FOccupiedFaction> Factions, TeamFaction Faction);
 		
 	void GetHighestFaction();
-
-	/** Does the stronghold have enemy opponents in its area? */
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-		bool IsUnderAttack();
-	
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-		FOnStrongholdCapturedSignature OnStrongholdCaptured;
-
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-		FOnStrongholdDefenderSpawnedSignature OnStrongholdDefenderSpawned;
-
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-		FOnStrongholdUnderAttackSignature OnStrongholdUnderAttack;
 
 protected:
 	virtual void BeginPlay() override;

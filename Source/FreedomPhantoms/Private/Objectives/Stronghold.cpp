@@ -49,6 +49,36 @@ AStronghold::AStronghold()
 	SpawnAreaComponentTag = "SpawnArea";
 }
 
+bool AStronghold::GetRandomSpawnPoint(FVector& OutLocation, FRotator& OutRotation)
+{
+	int RandIndex = rand() % SpawnAreas.Num();
+
+	UBoxComponent* SpawnArea = SpawnAreas[RandIndex];
+
+	FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
+
+	// check if location is on the navmesh
+	FNavLocation NavLocation;
+	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
+	bool navResult = NavigationArea->GetRandomReachablePointInRadius(Location, 500.f, NavLocation);
+
+	if (!navResult) {
+		return false;
+	}
+
+	FNavLocation NewNavLocation;
+	navResult = NavigationArea->ProjectPointToNavigation(NavLocation.Location, NewNavLocation);
+
+	if (!navResult) {
+		return false;
+	}
+
+	OutLocation = NewNavLocation.Location;
+	OutRotation = SpawnArea->GetComponentRotation();
+
+	return true;
+}
+
 void AStronghold::BeginPlay()
 {
 	Super::BeginPlay();
@@ -197,29 +227,15 @@ void AStronghold::SpawnDefender()
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	int RandIndex = rand() % SpawnAreas.Num();
+	FVector OutLocation;
+	FRotator OutRotation;
+	bool HasSpawnPoint = GetRandomSpawnPoint(OutLocation, OutRotation);
 
-	UBoxComponent* SpawnArea = SpawnAreas[RandIndex];
-
-	FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
-
-	// check if location is on the navmesh
-	FNavLocation NavLocation;
-	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-	bool navResult = NavigationArea->GetRandomReachablePointInRadius(Location, 500.f, NavLocation);
-
-	if (!navResult) {
+	if (!HasSpawnPoint) {
 		return;
 	}
 
-	FNavLocation NewNavLocation;
-	navResult = NavigationArea->ProjectPointToNavigation(NavLocation.Location, NewNavLocation);
-
-	if (!navResult) {
-		return;
-	}
-
-	auto Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction.FactionDataSet->OperativeCharacterClass, NewNavLocation.Location, SpawnArea->GetComponentRotation(), SpawnParams);
+	ABaseCharacter* Character = GetWorld()->SpawnActor<ABaseCharacter>(DominantFaction.FactionDataSet->OperativeCharacterClass, OutLocation, OutRotation, SpawnParams);
 
 	if (!Character) {
 		return;

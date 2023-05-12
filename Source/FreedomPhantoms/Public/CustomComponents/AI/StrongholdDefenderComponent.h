@@ -37,7 +37,8 @@ public:
 	void FindDefenderPoint();
 
 	/** Remove defender from stronghold & make stronghold null */
-	void RemoveStronghold();
+	UFUNCTION(BlueprintCallable)
+		void RemoveStronghold();
 
 	void ClearTimer();
 
