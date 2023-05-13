@@ -21,7 +21,6 @@ private:
 	class AAIController* AIController;
 	class ABaseCharacter* Character;
 	APawn* PawnOwner;
-	USphereComponent* DestinationTrigger;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MinAcceptanceRadius;
@@ -45,12 +44,8 @@ private:
 		TSubclassOf<class UNavigationQueryFilter> FilterClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
-		float MovementDebugLifetTime;
+		float MovementDebugLifeTime;
 
-
-	/** The sphere radius for NPC to move around the same target position so that multiple NPCs do not stick together in one place */
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//	float DestinationRadius;
 
 public:	
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
@@ -66,11 +61,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-private:
-	void CreateDestinationTrigger(FVector Location, float Radius);
 
 public:	
 	UFUNCTION(BlueprintCallable)

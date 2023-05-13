@@ -16,7 +16,7 @@ UAIMovementComponent::UAIMovementComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	MinAcceptanceRadius = 50.f;
-	MovementDebugLifetTime = 1.0f;
+	MovementDebugLifeTime = 1.0f;
 	ProjectDestinationToNavigation = true;
 
 	UsePathfinding = true;
@@ -38,9 +38,12 @@ void UAIMovementComponent::Init()
 
 	AIController = Cast<AAIController>(GetOwner());
 
-	if (!AIController) {
+	if (!AIController) 
+	{
+		UE_LOG(LogTemp, Error, TEXT("No AIController for the AI movement component"));
 		return;
 	}
+
 	PawnOwner = AIController->GetPawn();
 
 	if (PawnOwner)
@@ -49,38 +52,9 @@ void UAIMovementComponent::Init()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("No Pawn Owner for the AI movement component"));
+		UE_LOG(LogTemp, Error, TEXT("No Pawn Owner for the AI movement component : %s"), *AIController->GetName());
 	}
 }
-
-void UAIMovementComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (!OtherActor || !PawnOwner) {
-		return;
-	}
-
-
-	if (OtherActor == PawnOwner)
-	{
-		auto TriggerLocation = OtherActor->GetActorLocation();
-
-		//	DrawDebugSphere(GetWorld(), TriggerLocation, 30.f, 20, FColor::Red, false, 20.f, 0, 2);
-
-		if (DestinationTrigger) {
-
-			DestinationTrigger->SetCollisionProfileName(TEXT("NoCollision"));
-
-			//if (DestinationTrigger->OnComponentBeginOverlap.IsBound()) {
-			//	DestinationTrigger->OnComponentBeginOverlap.RemoveDynamic(this, &UAIMovementComponent::OnOverlapBegin);
-			//}
-
-			//DestinationTrigger->DestroyComponent();
-		}
-
-		OnDestinationReached.Broadcast(TriggerLocation);
-	}
-}
-
 
 EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, AIBehaviourState BehaviourState, bool SprintToTarget, bool WalkNearTarget)
 {
@@ -105,12 +79,6 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 	// otherwise use the accept radius amount
 	float TargetRadius = AcceptRadius <= 1.f ? MinAcceptanceRadius : AcceptRadius;
 
-
-	CreateDestinationTrigger(TargetDestination, TargetRadius);
-
-	if (DestinationTrigger) {
-		DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
-	}
 
 	if (Character == nullptr) {
 		Init();
@@ -230,23 +198,4 @@ FVector UAIMovementComponent::ValidateDestination(FVector Location, bool& IsLoca
 	}
 
 	return Destination;
-}
-
-void UAIMovementComponent::CreateDestinationTrigger(FVector Location, float Radius)
-{
-	if (DestinationTrigger == nullptr) {
-		return;
-	}
-
-	DestinationTrigger = NewObject<USphereComponent>(this);
-	DestinationTrigger->RegisterComponent();
-	DestinationTrigger->SetSphereRadius(Radius);
-	DestinationTrigger->SetWorldLocation(Location);
-	DestinationTrigger->SetCollisionProfileName(TEXT("OverlapAllCharacter"));
-	DestinationTrigger->SetCanEverAffectNavigation(false);
-	DestinationTrigger->ShapeColor = FColor(0, 255, 0, 255);
-
-	if (!DestinationTrigger->OnComponentBeginOverlap.IsBound()) {
-		DestinationTrigger->OnComponentBeginOverlap.AddDynamic(this, &UAIMovementComponent::OnOverlapBegin);
-	}
 }
