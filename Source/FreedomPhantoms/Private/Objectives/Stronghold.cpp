@@ -272,8 +272,9 @@ void AStronghold::UpdateTotalOccupants()
 			{
 				TeamFaction Faction = TeamFactionComp->GetSelectedFaction();
 
+				int index = 0;
 				// add faction to local array.
-				if (GetFaction(NewOccupiedFactions, Faction).FactionDataSet == nullptr)
+				if (GetFaction(NewOccupiedFactions, Faction, index).FactionDataSet == nullptr)
 				{
 					NewOccupiedFactions.Add(AddFaction(Character, Faction));
 				}
@@ -311,12 +312,13 @@ void AStronghold::UpdateTotalOccupants()
 
 	for (TeamFaction Faction : OutKeys)
 	{
-		FOccupiedFaction OccupiedFaction = GetFaction(OccupiedFactions, Faction);
+		int index = 0;
+		FOccupiedFaction OccupiedFaction = GetFaction(OccupiedFactions, Faction, index);
 
 		if (OccupiedFaction.FactionDataSet != nullptr)
 		{
-			auto Count = FactionMap[Faction];
-			OccupiedFaction.FactionCount = Count;
+			OccupiedFaction.FactionCount = FactionMap[Faction];
+			OccupiedFactions[index] = OccupiedFaction;
 		}
 	}
 
@@ -351,16 +353,19 @@ FOccupiedFaction AStronghold::AddFaction(ACombatCharacter* Character, TeamFactio
 	return OccupyingFaction;
 }
 
-FOccupiedFaction AStronghold::GetFaction(TArray<FOccupiedFaction> Factions, TeamFaction Faction)
+FOccupiedFaction AStronghold::GetFaction(TArray<FOccupiedFaction> Factions, TeamFaction Faction, int& index)
 {
 	if (Factions.Num() <= 0) {
 		return FOccupiedFaction();
 	}
 
-	for (FOccupiedFaction OccupiedFaction : Factions)
+	for (int i = 0; i < Factions.Num(); i++)
 	{
+		FOccupiedFaction OccupiedFaction = Factions[i];
+
 		if (OccupiedFaction.Faction == Faction)
 		{
+			index = i;
 			return OccupiedFaction;
 		}
 	}

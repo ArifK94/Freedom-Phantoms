@@ -120,7 +120,7 @@ private:
 	
 	FOccupiedFaction AddFaction(ACombatCharacter* Character, TeamFaction Faction);
 	
-	FOccupiedFaction GetFaction(TArray<FOccupiedFaction> Factions, TeamFaction Faction);
+	FOccupiedFaction GetFaction(TArray<FOccupiedFaction> Factions, TeamFaction Faction, int& index);
 		
 	void GetHighestFaction();
 
