@@ -347,7 +347,6 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo, int Re
 	if (RecruitInfo->Recruit != OwningCombatCharacter) {
 		return;
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("hello")));
 
 	bRecruitInfo = RecruitInfo;
 
