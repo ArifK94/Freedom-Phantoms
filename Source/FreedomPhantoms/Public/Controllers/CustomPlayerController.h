@@ -134,6 +134,7 @@ public:
 
 	virtual void OnPossess(APawn* InPawn) override;
 
+	virtual void OnUnPossess() override;
 
 	// Rather than copying entire amount of code to be inherited by subclasses, common functionality should be passed here
 	UFUNCTION(BlueprintCallable)

@@ -231,6 +231,15 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 	IsShowingRadialMenu = false;
 }
 
+void ACustomPlayerController::OnUnPossess()
+{
+	if (!UHealthComponent::IsActorAlive(OwningCombatCharacter))
+	{
+		return;
+	}
+	Super::OnUnPossess();
+}
+
 void ACustomPlayerController::SpawnPlayer()
 {
 	GetWorldTimerManager().ClearTimer(THandler_RespawnDelay);
