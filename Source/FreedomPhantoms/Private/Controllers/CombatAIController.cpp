@@ -117,8 +117,6 @@ void ACombatAIController::Tick(float DeltaTime)
 	OwningCombatCharacter->bUseControllerRotationYaw = false;
 	OwningCombatCharacter->GetCharacterMovement()->RotationRate = FRotator(0.0f, 250.f, 0.0f); // ...at this rotation rate
 
-	Commander = OwningCombatCharacter->GetCommander();
-
 	FaceTarget();
 }
 
@@ -349,6 +347,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo, int Re
 	if (RecruitInfo->Recruit != OwningCombatCharacter) {
 		return;
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("hello")));
 
 	bRecruitInfo = RecruitInfo;
 
@@ -385,6 +384,20 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo, int Re
 	MoveToOrderResult = EPathFollowingRequestResult::Failed;
 
 	CoverFinderComponent->RemoveCoverPoint();
+}
+
+void ACombatAIController::OnCommanderChanged(ACommanderCharacter* NewCommander)
+{
+	Commander = NewCommander;
+
+	if (Commander == nullptr) {
+		return;
+	}
+
+	// Assign Order Event
+	Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
+
+	Commander->OnCommanderChange.AddDynamic(this, &ACombatAIController::OnCommanderChanged);
 }
 
 void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
@@ -638,6 +651,8 @@ void ACombatAIController::FindMountedGun()
 
 void ACombatAIController::CheckCommanderOrder()
 {
+	Commander = OwningCombatCharacter->GetCommander();
+
 	if (Commander == nullptr) {
 		return;
 	}
@@ -648,6 +663,8 @@ void ACombatAIController::CheckCommanderOrder()
 
 	// Assign Order Event
 	Commander->OnOrderSent.AddDynamic(this, &ACombatAIController::OnOrderReceived);
+
+	Commander->OnCommanderChange.AddDynamic(this, &ACombatAIController::OnCommanderChanged);
 
 	// refresh state of behaviour
 	SetStayCombatAlert(false);

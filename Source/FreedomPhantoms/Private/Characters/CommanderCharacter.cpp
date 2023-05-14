@@ -177,6 +177,8 @@ void ACommanderCharacter::ChangeCommander(ACommanderCharacter* NewCommander)
 	NewCommander->SetCurrentRecruit(CurrentRecruit);
 	NewCommander->SetCurrentRecruitIndex(CurrentRecruitIndex);
 	NewCommander->SetWoundedCount(WoundedCount);
+
+	OnCommanderChange.Broadcast(NewCommander);
 }
 
 void ACommanderCharacter::InteractWithOperative()

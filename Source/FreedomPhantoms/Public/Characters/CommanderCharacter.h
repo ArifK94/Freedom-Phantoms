@@ -16,6 +16,7 @@ class UTargetFinderComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRemoveRecruitSignature, ACommanderCharacter*, Commander, int, RecruitIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnOrderSentSignature, UCommanderRecruit*, RecruitInfo, int, RecruitIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRecruitHealthChangeSignature, UCommanderRecruit*, RecruitInfo, int, RecruitIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCommanderChangeSignature, ACommanderCharacter*, NewCommander);
 
 
 UCLASS(Blueprintable)
@@ -121,6 +122,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Commander")
 		FOnRecruitHealthChangeSignature OnRecruitHealthChange;
+
+	UPROPERTY(BlueprintAssignable, Category = "Commander")
+		FOnCommanderChangeSignature OnCommanderChange;
 
 	void InteractWithOperative();
 

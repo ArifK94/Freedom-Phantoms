@@ -251,6 +251,9 @@ private:
 		void OnOrderReceived(UCommanderRecruit* RecruitInfo, int RecruitIndex);
 
 	UFUNCTION()
+		void OnCommanderChanged(ACommanderCharacter* NewCommander);
+
+	UFUNCTION()
 		void OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParameters);
 
 	virtual void OnNearbyActorFound_Implementation(FAvoidableParams AvoidableParams) override;
