@@ -56,22 +56,31 @@ void ACharacterSpawner::GetSpawnTransform(UWorld* World, FVector& OutLocation, F
 	TArray<AActor*> OutActors;
 	UGameplayStatics::GetAllActorsOfClass(World, ACharacterSpawner::StaticClass(), OutActors);
 
-	ACharacterSpawner* HighestPriority = nullptr;
+	TArray<ACharacterSpawner*> HighestPriorities;
 
 	for (AActor* OutActor : OutActors)
 	{
 		ACharacterSpawner* CharacterSpawner = Cast<ACharacterSpawner>(OutActor);
 
-		if (!HighestPriority)
+		if (HighestPriorities.Num() <= 0)
 		{
-			HighestPriority = CharacterSpawner;
+			HighestPriorities.Add(CharacterSpawner);
 		}
-		// if current iteration has higher priority than the current highest priority spawner.
-		else if (CharacterSpawner->GetPriority() > HighestPriority->GetPriority())
+		// if current iteration has equal priority than the last highest priority spawner, then add to the array.
+		else if (CharacterSpawner->GetPriority() == HighestPriorities[HighestPriorities.Num() - 1]->GetPriority())
 		{
-			HighestPriority = CharacterSpawner;
+			HighestPriorities.Add(CharacterSpawner);
+		}
+		// if current iteration has higher priority than the last highest priority spawner, then empty the array and add the highest.
+		else if (CharacterSpawner->GetPriority() > HighestPriorities[HighestPriorities.Num() - 1]->GetPriority())
+		{
+			HighestPriorities.Empty();
+			HighestPriorities.Add(CharacterSpawner);
 		}
 	}
+
+	int RandomIndex = rand() % HighestPriorities.Num();
+	ACharacterSpawner* HighestPriority = HighestPriorities[RandomIndex];
 
 	OutLocation = HighestPriority->GetActorLocation();
 	OutRotation = HighestPriority->GetActorRotation();
