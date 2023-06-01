@@ -15,10 +15,12 @@ class FREEDOMPHANTOMS_API UShooterComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	TArray<AWeapon*> Weapons;
 
 	FTimerHandle THandler_BeginShoot;
 	FTimerHandle THandler_ResumeShoot;
+
+	UPROPERTY()
+		TArray<AWeapon*> Weapons;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float m_TimeBetweenShotsMin;
