@@ -214,7 +214,7 @@ public:
 
 	void swapWeapon();
 
-	void PickupWeapon(AWeapon* Weapon);
+	void PickupWeapon(AWeapon* NewWeapon);
 
 	void HolsterWeapon();
 

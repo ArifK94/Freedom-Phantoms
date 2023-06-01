@@ -867,13 +867,13 @@ void ACombatCharacter::swapWeapon()
 /// End result will always be one primary as assault or LMG etc. and secondary will be pistol or other handgun types
 /// </summary>
 /// <param name="Weapon"></param>
-void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
+void ACombatCharacter::PickupWeapon(AWeapon* NewWeapon)
 {
 	// Required for the weapon events
-	Weapon->SetOwner(this);
+	NewWeapon->SetOwner(this);
 
 	// register new weapon events
-	RegisterWeaponEvents(Weapon, true);
+	RegisterWeaponEvents(NewWeapon, true);
 
 	// update the primary or secondary weapon
 	// unregister/ register the weapon events when swapped
@@ -914,12 +914,12 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 	if (IsPrimary)
 	{
 		RegisterWeaponEvents(primaryWeaponObj, false);
-		primaryWeaponObj = Weapon;
+		primaryWeaponObj = NewWeapon;
 	}
 	else
 	{
 		RegisterWeaponEvents(secondaryWeaponObj, false);
-		secondaryWeaponObj = Weapon;
+		secondaryWeaponObj = NewWeapon;
 	}
 
 	isReloading = false;
@@ -933,10 +933,10 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 		CurrentWeapon->DropWeapon();
 
 		// set the actor location of current to where the pickup weapon is
-		CurrentWeapon->SetActorLocationAndRotation(Weapon->GetActorLocation(), Weapon->GetActorRotation());
+		CurrentWeapon->SetActorLocationAndRotation(NewWeapon->GetActorLocation(), NewWeapon->GetActorRotation());
 
 		// assign new weapon to current weapon
-		CurrentWeapon = Weapon;
+		CurrentWeapon = NewWeapon;
 
 		CurrentWeapon->setWeaponSocket(GetMesh(), WeaponHandSocket);
 
@@ -945,7 +945,7 @@ void ACombatCharacter::PickupWeapon(AWeapon* Weapon)
 		RetrieveWeaponAnimDataSet();
 	}
 	else {
-		Loadout->HolsterWeapon(Weapon);
+		Loadout->HolsterWeapon(NewWeapon);
 	}
 }
 
