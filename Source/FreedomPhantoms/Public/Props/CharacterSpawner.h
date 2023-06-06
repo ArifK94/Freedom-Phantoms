@@ -37,7 +37,8 @@ public:
 		void SetDefaultPriority();
 
 	/** Get character spawn by priority */
-	static void GetSpawnTransform(UWorld* World, FVector& OutLocation, FRotator& OutRotation);
+	UFUNCTION(BlueprintCallable)
+		static bool GetSpawnTransform(UWorld* World, FVector& OutLocation, FRotator& OutRotation);
 
 protected:
 	virtual void BeginPlay() override;

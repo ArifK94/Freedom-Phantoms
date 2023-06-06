@@ -13,8 +13,6 @@ ACharacterSpawner::ACharacterSpawner()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	
-#if WITH_EDITORONLY_DATA
-
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
 	CapsuleComponent->InitCapsuleSize(34.0f, 88.0f);
 	CapsuleComponent->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
@@ -25,6 +23,8 @@ ACharacterSpawner::ACharacterSpawner()
 	CapsuleComponent->bDynamicObstacle = false;
 	RootComponent = CapsuleComponent;
 
+#if WITH_EDITORONLY_DATA
+
 	ArrowComponent = CreateEditorOnlyDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
 	if (ArrowComponent)
 	{
@@ -34,6 +34,7 @@ ACharacterSpawner::ACharacterSpawner()
 		ArrowComponent->bIsScreenSizeScaled = true;
 		ArrowComponent->SetSimulatePhysics(false);
 	}
+
 #endif // WITH_EDITORONLY_DATA
 
 	Priority = 0;
@@ -51,8 +52,13 @@ void ACharacterSpawner::SetDefaultPriority()
 	Priority = DefaultPriority;
 }
 
-void ACharacterSpawner::GetSpawnTransform(UWorld* World, FVector& OutLocation, FRotator& OutRotation)
+bool ACharacterSpawner::GetSpawnTransform(UWorld* World, FVector& OutLocation, FRotator& OutRotation)
 {
+	if (!World) {
+		UE_LOG(LogTemp, Error, TEXT("GetSpawnTransform No World found."));
+		return false;
+	}
+
 	TArray<AActor*> OutActors;
 	UGameplayStatics::GetAllActorsOfClass(World, ACharacterSpawner::StaticClass(), OutActors);
 
@@ -79,9 +85,17 @@ void ACharacterSpawner::GetSpawnTransform(UWorld* World, FVector& OutLocation, F
 		}
 	}
 
+	if (HighestPriorities.Num() == 0) {
+		UE_LOG(LogTemp, Error, TEXT("GetSpawnTransform No HighestPriorities found."));
+		return false;
+	}
+
 	int RandomIndex = rand() % HighestPriorities.Num();
 	ACharacterSpawner* HighestPriority = HighestPriorities[RandomIndex];
 
 	OutLocation = HighestPriority->GetActorLocation();
 	OutRotation = HighestPriority->GetActorRotation();
+
+	return true;
+
 }
