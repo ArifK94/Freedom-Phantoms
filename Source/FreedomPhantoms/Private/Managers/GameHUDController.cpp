@@ -1,6 +1,7 @@
 #include "Managers/GameHUDController.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 AGameHUDController::AGameHUDController()
 {
@@ -72,7 +73,10 @@ void AGameHUDController::RemoveAllWidgets()
 
 bool AGameHUDController::IsWidgetInViewport(UUserWidget* Widget, UUserWidget*& ViewportWidget)
 {
-	for (auto W : ViewportWidgets)
+	TArray<UUserWidget*> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), true);
+
+	for (auto W : FoundWidgets)
 	{
 		if (W->GetClass()->GetName() == Widget->GetClass()->GetName())
 		{
@@ -80,6 +84,7 @@ bool AGameHUDController::IsWidgetInViewport(UUserWidget* Widget, UUserWidget*& V
 			return true;
 		}
 	}
+
 	return false;
 }
 
