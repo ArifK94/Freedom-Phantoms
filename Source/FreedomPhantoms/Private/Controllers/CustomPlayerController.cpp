@@ -332,7 +332,7 @@ void ACustomPlayerController::PauseGame()
 
 			if (Widget && Widget != GameHUDController->GetInventoryWidget())
 			{
-				OnViewWidgets[i]->SetVisibility(ESlateVisibility::Visible);
+				Widget->SetVisibility(ESlateVisibility::Visible);
 			}
 
 		}

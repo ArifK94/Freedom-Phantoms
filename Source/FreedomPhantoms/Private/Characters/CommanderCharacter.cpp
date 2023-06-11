@@ -61,7 +61,7 @@ void ACommanderCharacter::OnRecruitHealthUpdate(FHealthParameters InHealthParame
 			UpdateActiveRecruits();
 
 			// If the current recruit is not alive, then move onto the next recruit
-			if (CurrentRecruit->Recruit == InHealthParameters.DamagedActor) {
+			if (CurrentRecruit && CurrentRecruit->Recruit == InHealthParameters.DamagedActor) {
 				IncrementCurrentRecruit();
 			}
 
@@ -749,7 +749,7 @@ void ACommanderCharacter::IncrementCurrentRecruit()
 
 void ACommanderCharacter::PlayCommunicationSound(USoundBase* SoundBase, UCommanderRecruit* TargetRecruit)
 {
-	if (!GetWorld()) {
+	if (!GetWorld() || !TargetRecruit || !SoundBase) {
 		return;
 	}
 
