@@ -43,13 +43,14 @@ struct FREEDOMPHANTOMS_API FMapDetail : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	/** The exact name of the map asset */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FName LevelName;
 
 	/** To be displayed on the loading screen or anywhere else */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FName DisplayName;
+
+	/** The exact name of the map asset */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FName LevelName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FName Description;
@@ -74,7 +75,9 @@ public:
 
 	FMapDetail()
 	{
-
+		RenderTargetMaterial = nullptr;
+		SatelliteImageryMaterial = nullptr;
+		Thumbnail = nullptr;
 	}
 };
 
@@ -150,24 +153,16 @@ public:
 
 	FHealthParameters()
 	{
+		AffectedHealthComponent = nullptr;
 		DamagedActor = nullptr;
-
 		DamageCauser = nullptr;
-
 		DamageType = nullptr;
-
 		InstigatedBy = nullptr;
-
 		WeaponCauser = nullptr;
-
 		Projectile = nullptr;
-
 		Damage = .0f;
-
 		IsExplosive = false;
-
 		ShouldWound = false;
-
 		CanDamageFriendlies = false;
 	}
 
@@ -667,7 +662,10 @@ public:
 
 	FVehicleSplinePoint()
 	{
-
+		CollisionBox = nullptr;
+		CollisionSphere = nullptr;
+		ArrowComponent = nullptr;
+		TextRenderComponent = nullptr;
 	}
 
 };
@@ -744,6 +742,10 @@ public:
 	{
 		Character = nullptr;
 		OwningVehicle = nullptr;
+		IdleAnimation = nullptr;
+		AimAnimation = nullptr;
+		FireAnimation = nullptr;
+		ExitAnimation = nullptr;
 		AssociatedWeapon = -1;
 	}
 };
@@ -878,7 +880,7 @@ public:
 
 	FFaction()
 	{
-
+		FlagMaterial = nullptr;
 	}
 };
 
