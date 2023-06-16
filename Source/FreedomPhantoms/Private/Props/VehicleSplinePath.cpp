@@ -148,6 +148,12 @@ void AVehicleSplinePath::UpdatePoints()
 		if (VehicleSplinePoints[i].ArrowComponent)
 		{
 			VehicleSplinePoints[i].ArrowComponent->SetWorldLocation(StartPoint);
+
+			if (i + 1 < VehicleSplinePoints.Num())
+			{
+				const FVector NextPoint = SplinePathComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::Type::World);
+				VehicleSplinePoints[i].ArrowComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(StartPoint, NextPoint));
+			}
 		}
 
 		if (VehicleSplinePoints[i].TextRenderComponent)
