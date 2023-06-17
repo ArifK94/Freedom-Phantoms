@@ -226,15 +226,7 @@ void UVehiclePathFollowerComponent::FindPath()
 		// setup time line for following the path
 		if (CurveFloat)
 		{
-			if (TransitionToSplineStart)
-			{
-				StartPath("MoveToSplinePathStart");
-			}
-			else
-			{
-				StartPath("FollowSplinePath");
-			}
-
+			BeginPath();
 		}
 	}
 }
@@ -263,23 +255,40 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 	// if reached the end
 	if (Alpha >= SplinePathComp->GetSplineLength())
 	{
-		if (CurrentLap < TotalLaps || HasInifiteLaps) // restart the lap if laps remaining / infinite
+		// move to next connected path if there is a path remaining.
+		if (ConnectedVehiclePaths.Num() > 0)
 		{
-			CurrentLap++;
+			// set current path to the next connected path.
+			VehiclePath = ConnectedVehiclePaths[0];
+
+			// remove the corresponding path from the list.
+			ConnectedVehiclePaths.RemoveAt(0);
 
 			// reset the processed points
 			ProcessedPoints.Empty();
 
-			CurveTimeline.PlayFromStart();
+			StartPath("MoveToSplinePathStart");
 		}
 		else
 		{
-			if (DestroyOnPathComplete)
+			if (CurrentLap < TotalLaps || HasInifiteLaps) // restart the lap if laps remaining / infinite
 			{
-				GetOwner()->Destroy();
-			}
+				CurrentLap++;
 
-			OnPathComplete.Broadcast(OwningVehicle);
+				// reset the processed points
+				ProcessedPoints.Empty();
+
+				CurveTimeline.PlayFromStart();
+			}
+			else
+			{
+				if (DestroyOnPathComplete)
+				{
+					GetOwner()->Destroy();
+				}
+
+				OnPathComplete.Broadcast(OwningVehicle);
+			}
 		}
 	}
 }
@@ -565,6 +574,18 @@ void UVehiclePathFollowerComponent::ResumePath()
 	CurveTimeline.Play();
 
 	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UVehiclePathFollowerComponent::BeginPath()
+{
+	if (TransitionToSplineStart)
+	{
+		StartPath("MoveToSplinePathStart");
+	}
+	else
+	{
+		StartPath("FollowSplinePath");
+	}
 }
 
 void UVehiclePathFollowerComponent::Stop()

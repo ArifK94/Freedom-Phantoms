@@ -57,6 +57,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AVehicleSplinePath* VehiclePath;
 
+	/** The next paths to take after finishing current path. List of paths are to be in order. Last connected path will be looped if set to loop. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<AVehicleSplinePath*> ConnectedVehiclePaths;
+
 	/** The actor tag name of the path to follow */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName VehiclePathTagName;
@@ -147,6 +151,10 @@ private:
 
 public:
 	UVehiclePathFollowerComponent();
+
+	/** Start following path */
+	UFUNCTION(BlueprintCallable)
+		void BeginPath();
 
 	UFUNCTION(BlueprintCallable)
 		void ResumePath();
