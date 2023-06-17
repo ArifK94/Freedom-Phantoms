@@ -210,6 +210,8 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
 
+		HealthComp->SetCanBeWounded(false);
+
 		IsInVehicle = true;
 	}
 	// otherwise no seat, in other words, not in a  vehicle
@@ -225,6 +227,8 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 		
 		IsInVehicle = false;
 		SetIsExitingVehicle(false);
+
+		HealthComp->SetCanBeWounded(HealthComp->GetCanBeWoundedDefault());
 	}
 
 }

@@ -63,6 +63,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool CanBeWounded;
+	bool CanBeWoundedDefault;
 
 	/** Which classes do not affect this health component?  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -141,5 +142,9 @@ public:
 
 
 	bool GetCanBeWounded() { return CanBeWounded; }
+
+
+	bool GetCanBeWoundedDefault() { return CanBeWoundedDefault; }
+
 
 };

@@ -39,6 +39,8 @@ void UHealthComponent::BeginPlay()
 	Super::BeginPlay();
 
 	DefaulUnlimitedHealth = HasUnlimitedHealth;
+	CanBeWoundedDefault = CanBeWounded;
+
 	Health = MaxHealth;
 	CurrentRegenerationDelay = RegenerationDelayAmount;
 	isAlive = true;
