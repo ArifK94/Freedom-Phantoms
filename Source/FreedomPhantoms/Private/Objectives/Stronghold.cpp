@@ -349,6 +349,7 @@ FOccupiedFaction AStronghold::AddFaction(ACombatCharacter* Character, TeamFactio
 	OccupyingFaction.Faction = Faction;
 	OccupyingFaction.FactionCount = 1;
 	OccupyingFaction.FactionDataSet = Character->GetFactionDataSet();
+	OccupyingFaction.FactionRowName = Character->GetFactionRowName();
 	OccupyingFaction.FlagMaterial = OccupyingFaction.FactionDataSet->FlagMaterial;
 	return OccupyingFaction;
 }

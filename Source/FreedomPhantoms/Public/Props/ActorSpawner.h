@@ -8,7 +8,7 @@
 #include "StructCollection.h"
 #include "ActorSpawner.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorSpawnedSignature, AActor*, Actor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorSpawnedSignature, AActorSpawner*, ActorSpawner, AActor*, Actor);
 
 class UBoxComponent;
 class AWeapon;
@@ -32,6 +32,10 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AActor> ActorClass;
+
+	/** List of actor classes to spawn randomly. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TArray<TSubclassOf<AActor>> ActorClasses;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName TargetPointTag;
@@ -76,6 +80,12 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnActorSpawnedSignature OnActorSpawned;
 
+	UFUNCTION(BlueprintCallable)
+		void StartSpawnTimer();
+
+	UFUNCTION(BlueprintCallable)
+		void StopSpawnTimer();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -105,8 +115,4 @@ private:
 	bool HasReachedSpawnLimit();
 
 	TArray<AActor*> GetTargetPoints();
-
-	void StartSpawnTimer();
-
-	void StopSpawnTimer();
 };

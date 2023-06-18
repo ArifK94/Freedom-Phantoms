@@ -869,14 +869,20 @@ struct FFaction : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<ACombatCharacter> OperativeCharacterClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TSubclassOf<ACommanderCharacter> CommanderCharacterClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UMaterialInterface* FlagMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vehicles")
+		TArray<TSubclassOf<AVehicleBase>> GroundVehicles;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vehicles")
+		TArray<TSubclassOf<AVehicleBase>> AirVehicles;
 
 	FFaction()
 	{
@@ -1074,6 +1080,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UMaterialInterface* FlagMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FName FactionRowName;
 
 	FFaction* FactionDataSet;
 

@@ -172,11 +172,15 @@ void AActorSpawner::BeginSpawn()
 
 	CurrentSpawnCount++;
 
-	OnActorSpawned.Broadcast(SpawnedActor);
+	OnActorSpawned.Broadcast(this, SpawnedActor);
 }
 
 AActor* AActorSpawner::SpawnActor()
 {
+	if (!ActorClass && ActorClasses.IsEmpty()) {
+		return nullptr;
+	}
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
@@ -188,7 +192,9 @@ AActor* AActorSpawner::SpawnActor()
 		return nullptr;
 	}
 
-	AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(ActorClass, Location, FRotator::ZeroRotator, SpawnParams);
+	TSubclassOf<AActor> TargetActorClass = ActorClass ? ActorClass : ActorClasses[rand() % ActorClasses.Num()];
+
+	AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(TargetActorClass, Location, FRotator::ZeroRotator, SpawnParams);
 
 	if (!SpawnedActor) {
 		return nullptr;

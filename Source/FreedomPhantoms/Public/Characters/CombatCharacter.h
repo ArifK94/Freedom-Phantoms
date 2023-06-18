@@ -317,6 +317,10 @@ public:
 		isInCombatMode = Value;
 	}
 
+	FName GetFactionRowName() {
+		return FactionRowName;
+	}
+
 	FFaction* GetFactionDataSet() {
 		return FactionDataSet;
 	}
