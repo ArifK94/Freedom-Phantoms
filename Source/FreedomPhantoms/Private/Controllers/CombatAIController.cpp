@@ -308,6 +308,7 @@ void ACombatAIController::OnUnPossess()
 
 		if (Commander) {
 			Commander->OnOrderSent.RemoveDynamic(this, &ACombatAIController::OnOrderReceived);
+			Commander->OnCommanderChange.RemoveDynamic(this, &ACombatAIController::OnCommanderChanged);
 			Commander = nullptr;
 		}
 
