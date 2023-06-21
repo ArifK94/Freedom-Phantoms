@@ -1049,8 +1049,6 @@ void ACustomPlayerController::UseInteractableActor()
 		// Cannot interact? 
 		if (!CanUseInteractable)
 		{
-			CollectedInteractableActor = nullptr;
-
 			// if the interactable is not the current support package, then try interacting with the support package.
 			// Instances like this can occur if player just interacted with an objective but the objective cannot be used.
 			if (Interactable != CurrentSupportPackage && UKismetSystemLibrary::IsValid(CurrentSupportPackage))
@@ -1059,6 +1057,8 @@ void ACustomPlayerController::UseInteractableActor()
 			}
 		}
 	}
+
+	CollectedInteractableActor = nullptr;
 }
 
 void ACustomPlayerController::SetControlledVehicle(AVehicleBase* InVehicle, bool IsContolled)
