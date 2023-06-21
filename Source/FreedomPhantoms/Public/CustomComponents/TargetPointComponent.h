@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
 #include "StructCollection.h"
 #include "TargetPointComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class FREEDOMPHANTOMS_API UTargetPointComponent : public UActorComponent
+class FREEDOMPHANTOMS_API UTargetPointComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
@@ -24,6 +24,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FName PointName;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		AActor* CurrentOwner;
+
+	class USphereComponent* SphereComponent;
+	class UArrowComponent* ArrowComponent;
+
 	class UHealthComponent* HealthComp;
 
 public:	
@@ -35,8 +41,5 @@ public:
 private:
 	UFUNCTION(BlueprintCallable)
 		void OnHealthChanged(FHealthParameters InHealthParameters);
-
-protected:
-	virtual void BeginPlay() override;
 		
 };
