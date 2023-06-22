@@ -493,6 +493,14 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 		if (EnemyActor) {
 			LastSeenEnemyActor = nullptr;
 		}
+
+		if (Commander && Commander->GetCurrentRecruit()->Recruit == OwningCombatCharacter && CurrentCommand == CommanderOrders::Attack)
+		{
+			if (Commander->GetCurrentRecruit()->HighValueTarget == EnemyActor)
+			{
+				OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->TargetFoundSound);
+			}
+		}
 	}
 }
 

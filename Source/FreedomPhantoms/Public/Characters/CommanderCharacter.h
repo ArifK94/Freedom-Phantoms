@@ -211,6 +211,8 @@ public:
 
 	bool GetCanRecruit();
 
+	UCommanderRecruit* GetCurrentRecruit() { return CurrentRecruit; }
+
 	ACombatCharacter* GetPotentialRecruit() { return PotentialRecruit; }
 
 	FName GetRecruitMessage() { return RecruitMessage; }
