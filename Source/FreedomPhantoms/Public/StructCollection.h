@@ -192,6 +192,24 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FREEDOMPHANTOMS_API FCoverSearchParameters
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FTransform CvoerPoint;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool IsCoverFound;
+
+	FCoverSearchParameters()
+	{
+		IsCoverFound = false;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FVoiceClipSet : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -199,6 +217,18 @@ struct FVoiceClipSet : public FTableRowBase
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* TargetFoundSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* OrderActionSuppressSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* OrderActionCoverMeSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* OrderMoveCombatSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* StayAlertSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		USoundBase* ReloadingSound;
@@ -251,6 +281,9 @@ public:
 	FVoiceClipSet()
 	{
 		TargetFoundSound = nullptr;
+		OrderActionSuppressSound = nullptr;
+		OrderActionCoverMeSound = nullptr;
+		OrderMoveCombatSound = nullptr;
 		ReloadingSound = nullptr;
 		FriendlyDownSound = nullptr;
 		EnemyDownSound = nullptr;

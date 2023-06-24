@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "StructCollection.h"
 #include "CoverFinderComponent.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCoverSearchSignature, FCoverSearchParameters, CoverSearchParameters);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FREEDOMPHANTOMS_API UCoverFinderComponent : public UActorComponent
@@ -34,6 +37,9 @@ private:
 
 public:	
 	UCoverFinderComponent();
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnCoverSearchSignature OnCoverSearch;
 
 	bool FindCover(FVector StartLocation, FTransform& ChosenCoverPoint);
 

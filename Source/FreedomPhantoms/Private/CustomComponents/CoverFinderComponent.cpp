@@ -62,6 +62,11 @@ bool UCoverFinderComponent::FindCover(FVector StartLocation, FTransform& ChosenC
 		ChosenCoverPoint = PointLocation;
 	}
 
+	FCoverSearchParameters CoverSearchParameters;
+	CoverSearchParameters.CvoerPoint = ChosenCoverPoint;
+	CoverSearchParameters.IsCoverFound = !ChosenCoverPoint.GetLocation().IsZero();
+	OnCoverSearch.Broadcast(CoverSearchParameters);
+
 	return !ChosenCoverPoint.GetLocation().IsZero();
 }
 
@@ -111,6 +116,11 @@ bool UCoverFinderComponent::FindCover(AActor* TargetActor, FTransform& ChosenCov
 		auto PointLocation = GetClosestCoverPoint(CoverPoints);
 		ChosenCoverPoint = PointLocation;
 	}
+
+	FCoverSearchParameters CoverSearchParameters;
+	CoverSearchParameters.CvoerPoint = ChosenCoverPoint;
+	CoverSearchParameters.IsCoverFound = !ChosenCoverPoint.GetLocation().IsZero();
+	OnCoverSearch.Broadcast(CoverSearchParameters);
 
 	return !ChosenCoverPoint.GetLocation().IsZero();
 }
