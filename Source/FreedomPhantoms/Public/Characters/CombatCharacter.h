@@ -15,6 +15,7 @@ class AThrowableWeapon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCharacter*, CombatCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMountedGunEnabledSignature, AMountedGun*, MountedGun);
 
 UCLASS()
 class FREEDOMPHANTOMS_API ACombatCharacter : public ABaseCharacter, public IInteractable
@@ -156,6 +157,9 @@ public:
 	*/
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnKillConfirmSignature OnKillConfirm;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnMountedGunEnabledSignature OnMountedGunEnabled;
 
 	UFUNCTION(BlueprintCallable)
 		void SetPrimaryWeapon(AWeapon* Weapon);

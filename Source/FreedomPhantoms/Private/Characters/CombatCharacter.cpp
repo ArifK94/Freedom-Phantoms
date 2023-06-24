@@ -1249,6 +1249,8 @@ void ACombatCharacter::UseMountedGun()
 
 	// in case character was spawned to use MG
 	hasEquippedWeapon = true;
+
+	OnMountedGunEnabled.Broadcast(MountedGun);
 }
 
 void ACombatCharacter::DropMountedGun(bool ClearMG)
