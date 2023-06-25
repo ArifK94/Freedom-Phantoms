@@ -27,9 +27,6 @@ private:
 	/** The detection sphere to check actors within the projectile radius */
 	USphereComponent* DetectionSphere;
 
-	/** Prevent processing the same overlapped actors */
-	TArray<AActor*> DetectionActors;
-
 	float CurrentDeltaTime;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

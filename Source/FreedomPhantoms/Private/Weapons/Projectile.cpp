@@ -104,8 +104,6 @@ void AProjectile::Init()
 			DetectionSphere->SetCollisionProfileName(TEXT("OverlapAll"));
 		}
 	}
-
-	DetectionActors.Empty();
 }
 
 void AProjectile::BeginPlay()
@@ -714,6 +712,9 @@ void AProjectile::AlertNearbyActors()
 	if (!DetectNearbyActors || GetVelocity().Size() >= 5.f) {
 		return;
 	}
+
+	/** Prevent processing the same overlapped actors */
+	TArray<AActor*> DetectionActors;
 
 	// create a collision sphere
 	FCollisionShape MyColSphere = FCollisionShape::MakeSphere(ExplosiveRadiusOuter);
