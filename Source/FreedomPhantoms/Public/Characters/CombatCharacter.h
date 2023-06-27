@@ -228,10 +228,6 @@ public:
 
 	void SetHandGaurdIK(float Alpha);
 
-	ACombatCharacter* FindNearestFriendly();
-
-	void FriendlyKilled();
-
 	void EnemyKilled();
 
 	void ResetVoiceSound();

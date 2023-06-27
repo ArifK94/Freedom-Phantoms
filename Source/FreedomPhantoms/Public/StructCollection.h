@@ -1167,3 +1167,60 @@ public:
 		AvoidableDistance = .0f;
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FChatableParams
+{
+	GENERATED_BODY()
+
+public:
+	/**
+	* The Sound to play
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* Sound;
+
+	/**
+	* The delay amount until the sound to play.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float PlayDelayTime;
+
+	FChatableParams()
+	{
+		Sound = nullptr;
+		PlayDelayTime = .0f;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FBattleChatterParams
+{
+	GENERATED_BODY()
+
+public:
+	/**
+	* The Sound to play
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		USoundBase* Sound;
+
+	/**
+	* The amount of seconds to cooldown.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float CooldownAmount;
+
+	/**
+	* The time handler for cooldown before playing the sound again.
+	*/
+	UPROPERTY()
+		FTimerHandle THandler_Cooldown;
+
+	FBattleChatterParams()
+	{
+		Sound = nullptr;
+		CooldownAmount = 0.f;
+		THandler_Cooldown = FTimerHandle();
+	}
+};

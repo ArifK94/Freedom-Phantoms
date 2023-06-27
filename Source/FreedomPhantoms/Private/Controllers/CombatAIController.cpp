@@ -11,6 +11,7 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/MountedGunFinderComponent.h"
+#include "CustomComponents/BattleChatterComponent.h"
 
 #include "Services/SharedService.h"
 
@@ -43,6 +44,7 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 {
 	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
+	BattleChatterComponent = CreateDefaultSubobject<UBattleChatterComponent>(TEXT("BattleChatterComponent"));
 
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -494,13 +496,6 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 			LastSeenEnemyActor = nullptr;
 		}
 
-		if (Commander && Commander->GetCurrentRecruit()->Recruit == OwningCombatCharacter && CurrentCommand == CommanderOrders::Attack)
-		{
-			if (Commander->GetCurrentRecruit()->HighValueTarget == EnemyActor)
-			{
-				OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->TargetFoundSound);
-			}
-		}
 	}
 }
 

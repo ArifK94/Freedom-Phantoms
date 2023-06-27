@@ -13,6 +13,7 @@ class ACombatCharacter;
 class ACommanderCharacter;
 
 class UAIMovementComponent;
+class UBattleChatterComponent;
 class UPatrolFollowerComponent;
 class UCoverFinderComponent;
 class UStrongholdDefenderComponent;
@@ -73,6 +74,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UAIMovementComponent * AIMovementComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UBattleChatterComponent* BattleChatterComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UPatrolFollowerComponent * PatrolFollowerComponent;
