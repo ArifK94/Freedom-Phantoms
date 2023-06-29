@@ -41,7 +41,9 @@ private:
 		void OnDestroyWeapon(AActor* Actor);
 
 protected:
-	USkeletalMeshComponent* CharacterReference;
+
+	UPROPERTY()
+		USkeletalMeshComponent* CharacterReference;
 
 
 	// Derived from RateOfFire
@@ -88,7 +90,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponClip> weaponClip;
-	AWeaponClip* weaponClipObj;
+
+	UPROPERTY()
+		AWeaponClip* weaponClipObj;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AProjectile> BulletClass;
@@ -307,7 +311,9 @@ protected:
 	/** Can this weapon be used for locking onto target actors? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target Actor", meta = (AllowPrivateAccess = "true"))
 		bool CanLockActors;
-	AActor* TargetActor;
+
+	UPROPERTY()
+		AActor* TargetActor;
 
 
 	/** Debug */
@@ -319,7 +325,10 @@ protected:
 
 
 private:
-	USceneComponent* EyeViewPointComponent; // used for vehicles rather than pawns
+
+	/** Used for vehicles rather than pawns */
+	UPROPERTY()
+		USceneComponent* EyeViewPointComponent;
 
 
 public:

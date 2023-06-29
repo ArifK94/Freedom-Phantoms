@@ -16,7 +16,9 @@ class FREEDOMPHANTOMS_API UPatrolFollowerComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	USplineComponent* SplinePathComp;
+
+	UPROPERTY()
+		USplineComponent* SplinePathComp;
 
 	int CurrentPathIndex;
 

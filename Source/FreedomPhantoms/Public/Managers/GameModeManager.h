@@ -31,7 +31,8 @@ class FREEDOMPHANTOMS_API AGameModeManager : public AGameModeBase
 	GENERATED_BODY()
 
 private:
-	TArray<FWorldCoverPoint> CoverPoints;
+	UPROPERTY()
+		TArray<FWorldCoverPoint> CoverPoints;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		ALevelManager* LevelManager;

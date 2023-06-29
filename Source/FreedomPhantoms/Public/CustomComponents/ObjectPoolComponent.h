@@ -14,7 +14,9 @@ class FREEDOMPHANTOMS_API UObjectPoolComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	AGameStateBaseCustom* GameStateBaseCustom;
+
+	UPROPERTY()
+		AGameStateBaseCustom* GameStateBaseCustom;
 
 	UPROPERTY()
 		TArray<FObjectPoolParameters> ActorsInObjectPool;

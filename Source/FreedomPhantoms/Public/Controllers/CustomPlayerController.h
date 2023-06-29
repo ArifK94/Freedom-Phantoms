@@ -26,16 +26,30 @@ class FREEDOMPHANTOMS_API ACustomPlayerController : public APlayerController
 	GENERATED_BODY()
 
 protected:
-	ACombatCharacter* OwningCombatCharacter;
-	ACombatCharacter* PreviousCombatCharacter;
-	ACommanderCharacter* OwningCommander;
-	ACommanderCharacter* PreviousOwningCommander;
+
+	UPROPERTY()
+		ACombatCharacter* OwningCombatCharacter;
+
+	UPROPERTY()
+		ACombatCharacter* PreviousCombatCharacter;
+
+	UPROPERTY()
+		ACommanderCharacter* OwningCommander;
+
+	UPROPERTY()
+		ACommanderCharacter* PreviousOwningCommander;
 
 	FTimerHandle THandler_CheckInteractable;
 private:
-	UGameInstanceController* GameInstanceController;
-	AGameStateBaseCustom* GameStateBaseCustom;
-	AGameHUDController* GameHUDController;
+
+	UPROPERTY()
+		UGameInstanceController* GameInstanceController;
+
+	UPROPERTY()
+		AGameStateBaseCustom* GameStateBaseCustom;
+
+	UPROPERTY()
+		AGameHUDController* GameHUDController;
 
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
@@ -44,12 +58,13 @@ private:
 	UPROPERTY(BlueprintAssignable)
 		FOnSupportPackageUpdateSignature OnSupportPackageUpdate;
 
-
-	APawn* OwningPawn;
+	UPROPERTY()
+		APawn* OwningPawn;
 
 	TeamFaction PlayerFaction;
 
-	USphereComponent* OverlapSphere;
+	UPROPERTY()
+		USphereComponent* OverlapSphere;
 
 	FTimerHandle THandler_DelayedInput;
 	FTimerHandle THandler_RespawnDelay;
@@ -94,10 +109,12 @@ private:
 		AActor* FocusedInteractableActor;
 
 	// actor assigned on overlap begin & end 
-	AActor* OverlappedInteractable;
+	UPROPERTY()
+		AActor* OverlappedInteractable;
 
 	// Store the interactable after picking it up as player may used the interactable afterwards
-	AActor* CollectedInteractableActor;
+	UPROPERTY()
+		AActor* CollectedInteractableActor;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

@@ -20,7 +20,9 @@ class FREEDOMPHANTOMS_API AAircraft : public AVehicleBase
 private:
 	float m_DeltaTime;
 	int CurrentWeaponIndex;
-	AActor* TargetActor;
+
+	UPROPERTY()
+		AActor* TargetActor;
 
 	FTimerHandle THandler_RandomChangeWeapon;
 
@@ -67,7 +69,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<FVehicleWeapon> CurrentVehicleWeapons;
-	FVehicleWeapon CurrentVehicleWeapon;
+
+	UPROPERTY()
+		FVehicleWeapon CurrentVehicleWeapon;
 
 	/** The speed of the turret when turning */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))

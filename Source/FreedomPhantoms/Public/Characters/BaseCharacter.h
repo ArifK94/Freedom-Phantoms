@@ -92,7 +92,9 @@ private:
 		UAudioComponent* VoiceAudioComponent;
 
 protected:
-	class AGameModeManager* GameModeManager;
+
+	UPROPERTY()
+		class AGameModeManager* GameModeManager;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
@@ -240,7 +242,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AOrderIcon> OverheadIconClass;
-	AOrderIcon* OverheadIcon;
+
+	UPROPERTY()
+		AOrderIcon* OverheadIcon;
 
 protected:
 	float DefaultMaxWalkSpeed;
@@ -252,7 +256,9 @@ protected:
 private:
 	FName DefaultCapsuleCollisionName;
 	FName DefaultMeshCollisionName;
-	AController* DefaultController;
+
+	UPROPERTY()
+		AController* DefaultController;
 	FVector DefaultMeshLocation;
 	FRotator DefaultMeshRotation;
 	FRotator RotationInput; // input for controller when looking around while taking cover and aiming
@@ -271,7 +277,8 @@ private:
 	// delay used to destroy character after death since we need to destory attached children but not all children such as weapons, these will be detached after some time
 	FTimerHandle THandler_Destroyer;
 
-	AAIController* DefaultAIController;
+	UPROPERTY()
+		AAIController* DefaultAIController;
 
 protected:
 	virtual void Init();

@@ -16,7 +16,9 @@ class FREEDOMPHANTOMS_API UTargetFinderComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	USphereComponent* TargetSightSphere;
+
+	UPROPERTY()
+		USphereComponent* TargetSightSphere;
 
 	FTimerHandle THandler_TargetSearch;
 	FTimerHandle THandler_CountdownTargetLost;
@@ -26,7 +28,8 @@ private:
 	/**
 	* Hold the last enemy seen.
 	*/
-	AActor* LastSeenTarget;
+	UPROPERTY()
+		AActor* LastSeenTarget;
 
 	/**
 	* Actors which have been set as non-targets e.g. friendlies should not be processed again to avoid performance issues.

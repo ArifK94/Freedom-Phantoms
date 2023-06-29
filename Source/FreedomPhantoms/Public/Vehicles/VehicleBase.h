@@ -29,9 +29,12 @@ class FREEDOMPHANTOMS_API AVehicleBase : public AActor
 	GENERATED_BODY()
 
 protected:
-	AGameStateBaseCustom* GameStateBaseCustom;
 
-	FTimerHandle THandler_Update;
+	UPROPERTY()
+		AGameStateBaseCustom* GameStateBaseCustom;
+
+	UPROPERTY()
+		FTimerHandle THandler_Update;
 
 	/** Save performance if vehicle does not require any tick or timer functions. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))

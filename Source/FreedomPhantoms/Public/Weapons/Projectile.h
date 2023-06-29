@@ -25,7 +25,8 @@ class FREEDOMPHANTOMS_API AProjectile : public AObjectPoolActor
 private:
 
 	/** The detection sphere to check actors within the projectile radius */
-	USphereComponent* DetectionSphere;
+	UPROPERTY()
+		USphereComponent* DetectionSphere;
 
 	float CurrentDeltaTime;
 
@@ -175,13 +176,19 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 		float CamShakeOuterRadius;
 
-	AWeapon* WeaponParent;
+	UPROPERTY()
+		AWeapon* WeaponParent;
 
 	int KillCount;
 
-	UHealthComponent* OwnerHealth;
-	UTeamFactionComponent* OwnerFaction;
-	ACombatCharacter* OwningCombatCharacter;
+	UPROPERTY()
+		UHealthComponent* OwnerHealth;
+
+	UPROPERTY()
+		UTeamFactionComponent* OwnerFaction;
+
+	UPROPERTY()
+		ACombatCharacter* OwningCombatCharacter;
 
 	FTimerHandle THandler_CountdownTimer;
 

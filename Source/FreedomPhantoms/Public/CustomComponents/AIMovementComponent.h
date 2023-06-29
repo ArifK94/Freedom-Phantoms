@@ -18,9 +18,15 @@ class FREEDOMPHANTOMS_API UAIMovementComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	class AAIController* AIController;
-	class ABaseCharacter* Character;
-	APawn* PawnOwner;
+
+	UPROPERTY()
+		class AAIController* AIController;
+
+	UPROPERTY()
+		class ABaseCharacter* Character;
+
+	UPROPERTY()
+		APawn* PawnOwner;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MinAcceptanceRadius;

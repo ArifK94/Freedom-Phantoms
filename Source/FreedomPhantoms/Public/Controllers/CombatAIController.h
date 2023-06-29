@@ -31,11 +31,17 @@ class FREEDOMPHANTOMS_API ACombatAIController : public AAIController, public IAv
 private:
 	float bDeltaTime;
 
-	ACombatCharacter* OwningCombatCharacter;
-	AActor* LastSeenEnemyActor;
+	UPROPERTY()
+		ACombatCharacter* OwningCombatCharacter;
 
-	UCommanderRecruit* bRecruitInfo;
-	ACommanderCharacter* Commander;
+	UPROPERTY()
+		AActor* LastSeenEnemyActor;
+
+	UPROPERTY()
+		UCommanderRecruit* bRecruitInfo;
+
+	UPROPERTY()
+		ACommanderCharacter* Commander;
 
 	/**
 	* The move to result when moving to an order position

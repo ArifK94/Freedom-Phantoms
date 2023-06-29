@@ -21,46 +21,60 @@ public:
 		TSubclassOf<UUserWidget> GameStatsWidgetClass;
 
 private:
-	TArray<UUserWidget*> ViewportWidgets;
 
-	UUserWidget* NVGWidget;
-	UUserWidget* GameStatWidget;
+	UPROPERTY()
+		TArray<UUserWidget*> ViewportWidgets;
+
+	UPROPERTY()
+		UUserWidget* NVGWidget;
+
+	UPROPERTY()
+		UUserWidget* GameStatWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> CommanderHUDWidgetClass;
-	UUserWidget* CommanderHUDWidget;
+	UPROPERTY()
+		UUserWidget* CommanderHUDWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> HealthWidgetClass;
-	UUserWidget* HealthWidget;
+	UPROPERTY()
+		UUserWidget* HealthWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> WeaponAmmoWidgetClass;
-	UUserWidget* WeaponAmmoWidget;
+	UPROPERTY()
+		UUserWidget* WeaponAmmoWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> WeaponCrosshairWidgetClass;
-	UUserWidget* WeaponCrosshairWidget;
+	UPROPERTY()
+		UUserWidget* WeaponCrosshairWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> InventoryWidgetClass;
-	UUserWidget* InventoryWidget;
+	UPROPERTY()
+		UUserWidget* InventoryWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> SupportPackageWidgetClass;
-	UUserWidget* SupportPackageWidget;
+	UPROPERTY()
+		UUserWidget* SupportPackageWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> InteractWidgetClass;
-	UUserWidget* InteractWidget;
+	UPROPERTY()
+		UUserWidget* InteractWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> ObjectiveWidgetClass;
-	UUserWidget* ObjectiveWidget;
+	UPROPERTY()
+		UUserWidget* ObjectiveWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Widgets", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> EndGameWidgetClass;
-	UUserWidget* EndGameWidget;
+	UPROPERTY()
+		UUserWidget* EndGameWidget;
 
 
 public:

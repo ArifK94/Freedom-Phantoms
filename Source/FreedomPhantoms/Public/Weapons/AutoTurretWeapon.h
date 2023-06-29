@@ -16,11 +16,15 @@ class FREEDOMPHANTOMS_API AAutoTurretWeapon : public AActor
 	GENERATED_BODY()
 
 private:
-	AGameStateBaseCustom* GameStateBaseCustom;
+
+	UPROPERTY()
+		AGameStateBaseCustom* GameStateBaseCustom;
 
 	float m_DeltaTime;
 	int CurrentWeaponIndex;
-	AActor* TargetActor;
+
+	UPROPERTY()
+		AActor* TargetActor;
 
 	FTimerHandle THandler_RandomChangeWeapon;
 
@@ -51,7 +55,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<FVehicleWeapon> CurrentVehicleWeapons;
-	FVehicleWeapon CurrentVehicleWeapon;
+
+	UPROPERTY()
+		FVehicleWeapon CurrentVehicleWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FRotator RotationInput;

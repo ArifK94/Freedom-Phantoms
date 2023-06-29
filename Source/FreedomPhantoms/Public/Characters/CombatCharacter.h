@@ -121,10 +121,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 		AThrowableWeapon* GrenadeWeapon;
 
-	AMountedGun* MountedGun;
+	UPROPERTY()
+		AMountedGun* MountedGun;
 
 	/** Used for equipping specific weapons. */
-	AWeapon* NewEquippedWeapon;
+	UPROPERTY()
+		AWeapon* NewEquippedWeapon;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))

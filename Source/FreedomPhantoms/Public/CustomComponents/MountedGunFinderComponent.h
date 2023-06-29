@@ -16,7 +16,9 @@ class FREEDOMPHANTOMS_API UMountedGunFinderComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	USphereComponent* SearchSphere;
+
+	UPROPERTY()
+		USphereComponent* SearchSphere;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float SearchRadius;
@@ -26,7 +28,8 @@ private:
 
 	float DefaultSearchRadius;
 
-	APawn* OwningPawn;
+	UPROPERTY()
+		APawn* OwningPawn;
 
 public:	
 	UMountedGunFinderComponent();

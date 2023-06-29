@@ -78,7 +78,9 @@ private:
 	FTimerHandle THandler_ZoomFOVOut;
 
 	// Help AI use Mounted Gun
-	AActor* PotentialOwner;
+
+	UPROPERTY()
+		AActor* PotentialOwner;
 
 public:
 	AMountedGun();

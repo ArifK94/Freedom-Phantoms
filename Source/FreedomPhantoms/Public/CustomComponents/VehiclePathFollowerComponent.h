@@ -28,19 +28,25 @@ class FREEDOMPHANTOMS_API UVehiclePathFollowerComponent : public UActorComponent
 private:
 
 	/** Used when resuming vehicle path */
-	FTimerHandle THandler_ResumePath;
+	UPROPERTY()
+		FTimerHandle THandler_ResumePath;
 
 	/** Used when passengers are leaving the vehicle */
-	FTimerHandle THandler_ExitPassenger;
+	UPROPERTY()
+		FTimerHandle THandler_ExitPassenger;
 
-	AVehicleBase* OwningVehicle;
+	UPROPERTY()
+		AVehicleBase* OwningVehicle;
 
-	FVehicleSplinePoint CurrentSplinePoint;
+	UPROPERTY()
+		FVehicleSplinePoint CurrentSplinePoint;
 
 	/** Stores spline points which have already been reached so that they are not processed again */
-	TArray<int32> ProcessedPoints;
+	UPROPERTY()
+		TArray<int32> ProcessedPoints;
 
-	FVector PreviousActorLocation;
+	UPROPERTY()
+		FVector PreviousActorLocation;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -48,7 +54,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCurveFloat* CurveFloat;
-	FTimeline CurveTimeline;
+
+	UPROPERTY()
+		FTimeline CurveTimeline;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsStopped;
@@ -138,8 +146,12 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passenger Exit", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ARope> RopeClass;
-	ARope* RopeLeft;
-	ARope* RopeRight;
+
+	UPROPERTY()
+		ARope* RopeLeft;
+
+	UPROPERTY()
+		ARope* RopeRight;
 
 	/** Do all passengers exit the vehicle at the same time? eg. a car/ */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passenger Exit", meta = (AllowPrivateAccess = "true"))

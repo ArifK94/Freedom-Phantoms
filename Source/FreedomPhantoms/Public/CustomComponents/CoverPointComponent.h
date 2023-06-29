@@ -11,11 +11,14 @@ class FREEDOMPHANTOMS_API UCoverPointComponent : public USphereComponent
 	GENERATED_BODY()
 
 private:
-	AActor* Owner;
+
+	UPROPERTY()
+		AActor* Owner;
 
 	FVector Location;
 
-	class UArrowComponent* ArrowComponent;
+	UPROPERTY()
+		class UArrowComponent* ArrowComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsAtCornerLeft;

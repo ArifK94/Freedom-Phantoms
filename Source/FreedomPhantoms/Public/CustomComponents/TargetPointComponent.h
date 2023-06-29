@@ -27,10 +27,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AActor* CurrentOwner;
 
-	class USphereComponent* SphereComponent;
-	class UArrowComponent* ArrowComponent;
+	UPROPERTY()
+		class USphereComponent* SphereComponent;
 
-	class UHealthComponent* HealthComp;
+	UPROPERTY()
+		class UArrowComponent* ArrowComponent;
+
+	UPROPERTY()
+		class UHealthComponent* HealthComp;
 
 public:	
 	UTargetPointComponent();

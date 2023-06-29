@@ -24,10 +24,12 @@ class FREEDOMPHANTOMS_API UStrongholdDefenderComponent : public UActorComponent
 private:
 	FTimerHandle THandler_StrongholdCoverPoint;
 
-	AStronghold* Stronghold;
+	UPROPERTY()
+		AStronghold* Stronghold;
 
 	// to take defensive positions within the stronghold
-	UCoverPointComponent* ChosenCoverPointComponent;
+	UPROPERTY()
+		UCoverPointComponent* ChosenCoverPointComponent;
 
 public:	
 	UStrongholdDefenderComponent();

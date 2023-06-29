@@ -16,9 +16,15 @@ class FREEDOMPHANTOMS_API UCoverFinderComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	class AGameModeManager* GameModeManager;
-	class AController* Controller;
-	class ABaseCharacter* Character;
+
+	UPROPERTY()
+		class AGameModeManager* GameModeManager;
+	
+	UPROPERTY()
+		class AController* Controller;
+
+	UPROPERTY()
+		class ABaseCharacter* Character;
 
 	FVector MyChosenCoverPoint;
 

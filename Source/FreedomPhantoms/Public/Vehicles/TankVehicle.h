@@ -16,7 +16,9 @@ class FREEDOMPHANTOMS_API ATankVehicle : public AVehicleBase
 private:
 	float m_DeltaTime;
 	int CurrentWeaponIndex;
-	AActor* TargetActor;
+
+	UPROPERTY()
+		AActor* TargetActor;
 
 	FTimerHandle THandler_RandomChangeWeapon;
 

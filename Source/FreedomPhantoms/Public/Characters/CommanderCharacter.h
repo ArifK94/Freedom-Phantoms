@@ -53,10 +53,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		TArray<AOrderIcon*> OrderIconArray;
 
+	UPROPERTY()
+		AOrderIcon* AttackPositionIcon;
 
-	AOrderIcon* AttackPositionIcon;
-	AOrderIcon* HighValueTargetOverheadIcon; // this icon of HVT acts like a position icon overhead of an enemy
-	AOrderIcon* DefendPositionIcon;
+	/** this icon of HVT acts like a position icon overhead of an enemy */
+	UPROPERTY()
+		AOrderIcon* HighValueTargetOverheadIcon;
+
+	UPROPERTY()
+		AOrderIcon* DefendPositionIcon;
 };
 
 UCLASS()
