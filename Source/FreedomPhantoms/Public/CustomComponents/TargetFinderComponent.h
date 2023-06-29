@@ -40,10 +40,6 @@ private:
 	UPROPERTY()
 		FTargetSearchParameters LastSeenTargetParam;
 
-	/** Enable to search for all overlapped targets in sphere radius */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool CreateTargetSphere;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TargetSightRadius;
 
@@ -134,8 +130,6 @@ public:
 
 	/** Do not call this method in the constructor since the timer will be set and it will cause the application to crash. */
 	void SetFindTargetPerFrame(bool Value);
-
-	void SetCreateTargetSphere(bool Value) { CreateTargetSphere = Value; }
 
 	void AddClassFilter(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
 	

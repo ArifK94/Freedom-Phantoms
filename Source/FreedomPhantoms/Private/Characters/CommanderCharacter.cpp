@@ -13,7 +13,6 @@
 ACommanderCharacter::ACommanderCharacter()
 {
 	TargetSeekerComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetSeekerComponent"));
-	TargetSeekerComponent->SetCreateTargetSphere(false);
 
 	CurrentRecruitIndex = 0;
 	MaxRecruits = 12;
