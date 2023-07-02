@@ -120,8 +120,15 @@ void UBattleChatterComponent::OnCallerReceived_Implementation(FChatableParams Ch
 
 void UBattleChatterComponent::PlayDelaySound(USoundBase* Sound)
 {
-	CombatCharacter->PlayVoiceSound(Sound);
-	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_DelaySound);
+	if (CombatCharacter)
+	{
+		CombatCharacter->PlayVoiceSound(Sound);
+	}
+
+	if (GetOwner())
+	{
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_DelaySound);
+	}
 }
 
 

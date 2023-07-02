@@ -129,7 +129,8 @@ public:
 		FOnTargetSearchSignature OnTargetSearch;
 
 	/** Do not call this method in the constructor since the timer will be set and it will cause the application to crash. */
-	void SetFindTargetPerFrame(bool Value);
+	UFUNCTION(BlueprintCallable)
+		void SetFindTargetPerFrame(bool Value);
 
 	void AddClassFilter(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
 	

@@ -244,6 +244,10 @@ void UVehiclePathFollowerComponent::StartPath(FString PathMethodName)
 
 void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 {
+	if (!VehiclePath) {
+		return;
+	}
+
 	USplineComponent* SplinePathComp = VehiclePath->GetSplinePathComp();
 	float Alpha = UKismetMathLibrary::Lerp(0.0f, SplinePathComp->GetSplineLength(), Value);
 
@@ -295,6 +299,10 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 
 void UVehiclePathFollowerComponent::MoveToSplinePathStart(float Value)
 {
+	if (!VehiclePath) {
+		return;
+	}
+
 	USplineComponent* SplinePathComp = VehiclePath->GetSplinePathComp();
 
 	FVector TargetLocation = SplinePathComp->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
