@@ -4,27 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "StructCollection.h"
 #include "Engine/DataTable.h"
 #include "GameModeManager.generated.h"
 
 class ALevelManager;
 class AWeapon;
 
-USTRUCT(BlueprintType)
-struct FWorldCoverPoint 
-{
-	GENERATED_BODY()
-
-public:
-	AActor* Owner;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		FVector Location;
-
-	FWorldCoverPoint()
-	{
-	}
-};
 UCLASS()
 class FREEDOMPHANTOMS_API AGameModeManager : public AGameModeBase
 {

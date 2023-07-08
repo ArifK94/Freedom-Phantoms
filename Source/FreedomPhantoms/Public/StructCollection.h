@@ -695,6 +695,14 @@ public:
 
 	FVehicleSplinePoint()
 	{
+		PointIndex = 0;
+		PointLocation = FVector::ZeroVector;
+		AffectSpeedType = EVehicleSpeedType::Normal;
+		MovementType = EVehicleMovement::Grounded;
+		PathDuration = 0.f;
+		WaitingDuration = 0.f;
+		IsPathFreeToUse = false;
+		RemoveUserControl = false;
 		CollisionBox = nullptr;
 		CollisionSphere = nullptr;
 		ArrowComponent = nullptr;
@@ -773,6 +781,17 @@ public:
 
 	FVehicletSeating()
 	{
+		Role = EVehicleRole::SideGunner;
+
+		IsSeatLeftSide = false;
+		ExitPassengerOnPoint = false;
+
+		PitchMin = 0.f;
+		PitchMax = 0.f;
+		YawMin = 0.f;
+		YawMax = 0.f;
+		CanCharacterShoot = 0.f;
+
 		Character = nullptr;
 		OwningVehicle = nullptr;
 		IdleAnimation = nullptr;
@@ -841,6 +860,11 @@ public:
 	{
 		AttachCharacterToWeapon = false;
 		Weapon = nullptr;
+		IsMainWeapon = false;
+		PitchMin = 0.f;
+		PitchMax = 0.f;
+		YawMin = 0.f;
+		YawMax = 0.f;
 	}
 };
 
@@ -873,7 +897,12 @@ public:
 
 	FClampChangePitch()
 	{
-
+		YawValueMin = 0.f;
+		YawValueMax = 0.f;
+		NewPitchMin = 0.f;
+		UseMinDefault = false;
+		NewPitchMax = 0.f;
+		UseMaxDefault = false;
 	}
 };
 
@@ -1222,5 +1251,24 @@ public:
 		Sound = nullptr;
 		CooldownAmount = 0.f;
 		THandler_Cooldown = FTimerHandle();
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FWorldCoverPoint
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+		AActor* Owner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		FVector Location;
+
+	FWorldCoverPoint()
+	{
+		Owner = nullptr;
+		Location = FVector::ZeroVector;
 	}
 };
