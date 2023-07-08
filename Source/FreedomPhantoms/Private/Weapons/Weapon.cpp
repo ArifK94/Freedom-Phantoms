@@ -368,6 +368,11 @@ bool AWeapon::IsFacingCrosshair()
 
 void AWeapon::Fire()
 {
+	if (!GetOwner()) {
+		StopFire();
+		return;
+	}
+
 	if (isReloading) {
 		return;
 	}
