@@ -13,7 +13,7 @@
 
 UAIMovementComponent::UAIMovementComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	MinAcceptanceRadius = 50.f;
 	MovementDebugLifeTime = 1.0f;
@@ -26,6 +26,13 @@ UAIMovementComponent::UAIMovementComponent()
 void UAIMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Init();
+}
+
+void UAIMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	Init();
 }

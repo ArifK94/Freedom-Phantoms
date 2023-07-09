@@ -28,10 +28,6 @@ void UCoverFinderComponent::BeginPlay()
 	Super::BeginPlay();
 
 	DefaultSearchRadius = CoverRadius;
-
-	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
-	Controller = Cast<AController>(GetOwner());
-	Character = Cast<ABaseCharacter>(Controller->GetPawn());
 }
 
 void UCoverFinderComponent::Init()
@@ -43,6 +39,10 @@ void UCoverFinderComponent::Init()
 	if (Character == nullptr) {
 		Character = Cast<ABaseCharacter>(Controller->GetPawn());
 	}
+
+	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
+	Controller = Cast<AController>(GetOwner());
+	Character = Cast<ABaseCharacter>(Controller->GetPawn());
 }
 
 

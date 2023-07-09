@@ -26,6 +26,12 @@ private:
 	bool IsSearching;
 
 	/**
+	* Onwing Pawn / Actor.
+	*/
+	UPROPERTY()
+		AActor* MyPawn;
+
+	/**
 	* Hold the last enemy seen.
 	*/
 	UPROPERTY()

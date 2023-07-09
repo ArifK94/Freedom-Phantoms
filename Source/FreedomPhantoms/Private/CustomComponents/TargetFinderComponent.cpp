@@ -68,15 +68,31 @@ void UTargetFinderComponent::Init()
 		return;
 	}
 
+	if (!MyPawn)
+	{
+		MyPawn = GetOwner();
+		AController* Controller = Cast<AController>(MyPawn);
+
+		if (Controller)
+		{
+			MyPawn = Controller->GetPawn();
+		}
+	}
+
+	if (!MyPawn) {
+		return;
+	}
+
+
 	// Alternative to AI Sight Perception in case 360 sight is wanted
 	if (TargetSightSphere == nullptr)
 	{
-		TargetSightSphere = NewObject<USphereComponent>(GetOwner());
+		TargetSightSphere = NewObject<USphereComponent>(MyPawn);
 
 		if (TargetSightSphere)
 		{
 			TargetSightSphere->RegisterComponent();
-			TargetSightSphere->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+			TargetSightSphere->AttachToComponent(MyPawn->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
 			TargetSightSphere->SetCanEverAffectNavigation(false);
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
@@ -141,9 +157,14 @@ AActor* UTargetFinderComponent::FindTarget()
 		return nullptr;
 	}
 
-	if (!GetOwner()) {
-		IsSearching = false;
-		return nullptr;
+	if (!MyPawn) {
+
+		Init();
+
+		if (!MyPawn) {
+			IsSearching = false;
+			return nullptr;
+		}
 	}
 
 	if (!TargetSightSphere) {
@@ -163,10 +184,10 @@ AActor* UTargetFinderComponent::FindTarget()
 	float TargetSightDistance = TargetSightRadius;
 
 
-	FVector OwnerLocation = GetOwner()->GetActorLocation();
+	FVector OwnerLocation = MyPawn->GetActorLocation();
 	FVector EyeLocation;
 	FRotator EyeRotation;
-	GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	MyPawn->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 	// The current limit of targets to process
 	int CurrentProcessedCharacters = 0;
@@ -190,7 +211,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		}
 
 		// is this the owner?
-		if (PotentialEnemy == GetOwner()) {
+		if (PotentialEnemy == MyPawn) {
 			AddToIgnoreProcessed(PotentialEnemy);
 			continue;
 		}
@@ -217,18 +238,14 @@ AActor* UTargetFinderComponent::FindTarget()
 			continue;
 		}
 
-		bool IsFriendly = UTeamFactionComponent::IsFriendly(GetOwner(), PotentialEnemy);
-
 		// ignore if friendly
-		if (IsFriendly) {
+		if (UTeamFactionComponent::IsFriendly(MyPawn, PotentialEnemy)) {
 			AddToIgnoreProcessed(PotentialEnemy);
 			continue;
 		}
 
-		bool IsAlive = UHealthComponent::IsActorAlive(PotentialEnemy);
-
 		// is target alive? Do not add this to ignore list as the enemy can be revived if wounded.
-		if (!IsAlive) {
+		if (!UHealthComponent::IsActorAlive(PotentialEnemy)) {
 			continue;
 		}
 
@@ -260,7 +277,7 @@ AActor* UTargetFinderComponent::FindTarget()
 	if (CanSeeLast)
 	{
 		// if the new target is not close by, then continue using the last enemy.
-		if (TargetActor && !USharedService::IsNearTargetPosition(GetOwner()->GetActorLocation(), TargetActor->GetActorLocation(), 500.f))
+		if (TargetActor && !USharedService::IsNearTargetPosition(MyPawn->GetActorLocation(), TargetActor->GetActorLocation(), 500.f))
 		{
 			TargetActor = LastSeenTarget;
 		}
@@ -331,10 +348,10 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 		return false;
 	}
 
-	FVector OwnerLocation = GetOwner()->GetActorLocation();
+	FVector OwnerLocation = MyPawn->GetActorLocation();
 	FVector EyeLocation;
 	FRotator EyeRotation;
-	GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	MyPawn->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 	FVector ActorLocation = TargetActor->GetActorLocation();
 
@@ -433,7 +450,7 @@ AActor* UTargetFinderComponent::GetChildrenTargets(AActor* ParentTarget)
 	{
 		auto Actor = ChildAttachedActors[i];
 
-		if (Actor == GetOwner()) {
+		if (Actor == MyPawn) {
 			continue;
 		}
 
@@ -482,7 +499,7 @@ void UTargetFinderComponent::ClearLastSeenTarget()
 {
 	LastSeenTarget = nullptr;
 
-	if (GetOwner() && GetWorld()) 
+	if (MyPawn && GetWorld()) 
 	{
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_CountdownTargetLost);
 	}
@@ -498,7 +515,7 @@ void UTargetFinderComponent::AddToIgnoreProcessed(AActor* Actor)
 
 bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
 {
-	auto Owner = GetOwner();
+	auto Owner = MyPawn;
 	FCollisionQueryParams QueryParams;
 	QueryParams.bTraceComplex = false;
 	QueryParams.AddIgnoredActor(Owner);

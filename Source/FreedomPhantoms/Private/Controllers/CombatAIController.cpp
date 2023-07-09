@@ -45,6 +45,9 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 	UtilityAIComponent = CreateDefaultSubobject<UUtilityAIComponent>(TEXT("UtilityAIComponent"));
 	AIMovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("AIMovementComponent"));
 	BattleChatterComponent = CreateDefaultSubobject<UBattleChatterComponent>(TEXT("BattleChatterComponent"));
+	TargetFinderComponent = CreateDefaultSubobject<UTargetFinderComponent>(TEXT("TargetFinderComponent"));
+	CoverFinderComponent = CreateDefaultSubobject<UCoverFinderComponent>(TEXT("CoverFinderComponent"));
+	MountedGunFinderComponent = CreateDefaultSubobject<UMountedGunFinderComponent>(TEXT("MountedGunFinderComponent"));
 
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -137,72 +140,27 @@ void ACombatAIController::Init()
 		OwningCombatCharacter->ToggleSprint();
 	}
 
-	// Spawned actors do not create the components made in the constructor, so create the components again at runtime
-	if (!AIMovementComponent)
-	{
-		AIMovementComponent = NewObject<UAIMovementComponent>(this);
-
-		if (AIMovementComponent)
-		{
-			AIMovementComponent->RegisterComponent();
-		}
-	}
-
-	if (!PatrolFollowerComponent)
-	{
-		PatrolFollowerComponent = NewObject<UPatrolFollowerComponent>(OwningCombatCharacter);
-
-		if (PatrolFollowerComponent)
-		{
-			PatrolFollowerComponent->RegisterComponent();
-		}
-	}
-
-	if (!StrongholdDefenderComponent)
-	{
-		StrongholdDefenderComponent = NewObject<UStrongholdDefenderComponent>(OwningCombatCharacter);
-
-		if (StrongholdDefenderComponent)
-		{
-			StrongholdDefenderComponent->RegisterComponent();
-		}
-	}
-
-	if (!CoverFinderComponent)
-	{
-		CoverFinderComponent = NewObject<UCoverFinderComponent>(this);
-
-		if (CoverFinderComponent)
-		{
-			CoverFinderComponent->RegisterComponent();
-		}
-	}
-
-	if (!TargetFinderComponent)
-	{
-		TargetFinderComponent = NewObject<UTargetFinderComponent>(OwningCombatCharacter);
-
-		if (TargetFinderComponent)
-		{
-			TargetFinderComponent->RegisterComponent();
-		}
-	}
-
-	if (!MountedGunFinderComponent)
-	{
-		MountedGunFinderComponent = NewObject<UMountedGunFinderComponent>(this);
-
-		if (MountedGunFinderComponent)
-		{
-			MountedGunFinderComponent->RegisterComponent();
-		}
-	}
-
 	// if assigned an MG at the beginning
 	if (OwningCombatCharacter->GetMountedGun()) {
 		TargetDestination = OwningCombatCharacter->GetMountedGun()->GetActorLocation();
 	}
 
+	if (!PatrolFollowerComponent)
+	{
+		PatrolFollowerComponent = NewObject<UPatrolFollowerComponent>(OwningCombatCharacter);
+		if (PatrolFollowerComponent)
+		{
+			PatrolFollowerComponent->RegisterComponent();
+		}
+	}
+	if (!StrongholdDefenderComponent)
+	{
+		StrongholdDefenderComponent = NewObject<UStrongholdDefenderComponent>(OwningCombatCharacter);
+		if (StrongholdDefenderComponent)
+		{
+			StrongholdDefenderComponent->RegisterComponent();
+		}
+	}
 
 	if (UtilityAIComponent) 
 	{

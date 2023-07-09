@@ -21,13 +21,6 @@ void UPatrolFollowerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//if (!PatrolPath)
-	//{
-	//	float ClosestDistance = 0.0f;
-	//	TArray<AActor*> TargetActor;
-	//	UGameplayStatics::GetAllActorsWithTag(GetWorld(), PathTagName, TargetActor);
-	//}
-
 	if (PatrolPath) {
 		SplinePathComp = PatrolPath->GetSplinePathComp();
 	}
