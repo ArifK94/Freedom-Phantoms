@@ -30,19 +30,28 @@ void UCoverFinderComponent::BeginPlay()
 	DefaultSearchRadius = CoverRadius;
 }
 
+void UCoverFinderComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	Init();
+}
+
 void UCoverFinderComponent::Init()
 {
-	if (Controller == nullptr) {
+	if (!GameModeManager) {
+		GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
+	}
+
+	if (!Controller) {
 		Controller = Cast<AController>(GetOwner());
 	}
 
-	if (Character == nullptr) {
-		Character = Cast<ABaseCharacter>(Controller->GetPawn());
+	if (Controller) {
+		if (!Character) {
+			Character = Cast<ABaseCharacter>(Controller->GetPawn());
+		}
 	}
-
-	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
-	Controller = Cast<AController>(GetOwner());
-	Character = Cast<ABaseCharacter>(Controller->GetPawn());
 }
 
 
