@@ -193,7 +193,7 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 		}
 	}
 
-	auto DamageReduction = HealthParameters.Damage - DamageReduceFactor;
+	auto DamageReduction = HealthParameters.Damage - (HealthParameters.DamageCauser == HealthParameters.DamagedActor ? 0 : DamageReduceFactor);
 
 	// Update health clamp
 	Health = FMath::Clamp(Health - DamageReduction, 0.0f, MaxHealth);

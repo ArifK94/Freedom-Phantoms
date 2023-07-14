@@ -401,6 +401,7 @@ void ABaseCharacter::Landed(const FHitResult& Hit)
 
 
 	FHealthParameters HealthParameters;
+	HealthParameters.DamageCauser = HealthParameters.DamagedActor = this;
 	HealthParameters.Damage = ClampVelo * 100.f;
 	HealthParameters.InstigatedBy = GetInstigatorController();
 	HealthParameters.HitInfo = Hit;
