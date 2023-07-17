@@ -20,7 +20,7 @@ UHealthComponent::UHealthComponent()
 	CanRegenerateHealth = true;
 	RegenPerSecond = 10.0f;
 
-	isAlive = false;
+	isAlive = true;
 
 	HasUnlimitedHealth = false;
 	DefaulUnlimitedHealth = false;
@@ -43,7 +43,6 @@ void UHealthComponent::BeginPlay()
 
 	Health = MaxHealth;
 	CurrentRegenerationDelay = RegenerationDelayAmount;
-	isAlive = true;
 }
 
 void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
