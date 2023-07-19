@@ -5,6 +5,7 @@
 #include "Vehicles/VehicleBase.h"
 #include "Visuals/OrderIcon.h"
 #include "Managers/GameModeManager.h"
+#include "Managers/GameStateBaseCustom.h"
 
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -123,6 +124,10 @@ ABaseCharacter::ABaseCharacter()
 	RightHandSocket = "j_wrist_ri";
 	ShoulderLeftocket = "j_shoulder_le";
 	ShoulderRightSocket = "j_shoulder_ri";
+	LeftFootSocket = "j_ball_le";
+	RightFootSocket = "j_ball_ri";
+
+	FootRowName = "Foot";
 
 	CoverRotationLeftPitch = FVector2D(-10.0f, 10.0f);
 	CoverRotationLeftYaw = FVector2D(-20.0f, 0.0f);
@@ -135,6 +140,17 @@ void ABaseCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
+
+	auto GameState = UGameplayStatics::GetGameState(GetWorld());
+
+	if (GameState) {
+		GameStateBaseCustom = Cast<AGameStateBaseCustom>(GameState);
+	}
+
+	if (GameStateBaseCustom)
+	{
+		FootSurfaceImpact = GameStateBaseCustom->RetrieveSurfaceImpact(FootRowName);
+	}
 
 	RetrieveVoiceDataSet();
 	RetrieveAccessoryDataSet();
@@ -407,6 +423,10 @@ void ABaseCharacter::Landed(const FHitResult& Hit)
 	HealthParameters.HitInfo = Hit;
 	HealthComp->OnDamage(HealthParameters);
 
+	FCharacterActionParameters CharacterActionParameters;
+	CharacterActionParameters.Action = ECharacterAction::Landed;
+	CharacterActionParameters.LandHeight = Velocity;
+	OnCharacterActionUpdate.Broadcast(CharacterActionParameters);
 }
 
 void ABaseCharacter::RetrieveVoiceDataSet()
@@ -647,7 +667,6 @@ void ABaseCharacter::UpdateDirection()
 	}
 }
 
-
 bool ABaseCharacter::IsCharacterMoving()
 {
 	auto Velocity = GetCharacterMovement()->Velocity.Size();
@@ -662,6 +681,10 @@ void ABaseCharacter::Jump()
 	}
 
 	Super::Jump();
+
+	FCharacterActionParameters CharacterActionParameters;
+	CharacterActionParameters.Action = ECharacterAction::Jump;
+	OnCharacterActionUpdate.Broadcast(CharacterActionParameters);
 }
 
 void ABaseCharacter::SetFirstPersonView()
@@ -1082,7 +1105,12 @@ void ABaseCharacter::BeginAim()
 		FLatentActionInfo LatentInfo;
 		LatentInfo.CallbackTarget = this;
 		UKismetSystemLibrary::MoveComponentTo(FollowCamera, FVector::ZeroVector, FRotator::ZeroRotator, true, true, 0.3f, false, EMoveComponentAction::Type::Move, LatentInfo);
+
+		FCharacterActionParameters CharacterActionParameters;
+		CharacterActionParameters.Action = ECharacterAction::BeginAim;
+		OnCharacterActionUpdate.Broadcast(CharacterActionParameters);
 	}
+
 }
 
 void ABaseCharacter::EndAim()
@@ -1100,12 +1128,124 @@ void ABaseCharacter::EndAim()
 		LatentInfo.CallbackTarget = this;
 
 		UKismetSystemLibrary::MoveComponentTo(FollowCamera, FVector::ZeroVector, FRotator::ZeroRotator, true, true, 0.3f, false, EMoveComponentAction::Type::Move, LatentInfo);
+	
+		FCharacterActionParameters CharacterActionParameters;
+		CharacterActionParameters.Action = ECharacterAction::BeginAim;
+		OnCharacterActionUpdate.Broadcast(CharacterActionParameters);
 	}
 }
 
 void ABaseCharacter::UpdateAimCamera()
 {
 	FollowCamera->SetWorldLocation(GetMesh()->GetSocketLocation(ShoulderRightSocket));
+}
+
+void ABaseCharacter::TraceFootstep()
+{
+	if (CharacterSpeed <= 0.f) {
+		return;
+	}
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.bTraceComplex = true;
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AllObjects;
+
+
+	FVector LeftFootPos = GetMesh()->GetSocketLocation(LeftFootSocket);
+	FVector LeftFootEnsPos = FVector(LeftFootPos.X, LeftFootPos.Y, LeftFootPos.Z - 5);
+
+	FHitResult OutHitLeft;
+	auto LeftFootTrace = GetWorld()->LineTraceSingleByObjectType(OutHitLeft, LeftFootPos, LeftFootEnsPos, ObjectParams, QueryParams);
+
+	if (LeftFootTrace)
+	{
+		PlayFootstepSound(OutHitLeft);
+	}
+
+	FVector RightFootPos = GetMesh()->GetSocketLocation(RightFootSocket);
+	FVector RightFootEnsPos = FVector(RightFootPos.X, RightFootPos.Y, RightFootPos.Z - 5);
+
+	FHitResult OutHitRight;
+	auto RightFootTrace = GetWorld()->LineTraceSingleByObjectType(OutHitRight, RightFootPos, RightFootEnsPos, ObjectParams, QueryParams);
+
+	if (RightFootTrace)
+	{
+		PlayFootstepSound(OutHitRight);
+	}
+}
+
+void ABaseCharacter::PlayFootstepSound(FHitResult HitInfo)
+{
+	USoundBase* Sound = GetFootstepSound(HitInfo);
+
+	if (!Sound) {
+		return;
+	}
+
+	FName DirectionParam = "is_move_right";
+	int32 DirectionVal = CharacterDirection >= 0 ? 1 : 0;
+
+	FName StanceParam = "stance";
+	int32 StanceVal = 0;
+
+	if (isSprinting)
+	{
+		StanceVal = 1;
+	}
+	else if (GetCharacterMovement()->IsCrouching())
+	{
+		StanceVal = 2;
+	}
+
+	auto FootstepAudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound, HitInfo.ImpactPoint);
+
+	if (FootstepAudioComponent)
+	{
+		FootstepAudioComponent->SetIntParameter(StanceParam, StanceVal);
+		FootstepAudioComponent->SetIntParameter(DirectionParam, DirectionVal);
+	}
+
+}
+
+USoundBase* ABaseCharacter::GetFootstepSound(FHitResult HitInfo)
+{
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitInfo.PhysMaterial.Get());
+
+	FSurfaceImpactSet SurfaceImpactSet = FootSurfaceImpact->Default;
+
+	if (HitInfo.PhysMaterial == nullptr) {
+		return SurfaceImpactSet.Sound;
+	}
+
+	switch (SurfaceType)
+	{
+	case SURFACE_CONCRETE:
+		SurfaceImpactSet = FootSurfaceImpact->Concrete;
+		break;
+	case SURFACE_WATER:
+		SurfaceImpactSet = FootSurfaceImpact->Water;
+		break;
+	case SURFACE_GRASS:
+		SurfaceImpactSet = FootSurfaceImpact->Grass;
+		break;
+	case SURFACE_WOOD:
+		SurfaceImpactSet = FootSurfaceImpact->Wood;
+		break;
+	case SURFACE_ROCK:
+		SurfaceImpactSet = FootSurfaceImpact->Rock;
+		break;
+	case SURFACE_SAND:
+		SurfaceImpactSet = FootSurfaceImpact->Sand;
+		break;
+	default:
+		SurfaceImpactSet = FootSurfaceImpact->Default;
+		break;
+	}
+
+	return SurfaceImpactSet.Sound;
 }
 
 void ABaseCharacter::PlayVoiceSound(USoundBase* Sound)

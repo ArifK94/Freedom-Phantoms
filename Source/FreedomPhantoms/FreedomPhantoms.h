@@ -14,6 +14,7 @@
 #define SURFACE_WOOD				SurfaceType8
 #define SURFACE_ROCK				SurfaceType9
 #define SURFACE_SAND				SurfaceType10
+#define SURFACE_CONCRETE			SurfaceType11
 
 #define COLLISION_WEAPON			ECC_GameTraceChannel1
 #define COLLISION_COVER				ECC_GameTraceChannel2

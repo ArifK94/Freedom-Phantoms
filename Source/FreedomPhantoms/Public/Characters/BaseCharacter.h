@@ -18,6 +18,7 @@ class UDataTable;
 class AWeapon;
 class AOrderIcon;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterActionUpdateignature, FCharacterActionParameters, CharacterActionParameters);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRappelUpdateignature, ABaseCharacter*, BaseCharacter);
 UCLASS(config = Game)
 class FREEDOMPHANTOMS_API ABaseCharacter : public ACharacter
@@ -80,6 +81,10 @@ protected:
 		UDataTable* DeathAnimDatatable;
 	FDeathAnimation* DeathAnimation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
+		FName FootRowName;
+	FSurfaceImpact* FootSurfaceImpact;
+
 private:
 	void RetrieveVoiceDataSet();
 	void RetrieveAccessoryDataSet();
@@ -96,6 +101,9 @@ protected:
 	UPROPERTY()
 		class AGameModeManager* GameModeManager;
 
+	UPROPERTY()
+		class AGameStateBaseCustom* GameStateBaseCustom;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName HeadSocket;
@@ -108,6 +116,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ShoulderRightSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		FName LeftFootSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		FName RightFootSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool UseRootMotion;
@@ -314,11 +328,18 @@ private:
 
 	void UpdateDirection();
 
+	void PlayFootstepSound(FHitResult HitInfo);
+
+	USoundBase* GetFootstepSound(FHitResult HitInfo);
+
 	void StartDestroy();
 	void DetroyChildActor(TArray<AActor*> ParentActor);
 
 public:
 	FOnRappelUpdateignature OnRappelUpdate;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnCharacterActionUpdateignature OnCharacterActionUpdate;
 
 	virtual FVector GetPawnViewLocation() const override;
 
@@ -383,6 +404,10 @@ public:
 	void UpdateAimCamera();
 
 	void PlayVoiceSound(USoundBase* Sound);
+
+	/** Line trace from foot for footstep VFX */
+	UFUNCTION(BlueprintCallable)
+		void TraceFootstep();
 
 	void PostDeath();
 

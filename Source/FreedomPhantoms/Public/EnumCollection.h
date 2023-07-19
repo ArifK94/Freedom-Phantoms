@@ -121,3 +121,13 @@ enum class AIBehaviourState : uint8
 	PriorityDestination		UMETA(DisplayName = "PriorityDestination"),
 	PriorityOrdersCommander	UMETA(DisplayName = "PriorityOrdersCommander"),
 };
+
+UENUM(BlueprintType)
+enum class ECharacterAction : uint8
+{
+	Crouch		UMETA(DisplayName = "Crouch"),
+	BeginAim	UMETA(DisplayName = "BeginAim"),
+	EndAim		UMETA(DisplayName = "EndAim"),
+	Jump		UMETA(DisplayName = "Jump"),
+	Landed		UMETA(DisplayName = "Landed"),
+};

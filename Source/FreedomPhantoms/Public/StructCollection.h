@@ -1272,3 +1272,23 @@ public:
 		Location = FVector::ZeroVector;
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FCharacterActionParameters
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		ECharacterAction Action;
+
+	/** The height when character has landed. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float LandHeight;
+
+	FCharacterActionParameters()
+	{
+		Action = ECharacterAction::Crouch;
+		LandHeight = 0.f;
+	}
+};
