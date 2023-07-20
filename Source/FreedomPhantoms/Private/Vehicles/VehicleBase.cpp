@@ -56,12 +56,12 @@ AVehicleBase::AVehicleBase()
 	FrontCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("FrontCollider"));
 	FrontCollider->SetCollisionProfileName(TEXT("OverlapAll"));
 	FrontCollider->CanCharacterStepUpOn = ECB_No;
-	FrontCollider->SetupAttachment(RootComponent);
+	FrontCollider->SetupAttachment(MeshComponent);
 
 	FrontKillZoneComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("FrontKillZoneComponent"));
 	FrontKillZoneComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	FrontKillZoneComponent->CanCharacterStepUpOn = ECB_No;
-	FrontKillZoneComponent->SetupAttachment(RootComponent);
+	FrontKillZoneComponent->SetupAttachment(MeshComponent);
 
 	EyePointComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("EyePointComponent"));
 	EyePointComponent->SetupAttachment(RootComponent);
