@@ -14,7 +14,7 @@ class AVehicleSplinePath;
 class ABaseCharacter;
 class ARope;
 
-class UCapsuleComponent;
+class USphereComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVehiclePointReachedSignature, FVehicleSplinePoint, VehicleSplinePoint);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPathCompleteSignature, AVehicleBase*, Vehicle);
@@ -50,13 +50,16 @@ private:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UCapsuleComponent* CollisionDetector;
+		USphereComponent* CollisionDetector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UCurveFloat* CurveFloat;
 
 	UPROPERTY()
 		FTimeline CurveTimeline;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float CurrentDuration;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsStopped;

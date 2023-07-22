@@ -44,7 +44,7 @@ AProjectile::AProjectile()
 	ExplosiveRadiusOuter = 20.f;
 	RadialForceStrength = 200.f;
 
-	ShowExplosionRadius = false;
+	ShowDebug = false;
 	DebugExplosionLifeTime = 5.0f;
 
 	InitialSpeed = 12000.0;
@@ -428,7 +428,7 @@ void AProjectile::Explode(FVector ImpactPoint)
 	// check if something got hit in the sweep
 	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, ImpactPoint, ImpactPoint, FQuat::Identity, ECC_Visibility, MyColSphere, GetQueryParams());
 
-	if (ShowExplosionRadius)
+	if (ShowDebug)
 	{
 		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadiusInner, 20, FColor::Red, false, DebugExplosionLifeTime, 0, 2);
 		DrawDebugSphere(GetWorld(), ImpactPoint, ExplosiveRadiusOuter, 20, FColor::Green, false, DebugExplosionLifeTime, 0, 2);
@@ -602,7 +602,7 @@ bool AProjectile::IsHittingTarget(AActor* TargetActor, FVector ImpactPoint, floa
 		return false;
 	}
 
-	if (ShowExplosionRadius)
+	if (ShowDebug)
 	{
 		DrawDebugSphere(GetWorld(), ImpactPoint, Radius, 20, FColor::Red, false, DebugExplosionLifeTime, 0, 2);
 	}
@@ -611,7 +611,24 @@ bool AProjectile::IsHittingTarget(AActor* TargetActor, FVector ImpactPoint, floa
 	{
 		AActor* DamagedActor = Hit.GetActor();
 
-		if (DamagedActor == TargetActor) {
+		if (ShowDebug)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("DamagedActor: %s | TargetActor: %s"), *DamagedActor->GetName(), *TargetActor->GetName()));
+		}
+
+		if (DamagedActor == TargetActor || (DamagedActor->GetAttachParentActor() && DamagedActor->GetAttachParentActor() == TargetActor)) {
+
+			if (ShowDebug)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("TargetActor Hit!")));
+
+				if (DamagedActor->GetAttachParentActor())
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("DamagedActor: %s"), *DamagedActor->GetAttachParentActor()->GetName()));
+				}
+
+			}
+
 			return true;
 		}
 	}

@@ -329,6 +329,10 @@ bool UCoverFinderComponent::IsPreferredCover(FVector WallNormal, FVector CoverLo
 
 void UCoverFinderComponent::RemoveCoverPoint()
 {
+	if (!GameModeManager) {
+		return;
+	}
+
 	FWorldCoverPoint CoverLocation = FWorldCoverPoint();
 	CoverLocation.Owner = Character;
 

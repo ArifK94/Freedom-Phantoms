@@ -81,6 +81,7 @@ void AGameModeManager::RemoveCoverPoint(FWorldCoverPoint CoverLocation)
 
 			if (CoverLocation.Owner == CoverPoints[i].Owner && UKismetMathLibrary::EqualEqual_VectorVector(CoverPoint, CoverLocation.Location)) {
 				CoverPoints.RemoveAt(i);
+				break;
 			}
 		}
 	}

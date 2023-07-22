@@ -65,7 +65,7 @@ void AGameHUDController::RemoveAllWidgets()
 {
 	for (auto Widget : ViewportWidgets)
 	{
-		Widget->RemoveFromViewport();
+		Widget->RemoveFromParent();
 	}
 
 	ViewportWidgets.Empty();

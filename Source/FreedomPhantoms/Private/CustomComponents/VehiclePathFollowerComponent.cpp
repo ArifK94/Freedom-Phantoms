@@ -9,7 +9,7 @@
 #include "Characters/BaseCharacter.h"
 #include "CustomComponents/HealthComponent.h"
 
-#include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "NavigationSystem.h"
@@ -38,13 +38,14 @@ void UVehiclePathFollowerComponent::Init()
 {
 	if (CollisionDetector == nullptr)
 	{
-		CollisionDetector = NewObject<UCapsuleComponent>(GetOwner());
+		CollisionDetector = NewObject<USphereComponent>(GetOwner());
 
 		if (CollisionDetector)
 		{
 			CollisionDetector->RegisterComponent();
 			CollisionDetector->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 			CollisionDetector->SetCollisionProfileName(TEXT("OverlapAll"));
+			CollisionDetector->SetSphereRadius(100.f);
 			CollisionDetector->SetCanEverAffectNavigation(false);
 			CollisionDetector->bDynamicObstacle = true;
 			CollisionDetector->CanCharacterStepUpOn = ECB_No;
@@ -58,6 +59,7 @@ void UVehiclePathFollowerComponent::Init()
 	}
 
 	DefaultPathFollowDuration = PathFollowDuration;
+	CurrentDuration = 1.0f / PathFollowDuration;
 
 	FindPath();
 }
@@ -128,11 +130,13 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 
 	// adjust path duration to change speed if specified
 	if (CurrentSplinePoint.AffectSpeedType == EVehicleSpeedType::Specified) {
-		CurveTimeline.SetPlayRate(1.0f / CurrentSplinePoint.PathDuration);
+		CurrentDuration = 1.0f / CurrentSplinePoint.PathDuration;
 	}
 	else {
-		CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+		CurrentDuration = 1.0f / PathFollowDuration;
 	}
+
+	CurveTimeline.SetPlayRate(CurrentDuration);
 
 	if (CurrentSplinePoint.IsPathFreeToUse) {
 		VehiclePath->SetOccupantVehicle(nullptr);
@@ -238,7 +242,7 @@ void UVehiclePathFollowerComponent::StartPath(FString PathMethodName)
 	TimelineProgress.BindUFunction(this, FName(PathMethodName));
 	CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
 	CurveTimeline.SetLooping(false);
-	CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+	CurveTimeline.SetPlayRate(CurrentDuration);
 	CurveTimeline.PlayFromStart();
 }
 
@@ -619,15 +623,14 @@ bool UVehiclePathFollowerComponent::ShouldStopVehicle()
 	return !CurveFloat || !CurveTimeline.IsPlaying() || !CanFollowPath();
 }
 
-
 void UVehiclePathFollowerComponent::ResumeNormalSpeed()
 {
-	CurveTimeline.SetPlayRate(1.0f / PathFollowDuration);
+	CurveTimeline.SetPlayRate(CurrentDuration);
 }
 
 void UVehiclePathFollowerComponent::Slowdown()
 {
-	CurveTimeline.SetPlayRate(1.0f / (PathFollowDuration * 2.f));
+	CurveTimeline.SetPlayRate(CurrentDuration * 2.f);
 }
 
 // Free up the path for another vehicle to use

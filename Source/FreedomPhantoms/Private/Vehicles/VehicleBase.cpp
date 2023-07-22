@@ -664,8 +664,10 @@ void AVehicleBase::UpdateWeaponView()
 
 	if (VehicleSeats.Num() > 0)
 	{
+		auto Index = CurrentWeaponIndex >= VehicleSeats.Num() ? 0 : CurrentWeaponIndex;
+
 		// Player possessing is required if the character is posseseed by the AI controller
-		auto Seat = VehicleSeats[CurrentWeaponIndex];
+		auto Seat = VehicleSeats[Index];
 
 		if (UHealthComponent::IsActorAlive(Seat.Character)) {
 

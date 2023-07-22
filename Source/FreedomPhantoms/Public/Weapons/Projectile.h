@@ -90,7 +90,7 @@ private:
 		bool IgnoreDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
-		bool ShowExplosionRadius;
+		bool ShowDebug;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		float DebugExplosionLifeTime;
