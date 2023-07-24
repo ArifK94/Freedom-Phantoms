@@ -1209,6 +1209,8 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 		return;
 	}
 
+	bool CanRemoveOwner = MountedGun->GetOwner() == this;
+
 	// prevent drop animations if not using MG.
 	if (isUsingMountedWeapon)
 	{
@@ -1218,8 +1220,10 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 		// Unregister the kill event for the MG
 		RegisterWeaponEvents(MountedGun, false);
 
-
-		MountedGun->DropWeapon();
+		if (CanRemoveOwner)
+		{
+			MountedGun->DropWeapon();
+		}
 
 		// Reassign to collide with the MG again
 		GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, false);
@@ -1233,7 +1237,11 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 
 	if (ClearMG)
 	{
-		MountedGun->SetOwner(nullptr);
+		if (CanRemoveOwner)
+		{
+			MountedGun->SetOwner(nullptr);
+		}
+
 		MountedGun->SetPotentialOwner(nullptr);
 		MountedGun = nullptr;
 	}

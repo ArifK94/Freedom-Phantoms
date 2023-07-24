@@ -659,6 +659,10 @@ void AVehicleBase::UpdateWeaponView()
 	}
 
 	CurrentWeapon = VehicleWeapons[CurrentWeaponIndex].Weapon;
+
+	auto MyOwner = GetOwner() ? GetOwner() : this;
+	CurrentWeapon->SetOwner(MyOwner);
+
 	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetViewTargetWithBlend(CurrentWeapon);
 
 
