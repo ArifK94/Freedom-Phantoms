@@ -22,8 +22,6 @@ private:
 	void RegenerateHealth();
 
 private:
-	float mDeltaTime;
-
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		float Health;
 
@@ -70,14 +68,13 @@ private:
 		TArray<TSubclassOf<AActor>> ImmuneActorClasses;
 
 private:
-	bool HasTakenDamage;
 	float RegenerationDelayAmount;
-	float CurrentRegenerationDelay;
+
+	UPROPERTY()
+		FTimerHandle THandler_Regeneration;
 
 private:
 	virtual void BeginPlay() override;
-
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Health Component")

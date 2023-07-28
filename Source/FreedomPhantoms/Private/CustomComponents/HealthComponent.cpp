@@ -13,24 +13,21 @@
 
 UHealthComponent::UHealthComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	MaxHealth = 100;
-
-	CanRegenerateHealth = true;
-	RegenPerSecond = 10.0f;
-
 	isAlive = true;
 
 	HasUnlimitedHealth = false;
 	DefaulUnlimitedHealth = false;
-	HasTakenDamage = false;
 	IgnoreFriendlyFire = true;
 	AcceptOnlyExplosions = false;
 	ClearAllActorTimers = true;
 	CanBeWounded = false;
 	isWounded = false;
 
+	CanRegenerateHealth = true;
+	RegenPerSecond = 10.0f;
 	RegenerationDelayAmount = 5.0f;
 }
 
@@ -40,24 +37,7 @@ void UHealthComponent::BeginPlay()
 
 	DefaulUnlimitedHealth = HasUnlimitedHealth;
 	CanBeWoundedDefault = CanBeWounded;
-
 	Health = MaxHealth;
-	CurrentRegenerationDelay = RegenerationDelayAmount;
-}
-
-void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	if (isAlive) {
-
-		Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-		mDeltaTime = DeltaTime;
-
-		if (CanRegenerateHealth)
-		{
-			RegenerateHealth();
-		}
-	}
 }
 
 void UHealthComponent::ApplyDamage(FHealthParameters HealthParameters)
@@ -192,18 +172,12 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 		}
 	}
 
+	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_Regeneration);
+
 	auto DamageReduction = HealthParameters.Damage - (HealthParameters.DamageCauser == HealthParameters.DamagedActor ? 0 : DamageReduceFactor);
 
 	// Update health clamp
 	Health = FMath::Clamp(Health - DamageReduction, 0.0f, MaxHealth);
-
-
-	// update the regeneration if taken damage as well as the delay time to wait again for another x seconds
-	if (CanRegenerateHealth) {
-		CurrentRegenerationDelay = RegenerationDelayAmount;
-		HasTakenDamage = true;
-	}
-
 
 	if (Health <= 0.0f)
 	{
@@ -218,6 +192,14 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 			isWounded = true;
 		}
 	}
+	else
+	{
+		// set the regeneration timer if taken damage as well as the delay time to wait again for another x seconds
+		if (CanRegenerateHealth) 
+		{
+			GetOwner()->GetWorldTimerManager().SetTimer(THandler_Regeneration, this, &UHealthComponent::RegenerateHealth, 1.f, true, RegenerationDelayAmount);
+		}
+	}
 
 
 	HealthParameters.SetHealthComponent(this);
@@ -227,33 +209,22 @@ void UHealthComponent::OnDamage(FHealthParameters HealthParameters)
 
 void UHealthComponent::RegenerateHealth()
 {
-	if (!isAlive) {
+	if (!isAlive || !GetOwner()) {
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_Regeneration);
 		return;
 	}
 
-	if (HasTakenDamage)
+	if (Health < MaxHealth)
 	{
-		// delay regeneration if more than 0
-		if (CurrentRegenerationDelay > 0.0f)
-		{
-			CurrentRegenerationDelay -= mDeltaTime;
-		}
-		else // delay has finished countdown so ready to regenerate health
-		{
-			CurrentRegenerationDelay = RegenerationDelayAmount;
-			HasTakenDamage = false;
-		}
-	}
-	else // regenerating the health
-	{
-		if (Health < MaxHealth)
-		{
-			Health = FMath::Clamp(Health + RegenPerSecond * mDeltaTime, 0.0f, MaxHealth);
+		Health = FMath::Clamp(Health + RegenPerSecond, 0.0f, MaxHealth);
 
-			FHealthParameters HealthParameters;
-			HealthParameters.SetHealthComponent(this);
-			OnHealthChanged.Broadcast(HealthParameters);
-		}
+		FHealthParameters HealthParameters;
+		HealthParameters.SetHealthComponent(this);
+		OnHealthChanged.Broadcast(HealthParameters);
+	}
+	else
+	{
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_Regeneration);
 	}
 }
 
