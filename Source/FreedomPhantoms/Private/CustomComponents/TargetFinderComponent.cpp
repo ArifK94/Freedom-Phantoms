@@ -14,23 +14,18 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 
 void UTargetFinderComponent::SetFindTargetPerFrame(bool Value)
 {
 	if (Value)
 	{
-		if (!THandler_TargetSearch.IsValid())
-		{
-			GetOwner()->GetWorldTimerManager().SetTimer(THandler_TargetSearch, this, &UTargetFinderComponent::FindTargetUpdate, 5.0f, true);
-		}
+		StartTickTimer(.5f, true);
 	}
 	else
 	{
-		if (THandler_TargetSearch.IsValid())
-		{
-			GetOwner()->GetWorldTimerManager().ClearTimer(THandler_TargetSearch);
-		}
+		StopTickTimer();
 	}
 
 	FindTargetPerFrame = Value;
@@ -60,39 +55,35 @@ void UTargetFinderComponent::BeginPlay()
 	Super::BeginPlay();
 
 	Init();
+
+	SetFindTargetPerFrame(FindTargetPerFrame);
 }
+
+void UTargetFinderComponent::TimerTick()
+{
+	Super::TimerTick();
+
+	FindTarget();
+}
+
 
 void UTargetFinderComponent::Init()
 {
-	if (!GetOwner()) {
+	Super::Init();
+
+	if (!GetOwningPawn()) {
 		return;
 	}
-
-	if (!MyPawn)
-	{
-		MyPawn = GetOwner();
-		AController* Controller = Cast<AController>(MyPawn);
-
-		if (Controller)
-		{
-			MyPawn = Controller->GetPawn();
-		}
-	}
-
-	if (!MyPawn) {
-		return;
-	}
-
 
 	// Alternative to AI Sight Perception in case 360 sight is wanted
-	if (TargetSightSphere == nullptr)
+	if (!TargetSightSphere)
 	{
-		TargetSightSphere = NewObject<USphereComponent>(MyPawn);
+		TargetSightSphere = NewObject<USphereComponent>(GetOwningPawn());
 
 		if (TargetSightSphere)
 		{
 			TargetSightSphere->RegisterComponent();
-			TargetSightSphere->AttachToComponent(MyPawn->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+			TargetSightSphere->AttachToComponent(GetOwningPawn()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
 			TargetSightSphere->SetCanEverAffectNavigation(false);
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
@@ -100,13 +91,6 @@ void UTargetFinderComponent::Init()
 			TargetSightSphere->OnComponentEndOverlap.AddDynamic(this, &UTargetFinderComponent::OnOverlapEnd);
 		}
 	}
-
-	SetFindTargetPerFrame(FindTargetPerFrame);
-}
-
-void UTargetFinderComponent::FindTargetUpdate()
-{
-	FindTarget();
 }
 
 void UTargetFinderComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -118,7 +102,6 @@ void UTargetFinderComponent::OnOverlapEnd(class UPrimitiveComponent* OverlappedC
 {
 	FindTarget();
 }
-
 
 TArray<AActor*> UTargetFinderComponent::GetActorsInRadius(float Radius)
 {
@@ -157,14 +140,8 @@ AActor* UTargetFinderComponent::FindTarget()
 		return nullptr;
 	}
 
-	if (!MyPawn) {
-
-		Init();
-
-		if (!MyPawn) {
-			IsSearching = false;
-			return nullptr;
-		}
+	if (!GetOwningPawn()) {
+		return nullptr;
 	}
 
 	if (!TargetSightSphere) {
@@ -184,10 +161,10 @@ AActor* UTargetFinderComponent::FindTarget()
 	float TargetSightDistance = TargetSightRadius;
 
 
-	FVector OwnerLocation = MyPawn->GetActorLocation();
+	FVector OwnerLocation = GetOwningPawn()->GetActorLocation();
 	FVector EyeLocation;
 	FRotator EyeRotation;
-	MyPawn->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	GetOwningPawn()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 	// The current limit of targets to process
 	int CurrentProcessedCharacters = 0;
@@ -211,7 +188,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		}
 
 		// is this the owner?
-		if (PotentialEnemy == MyPawn) {
+		if (PotentialEnemy == GetOwningPawn()) {
 			AddToIgnoreProcessed(PotentialEnemy);
 			continue;
 		}
@@ -239,7 +216,7 @@ AActor* UTargetFinderComponent::FindTarget()
 		}
 
 		// ignore if friendly
-		if (UTeamFactionComponent::IsFriendly(MyPawn, PotentialEnemy)) {
+		if (UTeamFactionComponent::IsFriendly(GetOwningPawn(), PotentialEnemy)) {
 			AddToIgnoreProcessed(PotentialEnemy);
 			continue;
 		}
@@ -277,7 +254,7 @@ AActor* UTargetFinderComponent::FindTarget()
 	if (CanSeeLast)
 	{
 		// if the new target is not close by, then continue using the last enemy.
-		if (TargetActor && !USharedService::IsNearTargetPosition(MyPawn->GetActorLocation(), TargetActor->GetActorLocation(), 500.f))
+		if (TargetActor && !USharedService::IsNearTargetPosition(GetOwningPawn()->GetActorLocation(), TargetActor->GetActorLocation(), 500.f))
 		{
 			TargetActor = LastSeenTarget;
 		}
@@ -348,10 +325,10 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 		return false;
 	}
 
-	FVector OwnerLocation = MyPawn->GetActorLocation();
+	FVector OwnerLocation = GetOwningPawn()->GetActorLocation();
 	FVector EyeLocation;
 	FRotator EyeRotation;
-	MyPawn->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	GetOwningPawn()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 	FVector ActorLocation = TargetActor->GetActorLocation();
 
@@ -450,7 +427,7 @@ AActor* UTargetFinderComponent::GetChildrenTargets(AActor* ParentTarget)
 	{
 		auto Actor = ChildAttachedActors[i];
 
-		if (Actor == MyPawn) {
+		if (Actor == GetOwningPawn()) {
 			continue;
 		}
 
@@ -499,7 +476,7 @@ void UTargetFinderComponent::ClearLastSeenTarget()
 {
 	LastSeenTarget = nullptr;
 
-	if (MyPawn && GetWorld()) 
+	if (GetOwningPawn() && GetWorld()) 
 	{
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_CountdownTargetLost);
 	}
@@ -515,7 +492,7 @@ void UTargetFinderComponent::AddToIgnoreProcessed(AActor* Actor)
 
 bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
 {
-	auto Owner = MyPawn;
+	auto Owner = GetOwningPawn();
 	FCollisionQueryParams QueryParams;
 	QueryParams.bTraceComplex = false;
 	QueryParams.AddIgnoredActor(Owner);

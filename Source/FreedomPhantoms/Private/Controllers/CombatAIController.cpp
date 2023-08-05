@@ -487,7 +487,7 @@ void ACombatAIController::FaceTarget()
 			if (HasHitTarget)
 			{
 				// use focal point since enemy maybe behind a barrier or cover so only the head would be visible.
-				SetFocalPosition(TargetLocation);
+				SetFocalPoint(TargetLocation);
 			}
 			else
 			{

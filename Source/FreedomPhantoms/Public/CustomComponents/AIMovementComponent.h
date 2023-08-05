@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnumCollection.h"
-#include "Components/ActorComponent.h"
+#include "CustomComponents/Engine/MyActorComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AIMovementComponent.generated.h"
 
@@ -13,7 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDestinationReachedSignature, FVec
 
 class USphereComponent;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class FREEDOMPHANTOMS_API UAIMovementComponent : public UActorComponent
+class FREEDOMPHANTOMS_API UAIMovementComponent : public UMyActorComponent
 {
 	GENERATED_BODY()
 
@@ -21,12 +21,6 @@ private:
 
 	UPROPERTY()
 		class AAIController* AIController;
-
-	UPROPERTY()
-		class ABaseCharacter* Character;
-
-	UPROPERTY()
-		APawn* PawnOwner;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MinAcceptanceRadius;
@@ -62,13 +56,8 @@ public:
 
 	UAIMovementComponent();
 
-	void Init();
-
 protected:
-	virtual void BeginPlay() override;
-
-private:
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void Init() override;
 
 public:	
 	UFUNCTION(BlueprintCallable)

@@ -76,23 +76,26 @@ void UVehiclePathFollowerComponent::BeginPlay()
 	PreviousActorLocation = GetOwner()->GetActorLocation();
 }
 
-
 void UVehiclePathFollowerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	CurveTimeline.TickTimeline(DeltaTime);
 
-	if (VehiclePath == nullptr && FindPathPerFrame && !IgnoreOccupiedPath)
+	if (CurveFloat)
 	{
-		FindPath();
+		CurveTimeline.TickTimeline(DeltaTime);
+
+		if (VehiclePath == nullptr && FindPathPerFrame && !IgnoreOccupiedPath)
+		{
+			FindPath();
+		}
+
+		auto Distance = GetOwner()->GetActorLocation() - PreviousActorLocation;
+		auto Velocity = UKismetMathLibrary::Divide_VectorFloat(Distance, DeltaTime);
+		GetOwner()->GetRootComponent()->ComponentVelocity = Velocity + CurveTimeline.GetPlayRate();
+		PreviousActorLocation = GetOwner()->GetActorLocation();
+
+		IsStopped = !CurveTimeline.IsPlaying();
 	}
-
-	auto Distance = GetOwner()->GetActorLocation() - PreviousActorLocation;
-	auto Velocity = UKismetMathLibrary::Divide_VectorFloat(Distance, DeltaTime);
-	GetOwner()->GetRootComponent()->ComponentVelocity = Velocity + CurveTimeline.GetPlayRate();
-	PreviousActorLocation = GetOwner()->GetActorLocation();
-
-	IsStopped = !CurveTimeline.IsPlaying();
 }
 
 void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

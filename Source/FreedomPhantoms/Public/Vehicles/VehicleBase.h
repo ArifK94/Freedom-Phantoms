@@ -249,7 +249,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool CheckFrontCollision;
 
+	/** If stationary, then vehicle follow path component will not be needed for performance reasons. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Optimization", meta = (AllowPrivateAccess = "true"))
+		bool IsStationary;
 
+	/** If it will not be controlled by player, then components like camera do not need to exist for performance reasons. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Optimization", meta = (AllowPrivateAccess = "true"))
+		bool HasNoPlayerInput;
+
+	/** Should the tick event be running for the mesh component? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Optimization", meta = (AllowPrivateAccess = "true"))
+		bool MeshComponentTickEnabled;
 
 	bool ShowTargetSystem;
 
@@ -324,6 +334,9 @@ private:
 
 	UFUNCTION(BlueprintCallable)
 		void AddComponentToDestroyList(UActorComponent* ActorComponent);
+
+	/** Destroy actor components which will not be needed to save performance */
+	void OptimizeComponents();
 
 	void DestroyChildActor(TArray<AActor*> ParentActor);
 

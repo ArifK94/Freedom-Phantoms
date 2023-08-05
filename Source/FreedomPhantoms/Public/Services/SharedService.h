@@ -58,5 +58,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		static bool IsInAir(struct FHitResult& OutHit, AActor* Actor, float Length = 100.f);
 
-
+	/**
+	* Destroy an actor component if it exists.
+	*/
+	UFUNCTION(BlueprintCallable)
+		static void DestroyActorComponent(UActorComponent* ActorComponent);
 };

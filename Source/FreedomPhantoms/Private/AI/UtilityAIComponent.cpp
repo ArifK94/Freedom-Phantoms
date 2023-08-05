@@ -6,8 +6,6 @@
 
 UUtilityAIComponent::UUtilityAIComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-
 	bCanRunWithoutPawn = true;
 }
 
@@ -30,10 +28,9 @@ void UUtilityAIComponent::BeginPlay()
 	OnUtilityAIInitialized.Broadcast();
 }
 
-// Called every frame
-void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UUtilityAIComponent::TimerTick()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	Super::TimerTick();
 
 	if (!EnableUtilityAI) {
 		return;
@@ -69,8 +66,8 @@ void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 		if (!Action->LastCanRun) {
 			continue;
 		}
-		
-		Action->Tick(DeltaTime, Controller, Pawn);
+
+		Action->Tick(WorldDeltaSeconds, Controller, Pawn);
 		OnUtilityAIActionTicked.Broadcast(Action);
 	}
 
@@ -99,9 +96,11 @@ void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 				BestAction = LastAction;
 			}
 		}
+
 		// Leave this commented out for debugging then uncomment it when needed.
 		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *BestAction->GetClass()->GetName()));
-		BestAction->Tick(DeltaTime, Controller, Pawn);
+
+		BestAction->Tick(WorldDeltaSeconds, Controller, Pawn);
 		LastAction = BestAction;
 		LastPawn = Pawn;
 		OnUtilityAIActionTicked.Broadcast(BestAction);
@@ -109,6 +108,7 @@ void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	}
 
 	OnUtilityAIActionNotAvailable.Broadcast();
+
 	if (LastAction)
 	{
 		OnUtilityAIActionChanged.Broadcast(nullptr, LastAction);
@@ -117,7 +117,6 @@ void UUtilityAIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 		LastAction = nullptr;
 		LastPawn = nullptr;
 	}
-
 }
 
 bool UUtilityAIComponent::CanSpawnActionInstance(TSubclassOf<UUtilityAIAction> ActionClass) const

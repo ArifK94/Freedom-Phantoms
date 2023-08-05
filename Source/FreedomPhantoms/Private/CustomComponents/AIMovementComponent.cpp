@@ -13,8 +13,6 @@
 
 UAIMovementComponent::UAIMovementComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-
 	MinAcceptanceRadius = 50.f;
 	MovementDebugLifeTime = 1.0f;
 	ProjectDestinationToNavigation = true;
@@ -22,44 +20,13 @@ UAIMovementComponent::UAIMovementComponent()
 	UsePathfinding = true;
 }
 
-
-void UAIMovementComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	Init();
-}
-
-void UAIMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	Init();
-}
-
 void UAIMovementComponent::Init()
 {
-	if (!GetOwner()) {
-		return;
-	}
+	Super::Init();
 
-	AIController = Cast<AAIController>(GetOwner());
-
-	if (!AIController) 
+	if (GetController())
 	{
-		UE_LOG(LogTemp, Error, TEXT("No AIController for the AI movement component"));
-		return;
-	}
-
-	PawnOwner = AIController->GetPawn();
-
-	if (PawnOwner)
-	{
-		Character = Cast<ABaseCharacter>(PawnOwner);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("No Pawn Owner for the AI movement component : %s"), *AIController->GetName());
+		AIController = Cast<AAIController>(GetController());
 	}
 }
 
@@ -87,45 +54,45 @@ EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVecto
 	float TargetRadius = AcceptRadius <= 1.f ? MinAcceptanceRadius : AcceptRadius;
 
 
-	if (Character == nullptr) {
+	if (!GetOwningCharacter()) {
 		Init();
 	}
 
 	//DrawDebugSphere(GetWorld(), TargetDestination, TargetRadius, 20, FColor::Purple, false, 20.f, 0, 2);
 
-	if (Character && SprintToTarget)
+	if (GetOwningCharacter() && SprintToTarget)
 	{
 		// break off cover.
-		if (Character->IsTakingCover()) {
-			Character->StopCover();
+		if (GetOwningCharacter()->IsTakingCover()) {
+			GetOwningCharacter()->StopCover();
 		}
 
 		// Walk when close to desination
 		if (WalkNearTarget)
 		{
-			FVector OwnerLocation = Character->GetActorLocation();
+			FVector OwnerLocation = GetOwningCharacter()->GetActorLocation();
 
 			float CurrentTargetDistance = UKismetMathLibrary::Vector_Distance(OwnerLocation, TargetDestination);
 
 			// if distance is outside of destination radius
 			if (CurrentTargetDistance > TargetRadius)
 			{
-				Character->BeginSprint();	// sprint
+				GetOwningCharacter()->BeginSprint();	// sprint
 			}
 			else
 			{
-				Character->EndSprint();
+				GetOwningCharacter()->EndSprint();
 			}
 		}
 		else
 		{
 			if (CurrentMovement != EPathFollowingRequestResult::AlreadyAtGoal)
 			{
-				Character->BeginSprint();
+				GetOwningCharacter()->BeginSprint();
 			}
 			else
 			{
-				Character->EndSprint();
+				GetOwningCharacter()->EndSprint();
 			}
 		}
 	}
@@ -146,7 +113,7 @@ FVector UAIMovementComponent::FindNearbyDestinationPoint(FVector TargetDestinati
 	// create tarray for hit results
 	TArray<FHitResult> OutHits;
 
-	IgnoreActors.Add(Character);
+	IgnoreActors.Add(GetOwningCharacter());
 
 	// check if something got hit in the sweep
 	bool isHit = GetWorld()->SweepMultiByChannel(OutHits, TargetDest, TargetDest, FQuat::Identity, ECC_Visibility, MyColSphere);
@@ -154,7 +121,7 @@ FVector UAIMovementComponent::FindNearbyDestinationPoint(FVector TargetDestinati
 
 	if (isHit)
 	{
-		// Is there already a character in that target dest?
+		// Is there already a GetOwningCharacter() in that target dest?
 		bool IsPointTaken = false;
 		for (auto& Hit : OutHits)
 		{

@@ -15,8 +15,6 @@
 
 UCoverFinderComponent::UCoverFinderComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
-
 	CoverRadius = 1000.f;
 	CoverDistance = 150.0f;
 
@@ -30,9 +28,9 @@ void UCoverFinderComponent::BeginPlay()
 	DefaultSearchRadius = CoverRadius;
 }
 
-void UCoverFinderComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UCoverFinderComponent::TimerTick()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	Super::TimerTick();
 
 	Init();
 }

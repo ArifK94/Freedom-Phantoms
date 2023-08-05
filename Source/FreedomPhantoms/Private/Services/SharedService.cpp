@@ -180,3 +180,11 @@ bool USharedService::IsInAir(FHitResult& OutHit, AActor* Actor, float Length)
 		QueryParams
 	);
 }
+
+void USharedService::DestroyActorComponent(UActorComponent* ActorComponent)
+{
+	if (ActorComponent)
+	{
+		ActorComponent->DestroyComponent();
+	}
+}

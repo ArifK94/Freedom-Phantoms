@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "CustomComponents/Engine/MyActorComponent.h"
 #include "StructCollection.h"
 #include "TargetFinderComponent.generated.h"
 
@@ -11,7 +11,7 @@ class USphereComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetSearchSignature, FTargetSearchParameters, TargetSearchParameters);
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class FREEDOMPHANTOMS_API UTargetFinderComponent : public UActorComponent
+class FREEDOMPHANTOMS_API UTargetFinderComponent : public UMyActorComponent
 {
 	GENERATED_BODY()
 
@@ -20,16 +20,10 @@ private:
 	UPROPERTY()
 		USphereComponent* TargetSightSphere;
 
-	FTimerHandle THandler_TargetSearch;
-	FTimerHandle THandler_CountdownTargetLost;
+	UPROPERTY()
+		FTimerHandle THandler_CountdownTargetLost;
 
 	bool IsSearching;
-
-	/**
-	* Onwing Pawn / Actor.
-	*/
-	UPROPERTY()
-		AActor* MyPawn;
 
 	/**
 	* Hold the last enemy seen.
@@ -86,8 +80,6 @@ public:
 public:	
 	UTargetFinderComponent();
 
-	void Init();
-
 	UFUNCTION(BlueprintCallable)
 		AActor* FindTarget();
 
@@ -102,14 +94,13 @@ public:
 	void RemoveClassFilter(TSubclassOf<AActor> Class);
 
 private:
+	virtual void Init() override;
 
 	UFUNCTION()
 		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
 		void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	void FindTargetUpdate();
 
 	TArray<AActor*> GetActorsInRadius(float Radius);
 
@@ -129,6 +120,8 @@ private:
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void TimerTick() override;
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)

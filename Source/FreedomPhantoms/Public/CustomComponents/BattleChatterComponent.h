@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "CustomComponents/Engine/MyActorComponent.h"
 #include "StructCollection.h"
 #include "Interfaces/Chatable.h"
 #include "BattleChatterComponent.generated.h"
@@ -12,7 +12,7 @@
 class AMountedGun;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class FREEDOMPHANTOMS_API UBattleChatterComponent : public UActorComponent, public IChatable
+class FREEDOMPHANTOMS_API UBattleChatterComponent : public UMyActorComponent, public IChatable
 {
 	GENERATED_BODY()
 
@@ -77,8 +77,8 @@ private:
 protected:
 	virtual void BeginPlay() override;
 
-public:	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TimerTick() override;
+
 
 		
 };

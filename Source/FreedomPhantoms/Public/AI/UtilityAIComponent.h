@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "CustomComponents/Engine/MyActorComponent.h"
 #include "Runtime/Core/Public/Math/RandomStream.h"
 #include "AI/UtilityAIAction.h"
 #include "UtilityAIComponent.generated.h"
@@ -18,7 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUtilityAIActionChoosen, UUtilityAIA
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUtilityAIActionTicked, UUtilityAIAction*, Action);
 
 UCLASS(BlueprintType, Blueprintable, ClassGroup = (AI), meta = (BlueprintSpawnableComponent))
-class FREEDOMPHANTOMS_API UUtilityAIComponent : public UActorComponent
+class FREEDOMPHANTOMS_API UUtilityAIComponent : public UMyActorComponent
 {
 	GENERATED_BODY()
 
@@ -27,13 +27,11 @@ public:
 	UUtilityAIComponent();
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TimerTick() override;
 
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Utility AI", meta = (ExposeOnSpawn = "true"))
 		TSet<TSubclassOf<UUtilityAIAction>> Actions;
 

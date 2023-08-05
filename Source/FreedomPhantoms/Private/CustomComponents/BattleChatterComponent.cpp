@@ -14,7 +14,6 @@
 
 UBattleChatterComponent::UBattleChatterComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UBattleChatterComponent::BeginPlay()
@@ -22,9 +21,9 @@ void UBattleChatterComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
-void UBattleChatterComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UBattleChatterComponent::TimerTick()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	Super::TimerTick();
 
 	if (!CombatAIController)
 	{

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "CustomComponents/Engine/MyActorComponent.h"
 #include "StructCollection.h"
 #include "CoverFinderComponent.generated.h"
 
@@ -11,7 +11,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCoverSearchSignature, FCoverSearchParameters, CoverSearchParameters);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class FREEDOMPHANTOMS_API UCoverFinderComponent : public UActorComponent
+class FREEDOMPHANTOMS_API UCoverFinderComponent : public UMyActorComponent
 {
 	GENERATED_BODY()
 
@@ -75,7 +75,7 @@ private:
 
 	virtual void BeginPlay() override;
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TimerTick() override;
 
 	/**
 	* Get a list of potential cover points

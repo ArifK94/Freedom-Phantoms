@@ -52,6 +52,7 @@ AVehicleBase::AVehicleBase()
 	MeshComponent->SetNotifyRigidBodyCollision(true);
 	MeshComponent->SetupAttachment(RootComponent);
 	MeshComponent->SetCanEverAffectNavigation(true);
+	MeshComponent->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	FrontCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("FrontCollider"));
 	FrontCollider->SetCollisionProfileName(TEXT("OverlapAll"));
@@ -120,6 +121,9 @@ AVehicleBase::AVehicleBase()
 	HighlightCharacters = false;
 	SimulateExplosionPhysics = false;
 	CheckFrontCollision = true;
+	IsStationary = false;
+	HasNoPlayerInput = false;
+	MeshComponentTickEnabled = true;
 	DestroyOnDeath = false;
 
 	KillConfirmedParamName = "KillConfirmed";
@@ -160,6 +164,7 @@ void AVehicleBase::BeginPlay()
 		GetWorldTimerManager().SetTimer(THandler_Update, this, &AVehicleBase::TimerTick, .2f, true, 2.f);
 	}
 
+	OptimizeComponents();
 }
 
 void AVehicleBase::Tick(float DeltaTime)
@@ -167,7 +172,10 @@ void AVehicleBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// Set the engine sound based on actor's velocity
-	EngineAudio->SetFloatParameter(EngineSoundParamName, GetVelocity().Size());
+	if (EngineAudio)
+	{
+		EngineAudio->SetFloatParameter(EngineSoundParamName, GetVelocity().Size());
+	}
 
 	WheelRPM = (GetVelocity().Size() * 360.f) / 60.f;
 
@@ -179,14 +187,18 @@ void AVehicleBase::Tick(float DeltaTime)
 	}
 
 	// stop following path if front collider has detetced something.
-	if (ShouldStopVehicle())
+	if (VehiclePathFollowerComponent)
 	{
-		VehiclePathFollowerComponent->Stop();
+		if (ShouldStopVehicle())
+		{
+			VehiclePathFollowerComponent->Stop();
+		}
+		else
+		{
+			VehiclePathFollowerComponent->ResumePath();
+		}
 	}
-	else
-	{
-		VehiclePathFollowerComponent->ResumePath();
-	}
+
 }
 
 void AVehicleBase::TimerTick()
@@ -230,7 +242,7 @@ void AVehicleBase::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRota
 
 bool AVehicleBase::ShouldStopVehicle()
 {
-	return (CheckFrontCollision && IsFrontCollisionFound()) || VehiclePathFollowerComponent->ShouldStopVehicle();
+	return (CheckFrontCollision && IsFrontCollisionFound()) || (VehiclePathFollowerComponent && VehiclePathFollowerComponent->ShouldStopVehicle());
 }
 
 void AVehicleBase::AddUIWidget()
@@ -308,14 +320,21 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 		SetActorTickEnabled(false);
 		GetWorldTimerManager().ClearTimer(THandler_Update);
 
-		FrontKillZoneComponent->OnComponentBeginOverlap.RemoveDynamic(this, &AVehicleBase::OnVehicleBeginOverlap);
+		if (FrontKillZoneComponent)
+		{
+			FrontKillZoneComponent->OnComponentBeginOverlap.RemoveDynamic(this, &AVehicleBase::OnVehicleBeginOverlap);
+		}
 
-		if (VehiclePathFollowerComponent) {
+		if (VehiclePathFollowerComponent) 
+		{
 			VehiclePathFollowerComponent->Stop();
 			VehiclePathFollowerComponent->ClearPath();
 		}
 
-		EngineAudio->Stop();
+		if (EngineAudio)
+		{
+			EngineAudio->Stop();
+		}
 
 		// Remove all passengers
 		for (int i = 0; i < VehicleSeats.Num(); i++)
@@ -872,6 +891,10 @@ void AVehicleBase::SetTargetSystem()
 
 bool AVehicleBase::IsFrontCollisionFound()
 {
+	if (!FrontCollider) {
+		return false;
+	}
+
 	TArray<AActor*> OutOverlappingActors;
 
 	// Get all overlapped actors based that have team faction component attached
@@ -1092,6 +1115,30 @@ void AVehicleBase::AddComponentToDestroyList(UActorComponent* ActorComponent)
 		DestroyableComponentList.Add(ActorComponent);
 	}
 }
+
+void AVehicleBase::OptimizeComponents()
+{
+	if (IsStationary)
+	{
+		USharedService::DestroyActorComponent(FrontCollider);
+		USharedService::DestroyActorComponent(FrontKillZoneComponent);
+		USharedService::DestroyActorComponent(FrontCollider);
+		USharedService::DestroyActorComponent(CameraBoom);
+		USharedService::DestroyActorComponent(FollowCamera);
+		USharedService::DestroyActorComponent(EngineAudio);
+		USharedService::DestroyActorComponent(VehiclePathFollowerComponent);
+	}
+
+	if (HasNoPlayerInput)
+	{
+		USharedService::DestroyActorComponent(PilotAudio);
+		USharedService::DestroyActorComponent(ThermalVisionPPComp);
+		USharedService::DestroyActorComponent(ThermalToggleAudio);
+	}
+
+	MeshComponent->SetComponentTickEnabled(MeshComponentTickEnabled);
+}
+
 
 // Recursively destroy children actors
 void AVehicleBase::DestroyChildActor(TArray<AActor*> ParentActor)
