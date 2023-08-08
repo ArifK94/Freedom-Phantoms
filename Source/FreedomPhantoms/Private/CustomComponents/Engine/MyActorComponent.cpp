@@ -60,32 +60,25 @@ void UMyActorComponent::Init()
 		// get the pawn actor.
 		if (!OwningPawn)
 		{
-			// By default, assume the owner is the pawn actor by checking if the owner has a controller.
-			OwningController = GetOwner()->GetInstigatorController();
+			// Assume the owner is a controller
+			OwningController = Cast<AController>(GetOwner());
 
 			// get the pawn from the controller.
 			if (OwningController)
 			{
 				OwningPawn = OwningController->GetPawn();
 			}
-			// otherwise, the owner by default is the pawn actor.
+			// otherwise, the owner is an actor.
 			else
 			{
-				OwningPawn = Cast<APawn>(GetOwner());
+				OwningPawn = Cast<AActor>(GetOwner());
 			}
 		}
 
-		// get the controller.
-		if (!OwningController)
+		// get the controller if already not assigned.
+		if (!OwningController && OwningPawn)
 		{
-			// if owner is a controller
-			OwningController = Cast<AController>(GetOwner());
-
-			// if no controller, then owner is an actor.
-			if (OwningPawn && !OwningController)
-			{
-				OwningController = OwningPawn->GetInstigatorController();
-			}
+			OwningController = OwningPawn->GetInstigatorController();
 		}
 
 		// get the pawn owner from the controller if pawn owner is null.
