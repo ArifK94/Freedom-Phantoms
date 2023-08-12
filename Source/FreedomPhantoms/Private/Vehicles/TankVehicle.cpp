@@ -109,7 +109,7 @@ bool ATankVehicle::ShouldStopVehicle()
 	{
 		return true;
 	}
-	else if (!TargetActor && StopOnTargetFound)
+	else if (!TargetActor && StopOnTargetFound && VehiclePathFollowerComponent)
 	{
 		VehiclePathFollowerComponent->ResumePath();
 	}
@@ -149,14 +149,19 @@ void ATankVehicle::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchPara
 	TargetActor = TargetSearchParameters.TargetActor;
 
 	if (!TargetActor) {
-		VehiclePathFollowerComponent->ResumeNormalSpeed();
+
+		if (VehiclePathFollowerComponent)
+		{
+			VehiclePathFollowerComponent->ResumeNormalSpeed();
+		}
+
 		ShooterComponent->EndFire();
 		GetWorldTimerManager().ClearTimer(THandler_RandomChangeWeapon);
 		return;
 	}
 
 	// slowdown when target actor is found.
-	if (SlowdownOnTargetFound) {
+	if (SlowdownOnTargetFound && VehiclePathFollowerComponent) {
 		VehiclePathFollowerComponent->Slowdown();
 	}
 
