@@ -6,6 +6,8 @@
 #include "Visuals/OrderIcon.h"
 #include "Managers/GameModeManager.h"
 #include "Managers/GameStateBaseCustom.h"
+#include "Services/SharedService.h"
+#include "CustomComponents/OptimizerComponent.h"
 
 
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -106,6 +108,7 @@ ABaseCharacter::ABaseCharacter()
 	CharacterOutlinePPComp->SetupAttachment(RootComponent);
 
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
+	OptimizerComponent = CreateDefaultSubobject<UOptimizerComponent>(TEXT("OptimizerComponent"));
 
 	CharacterSpeed = 0.0f;
 	CurrentDeltaTime = 0.0f;

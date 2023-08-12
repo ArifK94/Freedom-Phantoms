@@ -15,6 +15,7 @@ class UBoxComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class UHealthComponent;
+class UOptimizerComponent;
 class UVehiclePathFollowerComponent;
 class URadialForceComponent;
 class UUserWidget;
@@ -87,7 +88,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UVehiclePathFollowerComponent* VehiclePathFollowerComponent;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UOptimizerComponent* OptimizerComponent;
 
 	/** This needs to be set on the tank's barrel socket for turret to face target */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))

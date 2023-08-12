@@ -5,7 +5,9 @@
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 USharedService::USharedService()
 {
@@ -187,4 +189,17 @@ void USharedService::DestroyActorComponent(UActorComponent* ActorComponent)
 	{
 		ActorComponent->DestroyComponent();
 	}
+}
+
+bool USharedService::IsActorOnScreen(UObject* WorldContextObject, AActor* Actor)
+{
+	auto PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0);
+
+	FVector2D ScreenLocation;
+	PlayerController->ProjectWorldLocationToScreen(Actor->GetActorLocation(), ScreenLocation);
+
+	FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(WorldContextObject);
+
+	// if all conditions are met. then actor is on the screen.
+	return ScreenLocation.X > 0 && ScreenLocation.Y > 0 && ScreenLocation.X < ViewportSize.X && ScreenLocation.Y < ViewportSize.Y;
 }

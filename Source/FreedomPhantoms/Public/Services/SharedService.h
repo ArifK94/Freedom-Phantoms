@@ -63,4 +63,12 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable)
 		static void DestroyActorComponent(UActorComponent* ActorComponent);
+
+
+	/**
+	* Can an actor be seen on the screen?
+	*/
+	UFUNCTION(BlueprintCallable)
+		static bool IsActorOnScreen(UObject* WorldContextObject, AActor* Actor);
+
 };

@@ -12,6 +12,7 @@
 #include "CustomComponents/ObjectPoolComponent.h"
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/VehiclePathFollowerComponent.h"
+#include "CustomComponents/OptimizerComponent.h"
 #include "Managers/GameStateBaseCustom.h"
 #include "Services/SharedService.h"
 
@@ -106,6 +107,8 @@ AVehicleBase::AVehicleBase()
 	HealthComponent->SetRegenerateHealth(false);
 
 	VehiclePathFollowerComponent = CreateDefaultSubobject<UVehiclePathFollowerComponent>(TEXT("VehiclePathFollowerComponent"));
+
+	OptimizerComponent = CreateDefaultSubobject<UOptimizerComponent>(TEXT("OptimizerComponent"));
 
 	EngineSoundParamName = "speed";
 
@@ -441,31 +444,35 @@ void AVehicleBase::OnWeaponKillConfirm(FProjectileImpactParameters ProjectileImp
 		return;
 	}
 
-	// Prioritise the kill confirmed sounds over random voice sounds
-	if (RandomPilotSound && PilotAudio->Sound == RandomPilotSound)
+	if (PilotAudio)
 	{
-		PilotAudio->Stop();
+		// Prioritise the kill confirmed sounds over random voice sounds
+		if (RandomPilotSound && PilotAudio->Sound == RandomPilotSound)
+		{
+			PilotAudio->Stop();
+		}
+
+		// allow the initial voice sounds to play before playing kill confirmed sounds
+		if (!PilotAudio->IsPlaying())
+		{
+			PilotAudio->Sound = KillConfirmedSound;
+
+			if (ProjectileImpactParameters.IsSingleKill)
+			{
+				PilotAudio->SetIntParameter(KillConfirmedParamName, SingleKillIndex);
+			}
+			else if (ProjectileImpactParameters.IsDoubleKill)
+			{
+				PilotAudio->SetIntParameter(KillConfirmedParamName, DoubleKillIndex);
+			}
+			else if (ProjectileImpactParameters.IsMultiKill)
+			{
+				PilotAudio->SetIntParameter(KillConfirmedParamName, MultiKillIndex);
+			}
+			PilotAudio->Play();
+		}
 	}
 
-	// allow the initial voice sounds to play before playing kill confirmed sounds
-	if (!PilotAudio->IsPlaying())
-	{
-		PilotAudio->Sound = KillConfirmedSound;
-
-		if (ProjectileImpactParameters.IsSingleKill)
-		{
-			PilotAudio->SetIntParameter(KillConfirmedParamName, SingleKillIndex);
-		}
-		else if (ProjectileImpactParameters.IsDoubleKill)
-		{
-			PilotAudio->SetIntParameter(KillConfirmedParamName, DoubleKillIndex);
-		}
-		else if (ProjectileImpactParameters.IsMultiKill)
-		{
-			PilotAudio->SetIntParameter(KillConfirmedParamName, MultiKillIndex);
-		}
-		PilotAudio->Play();
-	}
 }
 
 void AVehicleBase::SpawnVehicleWeapons()

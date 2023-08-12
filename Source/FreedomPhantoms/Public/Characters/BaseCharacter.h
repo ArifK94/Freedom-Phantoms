@@ -10,6 +10,7 @@
 #include "BaseCharacter.generated.h"
 
 class UHealthComponent;
+class UOptimizerComponent;
 class UAudioComponent;
 class UPostProcessComponent;
 class APlayerCameraManager;
@@ -52,6 +53,9 @@ public:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* FollowCamera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UOptimizerComponent* OptimizerComponent;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
