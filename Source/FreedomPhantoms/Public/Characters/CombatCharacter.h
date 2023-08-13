@@ -210,9 +210,14 @@ public:
 	/** In case a secondary weapon is not present or any weapons at all. */
 	bool CanSwapWeapon();
 
-	void BeginEquipWeapon();
-	void GrabWeapon();
-	void EndEquipWeapon();
+	UFUNCTION(BlueprintCallable)
+		void BeginEquipWeapon();
+
+	UFUNCTION(BlueprintCallable)
+		void GrabWeapon();
+
+	UFUNCTION(BlueprintCallable)
+		void EndEquipWeapon();
 
 
 	UFUNCTION(BlueprintCallable)
