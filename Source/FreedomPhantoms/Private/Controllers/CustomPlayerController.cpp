@@ -48,6 +48,7 @@ ACustomPlayerController::ACustomPlayerController()
 
 	HasGameEnded = false;
 	ShouldRespawn = false;
+	PlaySupportPackageSound = true;
 }
 
 void ACustomPlayerController::BeginPlay()
@@ -106,6 +107,8 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 {
 	if (GameInstanceController)
 	{
+		SupportPackages.Empty();
+
 		for (ASupportPackage* SP : GameInstanceController->GetSupportPackage())
 		{
 			SupportPackages.Add(SP);
@@ -116,8 +119,12 @@ void ACustomPlayerController::InitBeginPlayUncommon()
 
 	if (SupportPackages.Num() > 0)
 	{
-		CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
-		CurrentSupportPackage->PlayInteractSound();
+		if (PlaySupportPackageSound)
+		{
+			CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
+			CurrentSupportPackage->PlayInteractSound();
+		}
+
 		CurrentSupportPackageIndex = SupportPackages.Num() - 1;
 	}
 
@@ -216,7 +223,7 @@ void ACustomPlayerController::OnPossess(APawn* InPawn)
 		return;
 	}
 
-	if (OwningCombatCharacter) 
+	if (OwningCombatCharacter)
 	{
 		// Grab the "Pickup Key" for it to be displayed on the UI 
 		UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
@@ -281,20 +288,22 @@ void ACustomPlayerController::SpawnPlayer()
 	OwningCombatCharacter->OnCombatUpdated.AddDynamic(this, &ACustomPlayerController::OnCombatModeUpdated);
 	OwningCombatCharacter->OnRappelUpdate.AddDynamic(this, &ACustomPlayerController::OnRappelUpdated);
 
-
-	if (!OverlapSphere)
+	if (OverlapSphere)
 	{
-		OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
-
-		if (OverlapSphere)
-		{
-			OverlapSphere->RegisterComponent();
-			OverlapSphere->SetSphereRadius(OverlapSpehereRadius);
-			OverlapSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-			OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
-			OverlapSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-		}
+		OverlapSphere->DestroyComponent();
 	}
+
+	OverlapSphere = NewObject<USphereComponent>(OwningCombatCharacter);
+
+	if (OverlapSphere)
+	{
+		OverlapSphere->RegisterComponent();
+		OverlapSphere->SetSphereRadius(OverlapSpehereRadius);
+		OverlapSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlayerController::OnOverlapBegin);
+		OverlapSphere->AttachToComponent(OwningCombatCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+	}
+
 
 	EnableInput(this);
 }
@@ -767,7 +776,7 @@ void ACustomPlayerController::ToggleSprint()
 
 void ACustomPlayerController::BeginAim()
 {
-	if (ControlledVehicle) 
+	if (ControlledVehicle)
 	{
 		ControlledVehicle->BeginAim();
 	}
@@ -1109,7 +1118,7 @@ void ACustomPlayerController::AddSupportPackage(ASupportPackage* InSupportPackag
 
 	// update support package event for UI
 	SupportPackages.Add(CurrentSupportPackage);
-	CurrentSupportPackageIndex++;
+	CurrentSupportPackageIndex = SupportPackages.Num() - 1;
 	OnSupportPackageUpdate.Broadcast(CurrentSupportPackage, CurrentSupportPackageIndex, true);
 }
 
@@ -1149,8 +1158,12 @@ void ACustomPlayerController::SelectSupportPackage(int32 Index)
 	CurrentSupportPackage = SupportPackages[TargetPosition];
 	CurrentSupportPackageIndex = TargetPosition;
 
-	CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
-	CurrentSupportPackage->PlayInteractSound();
+	if (PlaySupportPackageSound)
+	{
+		CurrentSupportPackage->PlayVoiceOverSound(PlayerFaction);
+		CurrentSupportPackage->PlayInteractSound();
+	}
+
 
 	// if current collected interactable is a support package, it will still reference the previious support package. 
 	// Either update the collected interactable to current support package or make it null

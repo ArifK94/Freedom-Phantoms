@@ -106,6 +106,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		ASupportPackage* CurrentSupportPackage;
 
+	/** Play the announcement & interaction sound of the current suppport package? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool PlaySupportPackageSound;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AActor* FocusedInteractableActor;
 
