@@ -5,30 +5,26 @@
 #include "Services/SharedService.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UOptimizerComponent::UOptimizerComponent()
 {
-	TickRadius = 500.f;
+	PrimaryComponentTick.bCanEverTick = true;
+
+	TickRadius = 1000.f;
 	TickIntervalOptimized = .5f;
+
+	ApplyDistanceOptimization = false;
+	MinimumDistanceOptimization = 5000.f;
 
 	CanOptimizeTick = true;
 	CanOptimizeChildrenComponents = true;
 }
 
-void UOptimizerComponent::Init()
-{
-	Super::Init();
 
-	if (GetOwner() && !HasInit)
-	{
-		DefaultActorTickInterval = GetOwner()->GetActorTickInterval();
-		HasInit = true;
-	}
-}
-
-void UOptimizerComponent::TimerTick()
+void UOptimizerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TimerTick();
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (!GetOwner() || !GetWorld()) {
 		return;
@@ -38,38 +34,39 @@ void UOptimizerComponent::TimerTick()
 	{
 		float NewTickInterval = 0.f;
 
-		bool HasNewTick = GetOptimizedTick(NewTickInterval);
+		GetOptimizedTick(NewTickInterval);
 
-		if (HasNewTick)
+		OptimizeActorTick(NewTickInterval);
+
+		if (CanOptimizeChildrenComponents)
 		{
-			OptimizeActorTick(NewTickInterval);
-
-			if (CanOptimizeChildrenComponents)
-			{
-				OptimizeComponentsTick(NewTickInterval);
-			}
+			OptimizeComponentsTick(NewTickInterval);
 		}
 	}
 }
 
-bool UOptimizerComponent::GetOptimizedTick(float& NewTickInterval)
+void UOptimizerComponent::GetOptimizedTick(float& NewTickInterval)
 {
 	// Actors near the player camera should have normal tick intervals to avoid experiencing the lag of an actor when player rotates camera around fast.
 	auto PlayerCam = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 
 	bool IsNearPlayerCam = false;
+	bool IsInDistance = false;
 
 	if (PlayerCam)
 	{
 		IsNearPlayerCam = USharedService::IsNearTargetPosition(PlayerCam->GetViewTarget(), GetOwner(), TickRadius);
 	}
 
-	bool IsActorOnScreen = USharedService::IsActorOnScreen(GetWorld(), GetOwner());
+	bool IsActorOnScreen = USharedService::IsActorOnScreen(GetWorld(), GetOwner(), OptimizeOffset);
+
+	if (IsActorOnScreen && ApplyDistanceOptimization)
+	{
+		IsInDistance = USharedService::IsNearTargetPosition(PlayerCam->GetViewTarget(), GetOwner(), MinimumDistanceOptimization);
+	}
 
 	// If on screen, then set tick interval to default otherwise add more intervals in order to get good performance.
-	NewTickInterval = IsActorOnScreen || IsNearPlayerCam ? DefaultActorTickInterval : TickIntervalOptimized;
-
-	return true;
+	NewTickInterval = IsActorOnScreen || IsNearPlayerCam || IsInDistance ? 0.f : TickIntervalOptimized;
 }
 
 void UOptimizerComponent::OptimizeActorTick(float NewTickInterval)

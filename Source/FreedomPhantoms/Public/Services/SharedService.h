@@ -67,8 +67,9 @@ public:
 
 	/**
 	* Can an actor be seen on the screen?
+	* Add offset of actor's screen location.
 	*/
 	UFUNCTION(BlueprintCallable)
-		static bool IsActorOnScreen(UObject* WorldContextObject, AActor* Actor);
+		static bool IsActorOnScreen(UObject* WorldContextObject, AActor* Actor, FVector2D Offset = FVector2D::ZeroVector);
 
 };

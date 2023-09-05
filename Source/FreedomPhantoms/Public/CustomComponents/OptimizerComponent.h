@@ -15,9 +15,6 @@ class FREEDOMPHANTOMS_API UOptimizerComponent : public UMyActorComponent
 	GENERATED_BODY()
 
 private:
-
-	bool HasInit;
-
 	UPROPERTY()
 		float DefaultActorTickInterval;
 
@@ -29,6 +26,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tick", meta = (AllowPrivateAccess = "true"))
 		bool CanOptimizeChildrenComponents;
 
+	/** Add offset of actor's screen location.  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tick", meta = (AllowPrivateAccess = "true"))
+		FVector2D OptimizeOffset;
+
 	/** The radius size which the owner can have its tick back to normal when within player radius. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tick", meta = (AllowPrivateAccess = "true"))
 		float TickRadius;
@@ -36,6 +37,14 @@ private:
 	/** The interval of the actor's tick when optimized. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tick", meta = (AllowPrivateAccess = "true"))
 		float TickIntervalOptimized;
+
+	/** Should the actor continue to be optimized from a distance if currently on screen? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tick Distance", meta = (AllowPrivateAccess = "true"))
+		bool ApplyDistanceOptimization;
+
+	/** The minimum distance for the actor to be optimized. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tick Distance", meta = (AllowPrivateAccess = "true"))
+		float MinimumDistanceOptimization;
 
 public:
 	/** Some components may not need to be optimized and should run as normal. */
@@ -50,7 +59,7 @@ public:
 	* Increase interval when off-screen.
 	* Default back to interval when back on-screen.
 	*/
-	bool GetOptimizedTick(float& NewTickInterval);
+	void GetOptimizedTick(float& NewTickInterval);
 
 
 	/**
@@ -63,9 +72,7 @@ public:
 	*/
 	void OptimizeComponentsTick(float NewTickInterval);
 
-protected:
-	virtual void Init() override;
+protected:		
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	virtual void TimerTick() override;
-		
 };
