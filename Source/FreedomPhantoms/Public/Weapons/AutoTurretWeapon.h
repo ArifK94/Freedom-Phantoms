@@ -8,7 +8,6 @@
 #include "StructCollection.h"
 #include "AutoTurretWeapon.generated.h"
 
-class AGameStateBaseCustom;
 class UCameraComponent;
 UCLASS()
 class FREEDOMPHANTOMS_API AAutoTurretWeapon : public AActor
@@ -16,10 +15,6 @@ class FREEDOMPHANTOMS_API AAutoTurretWeapon : public AActor
 	GENERATED_BODY()
 
 private:
-
-	UPROPERTY()
-		AGameStateBaseCustom* GameStateBaseCustom;
-
 	float m_DeltaTime;
 	int CurrentWeaponIndex;
 

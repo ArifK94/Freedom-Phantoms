@@ -1,5 +1,6 @@
 #include "Managers/GameInstanceController.h"
 #include "Managers/CustomSaveGame.h"
+#include "Managers/DatatableManager.h"
 #include "Characters/CombatCharacter.h"
 #include "Weapons/Weapon.h"
 #include "Props/SupportPackage.h"
@@ -80,6 +81,8 @@ void UGameInstanceController::Init()
 
 	FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UGameInstanceController::BeginLoadingScreen);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UGameInstanceController::EndLoadingScreen);
+
+	DatatableManager = NewObject<UDatatableManager>(this, DatatableManagerClass);
 }
 
 void UGameInstanceController::DelayedInit()

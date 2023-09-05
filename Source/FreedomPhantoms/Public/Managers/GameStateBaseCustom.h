@@ -72,20 +72,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player", meta = (AllowPrivateAccess = "true"))
 		bool CanPlayerRespawn;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
-		UDataTable* SurfaceImpactSetDatatable;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
-		UDataTable* SurfaceImpactDatatable;
-
 
 public:
 	AGameStateBaseCustom();
-
-	FSurfaceImpactSet* RetrieveSurfaceImpactSet(FName RowName);
-
-	FSurfaceImpact* RetrieveSurfaceImpact(FName RowName);
-
 
 	void EndGame(bool MissionPassed);
 

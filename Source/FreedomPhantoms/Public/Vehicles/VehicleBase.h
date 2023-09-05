@@ -8,7 +8,6 @@
 #include "StructCollection.h"
 #include "VehicleBase.generated.h"
 
-class AGameStateBaseCustom;
 class UCapsuleComponent;
 class UArrowComponent;
 class UBoxComponent;
@@ -30,9 +29,6 @@ class FREEDOMPHANTOMS_API AVehicleBase : public AActor
 	GENERATED_BODY()
 
 protected:
-
-	UPROPERTY()
-		AGameStateBaseCustom* GameStateBaseCustom;
 
 	UPROPERTY()
 		FTimerHandle THandler_Update;

@@ -11,17 +11,13 @@
 /**
  * Objectives which involve destorying something, eg. destroying a bridge.
  */
-class AGameStateBaseCustom;
 UCLASS()
 class FREEDOMPHANTOMS_API ADestructionObjective : public ABaseObjective, public IInteractable
 {
 	GENERATED_BODY()
 	
 private:
-	AGameStateBaseCustom* GameStateBaseCustom;
-
 	FTimerHandle THandler_Countdown;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class URadialForceComponent* RadialForceComp;

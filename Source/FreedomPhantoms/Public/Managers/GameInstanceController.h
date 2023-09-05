@@ -10,6 +10,7 @@ class ACombatCharacter;
 class ASupportPackage;
 class USoundClass;
 class USoundMix;
+class UDatatableManager;
 
 UCLASS()
 class FREEDOMPHANTOMS_API UGameInstanceController : public UGameInstance
@@ -21,22 +22,38 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		FMapDetail SelectedLevel;
 
+
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> LoadingScreenWidgetClass;
 	UUserWidget* LoadingScreenWidget;
 
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeapon> PrimaryWeaponClass;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeapon> SecondaryWeaponClass;
 
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<TSubclassOf<ASupportPackage>> SupportPackageClasses;
 
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<ACombatCharacter> CombatCharacterClass;
+
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UDatatableManager> DatatableManagerClass;
+	UDatatableManager* DatatableManager;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		bool IsBloodEnabled = true;
@@ -110,6 +127,10 @@ private:
 	void LoadAudioSettings();
 
 public:
+
+	UDatatableManager* GetDatatableManager() {
+		return DatatableManager;
+	}
 
 	bool GetIsBloodEnabled() {
 		return IsBloodEnabled;

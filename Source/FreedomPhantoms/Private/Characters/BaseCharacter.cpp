@@ -5,7 +5,7 @@
 #include "Vehicles/VehicleBase.h"
 #include "Visuals/OrderIcon.h"
 #include "Managers/GameModeManager.h"
-#include "Managers/GameStateBaseCustom.h"
+#include "Managers/DatatableManager.h"
 #include "Services/SharedService.h"
 #include "CustomComponents/OptimizerComponent.h"
 
@@ -146,16 +146,7 @@ void ABaseCharacter::BeginPlay()
 
 	GameModeManager = Cast<AGameModeManager>(GetWorld()->GetAuthGameMode());
 
-	auto GameState = UGameplayStatics::GetGameState(GetWorld());
-
-	if (GameState) {
-		GameStateBaseCustom = Cast<AGameStateBaseCustom>(GameState);
-	}
-
-	if (GameStateBaseCustom)
-	{
-		FootSurfaceImpact = GameStateBaseCustom->RetrieveSurfaceImpact(FootRowName);
-	}
+	FootSurfaceImpact = UDatatableManager::RetrieveSurfaceImpact(GetWorld(), FootRowName);
 
 	RetrieveVoiceDataSet();
 	RetrieveAccessoryDataSet();

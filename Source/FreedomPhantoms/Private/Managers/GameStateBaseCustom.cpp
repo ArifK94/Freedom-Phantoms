@@ -27,26 +27,6 @@ AGameStateBaseCustom::AGameStateBaseCustom()
 	IsMissionPassed = false;
 }
 
-FSurfaceImpactSet* AGameStateBaseCustom::RetrieveSurfaceImpactSet(FName RowName)
-{
-	if (SurfaceImpactSetDatatable == nullptr) {
-		return nullptr;
-	}
-
-	static const FString ContextString(TEXT("Surface Impact Set DataSet"));
-	return SurfaceImpactSetDatatable->FindRow<FSurfaceImpactSet>(RowName, ContextString, true);
-}
-
-FSurfaceImpact* AGameStateBaseCustom::RetrieveSurfaceImpact(FName RowName)
-{
-	if (SurfaceImpactDatatable == nullptr) {
-		return nullptr;
-	}
-
-	static const FString ContextString(TEXT("Surface Impact DataSet"));
-	return SurfaceImpactDatatable->FindRow<FSurfaceImpact>(RowName, ContextString, true);
-}
-
 void AGameStateBaseCustom::BeginPlay()
 {
 	Super::BeginPlay();

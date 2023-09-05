@@ -105,9 +105,6 @@ protected:
 	UPROPERTY()
 		class AGameModeManager* GameModeManager;
 
-	UPROPERTY()
-		class AGameStateBaseCustom* GameStateBaseCustom;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName HeadSocket;

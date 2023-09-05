@@ -13,7 +13,7 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/VehiclePathFollowerComponent.h"
 #include "CustomComponents/OptimizerComponent.h"
-#include "Managers/GameStateBaseCustom.h"
+#include "Managers/DatatableManager.h"
 #include "Services/SharedService.h"
 
 #include "Components/SkeletalMeshComponent.h"
@@ -144,9 +144,7 @@ void AVehicleBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
-
-	SurfaceImpactSet = GameStateBaseCustom->RetrieveSurfaceImpactSet(SurfaceImpactRowName);
+	SurfaceImpactSet = UDatatableManager::RetrieveSurfaceImpactSet(GetWorld(), SurfaceImpactRowName);
 
 	ThermalVisionPPComp->bEnabled = false;
 

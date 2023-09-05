@@ -7,7 +7,7 @@
 #include "CustomComponents/TargetFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
 #include "Weapons/MountedGun.h"
-#include "Managers/GameStateBaseCustom.h"
+#include "Managers/DatatableManager.h"
 
 #include "Components/AudioComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -48,9 +48,7 @@ void AAutoTurretWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
-
-	SurfaceImpactSet = GameStateBaseCustom->RetrieveSurfaceImpactSet(SurfaceImpactRowName);
+	SurfaceImpactSet = UDatatableManager::RetrieveSurfaceImpactSet(GetWorld(), SurfaceImpactRowName);
 
 	HealthComponent->OnHealthChanged.AddDynamic(this, &AAutoTurretWeapon::OnHealthUpdate);
 

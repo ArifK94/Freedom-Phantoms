@@ -5,7 +5,7 @@
 #include "CustomComponents/HealthComponent.h"
 #include "Weapons/Projectile.h"
 #include "Services/SharedService.h"
-#include "Managers/GameStateBaseCustom.h"
+#include "Managers/DatatableManager.h"
 
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -33,9 +33,7 @@ void ADestructionObjective::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GameStateBaseCustom = Cast<AGameStateBaseCustom>(UGameplayStatics::GetGameState(GetWorld()));
-
-	SurfaceImpactSet = GameStateBaseCustom->RetrieveSurfaceImpactSet(SurfaceImpactRowName);
+	SurfaceImpactSet = UDatatableManager::RetrieveSurfaceImpactSet(GetWorld(), SurfaceImpactRowName);
 }
 
 
