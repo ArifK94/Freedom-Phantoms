@@ -14,7 +14,6 @@
 #include "Managers/GameModeManager.h"
 #include "FreedomPhantoms/FreedomPhantoms.h"
 
-#include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
