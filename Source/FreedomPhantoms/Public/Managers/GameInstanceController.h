@@ -52,7 +52,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UDatatableManager> DatatableManagerClass;
-	UDatatableManager* DatatableManager;
+
+	UPROPERTY()
+		UDatatableManager* DatatableManager;
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
