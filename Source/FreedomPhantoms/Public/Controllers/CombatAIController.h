@@ -278,6 +278,9 @@ private:
 
 	void TargetFound();
 
+	/** Reset all behaviour states in this function. */
+	void ResetBehaviourFlags();
+
 
 protected:
 	virtual void BeginPlay() override;

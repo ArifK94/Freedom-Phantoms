@@ -335,9 +335,7 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo, int Re
 
 	//OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
 
-	HasChosenNearTargetDest = false;
-	IsRunningForCover = false;
-	CoverFound = false;
+	ResetBehaviourFlags();
 
 	SetStayCombatAlert(false);
 	
@@ -618,6 +616,8 @@ void ACombatAIController::CheckCommanderOrder()
 		return;
 	}
 
+	ResetBehaviourFlags();
+
 	OwningCombatCharacter->DropMountedGun();
 
 	CurrentCommand = CommanderOrders::Follow;
@@ -648,6 +648,14 @@ void ACombatAIController::TargetFound()
 		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->TargetFoundSound);
 		HasPlayedTargetFoundSound = true;
 	}
+}
+
+void ACombatAIController::ResetBehaviourFlags()
+{
+	HasPriorityDestination = false;
+	HasChosenNearTargetDest = false;
+	IsRunningForCover = false;
+	CoverFound = false;
 }
 
 bool ACombatAIController::IsNearCommander()
