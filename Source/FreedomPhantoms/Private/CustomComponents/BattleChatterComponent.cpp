@@ -374,6 +374,10 @@ bool UBattleChatterComponent::CanPlay(int max)
 
 void UBattleChatterComponent::AddBattleChatterItem()
 {
+	if (!VoiceClipsSet) {
+		return;
+	}
+
 	FBattleChatterParams ChatterParam;
 	ChatterParam.Sound = VoiceClipsSet->TargetFoundSound;
 	BattleChatters.Add(ChatterParam);
