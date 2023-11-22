@@ -17,32 +17,32 @@ ACharacterCinematic::ACharacterCinematic()
 	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
 	HeadMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	HeadMesh->CanCharacterStepUpOn = ECB_No;
-	HeadMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	HeadMesh->SetupAttachment(RootComponent);
 
 	LoaoutMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LoaoutMesh"));
 	LoaoutMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	LoaoutMesh->CanCharacterStepUpOn = ECB_No;
-	LoaoutMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	HeadMesh->SetupAttachment(RootComponent);
 
 	PrimaryWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PrimaryWeaponMesh"));
 	PrimaryWeaponMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	PrimaryWeaponMesh->CanCharacterStepUpOn = ECB_No;
-	PrimaryWeaponMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponHandSocket);
+	PrimaryWeaponMesh->SetupAttachment(RootComponent, WeaponHandSocket);
 
 	HolsterWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HolsterWeaponMesh"));
 	HolsterWeaponMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	HolsterWeaponMesh->CanCharacterStepUpOn = ECB_No;
-	HolsterWeaponMesh->AttachToComponent(LoaoutMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SidearmHolsterSocket);
+	HolsterWeaponMesh->SetupAttachment(LoaoutMesh, SidearmHolsterSocket);
 
 	PrimaryWeaponScope = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PrimaryWeaponScope"));
 	PrimaryWeaponScope->SetCollisionProfileName(TEXT("NoCollision"));
 	PrimaryWeaponScope->CanCharacterStepUpOn = ECB_No;
-	PrimaryWeaponScope->AttachToComponent(PrimaryWeaponMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	PrimaryWeaponScope->SetupAttachment(PrimaryWeaponMesh);
 
 	HolsterWeaponScope = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HolsterWeaponScope"));
 	HolsterWeaponScope->SetCollisionProfileName(TEXT("NoCollision"));
 	HolsterWeaponScope->CanCharacterStepUpOn = ECB_No;
-	HolsterWeaponScope->AttachToComponent(HolsterWeaponMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	HolsterWeaponScope->SetupAttachment(HolsterWeaponMesh);
 
 	ShowPrimaryWeapon = true;
 	ShowSecondaryWeapon = true;
@@ -68,12 +68,14 @@ void ACharacterCinematic::OnConstruction(const FTransform& Transform)
 	Update();
 }
 
+#if WITH_EDITOR
 void ACharacterCinematic::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	Update();
 }
+#endif
 
 void ACharacterCinematic::Update()
 {
