@@ -32,6 +32,7 @@ AActorSpawner::AActorSpawner()
 	TriggerArea->SetupAttachment(RootComponent);
 
 	SpawnRate = 1.f;
+	SpawnFirstDelay = 0.f;
 	FreeSpawnLimit = 1;
 
 	SpawnOnNav = true;
@@ -301,7 +302,7 @@ TArray<AActor*> AActorSpawner::GetTargetPoints()
 void AActorSpawner::StartSpawnTimer()
 {
 	if (!THandler_Spawn.IsValid()) {
-		GetWorldTimerManager().SetTimer(THandler_Spawn, this, &AActorSpawner::BeginSpawn, SpawnRate, true);
+		GetWorldTimerManager().SetTimer(THandler_Spawn, this, &AActorSpawner::BeginSpawn, SpawnRate, true, SpawnFirstDelay);
 	}
 }
 
