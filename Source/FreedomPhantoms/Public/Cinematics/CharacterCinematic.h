@@ -119,6 +119,9 @@ private:
 public:	
 	ACharacterCinematic();
 
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponHand(USkeletalMeshComponent* ParentWeapon, FName NewHandSocket);
+
 private:
 	void OnConstruction(const FTransform& Transform) override;
 

@@ -9,6 +9,8 @@ ACharacterCinematic::ACharacterCinematic()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+
+
 	BodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BodyMesh"));
 	BodyMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	BodyMesh->CanCharacterStepUpOn = ECB_No;
@@ -22,27 +24,32 @@ ACharacterCinematic::ACharacterCinematic()
 	LoaoutMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LoaoutMesh"));
 	LoaoutMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	LoaoutMesh->CanCharacterStepUpOn = ECB_No;
-	HeadMesh->SetupAttachment(RootComponent);
+	LoaoutMesh->SetupAttachment(RootComponent);
+
+
 
 	PrimaryWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PrimaryWeaponMesh"));
 	PrimaryWeaponMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	PrimaryWeaponMesh->CanCharacterStepUpOn = ECB_No;
 	PrimaryWeaponMesh->SetupAttachment(RootComponent, WeaponHandSocket);
 
-	HolsterWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HolsterWeaponMesh"));
-	HolsterWeaponMesh->SetCollisionProfileName(TEXT("NoCollision"));
-	HolsterWeaponMesh->CanCharacterStepUpOn = ECB_No;
-	HolsterWeaponMesh->SetupAttachment(LoaoutMesh, SidearmHolsterSocket);
-
 	PrimaryWeaponScope = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PrimaryWeaponScope"));
 	PrimaryWeaponScope->SetCollisionProfileName(TEXT("NoCollision"));
 	PrimaryWeaponScope->CanCharacterStepUpOn = ECB_No;
 	PrimaryWeaponScope->SetupAttachment(PrimaryWeaponMesh);
 
+
+
+	HolsterWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HolsterWeaponMesh"));
+	HolsterWeaponMesh->SetCollisionProfileName(TEXT("NoCollision"));
+	HolsterWeaponMesh->CanCharacterStepUpOn = ECB_No;
+	HolsterWeaponMesh->SetupAttachment(LoaoutMesh, SidearmHolsterSocket);
+
 	HolsterWeaponScope = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HolsterWeaponScope"));
 	HolsterWeaponScope->SetCollisionProfileName(TEXT("NoCollision"));
 	HolsterWeaponScope->CanCharacterStepUpOn = ECB_No;
 	HolsterWeaponScope->SetupAttachment(HolsterWeaponMesh);
+
 
 	ShowPrimaryWeapon = true;
 	ShowSecondaryWeapon = true;
@@ -139,7 +146,7 @@ void ACharacterCinematic::SetWeaponHolster(USkeletalMeshComponent* ParentWeapon,
 	}
 	else if (HoldWeapon)
 	{
-		ParentWeapon->AttachToComponent(BodyMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponHandSocket);
+		SetWeaponHand(ParentWeapon, WeaponHandSocket);
 	}
 }
 
@@ -151,4 +158,9 @@ void ACharacterCinematic::FixBodyTransform()
 		BodyMesh->AddRelativeLocation(FVector(0.f, 0.f, -95.f));
 		BodyMesh->AddRelativeRotation(FRotator(0.f, 0.f, -90.f));
 	}
+}
+
+void ACharacterCinematic::SetWeaponHand(USkeletalMeshComponent* ParentWeapon, FName NewHandSocket)
+{
+	ParentWeapon->AttachToComponent(BodyMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, NewHandSocket);
 }
