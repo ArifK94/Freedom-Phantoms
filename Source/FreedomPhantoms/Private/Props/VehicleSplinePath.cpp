@@ -38,7 +38,7 @@ AVehicleSplinePath* AVehicleSplinePath::FindVehiclePath(UWorld* World, FName Tag
 		auto Path = Cast<AVehicleSplinePath>(Actor);
 
 		// check if path is not occupied
-		if (Path && !Path->GetOccupiedVehicle())
+		if (Path && Path->IsPathFree())
 		{
 			ClosestPath = Path;
 		}
@@ -82,6 +82,11 @@ void AVehicleSplinePath::GetFirstSplinePoint(FVector& OutLocation, FRotator& Out
 
 	OutLocation = Loc;
 	OutRotation = Rot;
+}
+
+bool AVehicleSplinePath::IsPathFree()
+{
+	return !UKismetSystemLibrary::IsValid(OccupiedVehicle);
 }
 
 void AVehicleSplinePath::OnConstruction(const FTransform& Transform)

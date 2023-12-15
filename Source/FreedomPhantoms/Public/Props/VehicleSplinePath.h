@@ -34,6 +34,8 @@ public:
 
 	void GetFirstSplinePoint(FVector& OutLocation, FRotator& OutRotation);
 
+	/** Check if path is free to use by another actor. */
+	bool IsPathFree();
 
 private:
 	void OnConstruction(const FTransform& Transform) override;

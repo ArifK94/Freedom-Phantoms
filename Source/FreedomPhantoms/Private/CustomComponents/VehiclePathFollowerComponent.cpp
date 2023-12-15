@@ -197,7 +197,7 @@ void UVehiclePathFollowerComponent::FindPath()
 			auto Path = Cast<AVehicleSplinePath>(Actor);
 
 			// check if path is not occupied
-			if (!Path || !IgnoreOccupiedPath && Path->GetOccupiedVehicle()) {
+			if (!Path || (!IgnoreOccupiedPath && !Path->IsPathFree())) {
 				continue;
 			}
 
