@@ -37,13 +37,12 @@ AActorSpawner::AActorSpawner()
 
 	SpawnOnNav = true;
 	FreeSpawn = false;
+	SpawnAtStart = true;
 }
 
 void AActorSpawner::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CurrentSpawnCount = 0;
 
 	SetActorTickEnabled(false);
 
@@ -54,7 +53,11 @@ void AActorSpawner::BeginPlay()
 	else
 	{
 		TriggerArea->DestroyComponent();
-		StartSpawnTimer();
+
+		if (SpawnAtStart)
+		{
+			StartSpawnTimer();
+		}
 	}
 }
 
@@ -62,9 +65,15 @@ void AActorSpawner::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
-		CurrentSpawnCount--;
+		RemoveSpawnedActor(InHealthParameters.DamagedActor);
 		StartSpawnTimer();
 	}
+}
+
+void AActorSpawner::OnSpawnActorDestroyed(AActor* DestroyedActor)
+{
+	RemoveSpawnedActor(DestroyedActor);
+	StartSpawnTimer();
 }
 
 void AActorSpawner::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -150,6 +159,8 @@ void AActorSpawner::BeginSpawn()
 			TargetPoint->SetOwner(SpawnedActor);
 		}
 
+		SpawnedActor->OnDestroyed.AddDynamic(this, &AActorSpawner::OnSpawnActorDestroyed);
+
 		auto ActorComponent = SpawnedActor->GetComponentByClass(UHealthComponent::StaticClass());
 
 		if (!ActorComponent) {
@@ -171,7 +182,7 @@ void AActorSpawner::BeginSpawn()
 		}
 	}
 
-	CurrentSpawnCount++;
+	SpawnedActors.Add(SpawnedActor);
 
 	OnActorSpawned.Broadcast(this, SpawnedActor);
 }
@@ -289,7 +300,7 @@ bool AActorSpawner::HasFreeTargetPoints()
 
 bool AActorSpawner::HasReachedSpawnLimit()
 {
-	return FreeSpawn && CurrentSpawnCount >= FreeSpawnLimit;
+	return FreeSpawn && SpawnedActors.Num() >= FreeSpawnLimit;
 }
 
 TArray<AActor*> AActorSpawner::GetTargetPoints()
@@ -297,6 +308,14 @@ TArray<AActor*> AActorSpawner::GetTargetPoints()
 	TArray<AActor*> OutActors;
 	UGameplayStatics::GetAllActorsWithTag(GetWorld(), TargetPointTag, OutActors);
 	return OutActors;
+}
+
+void AActorSpawner::RemoveSpawnedActor(AActor* Actor)
+{
+	if (SpawnedActors.Contains(Actor))
+	{
+		SpawnedActors.Remove(Actor);
+	}
 }
 
 void AActorSpawner::StartSpawnTimer()
