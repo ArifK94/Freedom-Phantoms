@@ -1242,7 +1242,7 @@ void ACustomPlayerController::RemoveVehicleControl()
 
 	// if the vehicle is destroyed, then the transition of going from vehicle to player camera will not exist and will happen in a sudden moment instead.
 	// In this case, we do not go through the delay of doing RemoveVehicleControlPost().
-	bool CanTransition = UHealthComponent::IsActorAlive(ControlledVehicle);
+	bool CanTransition = UHealthComponent::IsActorAlive(ControlledVehicle) && !ControlledVehicle->IsPendingKill();
 
 	EndAim();
 	EndFire();
@@ -1260,7 +1260,6 @@ void ACustomPlayerController::RemoveVehicleControl()
 
 		// to renable player controls and other features after transitioning back to player character.
 		GetWorldTimerManager().SetTimer(THandler_RemoveVehicleControlPost, this, &ACustomPlayerController::RemoveVehicleControlPost, Delay, true);
-
 	}
 	else
 	{
