@@ -19,6 +19,8 @@ AVehicleSplinePath::AVehicleSplinePath()
 
 	OverridePathDurationType = EVehicleSpeedType::Normal;
 	OverridePathDuration = 0.f;
+
+	TimeLimit = 0.f;
 }
 
 void AVehicleSplinePath::BeginPlay()
@@ -96,6 +98,14 @@ float AVehicleSplinePath::GetOverridePathDuration(bool& IsOverride)
 {
 	IsOverride = OverridePathDurationType == EVehicleSpeedType::Specified;
 	return IsOverride ? OverridePathDuration : 0.f;
+}
+
+void AVehicleSplinePath::StartDurationLimit()
+{
+	if (TimeLimit > 0.f)
+	{
+		GetWorldTimerManager().SetTimer(THandler_DurationLimit, this, &AVehicleSplinePath::DestroyVehicle, 1.f, false, TimeLimit);
+	}
 }
 
 void AVehicleSplinePath::OnConstruction(const FTransform& Transform)
@@ -241,4 +251,14 @@ void AVehicleSplinePath::UpdatePointerPoints(int Index)
 		VehicleSplinePoints[Index].TextRenderComponent->SetHiddenInGame(true);
 		VehicleSplinePoints[Index].TextRenderComponent->SetWorldSize(100.f);
 	}
+}
+
+void AVehicleSplinePath::DestroyVehicle()
+{
+	if (OccupiedVehicle)
+	{
+		OccupiedVehicle->Destroy();
+	}
+
+	GetWorldTimerManager().ClearTimer(THandler_DurationLimit);
 }

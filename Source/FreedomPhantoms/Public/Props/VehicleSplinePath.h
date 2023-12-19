@@ -32,9 +32,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float OverridePathDuration;
 
-	/** Set a time limit for the vehicle to be on the path. Then destroy the vehicle. */
+	/** Set a time limit for the vehicle to be on the path. Then destroy the vehicle. Set it to zero to not start timer. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float TimeLimit;
+
+	UPROPERTY()
+		FTimerHandle THandler_DurationLimit;
 
 public:
 	AVehicleSplinePath();
@@ -51,6 +54,8 @@ public:
 
 	float GetOverridePathDuration(bool& IsOverride);
 
+	void StartDurationLimit();
+
 private:
 	void OnConstruction(const FTransform& Transform) override;
 
@@ -62,6 +67,9 @@ private:
 	void UpdatePoints();
 
 	void UpdatePointerPoints(int Index);
+
+	void DestroyVehicle();
+
 
 protected:
 	virtual void BeginPlay() override;

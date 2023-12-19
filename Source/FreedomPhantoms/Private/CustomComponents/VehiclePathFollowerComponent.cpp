@@ -245,6 +245,8 @@ void UVehiclePathFollowerComponent::FindPath()
 		{
 			BeginPath();
 		}
+
+		VehiclePath->StartDurationLimit();
 	}
 }
 
