@@ -83,6 +83,10 @@ private:
 	/** The original value sset for the duration */
 	float DefaultPathFollowDuration;
 
+	/** Starting point to follow the path. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		float StartPointLength;
+
 	/** How many laps until complete */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		uint8 TotalLaps;

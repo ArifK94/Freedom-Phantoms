@@ -39,6 +39,14 @@ private:
 	UPROPERTY()
 		FTimerHandle THandler_DurationLimit;
 
+	/** Get random starting point for the vehicle to begin following this path? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool HasRandomStartingPoint;
+
+	/** Can vehicles follow this path forever? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool HasInifiteLaps;
+
 public:
 	AVehicleSplinePath();
 
@@ -55,6 +63,9 @@ public:
 	float GetOverridePathDuration(bool& IsOverride);
 
 	void StartDurationLimit();
+
+	/** Get the starting point of the spline length for vehicle tp start following from. */
+	float GetStartPointLength();
 
 private:
 	void OnConstruction(const FTransform& Transform) override;
@@ -84,4 +95,5 @@ public:
 
 	void SetOccupantVehicle(AActor* Occupant) { OccupiedVehicle = Occupant; }
 
+	bool GetHasInifiteLaps() { return HasInifiteLaps; }
 };

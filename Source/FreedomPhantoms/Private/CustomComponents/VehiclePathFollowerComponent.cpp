@@ -20,6 +20,7 @@ UVehiclePathFollowerComponent::UVehiclePathFollowerComponent()
 
 	PathFollowDuration = 10.0f;
 	TotalLaps = 0;
+	StartPointLength = 0.f;
 
 	RandomNavPointRadius = 1000.f;
 
@@ -230,6 +231,8 @@ void UVehiclePathFollowerComponent::FindPath()
 	{
 		VehiclePath->SetOccupantVehicle(GetOwner());
 
+		StartPointLength = VehiclePath->GetStartPointLength();
+
 		bool OutIsOverride = false;
 		float NewDuration = VehiclePath->GetOverridePathDuration(OutIsOverride);
 
@@ -268,7 +271,8 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 	}
 
 	USplineComponent* SplinePathComp = VehiclePath->GetSplinePathComp();
-	float Alpha = UKismetMathLibrary::Lerp(0.0f, SplinePathComp->GetSplineLength(), Value);
+
+	float Alpha = UKismetMathLibrary::Lerp(StartPointLength, SplinePathComp->GetSplineLength(), Value);
 
 	FVector TargetLocation = SplinePathComp->GetLocationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
 	FRotator TargetRotation = SplinePathComp->GetRotationAtDistanceAlongSpline(Alpha, ESplineCoordinateSpace::World);
@@ -294,9 +298,12 @@ void UVehiclePathFollowerComponent::FollowSplinePath(float Value)
 		}
 		else
 		{
-			if (CurrentLap < TotalLaps || HasInifiteLaps) // restart the lap if laps remaining / infinite
+			if (CurrentLap < TotalLaps || HasInifiteLaps || VehiclePath->GetHasInifiteLaps()) // restart the lap if laps remaining / infinite
 			{
 				CurrentLap++;
+
+				// reset start point back to beginning path.
+				StartPointLength = 0.f;
 
 				// reset the processed points
 				ProcessedPoints.Empty();

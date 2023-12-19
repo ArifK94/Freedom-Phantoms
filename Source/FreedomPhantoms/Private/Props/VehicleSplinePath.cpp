@@ -21,6 +21,9 @@ AVehicleSplinePath::AVehicleSplinePath()
 	OverridePathDuration = 0.f;
 
 	TimeLimit = 0.f;
+
+	HasRandomStartingPoint = false;
+	HasInifiteLaps = false;
 }
 
 void AVehicleSplinePath::BeginPlay()
@@ -108,6 +111,11 @@ void AVehicleSplinePath::StartDurationLimit()
 	}
 }
 
+float AVehicleSplinePath::GetStartPointLength()
+{
+	return HasRandomStartingPoint ? FMath::RandRange(0.f, SplinePathComp->GetSplineLength() - 1) : 0.f;
+}
+
 void AVehicleSplinePath::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
@@ -128,20 +136,7 @@ void AVehicleSplinePath::OnConstruction(const FTransform& Transform)
 		VehicleSplinePoints.Add(VehicleSplinePoint);
 	}
 
-
-
 	UpdatePoints();
-
-	//updating the aircraft points if any are removed from the editor
-	//if (VehicleSplinePoints.Num() > TotalSplinePoints)
-	//{
-	//	const int32 UnusedPoints = VehicleSplinePoints.Num() - TotalSplinePoints;
-	//	for (int i = VehicleSplinePoints.Num(); i > UnusedPoints; i++)
-	//	{
-	//		//VehicleSplinePoints.RemoveAt(i);
-	//	}
-	//}
-
 }
 
 
