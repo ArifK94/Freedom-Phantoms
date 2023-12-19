@@ -230,6 +230,16 @@ void UVehiclePathFollowerComponent::FindPath()
 	{
 		VehiclePath->SetOccupantVehicle(GetOwner());
 
+		bool OutIsOverride = false;
+		float NewDuration = VehiclePath->GetOverridePathDuration(OutIsOverride);
+
+		if (OutIsOverride)
+		{
+			PathFollowDuration = NewDuration;
+			CurrentDuration = 1.0f / PathFollowDuration;
+		}
+
+
 		// setup time line for following the path
 		if (CurveFloat)
 		{

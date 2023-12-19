@@ -24,6 +24,18 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		AActor* OccupiedVehicle;
 
+	/** Override the duration of the VehiclePathComponent. Set to Specified to override the duration otherwise Normal will not override. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		EVehicleSpeedType OverridePathDurationType;
+
+	/** Set the new duration of the path. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float OverridePathDuration;
+
+	/** Set a time limit for the vehicle to be on the path. Then destroy the vehicle. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float TimeLimit;
+
 public:
 	AVehicleSplinePath();
 
@@ -36,6 +48,8 @@ public:
 
 	/** Check if path is free to use by another actor. */
 	bool IsPathFree();
+
+	float GetOverridePathDuration(bool& IsOverride);
 
 private:
 	void OnConstruction(const FTransform& Transform) override;

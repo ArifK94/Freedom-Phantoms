@@ -16,6 +16,9 @@ AVehicleSplinePath::AVehicleSplinePath()
 	PrimaryActorTick.bCanEverTick = false;
 
 	SplinePathComp = CreateDefaultSubobject<USplineComponent>("SplinePathComp");
+
+	OverridePathDurationType = EVehicleSpeedType::Normal;
+	OverridePathDuration = 0.f;
 }
 
 void AVehicleSplinePath::BeginPlay()
@@ -87,6 +90,12 @@ void AVehicleSplinePath::GetFirstSplinePoint(FVector& OutLocation, FRotator& Out
 bool AVehicleSplinePath::IsPathFree()
 {
 	return !UKismetSystemLibrary::IsValid(OccupiedVehicle);
+}
+
+float AVehicleSplinePath::GetOverridePathDuration(bool& IsOverride)
+{
+	IsOverride = OverridePathDurationType == EVehicleSpeedType::Specified;
+	return IsOverride ? OverridePathDuration : 0.f;
 }
 
 void AVehicleSplinePath::OnConstruction(const FTransform& Transform)
