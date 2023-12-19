@@ -501,10 +501,10 @@ struct FREEDOMPHANTOMS_API FWeaponUpdateParameters
 
 public:
 	/** Has the weapon fired a shot? */
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		bool HasFiredShot;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		EWeaponState WeaponState;
 
 

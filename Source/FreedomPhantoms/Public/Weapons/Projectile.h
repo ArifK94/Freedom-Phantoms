@@ -176,7 +176,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX", meta = (AllowPrivateAccess = "true"))
 		float CamShakeOuterRadius;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		AWeapon* WeaponParent;
 
 	int KillCount;
