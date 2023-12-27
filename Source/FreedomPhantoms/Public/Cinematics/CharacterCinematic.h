@@ -7,6 +7,8 @@
 #include "CharacterCinematic.generated.h"
 
 class USkeletalMeshComponent;
+class AWeapon;
+class UChildActorComponent;
 UCLASS()
 class FREEDOMPHANTOMS_API ACharacterCinematic : public AActor
 {
@@ -23,17 +25,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* LoaoutMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* PrimaryWeaponMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* PrimaryWeaponScope;
+	UChildActorComponent* PrimaryWeaponActorComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* HolsterWeaponMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* HolsterWeaponScope;
+	UChildActorComponent* HolsterWeaponActorComp;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
@@ -78,49 +75,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Holster", meta = (AllowPrivateAccess = "true"))
 	bool UsePrimaryHolster;
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	bool UseACOG;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	bool UseEOTECH;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	bool UseREDDOT;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	bool UseTHERMAL;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	FName ACOGSocket;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	FName EOTECHSocket;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	FName REDDOTSocket;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	FName THERMALSocket;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	USkeletalMesh* ACOGMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	USkeletalMesh* EOTECHMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	USkeletalMesh* REDDOTMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default Weapon Attachments", meta = (AllowPrivateAccess = "true"))
-	USkeletalMesh* THERMALMesh;
 	
 public:	
 	ACharacterCinematic();
 
 	UFUNCTION(BlueprintCallable)
-	void SetWeaponHand(USkeletalMeshComponent* ParentWeapon, FName NewHandSocket);
+	void AttachWeaponHand(AActor* ParentWeapon, FName NewHandSocket);
+
+protected:
+	virtual void BeginPlay() override;
 
 private:
 	void OnConstruction(const FTransform& Transform) override;
@@ -133,11 +96,7 @@ private:
 
 	void Update();
 
-	void ToggleAttachments(USkeletalMeshComponent* ParentWeapon, USkeletalMeshComponent* ScopeMeshComp);
-
-	void ChangeWeaponAttachment(USkeletalMeshComponent* ParentWeapon, USkeletalMeshComponent* ScopeMeshComp, USkeletalMesh* AttachmentMesh, FName Socket);
-
-	void SetWeaponHolster(USkeletalMeshComponent* ParentWeapon, bool CanUseSidearmHolster, bool CanUseBackHolster, bool CanUseHolster1, bool HoldWeapon);
+	void AttachWeaponHolster(AActor* ParentWeapon, bool CanUseSidearmHolster, bool CanUseBackHolster, bool CanUseHolster1, bool HoldWeapon);
 
 	void FixBodyTransform();
 };

@@ -2,14 +2,14 @@
 
 
 #include "Cinematics/CharacterCinematic.h"
+#include "Weapons/Weapon.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/ChildActorComponent.h"
 
 ACharacterCinematic::ACharacterCinematic()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
-
 
 	BodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BodyMesh"));
 	BodyMesh->SetCollisionProfileName(TEXT("NoCollision"));
@@ -27,28 +27,11 @@ ACharacterCinematic::ACharacterCinematic()
 	LoaoutMesh->SetupAttachment(RootComponent);
 
 
+	PrimaryWeaponActorComp = CreateDefaultSubobject<UChildActorComponent>(FName(TEXT("PrimaryWeaponActorComp")));
+	PrimaryWeaponActorComp->SetupAttachment(RootComponent);
 
-	PrimaryWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PrimaryWeaponMesh"));
-	PrimaryWeaponMesh->SetCollisionProfileName(TEXT("NoCollision"));
-	PrimaryWeaponMesh->CanCharacterStepUpOn = ECB_No;
-	PrimaryWeaponMesh->SetupAttachment(RootComponent, WeaponHandSocket);
-
-	PrimaryWeaponScope = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PrimaryWeaponScope"));
-	PrimaryWeaponScope->SetCollisionProfileName(TEXT("NoCollision"));
-	PrimaryWeaponScope->CanCharacterStepUpOn = ECB_No;
-	PrimaryWeaponScope->SetupAttachment(PrimaryWeaponMesh);
-
-
-
-	HolsterWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HolsterWeaponMesh"));
-	HolsterWeaponMesh->SetCollisionProfileName(TEXT("NoCollision"));
-	HolsterWeaponMesh->CanCharacterStepUpOn = ECB_No;
-	HolsterWeaponMesh->SetupAttachment(LoaoutMesh, SidearmHolsterSocket);
-
-	HolsterWeaponScope = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HolsterWeaponScope"));
-	HolsterWeaponScope->SetCollisionProfileName(TEXT("NoCollision"));
-	HolsterWeaponScope->CanCharacterStepUpOn = ECB_No;
-	HolsterWeaponScope->SetupAttachment(HolsterWeaponMesh);
+	HolsterWeaponActorComp = CreateDefaultSubobject<UChildActorComponent>(FName(TEXT("HolsterWeaponActorComp")));
+	HolsterWeaponActorComp->SetupAttachment(LoaoutMesh, SidearmHolsterSocket);
 
 
 	ShowPrimaryWeapon = true;
@@ -59,11 +42,6 @@ ACharacterCinematic::ACharacterCinematic()
 	BackHolsterSocket = "holster_back";
 	Holster1Socket = "holster1";
 	UseSidearmHolster = true;
-
-	ACOGSocket = "tag_acog_2";
-	EOTECHSocket = "tag_eotech";
-	REDDOTSocket = "tag_red_dot";
-	THERMALSocket = "tag_thermal_scope";
 
 	FixTransform = true;
 }
@@ -84,53 +62,42 @@ void ACharacterCinematic::PostEditChangeProperty(FPropertyChangedEvent& Property
 }
 #endif
 
+void ACharacterCinematic::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void ACharacterCinematic::Update()
 {
 	HeadMesh->SetLeaderPoseComponent(BodyMesh);
 	LoaoutMesh->SetLeaderPoseComponent(BodyMesh);
 
-	SetWeaponHolster(PrimaryWeaponMesh, UsePrimarySidearmHolster, UsePrimaryBackHolster, UsePrimaryHolster, true);
-	SetWeaponHolster(HolsterWeaponMesh, UseSidearmHolster, UseBackHolster, UseHolster1, false);
 
-	ToggleAttachments(PrimaryWeaponMesh, PrimaryWeaponScope);
+	PrimaryWeaponActorComp->SetVisibility(ShowPrimaryWeapon, true);
+	HolsterWeaponActorComp->SetVisibility(ShowSecondaryWeapon, true);
 
-	PrimaryWeaponMesh->SetVisibility(ShowPrimaryWeapon, true);
-	HolsterWeaponMesh->SetVisibility(ShowSecondaryWeapon, true);
 
 	FixBodyTransform();
-}
 
-void ACharacterCinematic::ToggleAttachments(USkeletalMeshComponent* ParentWeapon, USkeletalMeshComponent* ScopeMeshComp)
-{
-	if (UseACOG)
+	if (PrimaryWeaponActorComp->GetChildActor())
 	{
-		ChangeWeaponAttachment(ParentWeapon, ScopeMeshComp, ACOGMesh, ACOGSocket);
+		AWeapon* Weapon = Cast<AWeapon>(PrimaryWeaponActorComp->GetChildActor());
+
+		Weapon->SetOwner(this);
+		Weapon->SetCrosshairErrorTolerance(0.f);
+		AttachWeaponHolster(Weapon, UsePrimarySidearmHolster, UsePrimaryBackHolster, UsePrimaryHolster, true);
+		PrimaryWeaponActorComp->SetVisibility(ShowPrimaryWeapon);
 	}
-	else if (UseEOTECH)
+
+	if (HolsterWeaponActorComp->GetChildActor())
 	{
-		ChangeWeaponAttachment(ParentWeapon, ScopeMeshComp, EOTECHMesh, EOTECHSocket);
-	}
-	else if (UseREDDOT)
-	{
-		ChangeWeaponAttachment(ParentWeapon, ScopeMeshComp, REDDOTMesh, REDDOTSocket);
-	}
-	else if (UseTHERMAL)
-	{
-		ChangeWeaponAttachment(ParentWeapon, ScopeMeshComp, THERMALMesh, THERMALSocket);
-	}
-	else
-	{
-		ScopeMeshComp->SetSkeletalMeshAsset(nullptr);
+		HolsterWeaponActorComp->GetChildActor()->SetOwner(this);
+		AttachWeaponHolster(HolsterWeaponActorComp->GetChildActor(), UseSidearmHolster, UseBackHolster, UseHolster1, false);
+		HolsterWeaponActorComp->SetVisibility(ShowSecondaryWeapon);
 	}
 }
 
-void ACharacterCinematic::ChangeWeaponAttachment(USkeletalMeshComponent* ParentWeapon, USkeletalMeshComponent* ScopeMeshComp, USkeletalMesh* AttachmentMesh, FName Socket)
-{
-	ScopeMeshComp->SetSkeletalMeshAsset(AttachmentMesh);
-	ScopeMeshComp->AttachToComponent(ParentWeapon, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Socket);
-}
-
-void ACharacterCinematic::SetWeaponHolster(USkeletalMeshComponent* ParentWeapon, bool CanUseSidearmHolster, bool CanUseBackHolster, bool CanUseHolster1, bool HoldWeapon)
+void ACharacterCinematic::AttachWeaponHolster(AActor* ParentWeapon, bool CanUseSidearmHolster, bool CanUseBackHolster, bool CanUseHolster1, bool HoldWeapon)
 {
 	if (CanUseSidearmHolster)
 	{
@@ -146,7 +113,7 @@ void ACharacterCinematic::SetWeaponHolster(USkeletalMeshComponent* ParentWeapon,
 	}
 	else if (HoldWeapon)
 	{
-		SetWeaponHand(ParentWeapon, WeaponHandSocket);
+		AttachWeaponHand(ParentWeapon, WeaponHandSocket);
 	}
 }
 
@@ -160,7 +127,8 @@ void ACharacterCinematic::FixBodyTransform()
 	}
 }
 
-void ACharacterCinematic::SetWeaponHand(USkeletalMeshComponent* ParentWeapon, FName NewHandSocket)
+
+void ACharacterCinematic::AttachWeaponHand(AActor* ParentWeapon, FName NewHandSocket)
 {
 	ParentWeapon->AttachToComponent(BodyMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, NewHandSocket);
 }
