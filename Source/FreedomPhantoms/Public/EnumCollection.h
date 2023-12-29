@@ -39,7 +39,8 @@ enum class EWeaponState : uint8
 {
 	Default			UMETA(DisplayName = "Default"),
 	Firing			UMETA(DisplayName = "Firing"),
-	Reloading		UMETA(DisplayName = "Reloading")
+	Reloading		UMETA(DisplayName = "Reloading"),
+	ReloadEnded		UMETA(DisplayName = "ReloadEnded")
 };
 
 UENUM(BlueprintType)

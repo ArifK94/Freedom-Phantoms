@@ -368,6 +368,7 @@ bool AWeapon::IsFacingCrosshair()
 
 void AWeapon::Fire()
 {
+
 	if (!GetOwner()) {
 		StopFire();
 		return;
@@ -921,6 +922,9 @@ void AWeapon::BeginReload()
 		weaponClipObj->getClipMesh()->SetVisibility(false);
 	}
 
+	FWeaponUpdateParameters WeaponUpdateParameters;
+	WeaponUpdateParameters.WeaponState = EWeaponState::Reloading;
+	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 
 void AWeapon::EndReload()
@@ -934,6 +938,11 @@ void AWeapon::EndReload()
 	isReloading = false;
 	HasPlayedClipIn = false;
 	HasPlayedClipOut = false;
+
+
+	FWeaponUpdateParameters WeaponUpdateParameters;
+	WeaponUpdateParameters.WeaponState = EWeaponState::ReloadEnded;
+	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 }
 
 
@@ -1077,6 +1086,10 @@ void AWeapon::AutoReloadBegin()
 		ClipAudioComponent->Play();
 	}
 
+	FWeaponUpdateParameters WeaponUpdateParameters;
+	WeaponUpdateParameters.WeaponState = EWeaponState::Reloading;
+	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
+
 	GetWorldTimerManager().SetTimer(THandler_AutoReloadEnd, this, &AWeapon::AutoReloadEnd, CooldownReload / 2.0f, false);
 	GetWorldTimerManager().ClearTimer(THandler_AutoReloadBegin);
 }
@@ -1088,8 +1101,6 @@ void AWeapon::AutoReloadEnd()
 	isReloading = false;
 	GetWorldTimerManager().ClearTimer(THandler_AutoReloadEnd);
 }
-
-
 
 
 bool AWeapon::ReplenishAmmo(int Amount)
