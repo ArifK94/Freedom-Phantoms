@@ -86,14 +86,15 @@ void ACharacterCinematic::Update()
 		Weapon->SetOwner(this);
 		Weapon->SetCrosshairErrorTolerance(0.f);
 		AttachWeaponHolster(Weapon, UsePrimarySidearmHolster, UsePrimaryBackHolster, UsePrimaryHolster, true);
-		PrimaryWeaponActorComp->SetVisibility(ShowPrimaryWeapon);
 	}
 
 	if (HolsterWeaponActorComp->GetChildActor())
 	{
-		HolsterWeaponActorComp->GetChildActor()->SetOwner(this);
-		AttachWeaponHolster(HolsterWeaponActorComp->GetChildActor(), UseSidearmHolster, UseBackHolster, UseHolster1, false);
-		HolsterWeaponActorComp->SetVisibility(ShowSecondaryWeapon);
+		AWeapon* Weapon = Cast<AWeapon>(HolsterWeaponActorComp->GetChildActor());
+
+		Weapon->SetOwner(this);
+		Weapon->SetCrosshairErrorTolerance(0.f);
+		AttachWeaponHolster(Weapon, UseSidearmHolster, UseBackHolster, UseHolster1, false);
 	}
 }
 

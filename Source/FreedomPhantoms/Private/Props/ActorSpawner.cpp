@@ -163,15 +163,14 @@ void AActorSpawner::BeginSpawn()
 
 		auto ActorComponent = SpawnedActor->GetComponentByClass(UHealthComponent::StaticClass());
 
-		if (!ActorComponent) {
-			return;
-		}
-
-		auto HealthComponent = Cast<UHealthComponent>(ActorComponent);
-
-		if (HealthComponent)
+		if (ActorComponent) 
 		{
-			HealthComponent->OnHealthChanged.AddDynamic(this, &AActorSpawner::OnHealthUpdate);
+			auto HealthComponent = Cast<UHealthComponent>(ActorComponent);
+
+			if (HealthComponent)
+			{
+				HealthComponent->OnHealthChanged.AddDynamic(this, &AActorSpawner::OnHealthUpdate);
+			}
 		}
 	}
 	else
