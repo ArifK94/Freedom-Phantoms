@@ -52,6 +52,7 @@ AWeapon::AWeapon()
 	MuzzleLightComponent->AttenuationRadius = 500.0f;
 	MuzzleLightComponent->SetCastShadows(false);
 	MuzzleLightComponent->SetVisibility(false);
+	MuzzleLightComponent->SetHiddenInGame(true, true);
 
 	MuzzleSocket = "Muzzle";
 	ClipSocket = "Clip";
@@ -580,7 +581,8 @@ void AWeapon::SpawnProjectile(FVector Locatiom, FRotator Rotation)
 
 void AWeapon::PlayShotEffect(FVector EyeLocation)
 {
-	MuzzleLightComponent->SetVisibility(true);
+	MuzzleLightComponent->SetVisibility(true, true);
+	MuzzleLightComponent->SetHiddenInGame(false, true);
 
 	if (MuzzleEffect)
 	{
@@ -867,7 +869,8 @@ void AWeapon::DecreaseCharge()
 
 void AWeapon::DisableMuzzleLight()
 {
-	MuzzleLightComponent->SetVisibility(false);
+	MuzzleLightComponent->SetVisibility(false, true);
+	MuzzleLightComponent->SetHiddenInGame(true, true);
 
 	if (GetWorld() && THandler_MuzzleLight.IsValid()) {
 		GetWorldTimerManager().ClearTimer(THandler_MuzzleLight);
