@@ -6,6 +6,7 @@
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/ChildActorComponent.h"
+#include "Camera/CameraComponent.h"
 
 ACharacterCinematic::ACharacterCinematic()
 {
@@ -33,6 +34,11 @@ ACharacterCinematic::ACharacterCinematic()
 	HolsterWeaponActorComp = CreateDefaultSubobject<UChildActorComponent>(FName(TEXT("HolsterWeaponActorComp")));
 	HolsterWeaponActorComp->SetupAttachment(LoaoutMesh, SidearmHolsterSocket);
 
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetHiddenInGame(false);
+
+	UseFollowCameraViewPoiint = false;
+	HeadSocket = "j_head";
 
 	ShowPrimaryWeapon = true;
 	ShowSecondaryWeapon = true;
@@ -67,6 +73,28 @@ void ACharacterCinematic::BeginPlay()
 	Super::BeginPlay();
 }
 
+void ACharacterCinematic::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+	if (UseFollowCameraViewPoiint && FollowCamera)
+	{
+		OutLocation = FollowCamera->GetComponentLocation();
+		OutRotation = FollowCamera->GetComponentRotation();
+	}
+	else if (PrimaryWeaponActorComp->GetChildActor())
+	{
+		AWeapon* Weapon = Cast<AWeapon>(PrimaryWeaponActorComp->GetChildActor());
+
+		if (Weapon)
+		{
+			Weapon->GetMeshComp()->GetSocketWorldLocationAndRotation(Weapon->GetMuzzleSocket(), OutLocation, OutRotation);
+		}
+	}
+	else
+	{
+		Super::GetActorEyesViewPoint(OutLocation, OutRotation);
+	}
+}
+
 void ACharacterCinematic::Update()
 {
 	HeadMesh->SetLeaderPoseComponent(BodyMesh);
@@ -76,6 +104,7 @@ void ACharacterCinematic::Update()
 	PrimaryWeaponActorComp->SetVisibility(ShowPrimaryWeapon, true);
 	HolsterWeaponActorComp->SetVisibility(ShowSecondaryWeapon, true);
 
+	FollowCamera->AttachToComponent(BodyMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeadSocket);
 
 	FixBodyTransform();
 

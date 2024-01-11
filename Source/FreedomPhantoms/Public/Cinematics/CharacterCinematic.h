@@ -32,6 +32,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
 	UChildActorComponent* HolsterWeaponActorComp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
 	FName WeaponHandSocket;
@@ -41,6 +43,13 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
 	bool ShowSecondaryWeapon;
+
+	/** Use the follow camera for the eye view point where the weapon can shoot towards. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (AllowPrivateAccess = "true"))
+	bool UseFollowCameraViewPoiint;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+	FName HeadSocket;
 
 	/**
 	* Fix body transform to avoid manually constantly fix mesh transform in the world. 
@@ -81,6 +90,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void AttachWeaponHand(AActor* ParentWeapon, FName NewHandSocket);
+
+	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const;
 
 protected:
 	virtual void BeginPlay() override;
