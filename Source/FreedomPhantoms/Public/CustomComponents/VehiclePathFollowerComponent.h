@@ -27,6 +27,10 @@ class FREEDOMPHANTOMS_API UVehiclePathFollowerComponent : public UActorComponent
 
 private:
 
+	/** Used when beginning follow path */
+	UPROPERTY()
+		FTimerHandle THandler_BeginPath;
+
 	/** Used when resuming vehicle path */
 	UPROPERTY()
 		FTimerHandle THandler_ResumePath;
@@ -82,6 +86,10 @@ private:
 
 	/** The original value sset for the duration */
 	float DefaultPathFollowDuration;
+
+	/** Add a delay before following path. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float BeginPathDelay;
 
 	/** Starting point to follow the path. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

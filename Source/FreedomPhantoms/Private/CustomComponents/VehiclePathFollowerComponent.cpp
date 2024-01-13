@@ -21,6 +21,7 @@ UVehiclePathFollowerComponent::UVehiclePathFollowerComponent()
 	PathFollowDuration = 10.0f;
 	TotalLaps = 0;
 	StartPointLength = 0.f;
+	BeginPathDelay = 0.f;
 
 	RandomNavPointRadius = 1000.f;
 
@@ -246,7 +247,7 @@ void UVehiclePathFollowerComponent::FindPath()
 		// setup time line for following the path
 		if (CurveFloat)
 		{
-			BeginPath();
+			GetOwner()->GetWorldTimerManager().SetTimer(THandler_BeginPath, this, &UVehiclePathFollowerComponent::BeginPath, 1.f, false, BeginPathDelay);
 		}
 
 		VehiclePath->StartDurationLimit();
@@ -620,6 +621,8 @@ void UVehiclePathFollowerComponent::BeginPath()
 	{
 		StartPath("FollowSplinePath");
 	}
+
+	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_BeginPath);
 }
 
 void UVehiclePathFollowerComponent::Stop()
