@@ -110,6 +110,9 @@ AVehicleBase::AVehicleBase()
 
 	OptimizerComponent = CreateDefaultSubobject<UOptimizerComponent>(TEXT("OptimizerComponent"));
 
+	// Vehicle path follower should not be optimized as the lag can cause the vehicle to miss its path trigger points.
+	OptimizerComponent->IgnoredComponentClasses.Add(UVehiclePathFollowerComponent::StaticClass());
+	
 	EngineSoundParamName = "speed";
 
 	RotationSpeed = 100000.0;
@@ -209,7 +212,7 @@ void AVehicleBase::TimerTick()
 
 void AVehicleBase::UpdatePassengerSeats()
 {
-	if (VehicleSeats.Num() <= 0) {
+	if (VehicleSeats.IsEmpty()) {
 		return;
 	}
 
@@ -220,7 +223,7 @@ void AVehicleBase::UpdatePassengerSeats()
 	{
 		auto Character = PassengerList[i].Character;
 
-		if (!UHealthComponent::IsActorAlive(Character))
+		if (!UHealthComponent::IsActorAlive(Character) || Character->GetVehicletSeat().OwningVehicle != this)
 		{
 			VehicleSeats.RemoveAt(i);
 		}
@@ -1132,6 +1135,8 @@ void AVehicleBase::OptimizeComponents()
 		USharedService::DestroyActorComponent(FollowCamera);
 		USharedService::DestroyActorComponent(EngineAudio);
 		USharedService::DestroyActorComponent(VehiclePathFollowerComponent);
+		USharedService::DestroyActorComponent(OptimizerComponent);
+
 	}
 
 	if (HasNoPlayerInput)

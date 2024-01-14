@@ -425,7 +425,6 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 			continue;
 		}
 
-
 		if (!Character->GetIsInVehicle())
 		{
 			OwningVehicle->RemovePassenger(i);
@@ -471,14 +470,11 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 
 			}
 		}
-
 	}
 
 	if (!HasRemainingPassengers)
 	{
 		ReleaseRopes();
-
-		CurrentVehicleMovement = EVehicleMovement::MovingForward;
 
 		// Let the ropes fall to the ground then resume path
 		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, 1.f);
@@ -603,6 +599,8 @@ void UVehiclePathFollowerComponent::ResumePath()
 	if (THandler_ResumePath.IsValid()) {
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
 	}
+
+	CurrentVehicleMovement = EVehicleMovement::MovingForward;
 
 	ReleaseRopes();
 
