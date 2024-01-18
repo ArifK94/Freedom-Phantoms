@@ -75,7 +75,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class UUtilityAIComponent* UtilityAIComponent;
-	class UCombatAction* CombatAction;
+
+	UPROPERTY()
+		class UCombatAction* CombatAction;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -204,8 +206,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<WeaponType> NonBlindFireWeaponTypes;
 
-	FTimerHandle THandler_CommanderOrders;
-	FTimerHandle THandler_MoveToNearbyDestination;
+	UPROPERTY()
+		FTimerHandle THandler_CommanderOrders;
+
+	UPROPERTY()
+		FTimerHandle THandler_MoveToNearbyDestination;
 
 
 	bool HasPlayedTargetFoundSound;
@@ -355,7 +360,8 @@ public:
 
 	bool GetStayCombatAlert() { return StayCombatAlert; }
 
-	void SetStayCombatAlert(bool Alert);
+	UFUNCTION(BlueprintCallable)
+		void SetStayCombatAlert(bool Alert);
 
 	FVector GetLastSeenLocation() { return LastSeenLocation; }
 
