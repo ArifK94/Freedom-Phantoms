@@ -377,6 +377,11 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 {
+	// allow NPC to move towards pre-set priority destination rather than find a random nearby location to move to.
+	if (HasPriorityDestination) {
+		return;
+	}
+
 	// Find a random point when landed after rappelling so upcoming characters rapelling down do not stand in the same spot
 	if (!OwningCombatCharacter->GetIsExitingVehicle())
 	{
@@ -387,14 +392,14 @@ void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 
 		if (bOnNavMesh)
 		{
-			DestinationRadius = 500.f;
+			DestinationRadius = 1000.f;
 			FNavLocation NavLocationTwo;
 			bool bOnNavMeshTwo = NavigationArea->GetRandomReachablePointInRadius(NavLocation.Location, DestinationRadius, NavLocationTwo);
 
 			if (bOnNavMeshTwo)
 			{
 				TargetDestination = NavLocationTwo.Location;
-				GetWorldTimerManager().SetTimer(THandler_MoveToNearbyDestination, this, &ACombatAIController::MoveToRandomPoint, 1.f, true);
+				SetPriorityDestination(NavLocationTwo.Location);
 			}
 		}
 		else
@@ -736,6 +741,9 @@ void ACombatAIController::SetPriorityDestination(FVector Location)
 		return;
 	}
 
+	ResetBehaviourFlags();
+
 	PriorityLocation = Location;
+	
 	HasPriorityDestination = true;
 }
