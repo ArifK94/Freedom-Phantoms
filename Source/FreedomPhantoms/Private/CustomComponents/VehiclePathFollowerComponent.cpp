@@ -160,9 +160,9 @@ void UVehiclePathFollowerComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 
 		// Start timer & set the delay based on the duration
 		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, CurrentSplinePoint.WaitingDuration);
-		
+
 		break;
-		
+
 		// Wait for passengers to leave
 	case EVehicleMovement::PassengerExit:
 
@@ -224,7 +224,7 @@ void UVehiclePathFollowerComponent::FindPath()
 	{
 		ClosestPath = VehiclePath;
 	}
-	
+
 	VehiclePath = ClosestPath;
 
 
@@ -474,12 +474,9 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 	{
 		ReleaseRopes();
 
-		if (CanFollowPath())
-		{
-			// Let the ropes fall to the ground then resume path
-			GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, 1.f);
-			GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
-		}
+		// Let the ropes fall to the ground then resume path
+		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, 1.f);
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
 	}
 
 }
@@ -592,7 +589,11 @@ void UVehiclePathFollowerComponent::ResumePath()
 	if (CurveTimeline.IsPlaying()) {
 		return;
 	}
-	
+
+	if (!CanFollowPath()) {
+		return;
+	}
+
 	if (THandler_ExitPassenger.IsValid()) {
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
 	}
