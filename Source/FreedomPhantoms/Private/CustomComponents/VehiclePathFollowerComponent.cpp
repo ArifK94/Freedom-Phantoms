@@ -395,9 +395,7 @@ void UVehiclePathFollowerComponent::FindNearestNav()
 
 void UVehiclePathFollowerComponent::ExitPassengers()
 {
-	auto VehicleSeats = OwningVehicle->GetVehicleSeats();
-
-	if (VehicleSeats.Num() <= 0) {
+	if (OwningVehicle->GetVehicleSeats().IsEmpty()) {
 		CurrentVehicleMovement = EVehicleMovement::MovingForward;
 		ResumePath();
 		return;
@@ -405,9 +403,9 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 
 	bool HasRemainingPassengers = false;
 
-	for (int i = 0; i < VehicleSeats.Num(); i++)
+	for (int i = OwningVehicle->GetVehicleSeats().Num() - 1; i >= 0; i--)
 	{
-		auto VehicleSeat = VehicleSeats[i];
+		auto VehicleSeat = OwningVehicle->GetVehicleSeats()[i];
 		auto Character = VehicleSeat.Character;
 
 		if (!Character) {
@@ -476,9 +474,12 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 	{
 		ReleaseRopes();
 
-		// Let the ropes fall to the ground then resume path
-		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, 1.f);
-		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
+		if (CanFollowPath())
+		{
+			// Let the ropes fall to the ground then resume path
+			GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, 1.f);
+			GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
+		}
 	}
 
 }
