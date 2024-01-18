@@ -916,6 +916,12 @@ bool AVehicleBase::IsFrontCollisionFound()
 		for (auto collisionClass : CollisionClassFilters)
 		{
 			if (Actor->IsA(collisionClass)) {
+
+				// ignore destroyed vehicles or dead actors to avoid having vehicles stopping from passing through.
+				if (!UHealthComponent::IsActorAlive(Actor)) {
+					return false;
+				}
+
 				return true;
 			}
 		}
