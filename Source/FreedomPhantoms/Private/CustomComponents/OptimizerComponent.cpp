@@ -11,6 +11,7 @@ UOptimizerComponent::UOptimizerComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
+	BeginPlayDelayAmount = 5.f;
 	TickRadius = 1000.f;
 	TickIntervalOptimized = .5f;
 
@@ -21,6 +22,25 @@ UOptimizerComponent::UOptimizerComponent()
 	CanOptimizeChildrenComponents = true;
 }
 
+
+void UOptimizerComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	SetComponentTickEnabled(false);
+
+	if (GetOwner()) {
+		GetOwner()->GetWorldTimerManager().SetTimer(THandler_BeginPlay, this, &UOptimizerComponent::BeginPlayDelay, 1.f, false, BeginPlayDelayAmount);
+	}
+
+}
+
+void UOptimizerComponent::BeginPlayDelay()
+{
+	SetComponentTickEnabled(true);
+
+	GetOwner()->GetWorldTimerManager().ClearTimer(THandler_BeginPlay);
+}
 
 void UOptimizerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -44,6 +64,7 @@ void UOptimizerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 		}
 	}
 }
+
 
 void UOptimizerComponent::GetOptimizedTick(float& NewTickInterval)
 {

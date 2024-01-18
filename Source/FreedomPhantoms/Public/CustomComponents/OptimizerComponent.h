@@ -18,6 +18,12 @@ private:
 	UPROPERTY()
 		float DefaultActorTickInterval;
 
+	/** Add a delay at the beginning so the actor can completely render its properties. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float BeginPlayDelayAmount;
+		FTimerHandle THandler_BeginPlay;
+
+
 	/** Can the owning actor have its tick optimized? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tick", meta = (AllowPrivateAccess = "true"))
 		bool CanOptimizeTick;
@@ -73,6 +79,11 @@ public:
 	void OptimizeComponentsTick(float NewTickInterval);
 
 protected:		
+	virtual void BeginPlay() override;
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+private:
+
+	void BeginPlayDelay();
 };
