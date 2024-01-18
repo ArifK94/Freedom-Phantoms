@@ -337,7 +337,8 @@ private:
 	void DetroyChildActor(TArray<AActor*> ParentActor);
 
 public:
-	FOnRappelUpdateignature OnRappelUpdate;
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+		FOnRappelUpdateignature OnRappelUpdate;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnCharacterActionUpdateignature OnCharacterActionUpdate;
