@@ -35,14 +35,6 @@ bool UStrongholdAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return true;
 }
 
-void UStrongholdAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
 void UStrongholdAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);

@@ -19,6 +19,13 @@ class FREEDOMPHANTOMS_API UUtilityAIAction : public UObject
 private:
 	bool bMarkedForDeath;
 
+protected:
+	UPROPERTY()
+		class ACombatAIController* CombatAIController;
+
+	UPROPERTY()
+		class ACombatCharacter* OwningCombatCharacter;
+
 public:
 
 	UPROPERTY(BlueprintReadOnly)

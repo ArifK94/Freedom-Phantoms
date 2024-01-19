@@ -15,9 +15,6 @@ class FREEDOMPHANTOMS_API UCombatAction : public UUtilityAIAction
 	GENERATED_BODY()
 
 private:
-	class ACombatAIController* CombatAIController;
-	class ACombatCharacter* OwningCombatCharacter;
-
 	mutable FTimerHandle THandler_Shoot;
 	mutable FTimerHandle THandler_EndShooting;
 
@@ -28,8 +25,6 @@ public:
 
 	// NPC will need to have the ability to shoot 90% of the time.
 	virtual bool CanRunAsynchronously(AAIController* Controller, APawn* Pawn) const override;
-
-	virtual void Spawn(AAIController* Controller, APawn* Pawn) override;
 
 	virtual void Exit(AAIController* Controller, APawn* Pawn) override;
 

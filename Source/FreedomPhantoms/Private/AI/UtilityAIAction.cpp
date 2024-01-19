@@ -2,6 +2,8 @@
 
 
 #include "AI/UtilityAIAction.h"
+#include "Characters/BaseCharacter.h"
+#include "Controllers/CombatAIController.h"
 
 UUtilityAIAction::UUtilityAIAction()
 {
@@ -53,6 +55,9 @@ void UUtilityAIAction::Exit(AAIController* Controller, APawn* Pawn)
 void UUtilityAIAction::Spawn(AAIController* Controller, APawn* Pawn)
 {
 	ReceiveSpawn(Controller, Pawn);
+
+	CombatAIController = Cast<ACombatAIController>(Controller);
+	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
 }
 
 void UUtilityAIAction::Kill()

@@ -15,9 +15,6 @@ class FREEDOMPHANTOMS_API ULastSeenEnemyAction : public UUtilityAIAction
 	GENERATED_BODY()
 	
 private:
-	class ACombatAIController* CombatAIController;
-	class ACombatCharacter* OwningCombatCharacter;
-
 	mutable EPathFollowingRequestResult::Type MoveToResult;
 
 	mutable FTimerHandle THandler_LastSeenEnemy;
@@ -32,8 +29,6 @@ public:
 	virtual bool CanRun(AAIController* Controller, APawn* Pawn) const override;
 
 	virtual void Spawn(AAIController* Controller, APawn* Pawn) override;
-
-	virtual void Enter(AAIController* Controller, APawn* Pawn) override;
 
 	virtual void Exit(AAIController* Controller, APawn* Pawn) override;
 

@@ -36,26 +36,6 @@ bool URecruitFollowAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return true;
 }
 
-void URecruitFollowAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
-void URecruitFollowAction::Enter(AAIController* Controller, APawn* Pawn)
-{
-	Super::Enter(Controller, Pawn);
-
-}
-
-void URecruitFollowAction::Exit(AAIController* Controller, APawn* Pawn)
-{
-	Super::Exit(Controller, Pawn);
-
-}
-
 void URecruitFollowAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);

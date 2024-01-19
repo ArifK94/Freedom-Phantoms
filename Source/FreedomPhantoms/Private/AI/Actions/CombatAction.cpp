@@ -61,14 +61,6 @@ bool UCombatAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return true;
 }
 
-void UCombatAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
 void UCombatAction::Exit(AAIController* Controller, APawn* Pawn)
 {
 	Super::Exit(Controller, Pawn);
@@ -198,6 +190,12 @@ void UCombatAction::ShootAtEnemy()
 
 void UCombatAction::EndShooting()
 {
+	if (OwningCombatCharacter->GetCurrentWeapon() == OwningCombatCharacter->GetGrenadeWeapon())
+	{
+		OwningCombatCharacter->EquipWeapon(OwningCombatCharacter->GetPrimaryWeapon());
+	}
+
+
 	OwningCombatCharacter->EndFire();
 
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndShooting);

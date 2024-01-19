@@ -32,24 +32,6 @@ bool UPatrolAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return true;
 }
 
-void UPatrolAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
-void UPatrolAction::Enter(AAIController* Controller, APawn* Pawn)
-{
-	Super::Enter(Controller, Pawn);
-}
-
-void UPatrolAction::Exit(AAIController* Controller, APawn* Pawn)
-{
-	Super::Exit(Controller, Pawn);
-}
-
 void UPatrolAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);

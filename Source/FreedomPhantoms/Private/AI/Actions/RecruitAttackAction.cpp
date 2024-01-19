@@ -47,24 +47,6 @@ bool URecruitAttackAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return true;
 }
 
-void URecruitAttackAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
-void URecruitAttackAction::Enter(AAIController* Controller, APawn* Pawn)
-{
-	Super::Enter(Controller, Pawn);
-}
-
-void URecruitAttackAction::Exit(AAIController* Controller, APawn* Pawn)
-{
-	Super::Exit(Controller, Pawn);
-}
-
 void URecruitAttackAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);

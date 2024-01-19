@@ -94,14 +94,6 @@ bool UMountedGunAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return true;
 }
 
-void UMountedGunAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
 void UMountedGunAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);

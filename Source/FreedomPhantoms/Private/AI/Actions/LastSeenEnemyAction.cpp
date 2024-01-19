@@ -43,15 +43,7 @@ void ULastSeenEnemyAction::Spawn(AAIController* Controller, APawn* Pawn)
 {
 	Super::Spawn(Controller, Pawn);
 
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-
 	Radius = FMath::RandRange(1000.f, 1500.f);
-}
-
-void ULastSeenEnemyAction::Enter(AAIController* Controller, APawn* Pawn)
-{
-	Super::Enter(Controller, Pawn);
 }
 
 void ULastSeenEnemyAction::Exit(AAIController* Controller, APawn* Pawn)

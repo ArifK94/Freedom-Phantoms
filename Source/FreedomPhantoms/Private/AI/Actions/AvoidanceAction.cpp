@@ -42,14 +42,6 @@ bool UAvoidanceAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return true;
 }
 
-void UAvoidanceAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
 void UAvoidanceAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);

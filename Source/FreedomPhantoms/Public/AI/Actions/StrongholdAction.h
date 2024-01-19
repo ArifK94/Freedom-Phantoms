@@ -15,9 +15,6 @@ class FREEDOMPHANTOMS_API UStrongholdAction : public UUtilityAIAction
 	GENERATED_BODY()
 
 private:
-	class ACombatAIController* CombatAIController;
-	class ACombatCharacter* OwningCombatCharacter;
-
 	EPathFollowingRequestResult::Type MoveToResult;
 
 	/**
@@ -29,8 +26,6 @@ public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
 
 	virtual bool CanRun(AAIController* Controller, APawn* Pawn) const override;
-
-	virtual void Spawn(AAIController* Controller, APawn* Pawn) override;
 
 	virtual void Tick(float DeltaTime, AAIController* Controller, APawn* Pawn) override;
 

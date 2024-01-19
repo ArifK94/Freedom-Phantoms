@@ -15,21 +15,12 @@ class FREEDOMPHANTOMS_API UPriorityDestinationAction : public UUtilityAIAction
 	GENERATED_BODY()
 
 private:
-	class ACombatAIController* CombatAIController;
-	class ACombatCharacter* OwningCombatCharacter;
-
 	mutable EPathFollowingRequestResult::Type MoveToResult;
 
 public:
 	virtual float Score(AAIController* Controller, APawn* Pawn) override;
 
 	virtual bool CanRun(AAIController* Controller, APawn* Pawn) const override;
-
-	virtual void Spawn(AAIController* Controller, APawn* Pawn) override;
-
-	virtual void Enter(AAIController* Controller, APawn* Pawn) override;
-
-	virtual void Exit(AAIController* Controller, APawn* Pawn) override;
 
 	virtual void Tick(float DeltaTime, AAIController* Controller, APawn* Pawn) override;
 	

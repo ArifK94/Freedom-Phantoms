@@ -24,24 +24,6 @@ bool UPriorityDestinationAction::CanRun(AAIController* Controller, APawn* Pawn) 
 	return true;
 }
 
-void UPriorityDestinationAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
-void UPriorityDestinationAction::Enter(AAIController* Controller, APawn* Pawn)
-{
-	Super::Enter(Controller, Pawn);
-}
-
-void UPriorityDestinationAction::Exit(AAIController* Controller, APawn* Pawn)
-{
-	Super::Exit(Controller, Pawn);
-}
-
 void UPriorityDestinationAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 {
 	Super::Tick(DeltaTime, Controller, Pawn);

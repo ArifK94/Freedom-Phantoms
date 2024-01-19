@@ -41,19 +41,6 @@ bool UCoverAction::CanRun(AAIController* Controller, APawn* Pawn) const
 	return true;
 }
 
-void UCoverAction::Spawn(AAIController* Controller, APawn* Pawn)
-{
-	Super::Spawn(Controller, Pawn);
-
-	CombatAIController = Cast<ACombatAIController>(Controller);
-	OwningCombatCharacter = Cast<ACombatCharacter>(Pawn);
-}
-
-void UCoverAction::Enter(AAIController* Controller, APawn* Pawn)
-{
-	Super::Enter(Controller, Pawn);
-}
-
 void UCoverAction::Exit(AAIController* Controller, APawn* Pawn)
 {
 	Super::Exit(Controller, Pawn);
