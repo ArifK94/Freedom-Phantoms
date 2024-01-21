@@ -19,6 +19,8 @@ class FREEDOMPHANTOMS_API UUtilityAIAction : public UObject
 private:
 	bool bMarkedForDeath;
 
+	FTimerHandle THandler_TimeOut;
+
 protected:
 	UPROPERTY()
 		class ACombatAIController* CombatAIController;
@@ -33,6 +35,10 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 		bool LastCanRun;
+
+	UPROPERTY(BlueprintReadWrite)
+		float CooldownAmount;
+
 
 public:
 	UUtilityAIAction();
@@ -84,10 +90,16 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		bool IsMarkedForDeath();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool IsTimedOut();
+
 	UFUNCTION(BlueprintCallable)
 		void Resurrect();
 
+	UFUNCTION(BlueprintCallable)
+		void StartTimeOut();
 
-
+	UFUNCTION(BlueprintCallable)
+		void StopTimeOut();
 };
 

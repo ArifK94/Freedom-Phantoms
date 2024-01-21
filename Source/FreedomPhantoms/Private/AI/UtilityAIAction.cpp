@@ -8,6 +8,7 @@
 UUtilityAIAction::UUtilityAIAction()
 {
 	bMarkedForDeath = false;
+	CooldownAmount = 5.f;
 }
 
 UWorld* UUtilityAIAction::GetWorld() const
@@ -70,7 +71,22 @@ bool UUtilityAIAction::IsMarkedForDeath()
 	return bMarkedForDeath;
 }
 
+bool UUtilityAIAction::IsTimedOut()
+{
+	return THandler_TimeOut.IsValid();
+}
+
 void UUtilityAIAction::Resurrect()
 {
 	bMarkedForDeath = false;
+}
+
+void UUtilityAIAction::StartTimeOut()
+{
+	GetWorld()->GetTimerManager().SetTimer(THandler_TimeOut, this, &UUtilityAIAction::StopTimeOut, 1.f, false, CooldownAmount);
+}
+
+void UUtilityAIAction::StopTimeOut()
+{
+	GetWorld()->GetTimerManager().ClearTimer(THandler_TimeOut);
 }
