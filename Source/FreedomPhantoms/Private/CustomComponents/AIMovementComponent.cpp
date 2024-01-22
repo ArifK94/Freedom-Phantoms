@@ -32,13 +32,12 @@ void UAIMovementComponent::Init()
 
 EPathFollowingRequestResult::Type UAIMovementComponent::MoveToDestination(FVector TargetDestination, float AcceptRadius, AIBehaviourState BehaviourState, bool SprintToTarget, bool WalkNearTarget)
 {
-	auto CurrentMovement = EPathFollowingRequestResult::Failed;
-
 	if (!AIController) {
 		Init();
 	}
 
 	if (!AIController || TargetDestination.IsZero()) {
+		CurrentMovement = EPathFollowingRequestResult::Failed;
 		return CurrentMovement;
 	}
 

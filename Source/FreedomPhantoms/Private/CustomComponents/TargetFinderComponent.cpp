@@ -19,21 +19,13 @@
 
 void UTargetFinderComponent::SetFindTargetPerFrame(bool Value)
 {
-	if (Value)
-	{
-		StartTickTimer(.5f, true);
-	}
-	else
-	{
-		StopTickTimer();
-	}
-
 	FindTargetPerFrame = Value;
+	SetComponentTickEnabled(Value);
 }
 
 UTargetFinderComponent::UTargetFinderComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	TargetSightRadius = 7000.0f;
 	LoseSightRadius = 7500.f;
@@ -59,13 +51,12 @@ void UTargetFinderComponent::BeginPlay()
 	SetFindTargetPerFrame(FindTargetPerFrame);
 }
 
-void UTargetFinderComponent::TimerTick()
+void UTargetFinderComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TimerTick();
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	FindTarget();
 }
-
 
 void UTargetFinderComponent::Init()
 {
@@ -87,59 +78,12 @@ void UTargetFinderComponent::Init()
 			TargetSightSphere->SetSphereRadius(TargetSightRadius);
 			TargetSightSphere->SetCanEverAffectNavigation(false);
 			TargetSightSphere->SetCollisionProfileName(TEXT("AITargetSight"));
-			TargetSightSphere->OnComponentBeginOverlap.AddDynamic(this, &UTargetFinderComponent::OnOverlapBegin);
-			TargetSightSphere->OnComponentEndOverlap.AddDynamic(this, &UTargetFinderComponent::OnOverlapEnd);
 		}
 	}
 }
 
-void UTargetFinderComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	FindTarget();
-}
-
-void UTargetFinderComponent::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	FindTarget();
-}
-
-TArray<AActor*> UTargetFinderComponent::GetActorsInRadius(float Radius)
-{
-	TArray<AActor*> OutActors;
-
-	// Get all overlapped actors based that have team faction component attached
-	TargetSightSphere->GetOverlappingActors(OutActors, AActor::StaticClass());
-
-	return OutActors;
-}
-
-bool UTargetFinderComponent::CanSeeLastTarget()
-{
-	if (LastSeenTarget == nullptr) {
-		return false;
-	}
-
-	FVector TargetLocation;
-	bool HasHitTarget = CanSeeTarget(LastSeenTarget, TargetLocation);
-
-	if (!HasHitTarget) {
-		return false;
-	}
-
-
-	if (!UHealthComponent::IsActorAlive(LastSeenTarget)) {
-		return false;
-	}
-
-	return true;
-}
-
 AActor* UTargetFinderComponent::FindTarget()
 {
-	if (IsSearching) {
-		return nullptr;
-	}
-
 	if (!GetOwningPawn()) {
 		return nullptr;
 	}
@@ -148,12 +92,9 @@ AActor* UTargetFinderComponent::FindTarget()
 		Init();
 
 		if (!TargetSightSphere) {
-			IsSearching = false;
 			return nullptr;
 		}
 	}
-
-	IsSearching = true;
 
 	TArray<AActor*> OutActors = GetActorsInRadius(TargetSightRadius);
 
@@ -275,7 +216,6 @@ AActor* UTargetFinderComponent::FindTarget()
 		}
 
 		OnTargetSearch.Broadcast(LastSeenTargetParam);
-		IsSearching = false;
 		return LastSeenTarget;
 	}
 	// otherwise clear the last target.
@@ -293,8 +233,6 @@ AActor* UTargetFinderComponent::FindTarget()
 
 	LastSeenTargetParam = TargetSearchParameters;
 	LastSeenTarget = TargetActor;
-
-	IsSearching = false;
 
 	OnTargetSearch.Broadcast(TargetSearchParameters);
 	return TargetActor;
@@ -624,4 +562,35 @@ bool UTargetFinderComponent::IsTargetBehind(AActor* ActorA, AActor* TargetActor)
 	}
 
 	return false;
+}
+
+TArray<AActor*> UTargetFinderComponent::GetActorsInRadius(float Radius)
+{
+	TArray<AActor*> OutActors;
+
+	// Get all overlapped actors based that have team faction component attached
+	TargetSightSphere->GetOverlappingActors(OutActors, AActor::StaticClass());
+
+	return OutActors;
+}
+
+bool UTargetFinderComponent::CanSeeLastTarget()
+{
+	if (LastSeenTarget == nullptr) {
+		return false;
+	}
+
+	FVector TargetLocation;
+	bool HasHitTarget = CanSeeTarget(LastSeenTarget, TargetLocation);
+
+	if (!HasHitTarget) {
+		return false;
+	}
+
+
+	if (!UHealthComponent::IsActorAlive(LastSeenTarget)) {
+		return false;
+	}
+
+	return true;
 }

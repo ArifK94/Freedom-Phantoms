@@ -23,6 +23,9 @@ private:
 		class AAIController* AIController;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		TEnumAsByte<EPathFollowingRequestResult::Type> CurrentMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		float MinAcceptanceRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -68,5 +71,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FVector ValidateDestination(FVector Location, bool& IsLocationValid);
+
+	EPathFollowingRequestResult::Type GetCurrentMovement() { return CurrentMovement; }
 		
 };

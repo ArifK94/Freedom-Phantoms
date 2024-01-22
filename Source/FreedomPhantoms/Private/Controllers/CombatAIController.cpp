@@ -63,6 +63,8 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	MoveToLastSeenEnemy = true;
 
+	HasTimeSpentOnEnemyReached = false;
+
 	NonBlindFireWeaponTypes.Add(WeaponType::Shotgun);
 	NonBlindFireWeaponTypes.Add(WeaponType::RPG);
 }
@@ -309,39 +311,24 @@ void ACombatAIController::OnOrderReceived(UCommanderRecruit* RecruitInfo, int Re
 		return;
 	}
 
-	bRecruitInfo = RecruitInfo;
+	ResetBehaviourFlags();
 
+	bRecruitInfo = RecruitInfo;
 	CurrentCommand = RecruitInfo->CurrentCommand;
 	TargetDestination = RecruitInfo->TargetLocation;
-
-	if (OwningCombatCharacter->IsTakingCover())
-	{
-		OwningCombatCharacter->StopCover();
-	}
 
 	if (CurrentCommand == CommanderOrders::Defend)
 	{
 		// Reduce search radius for all components if defending.
 		MountedGunFinderComponent->SetSearchRadius(100.f);
 		CoverFinderComponent->SetSearchRadius(200.f);
+		SetPriorityDestination(TargetDestination);
 	}
 	else
 	{
 		MountedGunFinderComponent->ResetSearchRadius();
 		CoverFinderComponent->ResetSearchRadius();
 	}
-
-	OwningCombatCharacter->DropMountedGun();
-
-	//OwningCombatCharacter->GetCharacterMovement()->bUseRVOAvoidance = true;
-
-	ResetBehaviourFlags();
-
-	SetStayCombatAlert(false);
-	
-	MoveToOrderResult = EPathFollowingRequestResult::Failed;
-
-	CoverFinderComponent->RemoveCoverPoint();
 }
 
 void ACombatAIController::OnCommanderChanged(ACommanderCharacter* NewCommander)
@@ -363,6 +350,7 @@ void ACombatAIController::OnHealthUpdate(FHealthParameters InHealthParameters)
 	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
 	{
 		ClearTimers();
+		ResetBehaviourFlags();
 
 		if (StrongholdDefenderComponent->GetStronghold()) {
 			StrongholdDefenderComponent->RemoveStronghold();
@@ -415,6 +403,23 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 {
 	AActor* ChosenTarget = TargetSearchParameters.TargetActor;
 
+	// same enemy as before?
+	if (EnemyActor && EnemyActor == ChosenTarget)
+	{
+		// is there no timer running?
+		if (!THandler_TimeSpentOnEnemy.IsValid())
+		{
+			HasTimeSpentOnEnemyReached = false;
+			GetWorld()->GetTimerManager().SetTimer(THandler_TimeSpentOnEnemy, this, &ACombatAIController::EndTimeSpentOnEnemy, 1.f, false, TimeSpentOnEnemyRange);
+		}
+	}
+	// otherwise new enemy.
+	// reset timer.
+	else
+	{
+		GetWorld()->GetTimerManager().ClearTimer(THandler_TimeSpentOnEnemy);
+	}
+
 	// if no new enemy found,
 	// maintain current enemy if enemy or owning AI character are taking cover.
 	if (ChosenTarget == nullptr && EnemyActor) 
@@ -428,9 +433,9 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 		// is enemy alive?
 		// AI can still see enemy if either enemy.
 		// or is my AI taking cover & the enemy is close? Should not be able to 
-		if (IsEnemyAlive && (EnemyCharacter && EnemyCharacter->IsTakingCover()) || (OwningCombatCharacter->IsTakingCover() && IsTargetClose))
+		if (IsEnemyAlive && (EnemyCharacter && EnemyCharacter->IsTakingCover()) || 
+			(OwningCombatCharacter->IsTakingCover() && IsTargetClose))
 		{
-			TimeSpentOnEnemy++;
 			return;
 		}
 		// otherwise enemy is unreachable.
@@ -447,9 +452,6 @@ void ACombatAIController::OnTargetSearchUpdate(FTargetSearchParameters TargetSea
 	}
 	else 
 	{
-		// same enemy as before?
-		TimeSpentOnEnemy = EnemyActor == ChosenTarget ? TimeSpentOnEnemy + 1 : .0f;
-
 		EnemyActor = ChosenTarget;
 
 		// if enemy is present, then ignore last seen enemy.
@@ -655,12 +657,31 @@ void ACombatAIController::TargetFound()
 	}
 }
 
+void ACombatAIController::EndTimeSpentOnEnemy()
+{
+	HasTimeSpentOnEnemyReached = true;
+	GetWorld()->GetTimerManager().ClearTimer(THandler_TimeSpentOnEnemy);
+}
+
 void ACombatAIController::ResetBehaviourFlags()
 {
 	HasPriorityDestination = false;
 	HasChosenNearTargetDest = false;
 	IsRunningForCover = false;
 	CoverFound = false;
+
+	if (OwningCombatCharacter->IsTakingCover())
+	{
+		OwningCombatCharacter->StopCover();
+	}
+
+	OwningCombatCharacter->DropMountedGun();
+
+	SetStayCombatAlert(false);
+
+	MoveToOrderResult = EPathFollowingRequestResult::Failed;
+
+	CoverFinderComponent->RemoveCoverPoint();
 }
 
 bool ACombatAIController::IsNearCommander()

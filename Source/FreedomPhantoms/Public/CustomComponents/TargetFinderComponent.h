@@ -23,8 +23,6 @@ private:
 	UPROPERTY()
 		FTimerHandle THandler_CountdownTargetLost;
 
-	bool IsSearching;
-
 	/**
 	* Hold the last enemy seen.
 	*/
@@ -96,12 +94,6 @@ public:
 private:
 	virtual void Init() override;
 
-	UFUNCTION()
-		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-		void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
 	TArray<AActor*> GetActorsInRadius(float Radius);
 
 	bool CanSeeLastTarget();
@@ -121,7 +113,7 @@ private:
 protected:
 	virtual void BeginPlay() override;
 
-	virtual void TimerTick() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)

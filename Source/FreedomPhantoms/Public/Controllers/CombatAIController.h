@@ -70,6 +70,8 @@ private:
 	FVector LastSeenLocation;
 
 
+	FTimerHandle THandler_TimeSpentOnEnemy;
+
 	UPROPERTY()
 		FAvoidableParams bAvoidableParams;
 
@@ -163,7 +165,7 @@ private:
 	* How much time spent on the same enemy?
 	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		float TimeSpentOnEnemy;
+		bool HasTimeSpentOnEnemyReached;
 
 	/**
 	* Time Range when spending time on same enemy.
@@ -248,6 +250,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SetPriorityDestination(FVector Location);
 
+	/** Reset all behaviour states in this function. */
+		void ResetBehaviourFlags();
+
 private:
 	void Init();
 
@@ -283,9 +288,7 @@ private:
 
 	void TargetFound();
 
-	/** Reset all behaviour states in this function. */
-	void ResetBehaviourFlags();
-
+	void EndTimeSpentOnEnemy();
 
 protected:
 	virtual void BeginPlay() override;
@@ -344,7 +347,7 @@ public:
 
 	float GetEnemyCloseRange() { return EnemyCloseRange; }
 
-	float GetTimeSpentOnEnemy() { return TimeSpentOnEnemy; }
+	bool GetHasTimeSpentOnEnemyReached() { return HasTimeSpentOnEnemyReached; }
 
 	float GetTimeSpentOnEnemyRange() { return TimeSpentOnEnemyRange; }
 

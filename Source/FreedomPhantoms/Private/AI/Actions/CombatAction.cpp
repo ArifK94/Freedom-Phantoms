@@ -8,10 +8,11 @@
 #include "Weapons/PumpActionWeapon.h"
 #include "Weapons/ThrowableWeapon.h"
 #include "Weapons/MountedGun.h"
-#include "CustomComponents/MountedGunFinderComponent.h"
-#include "CustomComponents/TargetFinderComponent.h"
 #include "StructCollection.h"
 #include "Services/SharedService.h"
+#include "CustomComponents/MountedGunFinderComponent.h"
+#include "CustomComponents/TargetFinderComponent.h"
+#include "CustomComponents/AIMovementComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -204,8 +205,6 @@ void UCombatAction::EndShooting()
 
 void UCombatAction::ReloadWeapon()
 {
-	OwningCombatCharacter->EndAim();
-
 	// check if enemy distance is close, if so then pull out pistol
 	bool IsTargetClose = USharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange());
 
@@ -249,23 +248,27 @@ void UCombatAction::ReloadWeapon()
 
 void UCombatAction::Aim()
 {
+	bool CanAim = true;
+
 	bool CanBlindFire = CombatAIController->CanBlindCoverFire(OwningCombatCharacter->GetCurrentWeapon());
 
-	// always aim towards target :-
-	// can only aim if not sprinting,
-	// if not in cover, since the character can do blind fire and no aim.
-	if (!OwningCombatCharacter->IsAiming() && !OwningCombatCharacter->IsSprinting() && !OwningCombatCharacter->IsReloading() && !OwningCombatCharacter->IsTakingCover() && !CanBlindFire && !CombatAIController->IsNearTargetDestination())
+	// If taking cover, can the character perform blind fire?
+	if (OwningCombatCharacter->IsTakingCover() && !CanBlindFire)
+	{
+		CanAim = false;
+	}
+
+	// If AI is moving to a location && 
+	// If far away from target destination, then do not aim so character can sprint to destination.
+	if (CombatAIController->GetAIMovementComponent()->GetCurrentMovement() == EPathFollowingRequestResult::RequestSuccessful && 
+		!CombatAIController->IsNearTargetDestination())
+	{
+		CanAim = false;
+	}
+
+	if (CanAim)
 	{
 		OwningCombatCharacter->BeginAim();
-	}
-	// can do blind fire if in cover without aiming but only if enemy is nearby.
-	else if (USharedService::IsNearTargetPosition(OwningCombatCharacter, CombatAIController->GetEnemyActor(), CombatAIController->GetEnemyCloseRange()) &&
-		OwningCombatCharacter->IsTakingCover() && CanBlindFire)
-	{
-		if (!UKismetMathLibrary::RandomBool() && OwningCombatCharacter->IsAiming())
-		{
-			OwningCombatCharacter->EndAim();
-		}
 	}
 	else
 	{
@@ -301,7 +304,7 @@ bool UCombatAction::CanThrowGrenade()
 	}
 
 	// has spent long on this enemy?
-	if (CombatAIController->GetTimeSpentOnEnemy() < CombatAIController->GetTimeSpentOnEnemyRange()) {
+	if (!CombatAIController->GetHasTimeSpentOnEnemyReached()) {
 		return false;
 	}
 
