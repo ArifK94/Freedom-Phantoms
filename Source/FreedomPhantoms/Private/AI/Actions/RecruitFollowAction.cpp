@@ -56,7 +56,7 @@ void URecruitFollowAction::MoveToCommander()
 		}
 	}
 
-	OwningCombatCharacter->DropMountedGun();
+	CombatAIController->ResetBehaviourFlags();
 	CombatAIController->SetTargetDestination(CombatAIController->GetCommander()->GetActorLocation());
 	CombatAIController->GetAIMovementComponent()->MoveToDestination(CombatAIController->GetTargetDestination(), CombatAIController->GetAcceptanceRadius(), AIBehaviourState::PriorityOrdersCommander);
 }
