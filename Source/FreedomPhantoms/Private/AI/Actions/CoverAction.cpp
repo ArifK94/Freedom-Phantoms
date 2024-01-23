@@ -12,6 +12,11 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
+UCoverAction::UCoverAction()
+{
+	CooldownAmount = FMath::RandRange(8.f, 10.f);
+}
+
 float UCoverAction::Score(AAIController* Controller, APawn* Pawn)
 {
 	Super::Score(Controller, Pawn);
@@ -47,9 +52,7 @@ void UCoverAction::Exit(AAIController* Controller, APawn* Pawn)
 
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Peaking);
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndPeaking);
-
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Stance);
-
 }
 
 void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
@@ -97,6 +100,7 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 		{
 			TakeCover();
 			CombatAIController->SetCoverFound(false);
+			StartTimeOut();
 		}
 		else 
 		{
@@ -111,6 +115,7 @@ void UCoverAction::Tick(float DeltaTime, AAIController* Controller, APawn* Pawn)
 		if (!THandler_Stance.IsValid())
 		{
 			OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_Stance, this, &UCoverAction::ChangeStance, 1.f, true, FMath::RandRange(2.f, 5.f));
+			StartTimeOut();
 		}
 	}
 }
@@ -217,14 +222,5 @@ void UCoverAction::ChangeStance()
 		OwningCombatCharacter->ToggleCrouch();
 	}
 
-	if (!THandler_EndStance.IsValid())
-	{
-		OwningCombatCharacter->GetWorldTimerManager().SetTimer(THandler_EndStance, this, &UCoverAction::ClearStanceTimer, 1.f, true, FMath::RandRange(5.f, 10.f));
-	}
-}
-
-void UCoverAction::ClearStanceTimer()
-{
 	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_Stance);
-	OwningCombatCharacter->GetWorldTimerManager().ClearTimer(THandler_EndStance);
 }
