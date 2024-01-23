@@ -20,6 +20,7 @@ private:
 	bool bMarkedForDeath;
 
 	FTimerHandle THandler_TimeOut;
+	bool bIsTimedOut;
 
 protected:
 	UPROPERTY()

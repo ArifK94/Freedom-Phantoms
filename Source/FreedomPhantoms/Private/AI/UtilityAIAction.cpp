@@ -8,6 +8,7 @@
 UUtilityAIAction::UUtilityAIAction()
 {
 	bMarkedForDeath = false;
+	bIsTimedOut = false;
 	CooldownAmount = 5.f;
 }
 
@@ -73,7 +74,7 @@ bool UUtilityAIAction::IsMarkedForDeath()
 
 bool UUtilityAIAction::IsTimedOut()
 {
-	return THandler_TimeOut.IsValid();
+	return bIsTimedOut;
 }
 
 void UUtilityAIAction::Resurrect()
@@ -84,9 +85,11 @@ void UUtilityAIAction::Resurrect()
 void UUtilityAIAction::StartTimeOut()
 {
 	GetWorld()->GetTimerManager().SetTimer(THandler_TimeOut, this, &UUtilityAIAction::StopTimeOut, 1.f, false, CooldownAmount);
+	bIsTimedOut = true;
 }
 
 void UUtilityAIAction::StopTimeOut()
 {
+	bIsTimedOut = false;
 	GetWorld()->GetTimerManager().ClearTimer(THandler_TimeOut);
 }
