@@ -24,6 +24,7 @@
 #include "Sound/SoundBase.h"
 #include "Engine.h"
 #include "UObject/UObjectGlobals.h"
+#include "Engine/GameInstance.h"
 
 AWeapon::AWeapon()
 {
@@ -107,7 +108,7 @@ void AWeapon::BeginPlay()
 	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
-	GetWorldTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, true, 1.f);
+	GetTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, true, 1.f);
 
 	SpawnMagazine();
 	ConfigSetup();
@@ -121,15 +122,15 @@ void AWeapon::DelayedInit()
 	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
-	if (GetWorld() && THandler_DelayedInit.IsValid())
+	if (GetMyWorld() && THandler_DelayedInit.IsValid())
 	{
-		GetWorldTimerManager().ClearTimer(THandler_DelayedInit);
+		GetTimerManager().ClearTimer(THandler_DelayedInit);
 	}
 }
 
 void AWeapon::SetIsAiming(bool isAiming)
 {
-	if (!GetWorld()) {
+	if (!GetMyWorld()) {
 		return;
 	}
 
@@ -200,9 +201,9 @@ bool AWeapon::CanInteract_Implementation(APawn* InPawn, AController* InControlle
 
 void AWeapon::OnDestroyWeapon(AActor* Actor)
 {
+	GetMyWorld()->GetTimerManager().ClearAllTimersForObject(this);
+
 	StopFire();
-	GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
-	GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
 
 	CurrentChargeAmount = 0.f;
 
@@ -232,6 +233,8 @@ void AWeapon::OnDestroyWeapon(AActor* Actor)
 
 void AWeapon::ConfigSetup()
 {
+	OwningGameInstance = Cast<UGameInstance>(UGameplayStatics::GetGameInstance(GetMyWorld()));
+
 	OnDestroyed.AddDynamic(this, &AWeapon::OnDestroyWeapon);
 
 	ConvertWeaponName();
@@ -399,7 +402,7 @@ void AWeapon::Fire()
 		if (BurstAmmountCount >= 3)
 		{
 			StopFire();
-			GetWorldTimerManager().ClearTimer(THandler_BurstFire);
+			GetTimerManager().ClearTimer(THandler_BurstFire);
 			BurstAmmountCount = 0;
 			return;
 		}
@@ -448,12 +451,12 @@ void AWeapon::Fire()
 		if (CurrentAmmo <= 0) {
 			isReloading = true;
 			ClipOut();
-			GetWorldTimerManager().SetTimer(THandler_AutoReloadBegin, this, &AWeapon::AutoReloadBegin, CooldownReload / 2.0f, false);
+			GetTimerManager().SetTimer(THandler_AutoReloadBegin, this, &AWeapon::AutoReloadBegin, CooldownReload / 2.0f, false);
 		}
 	}
 
 	if (hasRecoil) {
-		GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
+		GetTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
 	}
 
 	if (selectiveFireMode == SelectiveFire::Burst) {
@@ -525,9 +528,9 @@ void AWeapon::CreateBullet()
 
 		SpawnProjectile(getMuzzleLocation(), TargetRotation);
 
-		if (DrawDebugShotLine) 
+		if (DrawDebugShotLine)
 		{
-			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Green, true, 1, 0, 2);
+			DrawDebugLine(GetMyWorld(), EyeLocation, TraceEnd, FColor::Green, true, 1, 0, 2);
 		}
 	}
 
@@ -558,7 +561,7 @@ void AWeapon::SpawnProjectile(FVector Locatiom, FRotator Rotation)
 			SpawnParams.Owner = GetOwner();
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			Bullet = GetWorld()->SpawnActor<AProjectile>(BulletClass, Locatiom, Rotation, SpawnParams);
+			Bullet = GetMyWorld()->SpawnActor<AProjectile>(BulletClass, Locatiom, Rotation, SpawnParams);
 		}
 
 
@@ -586,15 +589,15 @@ void AWeapon::PlayShotEffect(FVector EyeLocation)
 
 	if (MuzzleEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleEffect, getMuzzleLocation(), GetMuzzleRotation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetMyWorld(), MuzzleEffect, getMuzzleLocation(), GetMuzzleRotation());
 	}
 
 	if (MuzzleFlashNiagara)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MuzzleFlashNiagara, getMuzzleLocation(), GetMuzzleRotation());
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetMyWorld(), MuzzleFlashNiagara, getMuzzleLocation(), GetMuzzleRotation());
 	}
 
-	LastFireTime = GetWorld()->TimeSeconds;
+	LastFireTime = GetMyWorld()->TimeSeconds;
 
 	// try and play the sound if specified
 	if (ShotSound != nullptr)
@@ -611,7 +614,7 @@ void AWeapon::PlayShotEffect(FVector EyeLocation)
 	}
 
 	// to get a blinking muzzle flash, delay rate needs to be very low
-	GetWorldTimerManager().SetTimer(THandler_MuzzleLight, this, &AWeapon::DisableMuzzleLight, .01f, false);
+	GetTimerManager().SetTimer(THandler_MuzzleLight, this, &AWeapon::DisableMuzzleLight, .01f, false);
 }
 
 void AWeapon::OnProjectileImpacted(FProjectileImpactParameters ProjectileImpactParameters)
@@ -669,7 +672,7 @@ void AWeapon::ReduceBulletSpread()
 	if (BulletSpreadCurrent <= BulletSpreadMin)
 	{
 		BulletSpreadCurrent = BulletSpreadMin;
-		GetWorldTimerManager().ClearTimer(THandler_BulletSpread);
+		GetTimerManager().ClearTimer(THandler_BulletSpread);
 	}
 }
 
@@ -677,7 +680,7 @@ void AWeapon::BeginShellEffect()
 {
 	if (ShellEjectEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ShellEjectEffect, MeshComp->GetSocketLocation(EjectorSocket));
+		UGameplayStatics::SpawnEmitterAtLocation(GetMyWorld(), ShellEjectEffect, MeshComp->GetSocketLocation(EjectorSocket));
 	}
 }
 
@@ -685,21 +688,21 @@ void AWeapon::StartFire()
 {
 	ShouldStopFiring = false;
 
-	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
+	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetMyWorld()->TimeSeconds, 0.0f);
 
 	switch (selectiveFireMode)
 	{
 	case SelectiveFire::Automatic:
 		if (!THandler_TimeBetweenShots.IsValid()) {
-			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+			GetTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
 		}
 		break;
 	case SelectiveFire::SemiAutomatic:
-			GetWorldTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, false, FirstDelay);
+		GetTimerManager().SetTimer(THandler_TimeBetweenShots, this, &AWeapon::Fire, TimeBetweenShots, false, FirstDelay);
 		break;
 	case SelectiveFire::Burst:
 		if (!THandler_BurstFire.IsValid()) {
-			GetWorldTimerManager().SetTimer(THandler_BurstFire, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+			GetTimerManager().SetTimer(THandler_BurstFire, this, &AWeapon::Fire, TimeBetweenShots, true, FirstDelay);
 		}
 		break;
 	default:
@@ -712,12 +715,12 @@ void AWeapon::StartFire()
 
 void AWeapon::StopFire()
 {
-	if (!GetWorld() || !HasFiredFirstShot) {
+	if (!GetMyWorld() || !HasFiredFirstShot) {
 		ShouldStopFiring = true;
 		return;
 	}
 
-	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
+	GetTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
 	// reset flags
 	isFiring = false;
@@ -727,7 +730,7 @@ void AWeapon::StopFire()
 	ChargeDown();
 
 	if (!THandler_BulletSpread.IsValid()) {
-		GetWorldTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
+		GetTimerManager().SetTimer(THandler_BulletSpread, this, &AWeapon::ReduceBulletSpread, BulletSpreadReduceRate, true);
 	}
 
 	FWeaponUpdateParameters WeaponUpdateParameters;
@@ -755,14 +758,14 @@ void AWeapon::ChargeUp()
 	}
 
 	if (THandler_ChargeDown.IsValid()) {
-		GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
+		GetTimerManager().ClearTimer(THandler_ChargeDown);
 	}
 
 
 	IsChargingUp = true;
 
 	if (!THandler_ChargeUp.IsValid()) {
-		GetWorldTimerManager().SetTimer(THandler_ChargeUp, this, &AWeapon::IncreaseCharge, .1f, true);
+		GetTimerManager().SetTimer(THandler_ChargeUp, this, &AWeapon::IncreaseCharge, .1f, true);
 	}
 
 }
@@ -778,13 +781,13 @@ void AWeapon::ChargeDown()
 	}
 
 	if (THandler_ChargeUp.IsValid()) {
-		GetWorldTimerManager().ClearTimer(THandler_ChargeUp);
+		GetTimerManager().ClearTimer(THandler_ChargeUp);
 	}
 
 	IsChargingUp = false;
 
 	if (!THandler_ChargeDown.IsValid()) {
-		GetWorldTimerManager().SetTimer(THandler_ChargeDown, this, &AWeapon::DecreaseCharge, .1f, true);
+		GetTimerManager().SetTimer(THandler_ChargeDown, this, &AWeapon::DecreaseCharge, .1f, true);
 	}
 }
 
@@ -813,7 +816,7 @@ void AWeapon::IncreaseCharge()
 			}
 
 			if (CanPlay) {
-				Sound.AudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound.Audio, GetActorLocation(), FRotator::ZeroRotator, .5f, 1.f, 0.f, ChargingAudioComponent->AttenuationSettings);
+				Sound.AudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetMyWorld(), Sound.Audio, GetActorLocation(), FRotator::ZeroRotator, .5f, 1.f, 0.f, ChargingAudioComponent->AttenuationSettings);
 			}
 
 			// update the array struct 
@@ -825,7 +828,7 @@ void AWeapon::IncreaseCharge()
 
 void AWeapon::DecreaseCharge()
 {
-	if (!GetWorld()) {
+	if (!GetMyWorld()) {
 		return;
 	}
 
@@ -844,7 +847,7 @@ void AWeapon::DecreaseCharge()
 	{
 		auto Sound = ChargeDownSounds[i];
 		if (CurrentChargeAmount >= Sound.StartAmount && !Sound.AudioComponent) {
-			Sound.AudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound.Audio, GetActorLocation(), FRotator::ZeroRotator, .5f, 1.f, 0.f, ChargingAudioComponent->AttenuationSettings);
+			Sound.AudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetMyWorld(), Sound.Audio, GetActorLocation(), FRotator::ZeroRotator, .5f, 1.f, 0.f, ChargingAudioComponent->AttenuationSettings);
 			ChargeDownSounds[i] = Sound;
 			break;
 		}
@@ -861,7 +864,7 @@ void AWeapon::DecreaseCharge()
 			}
 		}
 
-		GetWorldTimerManager().ClearTimer(THandler_ChargeDown);
+		GetTimerManager().ClearTimer(THandler_ChargeDown);
 	}
 
 	CurrentChargeAmount = FMath::Clamp(CurrentChargeAmount - .1f, 0.f, ChargeUpTime);
@@ -872,14 +875,14 @@ void AWeapon::DisableMuzzleLight()
 	MuzzleLightComponent->SetVisibility(false, true);
 	MuzzleLightComponent->SetHiddenInGame(true, true);
 
-	if (GetWorld() && THandler_MuzzleLight.IsValid()) {
-		GetWorldTimerManager().ClearTimer(THandler_MuzzleLight);
+	if (GetMyWorld() && THandler_MuzzleLight.IsValid()) {
+		GetTimerManager().ClearTimer(THandler_MuzzleLight);
 	}
 }
 
 void AWeapon::OnReload()
 {
-	if (!GetWorld()) {
+	if (!GetMyWorld()) {
 		return;
 	}
 
@@ -888,7 +891,7 @@ void AWeapon::OnReload()
 		return;
 	}
 
-	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
+	GetTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
 	if (HasUnlimitedAmmo)
 	{
@@ -916,7 +919,7 @@ void AWeapon::BeginReload()
 {
 	if (CurrentMaxAmmo <= 0 || CurrentAmmo >= AmmoPerClip && !isReloading)	return;
 
-	GetWorldTimerManager().ClearTimer(THandler_TimeBetweenShots);
+	GetTimerManager().ClearTimer(THandler_TimeBetweenShots);
 
 	StopFire();
 	isReloading = true;
@@ -998,7 +1001,7 @@ void AWeapon::SpawnMagazine()
 		return;
 	}
 
-	UWorld* world = GetWorld();
+	UWorld* world = GetMyWorld();
 
 	if (!world) {
 		return;
@@ -1035,7 +1038,7 @@ void AWeapon::SpawnScopeAttachment()
 
 	auto RandomIndex = rand() % ScopeAttachmentClasses.Num();
 
-	ScopeAttachment = GetWorld()->SpawnActor<AWeaponAttachment>(ScopeAttachmentClasses[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	ScopeAttachment = GetMyWorld()->SpawnActor<AWeaponAttachment>(ScopeAttachmentClasses[RandomIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (ScopeAttachment)
 	{
@@ -1093,8 +1096,11 @@ void AWeapon::AutoReloadBegin()
 	WeaponUpdateParameters.WeaponState = EWeaponState::Reloading;
 	OnWeaponUpdate.Broadcast(WeaponUpdateParameters);
 
-	GetWorldTimerManager().SetTimer(THandler_AutoReloadEnd, this, &AWeapon::AutoReloadEnd, CooldownReload / 2.0f, false);
-	GetWorldTimerManager().ClearTimer(THandler_AutoReloadBegin);
+	if (GetMyWorld())
+	{
+		GetTimerManager().SetTimer(THandler_AutoReloadEnd, this, &AWeapon::AutoReloadEnd, CooldownReload / 2.0f, false);
+		GetTimerManager().ClearTimer(THandler_AutoReloadBegin);
+	}
 }
 
 void AWeapon::AutoReloadEnd()
@@ -1102,7 +1108,8 @@ void AWeapon::AutoReloadEnd()
 	OnReload();
 	EndReload();
 	isReloading = false;
-	GetWorldTimerManager().ClearTimer(THandler_AutoReloadEnd);
+
+	GetTimerManager().ClearTimer(THandler_AutoReloadEnd);
 }
 
 
@@ -1165,4 +1172,25 @@ void AWeapon::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 	MeshComp->SetGenerateOverlapEvents(true);
 	MeshComp->SetSimulatePhysics(SimulatePhysics);
 
+}
+
+UWorld* AWeapon::GetMyWorld() const
+{
+	if (GetWorld())
+	{
+		return GetWorld();
+	}
+
+	return OwningGameInstance->GetWorld();
+}
+
+
+FTimerManager& AWeapon::GetTimerManager() const
+{
+	if (GetWorld())
+	{
+		return GetWorld()->GetTimerManager();
+	}
+
+	return OwningGameInstance->GetTimerManager();
 }

@@ -40,6 +40,9 @@ private:
 	UFUNCTION()
 		void OnDestroyWeapon(AActor* Actor);
 
+	UPROPERTY(Transient)
+		TObjectPtr<class UGameInstance>	OwningGameInstance;
+
 protected:
 
 	UPROPERTY()
@@ -454,6 +457,10 @@ protected:
 	void PlayShotEffect(FVector EyeLocation);
 
 	void EmptyClipEvent();
+
+	virtual UWorld* GetMyWorld() const;
+
+	class FTimerManager& GetTimerManager() const;
 
 public:
 

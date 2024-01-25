@@ -4,6 +4,7 @@
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/GameInstance.h"
 
 UObjectPoolComponent::UObjectPoolComponent()
 {
@@ -13,6 +14,9 @@ UObjectPoolComponent::UObjectPoolComponent()
 void UObjectPoolComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	OwningGameInstance = Cast<UGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
 
 	auto GameState = UGameplayStatics::GetGameState(GetWorld());
 
@@ -45,7 +49,7 @@ TArray<FObjectPoolParameters> UObjectPoolComponent::AddToPool(FObjectPoolParamet
 
 	for (int i = 0; i < ObjectPoolParams.PoolSize; i++)
 	{
-		AObjectPoolActor* ActorObj = GetWorld()->SpawnActor<AObjectPoolActor>(ObjectPoolParams.PoolableActorClass, FVector().ZeroVector, FRotator().ZeroRotator);
+		AObjectPoolActor* ActorObj = OwningGameInstance->GetWorld()->SpawnActor<AObjectPoolActor>(ObjectPoolParams.PoolableActorClass, FVector().ZeroVector, FRotator().ZeroRotator);
 
 		if (ActorObj)
 		{

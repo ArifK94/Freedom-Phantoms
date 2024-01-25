@@ -15,6 +15,9 @@ class FREEDOMPHANTOMS_API UObjectPoolComponent : public UActorComponent
 
 private:
 
+	UPROPERTY(Transient)
+		TObjectPtr<class UGameInstance>	OwningGameInstance;
+
 	UPROPERTY()
 		AGameStateBaseCustom* GameStateBaseCustom;
 
