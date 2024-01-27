@@ -215,8 +215,6 @@ private:
 		FTimerHandle THandler_MoveToNearbyDestination;
 
 
-	bool HasPlayedTargetFoundSound;
-
 	// To prevent the NPC from constantly finding a new position to target destination
 	bool HasChosenNearTargetDest;
 
@@ -285,8 +283,6 @@ private:
 	void UpdatCombatAlert();
 
 	void CheckCommanderOrder();
-
-	void TargetFound();
 
 	void EndTimeSpentOnEnemy();
 

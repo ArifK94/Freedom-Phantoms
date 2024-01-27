@@ -647,16 +647,6 @@ void ACombatAIController::CheckCommanderOrder()
 	GetWorldTimerManager().ClearTimer(THandler_CommanderOrders);
 }
 
-
-void ACombatAIController::TargetFound()
-{
-	if (!HasPlayedTargetFoundSound)
-	{
-		OwningCombatCharacter->PlayVoiceSound(OwningCombatCharacter->GetVoiceClipsSet()->TargetFoundSound);
-		HasPlayedTargetFoundSound = true;
-	}
-}
-
 void ACombatAIController::EndTimeSpentOnEnemy()
 {
 	HasTimeSpentOnEnemyReached = true;
