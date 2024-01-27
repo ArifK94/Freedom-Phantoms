@@ -8,6 +8,7 @@
 #include "CustomComponents/CoverFinderComponent.h"
 #include "CustomComponents/HealthComponent.h"
 #include "CustomComponents/TeamFactionComponent.h"
+#include "Weapons/Weapon.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -53,8 +54,10 @@ void UBattleChatterComponent::TimerTick()
 
 				AddBattleChatterItem();
 
-				CombatCharacter->OnMountedGunEnabled.AddDynamic(this, &UBattleChatterComponent::OnMountedGunEnabledUpdate);
 				CombatCharacter->GetHealthComp()->OnHealthChanged.AddDynamic(this, &UBattleChatterComponent::OnHealthUpdate);
+				CombatCharacter->OnMountedGunEnabled.AddDynamic(this, &UBattleChatterComponent::OnMountedGunEnabledUpdate);
+				CombatCharacter->GetPrimaryWeapon()->OnWeaponUpdate.AddDynamic(this, &UBattleChatterComponent::OnWeaponUpdate);
+				CombatCharacter->GetSecondaryWeaponObj()->OnWeaponUpdate.AddDynamic(this, &UBattleChatterComponent::OnWeaponUpdate);
 			}
 		}
 	}
@@ -94,7 +97,7 @@ void UBattleChatterComponent::OnMountedGunEnabledUpdate(AMountedGun* MountedGun)
 
 void UBattleChatterComponent::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
-	if (!InHealthParameters.AffectedHealthComponent->IsAlive())
+	if (!InHealthParameters.AffectedHealthComponent->IsAlive() && CanPlay(3))
 	{
 		ACombatCharacter* FriendlyCharacter = FindNearChatableFriendly();
 
@@ -108,70 +111,20 @@ void UBattleChatterComponent::OnHealthUpdate(FHealthParameters InHealthParameter
 	}
 }
 
+void UBattleChatterComponent::OnWeaponUpdate(FWeaponUpdateParameters WeaponUpdateParameters)
+{
+	if (WeaponUpdateParameters.WeaponState == EWeaponState::Firing)
+	{
+		PlaySuppressingFire();
+	}
+}
+
 void UBattleChatterComponent::OnCallerReceived_Implementation(FChatableParams ChatableParams)
 {
 	if (ChatableParams.Sound && !THandler_DelaySound.IsValid())
 	{
 		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &UBattleChatterComponent::PlayDelaySound, ChatableParams.Sound);
 		GetOwner()->GetWorldTimerManager().SetTimer(THandler_DelaySound, Delegate, 1.0f, false, ChatableParams.PlayDelayTime);
-	}
-}
-
-void UBattleChatterComponent::PlayDelaySound(USoundBase* Sound)
-{
-	if (CombatCharacter)
-	{
-		CombatCharacter->PlayVoiceSound(Sound);
-	}
-
-	if (GetOwner())
-	{
-		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_DelaySound);
-	}
-}
-
-
-USoundBase* UBattleChatterComponent::GetBattleChatterSound(USoundBase* Sound)
-{
-	if (!Sound) {
-		return nullptr;
-	}
-
-	for (FBattleChatterParams ChatterParam : BattleChatters)
-	{
-		// if sound is found & there is currently no cooldown.
-		if (ChatterParam.Sound == Sound && !ChatterParam.THandler_Cooldown.IsValid())
-		{
-			FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &UBattleChatterComponent::CooldownChatter, ChatterParam);
-			GetOwner()->GetWorldTimerManager().SetTimer(ChatterParam.THandler_Cooldown, Delegate, 1.0f, false, ChatterParam.CooldownAmount);
-			return ChatterParam.Sound;
-		}
-	}
-
-	return nullptr;
-}
-
-void UBattleChatterComponent::CooldownChatter(FBattleChatterParams ChatterParam)
-{
-	for (FBattleChatterParams Chatter : BattleChatters)
-	{
-		if (Chatter.Sound == ChatterParam.Sound)
-		{
-			GetOwner()->GetWorldTimerManager().ClearTimer(Chatter.THandler_Cooldown);
-			break;
-		}
-	}
-}
-
-void UBattleChatterComponent::SendReponseCall(ACombatCharacter* Character, FChatableParams ChatableParams)
-{
-	if (Character->GetController())
-	{
-		auto BattleChatterComponent = Character->GetController()->GetComponentByClass(UBattleChatterComponent::StaticClass());
-		if (BattleChatterComponent && BattleChatterComponent->GetClass()->ImplementsInterface(UChatable::StaticClass()))
-		{
-			IChatable::Execute_OnCallerReceived(BattleChatterComponent, ChatableParams);
-		}
 	}
 }
 
@@ -192,14 +145,26 @@ void UBattleChatterComponent::PlayTargetFound()
 
 void UBattleChatterComponent::PlaySuppressingFire()
 {
-	if (!CanPlay()) {
+	if (!CanPlay(50)) {
 		return;
 	}
 
-	if (CombatAIController->GetEnemyActor() && CombatCharacter->IsFiring())
+	auto Sound = GetBattleChatterSound(VoiceClipsSet->OrderActionSuppressSound);
+
+	if (Sound)
 	{
-		CombatCharacter->PlayVoiceSound(GetBattleChatterSound(VoiceClipsSet->OrderActionSuppressSound));
+		ACombatCharacter* FriendlyCharacter = FindNearChatableFriendly();
+
+		// ensure character is not alone otherwise character will be speaking to itself.
+		if (FriendlyCharacter)
+		{
+			if (CombatAIController->GetEnemyActor() && CombatCharacter->IsFiring())
+			{
+				CombatCharacter->PlayVoiceSound(Sound);
+			}
+		}
 	}
+
 }
 
 void UBattleChatterComponent::PlayMoveCombat()
@@ -213,22 +178,29 @@ void UBattleChatterComponent::PlayMoveCombat()
 
 void UBattleChatterComponent::PlayCoverMe()
 {
-	if (!CanPlay(4) || !VoiceClipsSet->OrderActionCoverMeSound) {
+	if (!CanPlay(10) || !VoiceClipsSet->OrderActionCoverMeSound) {
 		return;
 	}
 
-	CombatCharacter->PlayVoiceSound(GetBattleChatterSound(VoiceClipsSet->OrderActionCoverMeSound));
+	auto Sound = GetBattleChatterSound(VoiceClipsSet->OrderActionCoverMeSound);
 
-	ACombatCharacter* FriendlyCharacter = FindNearChatableFriendly();
-
-	if (FriendlyCharacter)
+	if (Sound)
 	{
-		FChatableParams ChatableParams;
-		ChatableParams.Sound = FriendlyCharacter->GetVoiceClipsSet()->AcknowledgeSound;
-		ChatableParams.PlayDelayTime = VoiceClipsSet->OrderActionCoverMeSound->GetDuration();
-		SendReponseCall(FriendlyCharacter, ChatableParams);
-	}
+		ACombatCharacter* FriendlyCharacter = FindNearChatableFriendly();
 
+		if (FriendlyCharacter)
+		{
+			if (FriendlyCharacter->GetVoiceClipsSet()->AcknowledgeSound)
+			{
+				CombatCharacter->PlayVoiceSound(GetBattleChatterSound(VoiceClipsSet->OrderActionCoverMeSound));
+
+				FChatableParams ChatableParams;
+				ChatableParams.Sound = FriendlyCharacter->GetVoiceClipsSet()->AcknowledgeSound;
+				ChatableParams.PlayDelayTime = VoiceClipsSet->OrderActionCoverMeSound->GetDuration();
+				SendReponseCall(FriendlyCharacter, ChatableParams);
+			}
+		}
+	}
 }
 
 void UBattleChatterComponent::PlayStayAlert()
@@ -237,96 +209,108 @@ void UBattleChatterComponent::PlayStayAlert()
 		return;
 	}
 
-	CombatCharacter->PlayVoiceSound(GetBattleChatterSound(VoiceClipsSet->StayAlertSound));
+	auto Sound = GetBattleChatterSound(VoiceClipsSet->StayAlertSound);
 
-	ACombatCharacter* FriendlyCharacter = FindNearChatableFriendly();
-
-	if (FriendlyCharacter)
+	if (Sound)
 	{
-		FChatableParams ChatableParams;
-		ChatableParams.Sound = FriendlyCharacter->GetVoiceClipsSet()->AcknowledgeSound;
-		ChatableParams.PlayDelayTime = VoiceClipsSet->StayAlertSound->GetDuration();
+		ACombatCharacter* FriendlyCharacter = FindNearChatableFriendly();
 
-		SendReponseCall(FriendlyCharacter, ChatableParams);
+		if (FriendlyCharacter)
+		{
+			if (FriendlyCharacter->GetVoiceClipsSet()->AcknowledgeSound)
+			{
+				CombatCharacter->PlayVoiceSound(GetBattleChatterSound(VoiceClipsSet->StayAlertSound));
+
+				FChatableParams ChatableParams;
+				ChatableParams.Sound = FriendlyCharacter->GetVoiceClipsSet()->AcknowledgeSound;
+				ChatableParams.PlayDelayTime = VoiceClipsSet->StayAlertSound->GetDuration();
+
+				SendReponseCall(FriendlyCharacter, ChatableParams);
+			}
+		}
 	}
+
 }
 
 ACombatCharacter* UBattleChatterComponent::FindNearChatableFriendly()
 {
+#pragma region  Uncomment code to add later for opitmisation & remove the working code at the bottom.
 	/**
-	* Uncomment code to add later for opitmisation & remove the working code at the bottom.
-	*/
-	//float Radius = 1000.f;
+* Uncomment code to add later for opitmisation & remove the working code at the bottom.
+*/
+//float Radius = 1000.f;
 
-	//// create a collision sphere
-	//FCollisionShape MyColSphere = FCollisionShape::MakeSphere(Radius);
+//// create a collision sphere
+//FCollisionShape MyColSphere = FCollisionShape::MakeSphere(Radius);
 
-	//// create tarray for hit results
-	//TArray<FHitResult> OutHits;
+//// create tarray for hit results
+//TArray<FHitResult> OutHits;
 
-	///** Prevent processing the same overlapped actors */
-	//TArray<AActor*> DetectionActors;
+///** Prevent processing the same overlapped actors */
+//TArray<AActor*> DetectionActors;
 
-	//FCollisionQueryParams QueryParams;
-	//QueryParams.AddIgnoredActor(CombatCharacter);
+//FCollisionQueryParams QueryParams;
+//QueryParams.AddIgnoredActor(CombatCharacter);
 
-	//// check if something got hit in the sweep
-	//bool isHit = GetWorld()->SweepMultiByChannel(OutHits, CombatCharacter->GetActorLocation(), CombatCharacter->GetActorLocation(), 
-	//	FQuat::Identity, ECC_Visibility, MyColSphere, QueryParams);
+//// check if something got hit in the sweep
+//bool isHit = GetWorld()->SweepMultiByChannel(OutHits, CombatCharacter->GetActorLocation(), CombatCharacter->GetActorLocation(), 
+//	FQuat::Identity, ECC_Visibility, MyColSphere, QueryParams);
 
-	//if (isHit)
-	//{
-	//	// loop through TArray
-	//	for (auto& Hit : OutHits)
-	//	{
-	//		AActor* HitActor = Hit.GetActor();
+//if (isHit)
+//{
+//	// loop through TArray
+//	for (auto& Hit : OutHits)
+//	{
+//		AActor* HitActor = Hit.GetActor();
 
-	//		if (!HitActor) {
-	//			continue;
-	//		}
+//		if (!HitActor) {
+//			continue;
+//		}
 
-	//		if (HitActor == CombatCharacter) {
-	//			continue;
-	//		}
+//		if (HitActor == CombatCharacter) {
+//			continue;
+//		}
 
-	//		if (DetectionActors.Contains(HitActor)) {
-	//			continue;
-	//		}
+//		if (DetectionActors.Contains(HitActor)) {
+//			continue;
+//		}
 
-	//		if (!UHealthComponent::IsActorAlive(HitActor)) {
-	//			continue;
-	//		}
+//		if (!UHealthComponent::IsActorAlive(HitActor)) {
+//			continue;
+//		}
 
-	//		if (!UTeamFactionComponent::IsFriendly(CombatCharacter, HitActor)) {
-	//			continue;
-	//		}
+//		if (!UTeamFactionComponent::IsFriendly(CombatCharacter, HitActor)) {
+//			continue;
+//		}
 
-	//		// Does actor implement the avoidable interface?
-	//		if (!HitActor->GetClass()->ImplementsInterface(UChatable::StaticClass())) {
+//		// Does actor implement the avoidable interface?
+//		if (!HitActor->GetClass()->ImplementsInterface(UChatable::StaticClass())) {
 
-	//			// Does the actor's controller implement the avoidable interface then?
-	//			if (HitActor->GetInstigatorController() && !HitActor->GetInstigatorController()->GetClass()->ImplementsInterface(UChatable::StaticClass())) {
+//			// Does the actor's controller implement the avoidable interface then?
+//			if (HitActor->GetInstigatorController() && !HitActor->GetInstigatorController()->GetClass()->ImplementsInterface(UChatable::StaticClass())) {
 
-	//				if (!HitActor->GetComponentByClass(UBattleChatterComponent::StaticClass())) {
-	//					continue;
-	//				}
-	//			}
-	//		}
+//				if (!HitActor->GetComponentByClass(UBattleChatterComponent::StaticClass())) {
+//					continue;
+//				}
+//			}
+//		}
 
-	//		DetectionActors.Add(HitActor);
-	//	}
+//		DetectionActors.Add(HitActor);
+//	}
 
-	//	if (DetectionActors.IsEmpty()) {
-	//		return nullptr;
-	//	}
+//	if (DetectionActors.IsEmpty()) {
+//		return nullptr;
+//	}
 
-	//	AActor* RandomActor = DetectionActors[rand() % DetectionActors.Num()];
+//	AActor* RandomActor = DetectionActors[rand() % DetectionActors.Num()];
 
-	//	if (RandomActor)
-	//	{
-	//		return Cast<ACombatCharacter>(RandomActor);
-	//	}
-	//}
+//	if (RandomActor)
+//	{
+//		return Cast<ACombatCharacter>(RandomActor);
+//	}
+//}
+#pragma endregion
+
 
 	TArray<AActor*> Characters;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACombatCharacter::StaticClass(), Characters);
@@ -363,13 +347,70 @@ ACombatCharacter* UBattleChatterComponent::FindNearChatableFriendly()
 	}
 
 	return ClosestAlly;
-
-	return nullptr;
 }
 
 bool UBattleChatterComponent::CanPlay(int max)
 {
-	return FMath::RandRange(1, max) == 1;
+	return FMath::RandRange(0, max) == 1;
+}
+
+void UBattleChatterComponent::PlayDelaySound(USoundBase* Sound)
+{
+	if (CombatCharacter)
+	{
+		CombatCharacter->PlayVoiceSound(Sound);
+	}
+
+	if (GetOwner())
+	{
+		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_DelaySound);
+	}
+}
+
+
+USoundBase* UBattleChatterComponent::GetBattleChatterSound(USoundBase* Sound)
+{
+	if (!Sound || PreviousBattleSoundInserted == Sound) {
+		return nullptr;
+	}
+
+	for (FBattleChatterParams ChatterParam : BattleChatters)
+	{
+		// if sound is found & there is currently no cooldown.
+		if (ChatterParam.Sound == Sound && !ChatterParam.THandler_Cooldown.IsValid())
+		{
+			FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &UBattleChatterComponent::CooldownChatter, ChatterParam);
+			GetOwner()->GetWorldTimerManager().SetTimer(ChatterParam.THandler_Cooldown, Delegate, 1.0f, false, ChatterParam.CooldownAmount);
+			return ChatterParam.Sound;
+		}
+	}
+
+	return nullptr;
+}
+
+void UBattleChatterComponent::CooldownChatter(FBattleChatterParams ChatterParam)
+{
+	for (FBattleChatterParams Chatter : BattleChatters)
+	{
+		if (Chatter.Sound == ChatterParam.Sound)
+		{
+			GetOwner()->GetWorldTimerManager().ClearTimer(Chatter.THandler_Cooldown);
+			PreviousBattleSoundInserted = nullptr;
+			break;
+		}
+	}
+}
+
+void UBattleChatterComponent::SendReponseCall(ACombatCharacter* Character, FChatableParams ChatableParams)
+{
+	if (Character->GetController())
+	{
+		auto BattleChatterComponent = Character->GetController()->GetComponentByClass(UBattleChatterComponent::StaticClass());
+		if (BattleChatterComponent && BattleChatterComponent->GetClass()->ImplementsInterface(UChatable::StaticClass()))
+		{
+			IChatable::Execute_OnCallerReceived(BattleChatterComponent, ChatableParams);
+		}
+	}
 }
 
 void UBattleChatterComponent::AddBattleChatterItem()
@@ -400,5 +441,10 @@ void UBattleChatterComponent::AddBattleChatterItem()
 	ChatterParam = FBattleChatterParams();
 	ChatterParam.Sound = VoiceClipsSet->StayAlertSound;
 	ChatterParam.CooldownAmount = FMath::RandRange(5.f, 10.f);
+	BattleChatters.Add(ChatterParam);
+
+	ChatterParam = FBattleChatterParams();
+	ChatterParam.Sound = VoiceClipsSet->OrderActionSuppressSound;
+	ChatterParam.CooldownAmount = FMath::RandRange(10.f, 20.f);
 	BattleChatters.Add(ChatterParam);
 }

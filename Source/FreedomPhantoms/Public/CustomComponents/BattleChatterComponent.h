@@ -32,6 +32,9 @@ private:
 	UPROPERTY()
 		FTimerHandle THandler_DelaySound;
 
+		/** Keep a reference of the last sound when invoking GetBattleChatterSound() to avoid duplicate invoke after a second.  */
+		USoundBase* PreviousBattleSoundInserted;
+
 public:	
 	UBattleChatterComponent();
 
@@ -57,6 +60,9 @@ private:
 
 	UFUNCTION()
 		void OnHealthUpdate(FHealthParameters InHealthParameters);
+
+	UFUNCTION()
+		void OnWeaponUpdate(FWeaponUpdateParameters WeaponUpdateParameters);
 
 	virtual void OnCallerReceived_Implementation(FChatableParams ChatableParams) override;
 
