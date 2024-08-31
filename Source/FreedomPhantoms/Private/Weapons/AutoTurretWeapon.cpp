@@ -53,7 +53,6 @@ void AAutoTurretWeapon::BeginPlay()
 	HealthComponent->OnHealthChanged.AddDynamic(this, &AAutoTurretWeapon::OnHealthUpdate);
 
 	TargetFinderComponent->OnTargetSearch.AddDynamic(this, &AAutoTurretWeapon::OnTargetSearchUpdate);
-	TargetFinderComponent->SetFindTargetPerFrame(true);
 
 	SpawnVehicleWeapons();
 }
