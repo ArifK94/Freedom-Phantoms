@@ -478,6 +478,9 @@ public:
 	FName GetWeaponName() { return WeaponName; }
 
 	FName GetMuzzleSocket() { return MuzzleSocket; }
+	void SetMuzzleSocket(FName Socket) { MuzzleSocket = Socket; }
+
+
 	FName getParentHolderSocket() { return ParentHolderSocket; }
 	FName getOpticsSocket() { return OpticsSocket; }
 	FName getLaserSocket() { return LaserSocket; }

@@ -12,12 +12,20 @@ UShooterComponent::UShooterComponent()
 
 	m_TimeBetweenShotsMin = 1.5f;
 	m_TimeBetweenShotsMax = 3.0f;
+
+	FireRandomWeapon = false;
+	HasFired = false;
 }
 
 
 void UShooterComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void UShooterComponent::AddWeapon(AWeapon* Weapon)
+{
+	Weapons.Add(Weapon);
 }
 
 void UShooterComponent::SetWeapons(TArray<AWeapon*> InWeapons)
@@ -31,19 +39,33 @@ void UShooterComponent::SetWeapons(TArray<AWeapon*> InWeapons)
 void UShooterComponent::BeginFire()
 {
 	// if no weapon assigned or timer already set
-	if (THandler_BeginShoot.IsValid() || !GetOwner()) {
+	if (THandler_BeginShoot.IsValid() || !GetOwner() || HasFired) {
 		return;
 	}
+
+	HasFired = true;
+
 	auto MyOwner = GetOwner();
 	MyOwner->GetWorldTimerManager().ClearTimer(THandler_ResumeShoot);
 
 	// fire weapons
-	for (auto Weapon : Weapons)
+	if (FireRandomWeapon)
 	{
+		auto RandomIndex = rand() % Weapons.Num();
+		AWeapon* Weapon = Weapons[RandomIndex];
 		Weapon->StartFire();
 	}
+	else 
+	{
+		for (auto Weapon : Weapons)
+		{
+			Weapon->StartFire();
+		}
+	}
 
-	MyOwner->GetWorldTimerManager().SetTimer(THandler_BeginShoot, this, &UShooterComponent::PauseFire, 1.f, true, FMath::RandRange(m_TimeBetweenShotsMin, m_TimeBetweenShotsMax)); // stop firing after a random x secs
+	auto Delay = FMath::RandRange(m_TimeBetweenShotsMin, m_TimeBetweenShotsMax);
+
+	MyOwner->GetWorldTimerManager().SetTimer(THandler_BeginShoot, this, &UShooterComponent::PauseFire, Delay, true, Delay); // stop firing after a random x secs
 }
 
 void UShooterComponent::PauseFire()
@@ -83,4 +105,5 @@ void UShooterComponent::EndFire()
 			Weapon->StopFire();
 		}
 	}
+	HasFired = false;
 }

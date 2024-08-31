@@ -343,8 +343,6 @@ bool AAutoTurretWeapon::UpdateCurrentWeapon(FVehicleWeapon InVehicleWeapon)
 
 	CurrentVehicleWeapon = InVehicleWeapon;
 
-	ShooterComponent->SetWeapons(Weapons);
-
 	return true;
 }
 
@@ -389,8 +387,8 @@ void AAutoTurretWeapon::SpawnVehicleWeapons()
 			VehicleWeapons[i].Weapon->SetYawMax(VehicleWeapon.YawMax);
 
 			VehicleWeapons[i].Weapon->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, VehicleWeapon.WeaponSocketName);
-
-			//VehicleWeapons[i].Weapon->OnKillConfirmed.AddDynamic(this, &AVehicleBase::OnWeaponKillConfirm);
+			VehicleWeapons[i].Weapon->SetMuzzleSocket(VehicleWeapon.WeaponSocketName);
+			ShooterComponent->AddWeapon(VehicleWeapons[i].Weapon);
 		}
 
 		auto VehicleWeaponPtr = new FVehicleWeapon();
