@@ -96,9 +96,9 @@ private:
 		float DebugExplosionLifeTime;
 
 
-	/** Homing projectile to follow the direction of the weapon's direction */
+	/** Rotate towards the eye points camera direction. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Homing", meta = (AllowPrivateAccess = "true"))
-		bool HomingFollowWeaponEyePoint;
+		bool UseLaserGuidance;
 
 	/** Homing projectile to lerp to target direction */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Homing", meta = (AllowPrivateAccess = "true"))
@@ -227,7 +227,8 @@ private:
 	/** Rotate projectile while moving */
 	void SpinOnMovement();
 
-	void FollowEyePoint();
+	/** Perform laser guidance to follow the eye point. */
+	void LaserGuidance();
 
 	void DetectHit();
 

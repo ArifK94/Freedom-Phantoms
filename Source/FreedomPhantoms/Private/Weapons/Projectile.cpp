@@ -57,7 +57,7 @@ AProjectile::AProjectile()
 	RowName = "Bullet";
 
 	UseCustomProjectileMovement = true;
-	HomingFollowWeaponEyePoint = false;
+	UseLaserGuidance = false;
 	DestroyOnDeactivate = false;
 	DetectProjectileHit = true;
 	DetectNearbyActors = false;
@@ -129,21 +129,6 @@ void AProjectile::Tick(float DeltaTime)
 
 	if (UseCustomProjectileMovement) {
 		Movement();
-
-		//if (HomingFollowWeaponEyePoint)
-		//{
-		//	if (DestroyOnDeactivate) // if not using this projectile in the object pool
-		//	{
-		//		FollowEyePoint();
-		//	}
-		//	else // if it is object pooled
-		//	{
-		//		if (IsActive()) // if activated
-		//		{
-		//			FollowEyePoint();
-		//		}
-		//	}
-		//}
 	}
 
 	if (SpinOnVelocity) {
@@ -258,16 +243,66 @@ void AProjectile::PlayCollisionSound(FVector Position)
 
 void AProjectile::Movement()
 {
+	if (UseLaserGuidance)
+	{
+		LaserGuidance();
+	}
+	else
+	{
+		// Get projectile's location at beginning of tick
+		PreviousPosition = GetActorLocation();
+
+		Velocity = GetActorForwardVector() * InitialSpeed;
+
+		// Calculate Drag
+		FVector DragStrength = (Velocity * Velocity.Size()) * (Drag / Mass);
+
+		// Calculate acceleration and total position offset
+		Acceleration = Gravity - DragStrength;
+
+		// Calculate position offset
+		NextPosition = Acceleration * UKismetMathLibrary::MultiplyMultiply_FloatFloat(CurrentDeltaTime, 2.0f) * 0.5f + Velocity * CurrentDeltaTime + GetActorLocation();
+
+		// Calculate velocity for next tick
+		Velocity = Velocity + Acceleration * CurrentDeltaTime;
+
+		// Set final position & rotation
+		SetActorLocation(NextPosition);
+		SetActorRotation(UKismetMathLibrary::MakeRotFromX(Velocity));
+	}
+
+	if (DetectProjectileHit) {
+		DetectHit();
+	}
+}
+
+void AProjectile::LaserGuidance()
+{
+	if (WeaponParent == nullptr) {
+		return;
+	}
+
+	auto EyeLocation = WeaponParent->GetEyeViewPointComponent()->GetComponentLocation();
+	auto EyeRotation = WeaponParent->GetEyeViewPointComponent()->GetComponentRotation();
+
+	FVector EyeForward = EyeRotation.Vector();
+	FVector TraceEnd = EyeLocation + (EyeForward * 1000000000.f);
+
+	FVector Direction = TraceEnd - GetActorLocation();
+	Direction.Normalize();
+	FRotator DesiredRotation = Direction.Rotation();
+
+	FRotator MyRotation = GetActorRotation();
+	FRotator InterpRotation = FMath::RInterpConstantTo(MyRotation, DesiredRotation, CurrentDeltaTime, 5.f);
+	
 	// Get projectile's location at beginning of tick
 	PreviousPosition = GetActorLocation();
-
-	Velocity = GetActorForwardVector() * InitialSpeed;
 
 	// Calculate Drag
 	FVector DragStrength = (Velocity * Velocity.Size()) * (Drag / Mass);
 
 	// Calculate acceleration and total position offset
-	Acceleration = Gravity - DragStrength;
+	Acceleration = (Direction * InitialSpeed) - DragStrength;
 
 	// Calculate position offset
 	NextPosition = Acceleration * UKismetMathLibrary::MultiplyMultiply_FloatFloat(CurrentDeltaTime, 2.0f) * 0.5f + Velocity * CurrentDeltaTime + GetActorLocation();
@@ -275,13 +310,11 @@ void AProjectile::Movement()
 	// Calculate velocity for next tick
 	Velocity = Velocity + Acceleration * CurrentDeltaTime;
 
+
+
 	// Set final position & rotation
 	SetActorLocation(NextPosition);
-	SetActorRotation(UKismetMathLibrary::MakeRotFromX(Velocity));
-
-	if (DetectProjectileHit) {
-		DetectHit();
-	}
+	SetActorRotation(InterpRotation);
 }
 
 void AProjectile::SpinOnMovement()
@@ -302,27 +335,6 @@ void AProjectile::SpinOnMovement()
 
 	//AddActorWorldRotation(NewRotation);
 	CurrentRotation = NewRotation;
-}
-
-void AProjectile::FollowEyePoint()
-{
-	//if (WeaponParent == nullptr) {
-	//	return;
-	//}
-
-	//auto EyeLocation = WeaponParent->GetEyeViewPointComponent()->GetComponentLocation();
-	//auto EyeRotation = WeaponParent->GetEyeViewPointComponent()->GetComponentRotation();
-
-	//float TraceLength = 10000.0f;
-	//FVector TraceEnd = EyeLocation + (UKismetMathLibrary::GetForwardVector(EyeRotation) * TraceLength);
-
-	//FVector TargetLocation = UKismetMathLibrary::VLerp(GetActorLocation(), TraceEnd, CurrentDeltaTime * HomingFollowFactor);
-	//auto target = TargetLocation;
-
-	//SetActorLocation(target);
-
-	//DrawDebugLine(GetWorld(), EyeLocation, target, FColor::Green, false, 1, 0, 1);
-
 }
 
 void AProjectile::Activate()
@@ -351,7 +363,7 @@ void AProjectile::Deactivate()
 
 
 
-	if (DestroyOnDeactivate) 
+	if (DestroyOnDeactivate)
 	{
 		Destroy();
 	}
@@ -585,7 +597,7 @@ void AProjectile::SelfDestruct()
 	ProjectileImpactParameters.KillCount = KillCount;
 	ProjectileImpactParameters.SetProjectileActor(this);
 
-	if (OwningCombatCharacter) 
+	if (OwningCombatCharacter)
 	{
 		OwningCombatCharacter->AddKillCount(KillCount);
 	}
@@ -690,7 +702,7 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSurface.Sound, ImpactLocation, 1.0f, 1.0f, 0.0f, ImpactAttenuation);
 	}
 
-	if (IsInAir()) 
+	if (IsInAir())
 	{
 		if (ImpactSurface.AirParticleEffect)
 		{
@@ -702,7 +714,7 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactSurface.AirNiagaraEffect, ImpactLocation, ImpactRotation);
 		}
 	}
-	else 
+	else
 	{
 		if (ImpactSurface.ParticleEffect)
 		{
@@ -715,7 +727,7 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 		}
 	}
 
-	if (ImpactSurface.DecalMaterial) 
+	if (ImpactSurface.DecalMaterial)
 	{
 		float Size = UKismetMathLibrary::RandomFloatInRange(DecalSizeMin, DecalSizeMax);
 		FVector SizeVector = UKismetMathLibrary::MakeVector(Size, Size, Size);
@@ -725,7 +737,7 @@ void AProjectile::SetVFX(FSurfaceImpactSet ImpactSurface, FVector ImpactLocation
 		DecalComponent->SetFadeOut(DecalLifetime, DecalFadeOutDuration);
 	}
 
-	if (CameraShake) 
+	if (CameraShake)
 	{
 		UGameplayStatics::PlayWorldCameraShake(GetWorld(), CameraShake, ImpactLocation, CamShakeInnerRadius, CamShakeOuterRadius);
 	}
