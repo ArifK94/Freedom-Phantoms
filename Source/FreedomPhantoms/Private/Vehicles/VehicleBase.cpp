@@ -103,6 +103,10 @@ AVehicleBase::AVehicleBase()
 	ThermalToggleAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("ThermalToggleAudio"));
 	ThermalToggleAudio->SetupAttachment(FollowCamera);
 
+	IncomingThreatAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("IncomingThreatAudio"));
+	IncomingThreatAudio->SetupAttachment(FollowCamera);
+	IncomingThreatAudio->SetAutoActivate(false);
+
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	HealthComponent->SetRegenerateHealth(false);
 
@@ -1121,6 +1125,45 @@ void AVehicleBase::RemoveTargetSystem()
 		}
 	}
 
+}
+
+void AVehicleBase::OnMissileIncoming_Implementation(AProjectile* Missile)
+{
+	if (Missile)
+	{
+		IncomingMissiles.AddUnique(Missile);
+
+		if (IncomingThreatAudio->GetSound() && !IncomingThreatAudio->IsPlaying())
+		{
+			IncomingThreatAudio->Play();
+		}
+
+
+		FIncomingThreatParameters IncomingThreatParams;
+		IncomingThreatParams.Missile = Missile;
+		IncomingThreatParams.bThreatDetected = true;
+		IncomingThreatParams.IncomingMissileCount = IncomingMissiles.Num();
+		OnIncomingThreatUpdate.Broadcast(IncomingThreatParams);
+	}
+}
+
+void AVehicleBase::OnMissileDestroyed_Implementation(AProjectile* Missile)
+{
+	if (IncomingMissiles.Contains(Missile))
+	{
+		IncomingMissiles.Remove(Missile);
+	}
+
+	// If no missiles incoming
+	if (IncomingMissiles.IsEmpty())
+	{
+		IncomingThreatAudio->Stop();
+	}
+
+	FIncomingThreatParameters IncomingThreatParams;
+	IncomingThreatParams.bThreatDetected = !IncomingMissiles.IsEmpty();
+	IncomingThreatParams.IncomingMissileCount = IncomingMissiles.Num();
+	OnIncomingThreatUpdate.Broadcast(IncomingThreatParams);
 }
 
 void AVehicleBase::AddComponentToDestroyList(UActorComponent* ActorComponent)

@@ -6,6 +6,7 @@
 #include "FreedomPhantoms/FreedomPhantoms.h"
 #include "Characters/CombatCharacter.h"
 #include "Interfaces/Avoidable.h"
+#include "Interfaces/Targetable.h"
 #include "StructCollection.h"
 #include "Services/SharedService.h"
 
@@ -344,23 +345,30 @@ void AProjectile::Activate()
 
 void AProjectile::Deactivate()
 {
-	if (DestroyOnDeactivate) {
+	if (HomingTargetActor && HomingTargetActor->GetClass()->ImplementsInterface(UTargetable::StaticClass())) {
+		ITargetable::Execute_OnMissileDestroyed(HomingTargetActor, this);
+	}
+
+
+
+	if (DestroyOnDeactivate) 
+	{
 		Destroy();
-		return;
 	}
+	else
+	{
+		IsDestroyed = true;
 
-	IsDestroyed = true;
+		GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
 
-	GetWorldTimerManager().ClearTimer(THandler_CountdownTimer);
+		KillCount = 0;
 
-	KillCount = 0;
+		if (DetectionSphere) {
+			DetectionSphere->SetCollisionProfileName(TEXT("NoCollision"));
+		}
 
-	if (DetectionSphere) {
-		DetectionSphere->SetCollisionProfileName(TEXT("NoCollision"));
+		Super::Deactivate();
 	}
-
-
-	Super::Deactivate();
 }
 
 void AProjectile::RetrieveSurfaceImpactSet()
@@ -865,6 +873,13 @@ void AProjectile::FindHomingTarget(AActor* TargetActor)
 	{
 		TargetComp = TargetActor->GetRootComponent();
 	}
+
+
+	if (TargetActor->GetClass()->ImplementsInterface(UTargetable::StaticClass())) {
+		ITargetable::Execute_OnMissileIncoming(TargetActor, this);
+	}
+
+	HomingTargetActor = TargetActor;
 
 	ProjectileMovementComponent->HomingTargetComponent = TargetComp;
 	ProjectileMovementComponent->bIsHomingProjectile = true;

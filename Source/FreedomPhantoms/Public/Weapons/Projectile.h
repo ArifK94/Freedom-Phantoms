@@ -196,6 +196,9 @@ private:
 
 	FRotator CurrentRotation;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	AActor* HomingTargetActor;
+
 
 public:
 	AProjectile();

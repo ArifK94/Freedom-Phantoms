@@ -1292,3 +1292,29 @@ public:
 		LandHeight = 0.f;
 	}
 };
+
+/**
+* When homing missile for instance targets an actor.
+*/
+USTRUCT(BlueprintType)
+struct FIncomingThreatParameters
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	AProjectile* Missile;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 IncomingMissileCount;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bThreatDetected;
+
+	FIncomingThreatParameters()
+	{
+		Missile = nullptr;
+		IncomingMissileCount = 0;
+		bThreatDetected = false;
+	}
+};

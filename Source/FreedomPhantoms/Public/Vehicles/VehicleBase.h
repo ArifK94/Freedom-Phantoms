@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "EnumCollection.h"
 #include "StructCollection.h"
+#include "Interfaces/Targetable.h"
 #include "VehicleBase.generated.h"
 
 class UCapsuleComponent;
@@ -20,11 +21,13 @@ class URadialForceComponent;
 class UUserWidget;
 class AVehicleSplinePath;
 class UPostProcessComponent;
+class AProjectile;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponSwitchSignature, AVehicleBase*, Vehicle);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVehicleDestroySignature, AVehicleBase*, Vehicle);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIncomingThreatUpdateSignature, FIncomingThreatParameters, IncomingThreatParams);
 UCLASS()
-class FREEDOMPHANTOMS_API AVehicleBase : public AActor
+class FREEDOMPHANTOMS_API AVehicleBase : public AActor, public ITargetable
 {
 	GENERATED_BODY()
 
@@ -55,6 +58,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ThermalToggleAudio;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* IncomingThreatAudio;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UBoxComponent* FrontCollider;
@@ -261,6 +267,9 @@ protected:
 
 	bool ShowTargetSystem;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Optimization", meta = (AllowPrivateAccess = "true"))
+	TArray<AProjectile*> IncomingMissiles;
+
 public:	
 	AVehicleBase();
 
@@ -286,6 +295,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SetRotationInput(FRotator InRotation);
 
+	virtual void OnMissileIncoming_Implementation(AProjectile* Missile) override;
+	virtual void OnMissileDestroyed_Implementation(AProjectile* Missile) override;
 
 private:
 	void TimerTick();
@@ -362,7 +373,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnVehicleDestroySignature OnVehicleDestroy;
 
-
+	UPROPERTY(BlueprintAssignable)
+		FOnIncomingThreatUpdateSignature OnIncomingThreatUpdate;
 
 protected:
 	virtual void BeginPlay() override;
