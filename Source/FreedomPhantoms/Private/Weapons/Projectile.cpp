@@ -886,13 +886,22 @@ void AProjectile::FindHomingTarget(AActor* TargetActor)
 		TargetComp = TargetActor->GetRootComponent();
 	}
 
-
-	if (TargetActor->GetClass()->ImplementsInterface(UTargetable::StaticClass())) {
-		ITargetable::Execute_OnMissileIncoming(TargetActor, this);
+	// Remove previous target actor if present.
+	if (HomingTargetActor) 
+	{
+		if (HomingTargetActor->GetClass()->ImplementsInterface(UTargetable::StaticClass()))
+		{
+			ITargetable::Execute_OnMissileDestroyed(HomingTargetActor, this);
+		}
 	}
 
 	HomingTargetActor = TargetActor;
 
 	ProjectileMovementComponent->HomingTargetComponent = TargetComp;
 	ProjectileMovementComponent->bIsHomingProjectile = true;
+
+
+	if (TargetActor->GetClass()->ImplementsInterface(UTargetable::StaticClass())) {
+		ITargetable::Execute_OnMissileIncoming(TargetActor, this);
+	}
 }

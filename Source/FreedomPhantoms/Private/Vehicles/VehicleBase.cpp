@@ -1138,10 +1138,9 @@ void AVehicleBase::OnMissileIncoming_Implementation(AProjectile* Missile)
 			IncomingThreatAudio->Play();
 		}
 
-
 		FIncomingThreatParameters IncomingThreatParams;
 		IncomingThreatParams.Missile = Missile;
-		IncomingThreatParams.bThreatDetected = true;
+		IncomingThreatParams.bThreatDetected = !IncomingMissiles.IsEmpty();
 		IncomingThreatParams.IncomingMissileCount = IncomingMissiles.Num();
 		OnIncomingThreatUpdate.Broadcast(IncomingThreatParams);
 	}

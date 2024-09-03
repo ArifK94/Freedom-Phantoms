@@ -138,11 +138,11 @@ private:
 	FVector PreviousPosition;
 
 	/** Destroy projectile rather than deactivate, in case it is not used as an object pool */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Object Pooling", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Object Pooling", meta = (AllowPrivateAccess = "true"))
 		bool DestroyOnDeactivate;
 
 	/** Countdown for the projectile to be destroyed, useful for grenades (Less than zero means there will be no countdown timer) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Destruction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Destruction", meta = (AllowPrivateAccess = "true"))
 		float CountdownTimer;
 
 

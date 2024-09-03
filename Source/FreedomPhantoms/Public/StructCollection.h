@@ -1318,3 +1318,42 @@ public:
 		bThreatDetected = false;
 	}
 };
+
+/**
+* The params for countermeasuring threats
+*/
+USTRUCT(BlueprintType)
+struct FCountermeasureParameters
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName FlareSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 NumFlares;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float SpawnRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Height;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Radius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float TotalDegrees;
+
+
+	FCountermeasureParameters()
+	{
+		FlareSocket = "FlareSocket";
+		NumFlares = 1;
+		SpawnRate = 1.f;
+		Height = 0.f;
+		Radius = 300.f;
+		TotalDegrees = 360.f;
+	}
+};
