@@ -358,7 +358,7 @@ void AProjectile::Activate()
 void AProjectile::Deactivate()
 {
 	if (HomingTargetActor && HomingTargetActor->GetClass()->ImplementsInterface(UTargetable::StaticClass())) {
-		ITargetable::Execute_OnMissileDestroyed(HomingTargetActor, this);
+		ITargetable::Execute_OnThreatOutbound(HomingTargetActor, this);
 	}
 
 
@@ -631,23 +631,29 @@ bool AProjectile::IsHittingTarget(AActor* TargetActor, FVector ImpactPoint, floa
 	{
 		AActor* DamagedActor = Hit.GetActor();
 
+#if WITH_EDITOR
 		if (ShowDebug)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("DamagedActor: %s | TargetActor: %s"), *DamagedActor->GetName(), *TargetActor->GetName()));
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT
+			("DamagedActor: %s | TargetActor: %s"), *DamagedActor->GetName(), *TargetActor->GetName()));
 		}
+#endif
 
 		if (DamagedActor == TargetActor || (DamagedActor->GetAttachParentActor() && DamagedActor->GetAttachParentActor() == TargetActor)) {
 
+#if WITH_EDITOR
 			if (ShowDebug)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("TargetActor Hit!")));
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT
+				("TargetActor Hit!")));
 
 				if (DamagedActor->GetAttachParentActor())
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("DamagedActor: %s"), *DamagedActor->GetAttachParentActor()->GetName()));
+					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT
+					("DamagedActor: %s"), *DamagedActor->GetAttachParentActor()->GetName()));
 				}
-
 			}
+#endif
 
 			return true;
 		}
@@ -864,24 +870,14 @@ void AProjectile::FindHomingTarget(AActor* TargetActor)
 
 	// Some targets may have meshes that have been translated up or down from the root component such as aircraft, the root component of the aircraft can be below the mesh.
 	// This assumes the skeletal mesh is the main body of the target.
-	auto SkeletalComp = Cast<USkeletalMeshComponent>(TargetActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+	auto MeshComp = Cast<UMeshComponent>(TargetActor->GetComponentByClass(UMeshComponent::StaticClass()));
 
-	if (SkeletalComp)
+	if (MeshComp)
 	{
-		TargetComp = SkeletalComp;
+		TargetComp = MeshComp;
 	}
-
-
-	// set the to any static mesh comps which the target actor may have if no skeletal mesh exists.
-	auto StaticComp = Cast<UStaticMeshComponent>(TargetActor->GetComponentByClass(UStaticMeshComponent::StaticClass()));
-
-	if (!TargetComp)
-	{
-		TargetComp = StaticComp;
-	}
-
 	// no target comp set? set to root component of actor.
-	if (!TargetComp)
+	else
 	{
 		TargetComp = TargetActor->GetRootComponent();
 	}
@@ -891,7 +887,7 @@ void AProjectile::FindHomingTarget(AActor* TargetActor)
 	{
 		if (HomingTargetActor->GetClass()->ImplementsInterface(UTargetable::StaticClass()))
 		{
-			ITargetable::Execute_OnMissileDestroyed(HomingTargetActor, this);
+			ITargetable::Execute_OnThreatOutbound(HomingTargetActor, this);
 		}
 	}
 
@@ -902,6 +898,6 @@ void AProjectile::FindHomingTarget(AActor* TargetActor)
 
 
 	if (TargetActor->GetClass()->ImplementsInterface(UTargetable::StaticClass())) {
-		ITargetable::Execute_OnMissileIncoming(TargetActor, this);
+		ITargetable::Execute_OnThreatInbound(TargetActor, this);
 	}
 }

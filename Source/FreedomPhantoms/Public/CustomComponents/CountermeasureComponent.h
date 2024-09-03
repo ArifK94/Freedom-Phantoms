@@ -28,11 +28,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	int32 CurrentCounterTotal;
 
+	/**
+	* Add delay when incoming threat is diverted.
+	* This allows a time gap between inbound and outbound threats to take place
+	* otherwise the events will fire at the same time making the outbound threat may not work.
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float SpawnDelay;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	TArray<FCountermeasureParameters> CountermeasureParams;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	USoundBase* SpawnSound;
@@ -40,12 +42,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	USoundAttenuation* AttenuationSettings;
 
-	/** 
-	* Add delay when incoming threat is diverted. 
-	* This allows a time gap between inbound and outbound threats to take place
-	* otherwise the events will fire at the same time making the outbound threat may not work.
-	*/
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	TArray<FCountermeasureParameters> CountermeasureParams;
 
 public:
 	UCountermeasureComponent();

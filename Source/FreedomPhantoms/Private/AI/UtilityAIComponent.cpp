@@ -99,7 +99,8 @@ void UUtilityAIComponent::TimerTick()
 
 #if WITH_EDITOR
 		// Leave this commented out for debugging then uncomment it when needed.
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *BestAction->GetClass()->GetName()));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT
+		// ("%s"), *BestAction->GetClass()->GetName()));
 #endif
 
 		BestAction->Tick(WorldDeltaSeconds, Controller, Pawn);

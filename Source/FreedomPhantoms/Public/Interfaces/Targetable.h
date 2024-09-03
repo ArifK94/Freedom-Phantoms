@@ -23,8 +23,8 @@ class FREEDOMPHANTOMS_API ITargetable
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void OnMissileIncoming(class AProjectile* Missile);
+	void OnThreatInbound(class AProjectile* Missile);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void OnMissileDestroyed(class AProjectile* Missile);
+	void OnThreatOutbound(class AProjectile* Missile);
 };

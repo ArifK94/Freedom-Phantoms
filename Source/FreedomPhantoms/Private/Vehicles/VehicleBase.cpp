@@ -1127,7 +1127,7 @@ void AVehicleBase::RemoveTargetSystem()
 
 }
 
-void AVehicleBase::OnMissileIncoming_Implementation(AProjectile* Missile)
+void AVehicleBase::OnThreatInbound_Implementation(AProjectile* Missile)
 {
 	if (Missile)
 	{
@@ -1146,7 +1146,7 @@ void AVehicleBase::OnMissileIncoming_Implementation(AProjectile* Missile)
 	}
 }
 
-void AVehicleBase::OnMissileDestroyed_Implementation(AProjectile* Missile)
+void AVehicleBase::OnThreatOutbound_Implementation(AProjectile* Missile)
 {
 	if (IncomingMissiles.Contains(Missile))
 	{

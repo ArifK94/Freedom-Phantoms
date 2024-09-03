@@ -295,8 +295,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SetRotationInput(FRotator InRotation);
 
-	virtual void OnMissileIncoming_Implementation(AProjectile* Missile) override;
-	virtual void OnMissileDestroyed_Implementation(AProjectile* Missile) override;
+	virtual void OnThreatInbound_Implementation(AProjectile* Missile) override;
+	virtual void OnThreatOutbound_Implementation(AProjectile* Missile) override;
 
 private:
 	void TimerTick();
