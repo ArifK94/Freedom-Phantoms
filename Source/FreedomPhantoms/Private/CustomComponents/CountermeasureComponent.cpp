@@ -28,7 +28,7 @@ void UCountermeasureComponent::BeginPlay()
 			Vehicle->OnIncomingThreatUpdate.AddDynamic(this, &UCountermeasureComponent::OnThreatUpdate);
 		}
 	}
-	
+
 }
 
 void UCountermeasureComponent::OnThreatUpdate(FIncomingThreatParameters IncomingThreatParams)
@@ -86,12 +86,7 @@ void UCountermeasureComponent::SpawnFlare(int32 Index, FCountermeasureParameters
 	{
 		if (SpawnSound)
 		{
-			UAudioComponent* SpawnAudio = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), SpawnSound, SpawnLocation, FlareRotation);
-
-			if (AttenuationSettings)
-			{
-				SpawnAudio->AttenuationSettings = AttenuationSettings;
-			}
+			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), SpawnSound, SpawnLocation, FlareRotation);
 		}
 	}
 

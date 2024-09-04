@@ -40,9 +40,6 @@ private:
 	USoundBase* SpawnSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	USoundAttenuation* AttenuationSettings;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	TArray<FCountermeasureParameters> CountermeasureParams;
 
 public:
