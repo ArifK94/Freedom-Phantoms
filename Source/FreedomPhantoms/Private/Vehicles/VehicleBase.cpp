@@ -328,6 +328,21 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 		SetActorTickEnabled(false);
 		GetWorldTimerManager().ClearTimer(THandler_Update);
 
+		// Clear timers on the actor itself
+		GetWorldTimerManager().ClearAllTimersForObject(this);
+
+		// Clear timers on all components
+		TArray<UActorComponent*> components;
+		GetComponents(components);
+
+		for (UActorComponent* component : components)
+		{
+			if (component)
+			{
+				GetWorldTimerManager().ClearAllTimersForObject(component);
+			}
+		}
+
 		if (FrontKillZoneComponent)
 		{
 			FrontKillZoneComponent->OnComponentBeginOverlap.RemoveDynamic(this, &AVehicleBase::OnVehicleBeginOverlap);

@@ -84,7 +84,7 @@ void AAircraft::OnHealthUpdate(FHealthParameters InHealthParameters)
 	if (!HealthComponent->IsAlive())
 	{
 		TargetFinderComponent->SetFindTargetPerFrame(false);
-		ShooterComponent->EndFire();
+		ShooterComponent->EndFireTimer();
 	}
 }
 
@@ -96,7 +96,7 @@ void AAircraft::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchParamet
 
 	if (!TargetActor) {
 		VehiclePathFollowerComponent->ResumeNormalSpeed();
-		ShooterComponent->EndFire();
+		ShooterComponent->StopFiringWeapons();
 		GetWorldTimerManager().ClearTimer(THandler_RandomChangeWeapon);
 		return;
 	}
@@ -272,7 +272,7 @@ void AAircraft::Shoot()
 		}
 		else
 		{
-			ShooterComponent->EndFire();
+			ShooterComponent->StopFiringWeapons();
 		}
 
 		TurretAudio->Stop();
@@ -287,7 +287,7 @@ void AAircraft::Shoot()
 			TurretAudio->Play();
 		}
 
-		ShooterComponent->EndFire();
+		ShooterComponent->StopFiringWeapons();
 	}
 }
 

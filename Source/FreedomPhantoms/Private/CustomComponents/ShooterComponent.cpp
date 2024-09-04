@@ -4,8 +4,6 @@
 #include "CustomComponents/ShooterComponent.h"
 #include "Weapons/Weapon.h"
 
-#include "Kismet/KismetSystemLibrary.h"
-
 UShooterComponent::UShooterComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -14,7 +12,9 @@ UShooterComponent::UShooterComponent()
 	m_TimeBetweenShotsMax = 3.0f;
 
 	FireRandomWeapon = false;
-	HasFired = false;
+	bIsFiring = false;
+	bIsPaused = false;
+
 }
 
 
@@ -31,79 +31,88 @@ void UShooterComponent::AddWeapon(AWeapon* Weapon)
 void UShooterComponent::SetWeapons(TArray<AWeapon*> InWeapons)
 {
 	// Stop firing current weapons
-	EndFire();
+	EndFireTimer();
 
 	Weapons = InWeapons;
 }
 
 void UShooterComponent::BeginFire()
 {
-	// if no weapon assigned or timer already set
-	if (THandler_BeginShoot.IsValid() || !GetOwner() || HasFired) {
-		return;
+	if (!bIsFiring && !bIsPaused)
+	{
+		bIsFiring = true;
+		FireWeapon();
 	}
+}
 
-	HasFired = true;
-
-	auto MyOwner = GetOwner();
-	MyOwner->GetWorldTimerManager().ClearTimer(THandler_ResumeShoot);
-
+void UShooterComponent::FireWeapon()
+{
 	// fire weapons
 	if (FireRandomWeapon)
 	{
 		auto RandomIndex = rand() % Weapons.Num();
-		AWeapon* Weapon = Weapons[RandomIndex];
-		Weapon->StartFire();
+
+		if (Weapons.IsValidIndex(RandomIndex))
+		{
+			Weapons[RandomIndex]->StartFire();
+		}
 	}
-	else 
+	else
 	{
 		for (auto Weapon : Weapons)
 		{
-			Weapon->StartFire();
+			if (IsValid(Weapon))
+			{
+				Weapon->StartFire();
+			}
 		}
 	}
 
-	auto Delay = FMath::RandRange(m_TimeBetweenShotsMin, m_TimeBetweenShotsMax);
 
-	MyOwner->GetWorldTimerManager().SetTimer(THandler_BeginShoot, this, &UShooterComponent::PauseFire, Delay, true, Delay); // stop firing after a random x secs
+	// stop firing after a random x secs
+	float PauseDelay = FMath::RandRange(m_TimeBetweenShotsMin, m_TimeBetweenShotsMax);
+	GetWorld()->GetTimerManager().SetTimer(PauseTimerHandle, this, &UShooterComponent::PauseFiring, PauseDelay, false);
 }
 
-void UShooterComponent::PauseFire()
+
+void UShooterComponent::PauseFiring()
 {
-	// timer already set?
-	if (THandler_ResumeShoot.IsValid()) {
-		return;
-	}
+	bIsPaused = true;
+	bIsFiring = false;
 
-	EndFire();
+	StopFiringWeapons();
 
-	auto MyOwner = GetOwner();
-	
 	auto ResumeDelay = FMath::RandRange(m_TimeBetweenShotsMin, m_TimeBetweenShotsMax);
-
+	GetWorld()->GetTimerManager().SetTimer(FireTimerHandle, this, &UShooterComponent::ResumeFiring, ResumeDelay, false);
 	OnShootPause.Broadcast(ResumeDelay);
-
-	// Resume fire
-	MyOwner->GetWorldTimerManager().SetTimer(THandler_ResumeShoot, this, &UShooterComponent::BeginFire, 1.f, true, ResumeDelay); // stop firing after a random x secs
 }
 
-void UShooterComponent::EndFire()
+void UShooterComponent::ResumeFiring()
 {
-	if (!GetOwner()) {
-		return;
-	}
-	auto MyOwner = GetOwner();
-	
-	MyOwner->GetWorldTimerManager().ClearTimer(THandler_ResumeShoot);
-	MyOwner->GetWorldTimerManager().ClearTimer(THandler_BeginShoot);
-
-	// stop firing weapons
-	for (auto Weapon : Weapons)
+	bIsPaused = false;
+	if (bIsFiring)
 	{
-		if (UKismetSystemLibrary::IsValid(Weapon))
+		FireWeapon();
+	}
+}
+
+void UShooterComponent::EndFireTimer()
+{
+	bIsFiring = false;
+	bIsPaused = false;
+
+	GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(PauseTimerHandle);
+}
+
+void UShooterComponent::StopFiringWeapons()
+{
+	// stop firing weapons
+	for (AWeapon* Weapon : Weapons)
+	{
+		if (IsValid(Weapon))
 		{
 			Weapon->StopFire();
 		}
 	}
-	HasFired = false;
 }

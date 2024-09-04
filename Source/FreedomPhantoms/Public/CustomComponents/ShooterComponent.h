@@ -16,8 +16,11 @@ class FREEDOMPHANTOMS_API UShooterComponent : public UActorComponent
 
 private:
 
-	FTimerHandle THandler_BeginShoot;
-	FTimerHandle THandler_ResumeShoot;
+	FTimerHandle FireTimerHandle;
+	FTimerHandle PauseTimerHandle;
+
+	bool bIsFiring;
+	bool bIsPaused;
 
 	UPROPERTY()
 	TArray<AWeapon*> Weapons;
@@ -34,23 +37,28 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float m_TimeBetweenShotsMax;
 
-	bool HasFired;
-
 
 public:
 	UShooterComponent();
 
 	UFUNCTION(BlueprintCallable)
+	void SetWeapons(TArray<AWeapon*> InWeapon);
+
+
+public:
+	UFUNCTION(BlueprintCallable)
 	void BeginFire();
 
 	UFUNCTION(BlueprintCallable)
-	void PauseFire();
+	void EndFireTimer();
 
-	UFUNCTION(BlueprintCallable)
-	void EndFire();
+	void StopFiringWeapons();
 
-	UFUNCTION(BlueprintCallable)
-	void SetWeapons(TArray<AWeapon*> InWeapon);
+private:
+	void FireWeapon();
+	void PauseFiring();
+	void ResumeFiring();
+
 
 protected:
 	virtual void BeginPlay() override;

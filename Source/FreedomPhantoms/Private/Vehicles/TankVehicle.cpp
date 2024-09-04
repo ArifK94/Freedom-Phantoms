@@ -124,7 +124,7 @@ void ATankVehicle::OnHealthUpdate(FHealthParameters InHealthParameters)
 	if (!HealthComponent->IsAlive())
 	{
 		TargetFinderComponent->SetFindTargetPerFrame(false);
-		ShooterComponent->EndFire();
+		ShooterComponent->StopFiringWeapons();
 
 		// Destroy all weapons
 		if (MainWeapon) {
@@ -155,7 +155,7 @@ void ATankVehicle::OnTargetSearchUpdate(FTargetSearchParameters TargetSearchPara
 			VehiclePathFollowerComponent->ResumeNormalSpeed();
 		}
 
-		ShooterComponent->EndFire();
+		ShooterComponent->StopFiringWeapons();
 		GetWorldTimerManager().ClearTimer(THandler_RandomChangeWeapon);
 		return;
 	}
@@ -300,7 +300,7 @@ void ATankVehicle::Shoot()
 		}
 		else
 		{
-			ShooterComponent->EndFire();
+			ShooterComponent->StopFiringWeapons();
 		}
 
 		TurretAudio->Stop();
@@ -315,7 +315,7 @@ void ATankVehicle::Shoot()
 			TurretAudio->Play();
 		}
 
-		ShooterComponent->EndFire();
+		ShooterComponent->StopFiringWeapons();
 	}
 }
 

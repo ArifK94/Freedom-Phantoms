@@ -71,7 +71,7 @@ void AAutoTurretWeapon::OnHealthUpdate(FHealthParameters InHealthParameters)
 	if (!HealthComponent->IsAlive())
 	{
 		TargetFinderComponent->SetFindTargetPerFrame(false);
-		ShooterComponent->EndFire();
+		ShooterComponent->EndFireTimer();
 
 		SetActorTickEnabled(false);
 
@@ -132,7 +132,7 @@ void AAutoTurretWeapon::OnTargetSearchUpdate(FTargetSearchParameters TargetSearc
 	TargetActor = TargetSearchParameters.TargetActor;
 
 	if (!TargetActor) {
-		ShooterComponent->EndFire();
+		ShooterComponent->StopFiringWeapons();
 		GetWorldTimerManager().ClearTimer(THandler_RandomChangeWeapon);
 		return;
 	}
@@ -221,7 +221,7 @@ void AAutoTurretWeapon::Shoot()
 		}
 		else
 		{
-			ShooterComponent->EndFire();
+			ShooterComponent->StopFiringWeapons();
 		}
 
 		TurretAudio->Stop();
@@ -235,7 +235,7 @@ void AAutoTurretWeapon::Shoot()
 			TurretAudio->Play();
 		}
 
-		ShooterComponent->EndFire();
+		ShooterComponent->StopFiringWeapons();
 	}
 }
 
