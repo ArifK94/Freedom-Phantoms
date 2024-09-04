@@ -70,6 +70,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		TArray<FOccupiedFaction> OccupiedFactions;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector SpawnOffset;
+
 
 	FTimerHandle THandler_OverlappingCombatatant;
 

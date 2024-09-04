@@ -35,6 +35,8 @@ AActorSpawner::AActorSpawner()
 	SpawnFirstDelay = 0.f;
 	FreeSpawnLimit = 1;
 
+	SpawnOffset = FVector::ZeroVector;
+
 	SpawnOnNav = true;
 	FreeSpawn = false;
 	SpawnAtStart = true;
@@ -193,15 +195,9 @@ AActor* AActorSpawner::SpawnActor()
 	}
 
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	FVector Location;
-	bool IsValid;
-	LoadSpawnLocation(Location, IsValid);
-
-	if (!IsValid) {
-		return nullptr;
-	}
+	FVector Location = GetSpawnLocation();
 
 	TSubclassOf<AActor> TargetActorClass = ActorClass ? ActorClass : ActorClasses[rand() % ActorClasses.Num()];
 
@@ -216,24 +212,28 @@ AActor* AActorSpawner::SpawnActor()
 	return SpawnedActor;
 }
 
-void AActorSpawner::LoadSpawnLocation(FVector& Location, bool& IsValid)
+FVector AActorSpawner::GetSpawnLocation()
 {
 	FVector PointLocation = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
 
-	if (SpawnOnNav)
-	{
-		FNavLocation NavLocation;
-		UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-		IsValid = NavigationArea->ProjectPointToNavigation(PointLocation, NavLocation);
+	// Set up line trace parameters
+	FVector Start = PointLocation + FVector(0, 0, 1000); // Start above desired spawn point
+	FVector End = PointLocation - FVector(0, 0, 1000);   // End below desired spawn point
 
-		Location = NavLocation.Location;
-	}
-	else
+
+	FHitResult HitResult;
+	FCollisionQueryParams QueryParams;
+
+	// Perform line trace
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, QueryParams);
+
+	if (bHit)
 	{
-		IsValid = true;
-		Location = PointLocation;
+		// Adjust spawn location to be slightly above the hit point
+		return HitResult.Location + SpawnOffset; // 100 units above ground
 	}
 
+	return PointLocation + SpawnOffset;
 }
 
 void AActorSpawner::SpawnWeapon(AActor* Actor)

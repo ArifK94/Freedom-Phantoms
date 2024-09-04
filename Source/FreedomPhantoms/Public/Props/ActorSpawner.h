@@ -85,6 +85,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeapon> CharacterWeaponClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector SpawnOffset;
+
 public:	
 	AActorSpawner();
 
@@ -116,7 +119,7 @@ private:
 
 	AActor* SpawnActor();
 
-	void LoadSpawnLocation(FVector& Location, bool& IsValid);
+	FVector GetSpawnLocation();
 
 	void SpawnWeapon(AActor* Actor);
 

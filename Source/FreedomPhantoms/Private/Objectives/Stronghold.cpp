@@ -55,26 +55,37 @@ bool AStronghold::GetRandomSpawnPoint(FVector& OutLocation, FRotator& OutRotatio
 
 	UBoxComponent* SpawnArea = SpawnAreas[RandIndex];
 
-	FVector Location = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
+	FVector PointLocation = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
+
 
 	// check if location is on the navmesh
 	FNavLocation NavLocation;
 	UNavigationSystemV1* NavigationArea = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this);
-	bool navResult = NavigationArea->GetRandomReachablePointInRadius(Location, 500.f, NavLocation);
+	bool navResult = NavigationArea->GetRandomReachablePointInRadius(PointLocation, 500.f, NavLocation);
 
 	if (!navResult) {
 		return false;
 	}
 
-	FNavLocation NewNavLocation;
-	navResult = NavigationArea->ProjectPointToNavigation(NavLocation.Location, NewNavLocation);
-
-	if (!navResult) {
-		return false;
-	}
-
-	OutLocation = NewNavLocation.Location;
+	OutLocation = PointLocation + SpawnOffset;
 	OutRotation = SpawnArea->GetComponentRotation();
+
+	// Set up line trace parameters
+	FVector Start = PointLocation + FVector(0, 0, 1000); // Start above desired spawn point
+	FVector End = PointLocation - FVector(0, 0, 1000);   // End below desired spawn point
+
+
+	FHitResult HitResult;
+	FCollisionQueryParams QueryParams;
+
+	// Perform line trace
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, QueryParams);
+
+	if (bHit)
+	{
+		// Adjust spawn location to be slightly above the hit point
+		OutLocation = HitResult.Location + SpawnOffset; // 100 units above ground
+	}
 
 	return true;
 }
@@ -225,7 +236,7 @@ void AStronghold::SpawnDefender()
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	FVector OutLocation;
 	FRotator OutRotation;
