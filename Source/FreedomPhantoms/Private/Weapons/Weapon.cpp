@@ -108,10 +108,10 @@ void AWeapon::BeginPlay()
 	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
-	GetTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, true, 1.f);
-
 	SpawnMagazine();
 	ConfigSetup();
+
+	GetTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, false, 1.f);
 }
 
 void AWeapon::DelayedInit()
@@ -122,10 +122,7 @@ void AWeapon::DelayedInit()
 	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
-	if (GetMyWorld() && THandler_DelayedInit.IsValid())
-	{
-		GetTimerManager().ClearTimer(THandler_DelayedInit);
-	}
+	GetTimerManager().ClearTimer(THandler_DelayedInit);
 }
 
 void AWeapon::SetIsAiming(bool isAiming)
@@ -312,7 +309,8 @@ void AWeapon::LoadParentMesh()
 	// Use weapon mesh comp by default
 	ParentMesh = MeshComp;
 
-	if (UseParentMuzzle) {
+	if (UseParentMuzzle) 
+	{
 		auto AttachedParent = GetAttachParentActor();
 
 		if (!AttachedParent || AttachedParent->GetComponents().Num() <= 0) {
@@ -321,7 +319,7 @@ void AWeapon::LoadParentMesh()
 
 		for (auto ChildComponent : AttachedParent->GetComponents())
 		{
-			auto SceneComp = Cast<USceneComponent>(ChildComponent);
+			auto SceneComp = Cast<UMeshComponent>(ChildComponent);
 
 			if (!SceneComp) {
 				continue;
@@ -372,18 +370,9 @@ bool AWeapon::IsFacingCrosshair()
 
 void AWeapon::Fire()
 {
-
-	if (!GetOwner()) {
+	if (CurrentAmmo <= 0)
+	{
 		StopFire();
-		return;
-	}
-
-	if (isReloading) {
-		return;
-	}
-
-	if (CurrentAmmo <= 0) {
-		isFiring = false;
 
 		OnEmptyAmmoClip.Broadcast(this);
 
@@ -392,7 +381,8 @@ void AWeapon::Fire()
 		}
 	}
 
-	if (CurrentAmmo <= 0) {
+	if (!CanFireWeapon()) {
+		StopFire();
 		return;
 	}
 
@@ -406,11 +396,6 @@ void AWeapon::Fire()
 			BurstAmmountCount = 0;
 			return;
 		}
-	}
-
-	// check if facing crosshair if tolerance is set to more than zero.
-	if (CrosshairErrorTolerance > 0.f && !IsFacingCrosshair()) {
-		return;
 	}
 
 	isFiring = true;
@@ -748,7 +733,24 @@ void AWeapon::ReadyToUse()
 
 bool AWeapon::CanFireWeapon()
 {
-	return CurrentAmmo > 0 && !isReloading && !isFiring;
+	if (!GetOwner()) {
+		return false;
+	}
+
+	if (THandler_DelayedInit.IsValid() || CurrentAmmo <= 0) {
+		return false;
+	}
+
+	if (isReloading) {
+		return false;
+	}
+
+	// check if facing crosshair if tolerance is set to more than zero.
+	if (CrosshairErrorTolerance > 0.f && !IsFacingCrosshair()) {
+		return false;
+	}
+
+	return true;
 }
 
 void AWeapon::ChargeUp()

@@ -47,13 +47,16 @@ void UShooterComponent::BeginFire()
 
 void UShooterComponent::FireWeapon()
 {
+	AWeapon* SelectedWeapon = nullptr;
+
 	// fire weapons
 	if (FireRandomWeapon)
 	{
 		auto RandomIndex = rand() % Weapons.Num();
 
-		if (Weapons.IsValidIndex(RandomIndex))
+		if (Weapons.IsValidIndex(RandomIndex) && Weapons[RandomIndex]->CanFireWeapon())
 		{
+			SelectedWeapon = Weapons[RandomIndex];
 			Weapons[RandomIndex]->StartFire();
 		}
 	}
@@ -61,13 +64,19 @@ void UShooterComponent::FireWeapon()
 	{
 		for (auto Weapon : Weapons)
 		{
-			if (IsValid(Weapon))
+			if (IsValid(Weapon) && Weapon->CanFireWeapon())
 			{
+				SelectedWeapon = Weapon;
 				Weapon->StartFire();
 			}
 		}
 	}
 
+	// If no available weapons to currently fire, then do not continue with the shooting functionality.
+	if (!SelectedWeapon) {
+		bIsFiring = false;
+		return;
+	}
 
 	// stop firing after a random x secs
 	float PauseDelay = FMath::RandRange(m_TimeBetweenShotsMin, m_TimeBetweenShotsMax);
