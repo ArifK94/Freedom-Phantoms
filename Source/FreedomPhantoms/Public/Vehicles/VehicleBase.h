@@ -22,6 +22,7 @@ class UUserWidget;
 class AVehicleSplinePath;
 class UPostProcessComponent;
 class AProjectile;
+class UStaticMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponSwitchSignature, AVehicleBase*, Vehicle);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVehicleDestroySignature, AVehicleBase*, Vehicle);
@@ -45,6 +46,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* MeshComponent;
+
+	/** If only the damaged mesh is imported as static mesh instead of skeletal. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UStaticMeshComponent* DamagedMeshComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UArrowComponent* EyePointComponent;
@@ -340,6 +345,8 @@ private:
 	void ApplyExplosionDamage(FVector ImpactPoint, FHealthParameters InHealthParams);
 
 	void RemoveTargetSystem();
+
+	void SetShowDamaged(bool ShowDamaged);
 
 	UFUNCTION(BlueprintCallable)
 		void AddComponentToDestroyList(UActorComponent* ActorComponent);

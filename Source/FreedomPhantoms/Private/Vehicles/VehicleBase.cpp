@@ -17,6 +17,8 @@
 #include "Services/SharedService.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
@@ -51,9 +53,17 @@ AVehicleBase::AVehicleBase()
 	MeshComponent->SetCollisionProfileName(TEXT("Vehicle"));
 	MeshComponent->SetGenerateOverlapEvents(true);
 	MeshComponent->SetNotifyRigidBodyCollision(true);
-	MeshComponent->SetupAttachment(RootComponent);
 	MeshComponent->SetCanEverAffectNavigation(true);
 	MeshComponent->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+	MeshComponent->SetupAttachment(RootComponent);
+
+	DamagedMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DamagedMesh"));
+	DamagedMeshComponent->SetCollisionProfileName(TEXT("Vehicle"));
+	DamagedMeshComponent->SetGenerateOverlapEvents(true);
+	DamagedMeshComponent->SetNotifyRigidBodyCollision(true);
+	DamagedMeshComponent->SetCanEverAffectNavigation(true);
+	DamagedMeshComponent->SetVisibility(false, true);
+	DamagedMeshComponent->SetupAttachment(MeshComponent);
 
 	FrontCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("FrontCollider"));
 	FrontCollider->SetCollisionProfileName(TEXT("OverlapAll"));
@@ -437,6 +447,12 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 			MeshComponent->SetSkeletalMesh(ExplosionMesh, false);
 			MeshComponent->AddWorldTransform(ExplosionMeshTransformOffset);
 		}
+
+		if (DamagedMeshComponent->GetStaticMesh())
+		{
+			SetShowDamaged(true);
+		}
+
 
 		// Blast away nearby physics actors
 		RadialForceComp->FireImpulse();
@@ -1140,6 +1156,12 @@ void AVehicleBase::RemoveTargetSystem()
 		}
 	}
 
+}
+
+void AVehicleBase::SetShowDamaged(bool ShowDamaged)
+{
+	MeshComponent->SetVisibility(!ShowDamaged, true);
+	DamagedMeshComponent->SetVisibility(ShowDamaged, true);
 }
 
 void AVehicleBase::OnThreatInbound_Implementation(AProjectile* Missile)
