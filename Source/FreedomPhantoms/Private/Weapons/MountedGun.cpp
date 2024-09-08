@@ -80,7 +80,7 @@ void AMountedGun::BeginPlay()
 	DefaultFOV = FollowCamera->FieldOfView;
 	TargetFOV = 0.0f;
 
-	FollowCamera->AttachToComponent(GetMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraPositionSocket);
+	FollowCamera->AttachToComponent(GetParentMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraPositionSocket);
 
 	// So that the weapon fires from the FollowCamera view
 	SetComponentEyeViewPoint(FollowCamera);

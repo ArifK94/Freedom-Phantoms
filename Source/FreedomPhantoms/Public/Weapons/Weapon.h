@@ -60,7 +60,8 @@ protected:
 		USkeletalMeshComponent* MeshComp;
 
 	/** The Parent mesh by default is the MeshComp, but if chosen to use attached parent actor mesh such as tank cannon, then this would use the tank's mesh cannon's sockets to shoot from */
-	USceneComponent* ParentMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UMeshComponent* ParentMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* HandguardMesh;
@@ -86,10 +87,6 @@ protected:
 	/** Not all weapons may need to have bullet object pooled */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool UseObjectPool;
-
-	/** Some imported models such as tanks or helicopters have turrets built in but cannot be separated actors, so using the vehicle's turret muzzles should be used */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool UseParentMuzzle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<AWeaponClip> weaponClip;
@@ -149,6 +146,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName MuzzleSocket;
+
+	/** Some imported models such as tanks or helicopters have turrets built in but cannot be separated actors, so using the vehicle's turret muzzles should be used */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		bool UseParentMuzzle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName ClipSocket;
@@ -468,6 +469,8 @@ public:
 	USkeletalMeshComponent* getCharacter() { return CharacterReference; }
 
 	USkeletalMeshComponent* GetMeshComp() { return MeshComp; }
+	UMeshComponent* GetParentMesh() { return ParentMesh; }
+
 
 	int32 GetCurrentAmmo() { return CurrentAmmo; }
 	int32 getCurrentMaxAmmo() { return CurrentMaxAmmo; }

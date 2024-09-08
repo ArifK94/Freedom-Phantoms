@@ -44,8 +44,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		FName StopUsingMessage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName CameraPositionSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		bool UseParentCameraPositionSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
 		FName CharacterPositionSocket;
