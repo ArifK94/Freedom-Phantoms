@@ -316,6 +316,14 @@ void AVehicleBase::OnVehicleBeginOverlap(UPrimitiveComponent* OverlappedComp, AA
 		return;
 	}
 
+
+	ABaseCharacter* Character = Cast<ABaseCharacter>(OtherActor);
+
+	// ignore actor if in a vehicle.
+	if (Character && Character->GetIsInVehicle()) {
+		return;
+	}
+
 	float DamageReduction = 5.f;
 
 	FVector Location = OtherActor->GetActorLocation();
