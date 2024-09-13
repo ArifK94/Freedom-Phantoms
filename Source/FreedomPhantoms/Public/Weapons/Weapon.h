@@ -430,7 +430,7 @@ private:
 protected:
 	virtual void BeginPlay() override;
 
-	void DelayedInit();
+	virtual void DelayedInit();
 
 
 	bool IsFacingCrosshair();

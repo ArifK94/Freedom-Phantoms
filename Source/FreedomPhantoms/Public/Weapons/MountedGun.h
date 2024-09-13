@@ -93,10 +93,15 @@ public:
 	virtual bool CanInteract_Implementation(APawn* InPawn, AController* InController) override;
 	virtual AActor* OnPickup_Implementation(APawn* InPawn, AController* InController) override;
 
+	UFUNCTION(BlueprintCallable)
 	void AddControllerPitchInput(float Val);
+
+	UFUNCTION(BlueprintCallable)
 	void AddControllerYawInput(float Val);
 
+	UFUNCTION(BlueprintCallable)
 	void SetRotationInput(FRotator TargetRotation);
+
 	void SetRotationInput(FRotator TargetRotation, float LerpSpeed);
 
 	void SetPlayerControl(APlayerController* OurPlayerController, ACharacter* Character);
@@ -114,6 +119,9 @@ public:
 
 private:
 	virtual void BeginPlay() override;
+
+	virtual void DelayedInit() override;
+
 
 	void ZoomIn();
 	void ZoomOut();

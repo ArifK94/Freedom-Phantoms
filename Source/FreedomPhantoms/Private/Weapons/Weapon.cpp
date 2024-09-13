@@ -111,7 +111,7 @@ void AWeapon::BeginPlay()
 	SpawnMagazine();
 	ConfigSetup();
 
-	GetTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, 1.f, false, 1.f);
+	GetTimerManager().SetTimer(THandler_DelayedInit, this, &AWeapon::DelayedInit, .1f, true, .1f);
 }
 
 void AWeapon::DelayedInit()
