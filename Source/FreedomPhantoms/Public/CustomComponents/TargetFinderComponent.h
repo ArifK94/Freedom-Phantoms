@@ -81,7 +81,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		AActor* FindTarget();
 
-	bool GetTrace(FHitResult& OutHit, FVector Start, FVector End);
+	bool GetTrace(FHitResult& OutHit, FVector Start, FVector End, AActor* TargetActor);
 
 	FRotator RotateTowardsTarget(AActor* OwnerActor, AActor* TargetActor, FRotator CurrentRotation, FRotator& TargetRotation, float DeltaTime, float LerpSpeed);
 

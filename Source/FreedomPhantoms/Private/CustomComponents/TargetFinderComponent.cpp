@@ -272,7 +272,7 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 
 	// check if can see the target
 	FHitResult HitTargetResult;
-	auto Trace = GetTrace(HitTargetResult, EyeLocation, ActorLocation);
+	auto Trace = GetTrace(HitTargetResult, EyeLocation, ActorLocation, TargetActor);
 
 	if (Trace && HitTargetResult.GetActor() == TargetActor)
 	{
@@ -286,12 +286,10 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 	if (EnemyCharacter)
 	{
 		FVector EnemyEyeLocation = EnemyCharacter->GetMesh()->GetSocketLocation(EnemyCharacter->GetHeadSocket());
-		FRotator EnemyEyeRotation;
-		TargetActor->GetActorEyesViewPoint(EnemyEyeLocation, EnemyEyeRotation);
 
 		// check if can see the target
 		FHitResult OutHitHead;
-		auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation);
+		auto HeadTrace = GetTrace(OutHitHead, EyeLocation, EnemyEyeLocation, TargetActor);
 
 		if (HeadTrace && OutHitHead.GetActor() == TargetActor)
 		{
@@ -316,30 +314,13 @@ bool UTargetFinderComponent::CanSeeTarget(AActor* TargetActor, FVector& TargetLo
 		// Some bones can be trasnformed away from the character mesh and so the trace will return nothing about the target.
 		auto BoneIndex = FMath::RandRange(0, SkelComp->GetNumBones());
 		FHitResult OutHitComponent;
-		auto CompTrace = GetTrace(OutHitComponent, EyeLocation, SkelComp->GetBoneLocation(SkelComp->GetBoneName(BoneIndex)));
+		auto CompTrace = GetTrace(OutHitComponent, EyeLocation, SkelComp->GetBoneLocation(SkelComp->GetBoneName(BoneIndex)), TargetActor);
 
 		if (CompTrace && (HitTargetResult.GetComponent() == TargetComponent || HitTargetResult.GetActor() == TargetActor))
 		{
 			TargetLocation = SkelComp->GetBoneLocation(SkelComp->GetBoneName(BoneIndex));
 			return true;
 		}
-
-		/**
-		* Uncomment this in the future in case a better solution with good perfomrance is foumd. This code is too expensive and drains the perfomrance.
-		*/
-
-		// iterate each bone to check if any bone can be hit, if so, then target can be seen.
-		//for (auto i = 0; i < SkelComp->GetNumBones(); i++)
-		//{
-		//	FHitResult OutHitComponent;
-		//	auto CompTrace = GetTrace(OutHitComponent, EyeLocation, SkelComp->GetBoneLocation(SkelComp->GetBoneName(i)));
-
-		//	if (CompTrace && (HitTargetResult.GetComponent() == TargetComponent || HitTargetResult.GetActor() == TargetActor))
-		//	{
-		//		TargetLocation = SkelComp->GetBoneLocation(SkelComp->GetBoneName(i));
-		//		return true;
-		//	}
-		//}
 	}
 
 	return false;
@@ -428,7 +409,7 @@ void UTargetFinderComponent::AddToIgnoreProcessed(AActor* Actor)
 	}
 }
 
-bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End)
+bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector End, AActor* TargetActor)
 {
 	auto Owner = GetOwningPawn();
 	FCollisionQueryParams QueryParams;
@@ -479,6 +460,11 @@ bool UTargetFinderComponent::GetTrace(FHitResult& OutHit, FVector Start, FVector
 				if (ShowDebugTrace)
 				{
 					DrawDebugLine(GetWorld(), OutHit.ImpactPoint, End, FColor::Red, false, 2.f);
+				}
+
+				if (OutHit.GetActor() == TargetActor)
+				{
+					return true;
 				}
 			}
 		}
