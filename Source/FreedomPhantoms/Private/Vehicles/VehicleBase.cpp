@@ -63,7 +63,8 @@ AVehicleBase::AVehicleBase()
 	DamagedMeshComponent->SetNotifyRigidBodyCollision(true);
 	DamagedMeshComponent->SetCanEverAffectNavigation(true);
 	DamagedMeshComponent->SetVisibility(false, true);
-	DamagedMeshComponent->SetupAttachment(MeshComponent);
+	DamagedMeshComponent->SetHiddenInGame(true, true);
+	DamagedMeshComponent->SetupAttachment(RootComponent);
 
 	FrontCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("FrontCollider"));
 	FrontCollider->SetCollisionProfileName(TEXT("OverlapAll"));
@@ -161,6 +162,8 @@ void AVehicleBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SetShowDamaged(!HealthComponent->IsAlive());
+
 	SurfaceImpactSet = UDatatableManager::RetrieveSurfaceImpactSet(GetWorld(), SurfaceImpactRowName);
 
 	ThermalVisionPPComp->bEnabled = false;
@@ -216,7 +219,6 @@ void AVehicleBase::Tick(float DeltaTime)
 			VehiclePathFollowerComponent->ResumePath();
 		}
 	}
-
 }
 
 void AVehicleBase::TimerTick()
@@ -456,6 +458,7 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 			MeshComponent->AddWorldTransform(ExplosionMeshTransformOffset);
 		}
 
+		// Only show damaged if static mesh assigned.
 		if (DamagedMeshComponent->GetStaticMesh())
 		{
 			SetShowDamaged(true);
@@ -1168,8 +1171,27 @@ void AVehicleBase::RemoveTargetSystem()
 
 void AVehicleBase::SetShowDamaged(bool ShowDamaged)
 {
+	if (ShowDamaged)
+	{
+		// Update the damaged mesh's location to the main mesh's location.
+		FTransform SkeletalMeshTransform = MeshComponent->GetComponentTransform();
+		DamagedMeshComponent->SetWorldTransform(SkeletalMeshTransform);
+
+		MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DamagedMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+	else
+	{
+		MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		DamagedMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	MeshComponent->SetHiddenInGame(ShowDamaged, true);
 	MeshComponent->SetVisibility(!ShowDamaged, true);
+
+	DamagedMeshComponent->SetHiddenInGame(!ShowDamaged, true);
 	DamagedMeshComponent->SetVisibility(ShowDamaged, true);
+
 }
 
 void AVehicleBase::OnThreatInbound_Implementation(AProjectile* Missile)
