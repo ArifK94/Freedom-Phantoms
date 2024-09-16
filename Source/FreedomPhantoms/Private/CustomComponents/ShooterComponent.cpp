@@ -32,6 +32,7 @@ void UShooterComponent::SetWeapons(TArray<AWeapon*> InWeapons)
 {
 	// Stop firing current weapons
 	EndFireTimer();
+	StopFiringWeapons();
 
 	Weapons = InWeapons;
 }
