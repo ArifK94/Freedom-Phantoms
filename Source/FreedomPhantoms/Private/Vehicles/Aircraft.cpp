@@ -56,8 +56,13 @@ void AAircraft::Tick(float DeltaTime)
 
 	m_DeltaTime = DeltaTime;
 
+	if (!HealthComponent->IsAlive())
+	{
+		return;
+	}
 
-	if (UserController == nullptr) 
+
+	if (UserController == nullptr)
 	{
 		Shoot();
 	}
@@ -69,7 +74,7 @@ bool AAircraft::ShouldStopVehicle()
 	{
 		return true;
 	}
-	else if (!TargetActor && StopOnTargetFound) 
+	else if (!TargetActor && StopOnTargetFound)
 	{
 		VehiclePathFollowerComponent->ResumePath();
 	}
@@ -204,13 +209,7 @@ void AAircraft::ChangeSecondaryWeapon()
 
 void AAircraft::RandomChangeWeapon()
 {
-	auto RandomBool = UKismetMathLibrary::RandomBool();
-
-	if (RandomBool)
-	{
-		//UpdateCurrentWeapon(MainWeapon, VehicleWeaponMain);
-	}
-	else
+	if (UKismetMathLibrary::RandomBool())
 	{
 		ChangeSecondaryWeapon();
 	}
@@ -223,71 +222,100 @@ FRotator AAircraft::FaceTarget(AActor* Actor, FRotator& TargetRotation)
 		return UKismetMathLibrary::RLerp(RotationInput, TargetRotation, m_DeltaTime * TurretRotationFactor, false);
 	}
 
-	FVector EyeLocation;
-	FRotator EyeRotation;
-	GetActorEyesViewPoint(EyeLocation, EyeRotation); // Grab the camera view points, this is a fail safe if vehicle weapons do not exist for some reason
-
+	FVector MidpointLocation = FVector::ZeroVector;
+	int ValidWeapons = 0;
 
 	for (auto VehicleWeapon : CurrentVehicleWeapons)
 	{
-		// eye location should be retrieved from weapon socket location as the follow camera shouldn't change as it can be used by another mechanic such as orbiting around the vehicle
-		// check if weapon class was provided as we cannot access the weapon object pointer when it has UPROPERTY attribute
-		if (VehicleWeapon.Weapon)
+		if (IsValid(VehicleWeapon.Weapon))
 		{
-			EyeLocation = MeshComponent->GetSocketLocation(VehicleWeapon.WeaponSocketName);
+			FVector WeaponLocation = MeshComponent->GetSocketLocation(VehicleWeapon.WeaponSocketName);
+			MidpointLocation += WeaponLocation;
+			ValidWeapons++;
 		}
 	}
 
+	if (ValidWeapons > 0)
+	{
+		MidpointLocation /= ValidWeapons; // Calculate the average midpoint
+	}
+	else
+	{
+		// Fallback to actor location if no valid weapons
+		FVector EyeLocation;
+		FRotator EyeRotation;
+		GetActorEyesViewPoint(EyeLocation, EyeRotation);
+		MidpointLocation = EyeLocation;
+	}
 
-
-	auto TargetLocation = TargetSearchParams.TargetLocation - EyeLocation;
+	auto TargetLocation = TargetSearchParams.TargetLocation - MidpointLocation;
 	auto RootBone = MeshComponent->GetBoneName(0);
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(MeshComponent->GetSocketTransform(RootBone), TargetLocation);
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
-	return UKismetMathLibrary::RInterpTo(RotationInput, TargetRotation, GetWorld()->DeltaTimeSeconds, TurretRotationFactor);
+	return UKismetMathLibrary::RInterpTo(RotationInput, TargetRotation, m_DeltaTime, TurretRotationFactor);
 }
+
 
 void AAircraft::Shoot()
 {
-	if (!HealthComponent->IsAlive()) {
+	// Get the target rotation
+	FRotator TargetRotation = FRotator::ZeroRotator;
+	FRotator NewRotationInput = FaceTarget(TargetActor, TargetRotation);
+
+
+	if (!TargetActor)
+	{
+		// No target actor, stop firing and handle audio
+		HandleFiring(false);
+		HandleTurretAudio(false);
 		return;
 	}
 
-	auto TargetRotation = FRotator::ZeroRotator;
-	auto NewRotationInput = FaceTarget(TargetActor, TargetRotation);
+	// Check if Pitch and Yaw are nearly equal, ignoring Roll
+	// Normalize the yaw values to handle wrap-around
+	float NormalizedTargetYaw = FMath::UnwindDegrees(TargetRotation.Yaw);
+	float NormalizedInputYaw = FMath::UnwindDegrees(RotationInput.Yaw);
+
+	// Check if Pitch and Yaw are nearly equal, ignoring Roll
+	bool bIsNearlyFacing = FMath::Abs(RotationInput.Pitch - TargetRotation.Pitch) <= TurretRotationErrorTolerance &&
+		FMath::Abs(NormalizedInputYaw - NormalizedTargetYaw) <= TurretRotationErrorTolerance;
+
+	// Handle firing and audio based on whether the actor is facing the target
+	HandleFiring(bIsNearlyFacing);
+	HandleTurretAudio(!bIsNearlyFacing);  // Play turning sound if not facing the target
+
 	SetRotationInput(NewRotationInput);
+}
 
-	auto NearlyEqualPitch = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Pitch, TargetRotation.Pitch, TurretRotationErrorTolerance);
-	auto NearlyEqualYaw = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Yaw, TargetRotation.Yaw, TurretRotationErrorTolerance);
-	auto NearlyEqualRoll = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Roll, TargetRotation.Roll, TurretRotationErrorTolerance);
-	auto NearlyEqual = NearlyEqualPitch && NearlyEqualYaw && NearlyEqualRoll;
-
-	// Rotation nearly turned to target rotation, can be considered as reaching target rotation
-	if (NearlyEqual)
+void AAircraft::HandleFiring(bool bIsFacingTarget)
+{
+	if (bIsFacingTarget)
 	{
-		if (TargetActor)
-		{
-			ShooterComponent->BeginFire();
-		}
-		else
-		{
-			ShooterComponent->StopFiringWeapons();
-		}
+		ShooterComponent->BeginFire();
+	}
+	else
+	{
+		ShooterComponent->StopFiringWeapons();
+	}
+}
 
+void AAircraft::HandleTurretAudio(bool bIsTurning)
+{
+	// Stop turret sound if it’s turning to the target
+	if (bIsTurning)
+	{
+		TurretAudio->Sound = TurretTurnSound;
+		if (!TurretAudio->IsPlaying())
+		{
+			TurretAudio->Play();
+		}
+	}
+	else
+	{
 		TurretAudio->Stop();
 		TurretAudio->Sound = TurretTurnStopSound;
 		TurretAudio->Play();
-
-	}
-	else // is turning to target rotation
-	{
-		TurretAudio->Sound = TurretTurnSound;
-		if (!TurretAudio->IsPlaying()) {
-			TurretAudio->Play();
-		}
-
-		ShooterComponent->StopFiringWeapons();
 	}
 }
 

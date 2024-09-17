@@ -116,6 +116,10 @@ private:
 
 	void Shoot();
 
+	void HandleFiring(bool bIsFacingTarget);
+
+	void HandleTurretAudio(bool bIsTurning);
+
 	void ChangePitchValue(float InYawValue);
 
 protected:
