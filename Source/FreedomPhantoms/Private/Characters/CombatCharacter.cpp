@@ -95,7 +95,7 @@ void ACombatCharacter::BeginPlay()
 			secondaryWeaponObj = SecondaryWeaponClass ? Loadout->SpawnWeapon(SecondaryWeaponClass, false) : Loadout->SpawnWeapon(WeaponsDataSet, false);
 		}
 
-		if (GrenadeWeapon == nullptr) 
+		if (GrenadeWeapon == nullptr)
 		{
 			GrenadeWeapon = Loadout->SpawnGrenade(WeaponsDataSet);
 		}
@@ -314,7 +314,8 @@ void ACombatCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 void ACombatCharacter::OnWeaponUpdated(FWeaponUpdateParameters WeaponUpdateParameters)
 {
-	if (WeaponUpdateParameters.WeaponState != EWeaponState::Firing && WeaponUpdateParameters.HasFiredShot) {
+	if (WeaponUpdateParameters.WeaponState != EWeaponState::Firing && WeaponUpdateParameters.HasFiredShot) 
+	{
 
 		// play voice sound when throwing a grenade.
 		if (currentWeaponObj == Cast<AWeapon>(GrenadeWeapon)) {
@@ -376,41 +377,19 @@ void ACombatCharacter::RegisterWeaponEvents(AWeapon* Weapon, bool BindEvent)
 
 	if (BindEvent)
 	{
-		if (!Weapon->OnWeaponUpdate.IsBound())
-		{
-			Weapon->OnWeaponUpdate.AddDynamic(this, &ACombatCharacter::OnWeaponUpdated);
-		}
-
-		if (!Weapon->OnKillConfirmed.IsBound())
-		{
-			Weapon->OnKillConfirmed.AddDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
-		}
+		Weapon->OnWeaponUpdate.AddDynamic(this, &ACombatCharacter::OnWeaponUpdated);
+		Weapon->OnKillConfirmed.AddDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
 
 		if (CanAutoReloadWeapon)
 		{
-			if (!Weapon->OnEmptyAmmoClip.IsBound())
-			{
-				Weapon->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
-			}
+			Weapon->OnEmptyAmmoClip.AddDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 		}
 	}
 	else
 	{
-		if (Weapon->OnWeaponUpdate.IsBound())
-		{
-			Weapon->OnWeaponUpdate.RemoveDynamic(this, &ACombatCharacter::OnWeaponUpdated);
-		}
-
-		if (Weapon->OnKillConfirmed.IsBound())
-		{
-			Weapon->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
-		}
-
-		if (Weapon->OnEmptyAmmoClip.IsBound())
-		{
-			Weapon->OnEmptyAmmoClip.RemoveDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
-		}
-
+		Weapon->OnWeaponUpdate.RemoveDynamic(this, &ACombatCharacter::OnWeaponUpdated);
+		Weapon->OnKillConfirmed.RemoveDynamic(this, &ACombatCharacter::OnWeaponKillConfirm);
+		Weapon->OnEmptyAmmoClip.RemoveDynamic(this, &ACombatCharacter::OnWeaponAmmoEmpty);
 	}
 }
 
@@ -706,8 +685,6 @@ bool ACombatCharacter::CanSwapWeapon()
 		// can use primary if exists
 		return primaryWeaponObj != nullptr;
 	}
-
-	return false;
 }
 
 

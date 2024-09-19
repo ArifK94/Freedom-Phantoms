@@ -457,9 +457,8 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 			MeshComponent->SetSkeletalMesh(ExplosionMesh, false);
 			MeshComponent->AddWorldTransform(ExplosionMeshTransformOffset);
 		}
-
 		// Only show damaged if static mesh assigned.
-		if (DamagedMeshComponent->GetStaticMesh())
+		else if (DamagedMeshComponent->GetStaticMesh())
 		{
 			SetShowDamaged(true);
 		}
@@ -1180,8 +1179,8 @@ void AVehicleBase::SetShowDamaged(bool ShowDamaged)
 		DamagedMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	MeshComponent->SetHiddenInGame(ShowDamaged, true);
-	MeshComponent->SetVisibility(!ShowDamaged, true);
+	MeshComponent->SetHiddenInGame(ShowDamaged, false);
+	MeshComponent->SetVisibility(!ShowDamaged, false);
 
 	DamagedMeshComponent->SetHiddenInGame(!ShowDamaged, true);
 	DamagedMeshComponent->SetVisibility(ShowDamaged, true);
