@@ -98,6 +98,16 @@ void AAutoTurretWeapon::OnHealthUpdate(FHealthParameters InHealthParameters)
 			}
 		}
 
+		for (int i = 0; i < VehicleWeapons.Num(); i++)
+		{
+			auto Weapon = VehicleWeapons[i].Weapon;
+
+			if (Weapon)
+			{
+				Weapon->Destroy();
+			}
+		}
+
 
 		// Play FX
 		if (SurfaceImpactSet)

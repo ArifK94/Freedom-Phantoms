@@ -92,7 +92,10 @@ void AMountedGun::DelayedInit()
 {
 	Super::DelayedInit();
 
-	FollowCamera->AttachToComponent(GetParentMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraPositionSocket);
+	if (UseParentMuzzle || UseParentCameraPositionSocket)
+	{
+		FollowCamera->AttachToComponent(GetParentMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CameraPositionSocket);
+	}
 }
 
 FString AMountedGun::OnInteractionFound_Implementation(APawn* InPawn, AController* InController)

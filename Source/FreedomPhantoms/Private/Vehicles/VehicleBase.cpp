@@ -809,6 +809,7 @@ void AVehicleBase::SetPlayerControl(APlayerController* OutPlayerController, bool
 	ShowTargetSystem = true;
 
 	OutPlayerController->SetViewTargetWithBlend(this, CameraSwitchDelay);
+
 	UpdateWeaponView();
 
 	ThermalVisionPPComp->bEnabled = EnableThermalPP;
@@ -1029,8 +1030,11 @@ void AVehicleBase::AddControllerPitchInput(float Val)
 	}
 	else
 	{
-		CurrentWeapon->AddControllerPitchInput(Val);
-		RotationInput = CurrentWeapon->GetRotationInput();
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->AddControllerPitchInput(Val);
+			RotationInput = CurrentWeapon->GetRotationInput();
+		}
 	}
 }
 void AVehicleBase::AddControllerYawInput(float Val)
@@ -1044,8 +1048,11 @@ void AVehicleBase::AddControllerYawInput(float Val)
 	}
 	else
 	{
-		CurrentWeapon->AddControllerYawInput(Val);
-		RotationInput = CurrentWeapon->GetRotationInput();
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->AddControllerYawInput(Val);
+			RotationInput = CurrentWeapon->GetRotationInput();
+		}
 	}
 }
 
