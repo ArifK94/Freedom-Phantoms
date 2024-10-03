@@ -123,12 +123,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SetFindTargetPerFrame(bool Value);
 
-	void AddClassFilter(TSubclassOf<AActor> Class) { ClassFilters.Add(Class); }
+	void AddClassFilter(TSubclassOf<AActor> Class);
 	
-	void AddIgnoreClass(TSubclassOf<AActor> Class) { IgnoreActorClasses.Add(Class); }
+	void AddIgnoreClass(TSubclassOf<AActor> Class);
 
-	void AddIgnoreActor(AActor* Actor) { IgnoreActors.Add(Actor); }
+	void AddIgnoreActor(AActor* Actor);
 
+	void RemoveIgnoreActor(AActor* Actor);
 
 	bool CanSeeTarget(AActor* TargetActor, FVector& TargetLocation);
 

@@ -580,3 +580,29 @@ bool UTargetFinderComponent::CanSeeLastTarget()
 
 	return true;
 }
+
+void UTargetFinderComponent::AddClassFilter(TSubclassOf<AActor> Class)
+{
+	ClassFilters.Add(Class);
+}
+
+void UTargetFinderComponent::AddIgnoreClass(TSubclassOf<AActor> Class)
+{
+	IgnoreActorClasses.Add(Class);
+}
+
+void UTargetFinderComponent::AddIgnoreActor(AActor* Actor)
+{
+	if (Actor && !IgnoreActors.Contains(Actor))
+	{
+		IgnoreActors.Add(Actor);
+	}
+}
+
+void UTargetFinderComponent::RemoveIgnoreActor(AActor* Actor)
+{
+	if (Actor && IgnoreActors.Contains(Actor))
+	{
+		IgnoreActors.Remove(Actor);
+	}
+}
