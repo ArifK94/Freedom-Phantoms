@@ -103,6 +103,12 @@ void ACombatAIController::Tick(float DeltaTime)
 	// AI can take out vehicles if holds an RPG
 	if (OwningCombatCharacter && TargetFinderComponent)
 	{
+		// ignore vehicle's colllision.
+		if (OwningCombatCharacter->GetIsInVehicle())
+		{
+			TargetFinderComponent->AddIgnoreActor(OwningCombatCharacter->GetVehicletSeat().OwningVehicle);
+		}
+
 		if ((OwningCombatCharacter->GetPrimaryWeapon() && OwningCombatCharacter->GetPrimaryWeapon()->GetWeaponType() == WeaponType::RPG) 
 			|| (OwningCombatCharacter->GetSecondaryWeaponObj() && OwningCombatCharacter->GetSecondaryWeaponObj()->GetWeaponType() == WeaponType::RPG)
 			|| (OwningCombatCharacter->GetCurrentWeapon() && OwningCombatCharacter->GetCurrentWeapon()->GetWeaponType() == WeaponType::MountedGun))
@@ -369,6 +375,9 @@ void ACombatAIController::OnRappelUpdated(ABaseCharacter* BaseCharacter)
 	if (HasPriorityDestination) {
 		return;
 	}
+
+	// can no longer ignore vehicle's colllision.
+	TargetFinderComponent->RemoveIgnoreActor(OwningCombatCharacter->GetVehicletSeat().OwningVehicle);
 
 	// Find a random point when landed after rappelling so upcoming characters rapelling down do not stand in the same spot
 	if (!OwningCombatCharacter->GetIsExitingVehicle())
