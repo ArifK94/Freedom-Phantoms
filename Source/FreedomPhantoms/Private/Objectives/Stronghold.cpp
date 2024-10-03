@@ -67,25 +67,11 @@ bool AStronghold::GetRandomSpawnPoint(FVector& OutLocation, FRotator& OutRotatio
 		return false;
 	}
 
-	OutLocation = PointLocation + SpawnOffset;
+	FNavLocation NewNavLocation;
+	navResult = NavigationArea->ProjectPointToNavigation(NavLocation.Location, NewNavLocation);
+
+	OutLocation = NewNavLocation.Location;
 	OutRotation = SpawnArea->GetComponentRotation();
-
-	// Set up line trace parameters
-	FVector Start = PointLocation + FVector(0, 0, 1000); // Start above desired spawn point
-	FVector End = PointLocation - FVector(0, 0, 1000);   // End below desired spawn point
-
-
-	FHitResult HitResult;
-	FCollisionQueryParams QueryParams;
-
-	// Perform line trace
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, QueryParams);
-
-	if (bHit)
-	{
-		// Adjust spawn location to be slightly above the hit point
-		OutLocation = HitResult.Location + SpawnOffset; // 100 units above ground
-	}
 
 	return true;
 }
