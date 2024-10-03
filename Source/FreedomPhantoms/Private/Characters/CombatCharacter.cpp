@@ -1169,7 +1169,7 @@ void ACombatCharacter::UseMountedGun()
 
 	if (MountedGun->GetAdjustBehindMG())
 	{
-		AttachToComponent(MountedGun->GetMeshComp(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MountedGun->GetCharacterPositionSocket());
+		AttachToComponent(MountedGun->GetParentMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MountedGun->GetCharacterPositionSocket());
 		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	}
 
