@@ -284,6 +284,7 @@ public:
 		OrderActionSuppressSound = nullptr;
 		OrderActionCoverMeSound = nullptr;
 		OrderMoveCombatSound = nullptr;
+		StayAlertSound = nullptr;
 		ReloadingSound = nullptr;
 		FriendlyDownSound = nullptr;
 		EnemyDownSound = nullptr;
