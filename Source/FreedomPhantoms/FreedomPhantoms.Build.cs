@@ -8,12 +8,13 @@ public class FreedomPhantoms : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] {
-            "Core",
-            "CoreUObject",
-            "Engine",
-            "InputCore",
-            "HeadMountedDisplay",
+		PublicDependencyModuleNames.AddRange(new string[] { 
+			"Core", 
+			"CoreUObject", 
+			"Engine", 
+			"InputCore", 
+			"EnhancedInput",  
+			"HeadMountedDisplay",
             "GameplayTasks",
             "UMG",
             "AIModule",
@@ -21,8 +22,8 @@ public class FreedomPhantoms : ModuleRules
             "PhysicsCore",
             "MoviePlayer",
             "Niagara",
-            "AnimGraphRuntime",
-        });
+            "AnimGraphRuntime", 
+		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

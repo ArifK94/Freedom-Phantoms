@@ -5,10 +5,11 @@ using System.Collections.Generic;
 
 public class FreedomPhantomsTarget : TargetRules
 {
-	public FreedomPhantomsTarget( TargetInfo Target) : base(Target)
+	public FreedomPhantomsTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.AddRange( new string[] { "FreedomPhantoms" } );
+		DefaultBuildSettings = BuildSettingsVersion.V5;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
+		ExtraModuleNames.Add("FreedomPhantoms");
 	}
 }
