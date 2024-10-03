@@ -119,7 +119,7 @@ private:
 
 	AActor* SpawnActor();
 
-	FVector GetSpawnLocation();
+	FVector GetSpawnLocation(bool& IsValid);
 
 	void SpawnWeapon(AActor* Actor);
 

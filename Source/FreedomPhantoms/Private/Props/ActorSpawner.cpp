@@ -197,7 +197,12 @@ AActor* AActorSpawner::SpawnActor()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	FVector Location = GetSpawnLocation();
+	bool IsValid;
+	FVector Location = GetSpawnLocation(IsValid);
+
+	if (!IsValid) {
+		return nullptr;
+	}
 
 	TSubclassOf<AActor> TargetActorClass = ActorClass ? ActorClass : ActorClasses[rand() % ActorClasses.Num()];
 
@@ -212,28 +217,38 @@ AActor* AActorSpawner::SpawnActor()
 	return SpawnedActor;
 }
 
-FVector AActorSpawner::GetSpawnLocation()
+FVector AActorSpawner::GetSpawnLocation(bool& IsValid)
 {
 	FVector PointLocation = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->GetComponentLocation(), SpawnArea->GetScaledBoxExtent());
+	FVector TargetPosition = PointLocation;
+	IsValid = false;
 
-	// Set up line trace parameters
-	FVector Start = PointLocation + FVector(0, 0, 1000); // Start above desired spawn point
-	FVector End = PointLocation - FVector(0, 0, 1000);   // End below desired spawn point
-
-
-	FHitResult HitResult;
-	FCollisionQueryParams QueryParams;
-
-	// Perform line trace
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, QueryParams);
-
-	if (bHit)
+	if (SpawnOnNav)
 	{
-		// Adjust spawn location to be slightly above the hit point
-		return HitResult.Location + SpawnOffset; // 100 units above ground
+		FVector DesiredHeight = FVector(0, 0, 1000);
+		// Set up line trace parameters
+		FVector Start = PointLocation + DesiredHeight; // Start above desired spawn point
+		FVector End = PointLocation - DesiredHeight;   // End below desired spawn point
+
+		FHitResult HitResult;
+		FCollisionQueryParams QueryParams;
+
+		// Perform line trace
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, QueryParams);
+
+		if (bHit)
+		{
+			IsValid = true;
+			// Adjust spawn location to be slightly above the hit point
+			TargetPosition = HitResult.Location + SpawnOffset; // x units above ground
+		}
+	}
+	else
+	{
+		IsValid = true;
 	}
 
-	return PointLocation + SpawnOffset;
+	return TargetPosition + SpawnOffset;
 }
 
 void AActorSpawner::SpawnWeapon(AActor* Actor)
