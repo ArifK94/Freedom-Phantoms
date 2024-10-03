@@ -104,9 +104,12 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MuzzleLightComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ShotAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ClipAudioComponent->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+	// Use weapon mesh comp by default
+	ParentMesh = MeshComp;
+
+	MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 
 	SpawnMagazine();
 	ConfigSetup();
@@ -306,9 +309,6 @@ FRotator AWeapon::GetMuzzleRotation()
 
 void AWeapon::LoadParentMesh()
 {
-	// Use weapon mesh comp by default
-	ParentMesh = MeshComp;
-
 	if (UseParentMuzzle) 
 	{
 		auto AttachedParent = GetAttachParentActor();
@@ -1044,7 +1044,7 @@ void AWeapon::SpawnScopeAttachment()
 
 	if (ScopeAttachment)
 	{
-		ScopeAttachment->GetRootComponent()->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ScopeAttachment->GetParentSocket());
+		ScopeAttachment->GetRootComponent()->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ScopeAttachment->GetParentSocket());
 	}
 
 }
@@ -1052,7 +1052,7 @@ void AWeapon::SpawnScopeAttachment()
 void AWeapon::SetMagazineSocket()
 {
 	if (weaponClipObj) {
-		weaponClipObj->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+		weaponClipObj->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
 	}
 }
 
