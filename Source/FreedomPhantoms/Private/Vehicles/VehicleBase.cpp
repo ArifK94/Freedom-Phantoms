@@ -532,6 +532,8 @@ void AVehicleBase::SpawnVehicleWeapons()
 		if (VehicleWeapons[i].Weapon)
 		{
 			VehicleWeapons[i].Weapon->SetOwner(MyOwner);
+			VehicleWeapons[i].Weapon->AddInstigator(this);
+
 			VehicleWeapons[i].Weapon->SetAdjustBehindMG(false);
 			VehicleWeapons[i].Weapon->SetCanTraceInteraction(false);
 			VehicleWeapons[i].Weapon->SetCanExit(false);

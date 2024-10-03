@@ -327,6 +327,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 		float ShotLineDuration;
 
+	/**
+	* Hold a collection of instigators of this weapon.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+		TSet <AActor*> Instigators;
 
 private:
 
@@ -400,6 +405,8 @@ public:
 	/** Called when owning character has died or picking up another weapon */
 	virtual void DropWeapon(bool RemoveOwner = true, bool SimulatePhysics = false);
 
+	void AddInstigator(AActor* Actor);
+
 private:
 	void LoadParentMesh();
 
@@ -464,7 +471,6 @@ protected:
 	class FTimerManager& GetTimerManager() const;
 
 public:
-
 	void setCharacter(USkeletalMeshComponent* mesh) { CharacterReference = mesh; }
 	USkeletalMeshComponent* getCharacter() { return CharacterReference; }
 
@@ -520,5 +526,7 @@ public:
 
 	AActor* GetTargetActor() { return TargetActor; }
 	void SetTargetActor(AActor* Target) { TargetActor = Target; }
+
+	TSet <AActor*> GetInstigators() { return Instigators; }
 
 };

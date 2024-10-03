@@ -1176,6 +1176,11 @@ void AWeapon::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 
 }
 
+void AWeapon::AddInstigator(AActor* Actor)
+{
+	Instigators.Add(Actor);
+}
+
 UWorld* AWeapon::GetMyWorld() const
 {
 	if (GetWorld())

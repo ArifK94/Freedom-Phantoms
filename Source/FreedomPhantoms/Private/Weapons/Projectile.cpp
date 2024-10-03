@@ -555,6 +555,11 @@ FCollisionQueryParams AProjectile::GetQueryParams()
 
 	if (WeaponParent) {
 		QueryParams.AddIgnoredActor(WeaponParent);
+
+		for (AActor* instigator : WeaponParent->GetInstigators())
+		{
+			QueryParams.AddIgnoredActor(instigator);
+		}
 	}
 
 	// weapon bullets can often collide with owning character, 
