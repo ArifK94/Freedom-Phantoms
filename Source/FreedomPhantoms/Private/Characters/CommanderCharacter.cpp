@@ -333,11 +333,11 @@ void ACommanderCharacter::Attack(bool CommandAll)
 
 		if (CommandAll)
 		{
-			float Delay = 1.f;
+			float Delay = .1f;
 			for (int i = 0; i < ActiveRecruits.Num(); i++)
 			{
 				AttackSingle(ActiveRecruits[i], EnemyCharacter, HitResult, Delay);
-				Delay++;
+				Delay += .1f;
 			}
 		}
 		else
@@ -391,11 +391,11 @@ void ACommanderCharacter::DefendArea(bool CommandAll)
 
 	if (CommandAll)
 	{
-		float Delay = 1.f;
+		float Delay = .1f;
 		for (int i = 0; i < ActiveRecruits.Num(); i++)
 		{
 			DefendAreaSingle(ActiveRecruits[i], Delay);
-			Delay++;
+			Delay += .1f;
 		}
 	}
 	else
@@ -443,11 +443,11 @@ void ACommanderCharacter::FollowCommander(bool CommandAll)
 
 	if (CommandAll)
 	{
-		float Delay = 1.f;
+		float Delay = .1f;
 		for (int i = 0; i < ActiveRecruits.Num(); i++)
 		{
 			FollowSingle(ActiveRecruits[i], Delay);
-			Delay++;
+			Delay += .1f;
 		}
 	}
 	else
