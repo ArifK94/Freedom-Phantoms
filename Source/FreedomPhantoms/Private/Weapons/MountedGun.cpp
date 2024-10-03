@@ -33,6 +33,7 @@ AMountedGun::AMountedGun()
 
 	CrosshairErrorTolerance = .0f;
 
+
 	weaponType = WeaponType::MountedGun;
 }
 
@@ -176,20 +177,6 @@ void AMountedGun::AddControllerYawInput(float Val)
 void AMountedGun::SetRotationInput(FRotator TargetRotation)
 {
 	RotationInput = TargetRotation;
-
-	//if (ClampPitch) {
-	//	RotationInput.Pitch = FMath::Clamp(Rotation.Pitch, PitchMin, PitchMax);
-	//}
-	//else {
-	//	RotationInput.Pitch = Rotation.Pitch;
-	//}
-
-	//if (ClampYaw) {
-	//	RotationInput.Yaw = FMath::Clamp(Rotation.Yaw, YawMin, YawMax);
-	//}
-	//else {
-	//	RotationInput.Yaw = Rotation.Yaw;
-	//}
 }
 
 void AMountedGun::SetRotationInput(FRotator TargetRotation, float LerpSpeed)
@@ -293,4 +280,10 @@ FVector AMountedGun::GetCharacterStandPos()
 FRotator AMountedGun::GetCharacterStandRot()
 {
 	return MeshComp->GetSocketRotation(CharacterPositionSocket);
+}
+
+FTransform AMountedGun::GetMGBaseTransform()
+{
+	USkeletalMeshComponent* MGMesh = Cast<USkeletalMeshComponent>(GetParentMesh());
+	return MGMesh->GetSocketTransform(TurretBaseBoneName);
 }

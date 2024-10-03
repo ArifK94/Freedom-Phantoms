@@ -5,6 +5,7 @@
 #include "Weapons/MountedGun.h"
 
 #include "Components/SphereComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -157,8 +158,7 @@ void UMountedGunFinderComponent::FocusTarget(AMountedGun* MG, FVector Location)
 	GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 	auto TargetLocation = Location - EyeLocation;
-	auto RootBone = MG->GetMeshComp()->GetBoneName(0);
-	auto T = MG->GetMeshComp()->GetSocketTransform(RootBone);
+	auto T = MG->GetMGBaseTransform();
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(T, TargetLocation);
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 
@@ -175,8 +175,7 @@ void UMountedGunFinderComponent::FocusTarget(AActor* Owner, AMountedGun* MG, FVe
 	Owner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 	auto TargetLocation = Location - EyeLocation;
-	auto RootBone = MG->GetMeshComp()->GetBoneName(0);
-	auto T = MG->GetMeshComp()->GetSocketTransform(RootBone);
+	auto T = MG->GetMGBaseTransform();
 	auto TargetDirectionInvert = UKismetMathLibrary::InverseTransformDirection(T, TargetLocation);
 	TargetRotation = UKismetMathLibrary::MakeRotFromX(TargetDirectionInvert);
 

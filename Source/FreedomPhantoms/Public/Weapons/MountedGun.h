@@ -49,9 +49,21 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		bool UseParentCameraPositionSocket;
+		
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
+	/**
+	* The socket where the character should stand behind the MG.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
 		FName CharacterPositionSocket;
+
+	/**
+	* The bone index of the this turret's base from the Mesh.
+	* This is the bone that will not change its transform but stay in its state.
+	* This is used for auto rotating turret to a desginated target.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
+		FName TurretBaseBoneName;
 
 	/** True sets character to stand behind MG, false does not set it as this can be used when character was spawned to use the mounted gun in a helicopter as a mounted gunner */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mounted Gun", meta = (AllowPrivateAccess = "true"))
@@ -116,6 +128,10 @@ public:
 	FVector GetCharacterStandPos();
 	FRotator GetCharacterStandRot();
 
+	/**
+	* Get the transform of the turret's base skeletal bone.
+	*/
+	FTransform GetMGBaseTransform();
 
 private:
 	virtual void BeginPlay() override;
