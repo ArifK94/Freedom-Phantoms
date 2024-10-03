@@ -243,6 +243,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
 		bool SimulateExplosionPhysics;
 
+	/** Can the children in the normal mesh component be affected during visibility?  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion", meta = (AllowPrivateAccess = "true"))
+		bool CanPropagateMeshChildren;
+
 	/** List containing all actor components to destroy when health reached zero eg. light components */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		TArray<UActorComponent*> DestroyableComponentList;
@@ -346,7 +350,8 @@ private:
 
 	void RemoveTargetSystem();
 
-	void SetShowDamaged(bool ShowDamaged);
+	UFUNCTION(BlueprintCallable)
+		void SetShowDamaged(bool ShowDamaged);
 
 	UFUNCTION(BlueprintCallable)
 		void AddComponentToDestroyList(UActorComponent* ActorComponent);

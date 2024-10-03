@@ -142,6 +142,7 @@ AVehicleBase::AVehicleBase()
 	HighlightCharacters = false;
 	SimulateExplosionPhysics = false;
 	CheckFrontCollision = true;
+	CanPropagateMeshChildren = false;
 	IsStationary = false;
 	HasNoPlayerInput = false;
 	MeshComponentTickEnabled = true;
@@ -1175,7 +1176,7 @@ void AVehicleBase::SetShowDamaged(bool ShowDamaged)
 	{
 		// Update the damaged mesh's location to the main mesh's location.
 		FTransform SkeletalMeshTransform = MeshComponent->GetComponentTransform();
-		DamagedMeshComponent->SetWorldTransform(SkeletalMeshTransform);
+		DamagedMeshComponent->SetWorldLocation(SkeletalMeshTransform.GetLocation() + ExplosionMeshTransformOffset.GetLocation());
 
 		MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		DamagedMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -1186,8 +1187,8 @@ void AVehicleBase::SetShowDamaged(bool ShowDamaged)
 		DamagedMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	MeshComponent->SetHiddenInGame(ShowDamaged, false);
-	MeshComponent->SetVisibility(!ShowDamaged, false);
+	MeshComponent->SetHiddenInGame(ShowDamaged, CanPropagateMeshChildren);
+	MeshComponent->SetVisibility(!ShowDamaged, CanPropagateMeshChildren);
 
 	DamagedMeshComponent->SetHiddenInGame(!ShowDamaged, true);
 	DamagedMeshComponent->SetVisibility(ShowDamaged, true);
@@ -1196,11 +1197,16 @@ void AVehicleBase::SetShowDamaged(bool ShowDamaged)
 
 void AVehicleBase::OnThreatInbound_Implementation(AProjectile* Missile)
 {
+	// ignore functionality for stattionary vehicles.
+	if (IsStationary) {
+		return;
+	}
+
 	if (Missile)
 	{
 		IncomingMissiles.AddUnique(Missile);
 
-		if (IncomingThreatAudio->GetSound() && !IncomingThreatAudio->IsPlaying())
+		if (IncomingThreatAudio && IncomingThreatAudio->GetSound() && !IncomingThreatAudio->IsPlaying())
 		{
 			IncomingThreatAudio->Play();
 		}
@@ -1215,13 +1221,18 @@ void AVehicleBase::OnThreatInbound_Implementation(AProjectile* Missile)
 
 void AVehicleBase::OnThreatOutbound_Implementation(AProjectile* Missile)
 {
+	// ignore functionality for stattionary vehicles.
+	if (IsStationary) {
+		return;
+	}
+
 	if (IncomingMissiles.Contains(Missile))
 	{
 		IncomingMissiles.Remove(Missile);
 	}
 
 	// If no missiles incoming
-	if (IncomingMissiles.IsEmpty())
+	if (IncomingThreatAudio && IncomingMissiles.IsEmpty())
 	{
 		IncomingThreatAudio->Stop();
 	}
@@ -1245,13 +1256,12 @@ void AVehicleBase::OptimizeComponents()
 	{
 		USharedService::DestroyActorComponent(FrontCollider);
 		USharedService::DestroyActorComponent(FrontKillZoneComponent);
-		USharedService::DestroyActorComponent(FrontCollider);
 		USharedService::DestroyActorComponent(CameraBoom);
 		USharedService::DestroyActorComponent(FollowCamera);
 		USharedService::DestroyActorComponent(EngineAudio);
+		USharedService::DestroyActorComponent(IncomingThreatAudio);
 		USharedService::DestroyActorComponent(VehiclePathFollowerComponent);
 		USharedService::DestroyActorComponent(OptimizerComponent);
-
 	}
 
 	if (HasNoPlayerInput)
