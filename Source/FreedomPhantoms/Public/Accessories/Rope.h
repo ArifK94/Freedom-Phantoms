@@ -12,10 +12,8 @@ class FREEDOMPHANTOMS_API ARope : public AActor
 	GENERATED_BODY()
 	
 private:
-	FTimerHandle THandler_Destroy;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		USkeletalMeshComponent* MeshComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		class UCableComponent* CableComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		bool IsRopeDropped;
@@ -36,14 +34,19 @@ private:
 public:	
 	ARope();
 
+	void UpdateCableLength();
+
 	void DropRope();
 	void ReleaseRope();
 
 	void AttachActorToRope(AActor* Actor);
 	void DettachActorToRope();
 
-private:
-	void DestroyRope();
+	FVector GetStartLocation();
+	FVector GetEndLocation();
+
+protected:
+	virtual void BeginPlay() override;
 
 public:	
 	bool GetIsRopeOccupied() { return IsRopeOccupied; }

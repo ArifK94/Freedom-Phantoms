@@ -1358,3 +1358,24 @@ public:
 		TotalDegrees = 360.f;
 	}
 };
+
+
+USTRUCT(BlueprintType)
+struct FRappellingParameters
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool IsRappelling;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool IsComplete;
+
+
+	FRappellingParameters()
+	{
+		IsRappelling = false;
+		IsComplete = false;
+	}
+};

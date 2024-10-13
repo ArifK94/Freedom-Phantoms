@@ -8,6 +8,7 @@
 #include "Vehicles/VehicleBase.h"
 #include "Characters/BaseCharacter.h"
 #include "CustomComponents/HealthComponent.h"
+#include "CustomComponents/RappellerComponent.h"
 
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -445,8 +446,7 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 					{
 						if (RopeLeft && !RopeLeft->GetIsRopeOccupied())
 						{
-							RopeLeft->AttachActorToRope(Character);
-							Character->SetIsExitingVehicle(true);
+							Character->GetRappellerComponent()->InitializeRappel(RopeLeft);
 							IsExiting = true;
 						}
 					}
@@ -454,8 +454,7 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 					{
 						if (RopeRight && !RopeRight->GetIsRopeOccupied())
 						{
-							RopeRight->AttachActorToRope(Character);
-							Character->SetIsExitingVehicle(true);
+							Character->GetRappellerComponent()->InitializeRappel(RopeRight);
 							IsExiting = true;
 						}
 					}
@@ -497,6 +496,7 @@ void UVehiclePathFollowerComponent::SpawnRope()
 
 		if (RopeLeft) {
 			RopeLeft->AttachToComponent(OwningVehicle->GetMeshComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
+			RopeLeft->UpdateCableLength();
 			RopeLeft->SetRopeLeft(true);
 			RopeLeft->DropRope();
 		}
@@ -509,6 +509,7 @@ void UVehiclePathFollowerComponent::SpawnRope()
 
 		if (RopeRight) {
 			RopeRight->AttachToComponent(OwningVehicle->GetMeshComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
+			RopeRight->UpdateCableLength();
 			RopeRight->DropRope();
 		}
 	}

@@ -7,6 +7,7 @@
 #include "Managers/GameModeManager.h"
 #include "Managers/DatatableManager.h"
 #include "Services/SharedService.h"
+#include "CustomComponents/RappellerComponent.h"
 #include "CustomComponents/OptimizerComponent.h"
 
 #include "Camera/CameraComponent.h"
@@ -107,6 +108,7 @@ ABaseCharacter::ABaseCharacter()
 
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 	OptimizerComponent = CreateDefaultSubobject<UOptimizerComponent>(TEXT("OptimizerComponent"));
+	RappellerComponent = CreateDefaultSubobject<URappellerComponent>(TEXT("RappellerComponent"));
 
 	CharacterSpeed = 0.0f;
 	CurrentDeltaTime = 0.0f;
@@ -174,6 +176,7 @@ void ABaseCharacter::BeginPlay()
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthUpdate);
+	RappellerComponent->OnRappelChanged.AddDynamic(this, &ABaseCharacter::OnRappelChange);
 }
 
 void ABaseCharacter::Tick(float DeltaTime)
@@ -377,6 +380,16 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		}
 
 		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	}
+}
+
+void ABaseCharacter::OnRappelChange(FRappellingParameters RappellingInfo)
+{
+	SetIsExitingVehicle(RappellingInfo.IsRappelling);
+
+	if (RappellingInfo.IsComplete)
+	{
+		SetVehicleSeat(FVehicletSeating());
 	}
 }
 

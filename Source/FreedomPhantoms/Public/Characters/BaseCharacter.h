@@ -252,6 +252,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UHealthComponent* HealthComp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		class URappellerComponent* RappellerComponent;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAnimSequence* DeathAnimationAsset;
 
@@ -317,6 +320,10 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		virtual void OnHealthUpdate(FHealthParameters InHealthParameters);
+
+	UFUNCTION(BlueprintCallable, Category = "Rappelling")
+		virtual void OnRappelChange(FRappellingParameters RappellingInfo);
+
 	virtual void PlayDeathAnim(FHealthParameters InHealthParameters);
 
 	UFUNCTION()
@@ -534,5 +541,7 @@ public:
 	AOrderIcon* GetOverheadIcon() { return OverheadIcon; }
 
 	UAudioComponent* GetVoiceAudioComponent() { return VoiceAudioComponent; }
+
+	URappellerComponent* GetRappellerComponent() { return RappellerComponent; }
 
 };
