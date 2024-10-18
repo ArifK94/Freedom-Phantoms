@@ -28,6 +28,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
 		bool UseMasterPoseComponent;
 
+	/** Use Parent Mesh Component instead of using this actor's Mesh for all the logic. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loadout", meta = (AllowPrivateAccess = "true"))
+		bool UseParentMeshComponent;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Accessory", meta = (AllowPrivateAccess = "true"))
 		USkeletalMeshComponent* Mesh;
 
@@ -45,7 +49,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void HolsterWeapon(AWeapon* Weapon);
 
-	USkeletalMeshComponent* GetMesh() { return Mesh; }
+	USkeletalMeshComponent* GetMesh();
 
 private:
 	virtual void BeginPlay() override;

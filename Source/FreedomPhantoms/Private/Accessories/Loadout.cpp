@@ -25,6 +25,9 @@ ALoadout::ALoadout()
 	Mesh->SetRelativeRotation(MakeControlRot);
 
 	UseMasterPoseComponent = false;
+	UseParentMeshComponent = false;
+
+	loadoutType = LoadoutType::Assault;
 }
 
 void ALoadout::BeginPlay()
@@ -40,7 +43,7 @@ void ALoadout::SimlateBones()
 	{
 		FName Bone = PhysicsBones[i];
 
-		Mesh->SetAllBodiesBelowSimulatePhysics(Bone, true, true);
+		GetMesh()->SetAllBodiesBelowSimulatePhysics(Bone, true, true);
 	}
 }
 
@@ -147,6 +150,29 @@ AThrowableWeapon* ALoadout::SpawnGrenade(FWeaponsSet* WeaponsDataSet)
 void ALoadout::HolsterWeapon(AWeapon* Weapon)
 {
 	if (Weapon) {
-		Weapon->HolsterWeapon(Mesh);
+		Weapon->HolsterWeapon(GetMesh());
 	}
+}
+
+USkeletalMeshComponent* ALoadout::GetMesh()
+{
+	if (UseParentMeshComponent)
+	{
+		// get the attached component that is parented to this loadout.
+		auto AttachedParent = RootComponent->GetAttachParent();
+
+		if (AttachedParent)
+		{
+			// If attached component is a skeletal mesh then use that as a parent.
+			auto AttachedParentMesh = Cast<USkeletalMeshComponent>(RootComponent->GetAttachParent());
+
+			if (AttachedParentMesh)
+			{
+				return AttachedParentMesh;
+			}
+		}
+	}
+
+	// return this loadout's mesh component as usual.
+	return Mesh;
 }
