@@ -905,7 +905,7 @@ bool ABaseCharacter::CanCoverStand()
 {
 	FVector Start = GetActorLocation();
 	Start.Z += 50.f;
-	FVector End = (GetActorForwardVector() * CoverDistance) + Start;
+	FVector End = ((GetActorForwardVector() * -1.f) * CoverDistance) + Start;
 
 	FHitResult OutHit;
 	bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, COLLISION_COVER);
