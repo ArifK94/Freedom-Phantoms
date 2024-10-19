@@ -1379,3 +1379,18 @@ public:
 		IsComplete = false;
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FCoverUpdateInfo
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float RightInputValue;
+
+	FCoverUpdateInfo()
+	{
+		RightInputValue = 0.f;
+	}
+};

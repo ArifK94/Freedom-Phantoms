@@ -138,6 +138,10 @@ ABaseCharacter::ABaseCharacter()
 	CoverRotationLeftYaw = FVector2D(-20.0f, 0.0f);
 	CoverRotationRightPitch = FVector2D(-10.0f, 10.0f);
 	CoverRotationRightYaw = FVector2D(0.0f, 20.0f);
+	CoverStartYawOffset = .0f;
+	CoverMovementYawOffset = .0f;
+	CoverCornerLeftYawOffset = .0f;
+	CoverCornerRightYawOffset = .0f;
 }
 
 void ABaseCharacter::BeginPlay()
@@ -832,9 +836,9 @@ void ABaseCharacter::StartCover(FHitResult OutHit, bool IsCrouchOnly)
 	// Only rotate in the horizontal axis to cover point.
 	LastCoverPosition = CoverFirstPos;
 	LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal);
-	LastCoverRotation.Yaw += 90.f;
 	LastCoverRotation.Roll = 0.f;
 	LastCoverRotation.Pitch = 0.f;
+	LastCoverRotation.Yaw += CoverStartYawOffset;
 
 	IsCurrentlyCrouched = IsCrouchOnly;
 
@@ -912,6 +916,8 @@ bool ABaseCharacter::CanCoverStand()
 
 void ABaseCharacter::CoverMovement(float Value)
 {
+	bool IsUpdated = false;
+
 	FVector WallDirection = GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f; // get direction towards the cover wall
 
 	bool LineTraceRight = false;
@@ -948,9 +954,16 @@ void ABaseCharacter::CoverMovement(float Value)
 
 		if (LineTrace && OutHit.bBlockingHit)
 		{
-			SetActorRotation(UKismetMathLibrary::MakeRotFromX(OutHit.Normal * -1.f));
+			FRotator NewRotation = UKismetMathLibrary::MakeRotFromX(OutHit.Normal * -1.f);
+			NewRotation.Roll = 0.f;
+			NewRotation.Pitch = 0.f;
+			NewRotation.Yaw += CoverMovementYawOffset;
+
+			SetActorRotation(NewRotation);
 			GetCharacterMovement()->SetPlaneConstraintNormal(OutHit.Normal);
 			AddMovementInput(Dir, Value);
+
+			IsUpdated = true;
 		}
 
 	}
@@ -962,6 +975,7 @@ void ABaseCharacter::CoverMovement(float Value)
 		}
 
 		RotateToRightCorner();
+		IsUpdated = true;
 	}
 	else if (LineTraceRight) // if reached left corner
 	{
@@ -971,7 +985,16 @@ void ABaseCharacter::CoverMovement(float Value)
 		}
 
 		RotateToLeftCorner();
+		IsUpdated = true;
 	}
+
+	if (IsUpdated)
+	{
+		FCoverUpdateInfo CoverUpdateInfo;
+		CoverUpdateInfo.RightInputValue = Value;
+		OnCoverUpdate.Broadcast(CoverUpdateInfo);
+	}
+
 }
 
 void ABaseCharacter::GetCorners(FVector WallNormal, bool& LineTraceLeft, bool& LineTraceRight)
@@ -1007,7 +1030,7 @@ void ABaseCharacter::GetCorners(FVector WallNormal, bool& LineTraceLeft, bool& L
 		StartLeft = StartLocation + LeftVector;
 		EndLeft = WallDirection * CoverDistance + StartLeft;
 		FHitResult OutHitBelow;
-		LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartLeft, EndRight, COLLISION_COVER);
+		LineTraceLeft = GetWorld()->LineTraceSingleByChannel(OutHitBelow, StartLeft, EndLeft, COLLISION_COVER);
 	}
 }
 
@@ -1019,9 +1042,10 @@ void ABaseCharacter::RotateToLeftCorner()
 	isFacingCoverRHS = false;
 
 	LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(WallDirection);
-	LastCoverRotation.Yaw -= 180.f;
 	LastCoverRotation.Roll = 0.f;
 	LastCoverRotation.Pitch = 0.f;
+	LastCoverRotation.Yaw += CoverCornerLeftYawOffset;
+
 	SetActorRotation(LastCoverRotation);
 	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 }
@@ -1032,9 +1056,10 @@ void ABaseCharacter::RotateToRightCorner()
 	isFacingCoverRHS = true;
 
 	LastCoverRotation = UKismetMathLibrary::MakeRotFromZ(GetCharacterMovement()->GetPlaneConstraintNormal());
-	LastCoverRotation.Yaw += 180.f;
 	LastCoverRotation.Roll = 0.f;
 	LastCoverRotation.Pitch = 0.f;
+	LastCoverRotation.Yaw += CoverCornerRightYawOffset;
+
 	SetActorRotation(LastCoverRotation);
 	FollowCamera->SetRelativeRotation(FRotator::ZeroRotator);
 }

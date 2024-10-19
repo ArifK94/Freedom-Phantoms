@@ -21,6 +21,8 @@ class AOrderIcon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterActionUpdateignature, FCharacterActionParameters, CharacterActionParameters);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRappelUpdateignature, ABaseCharacter*, BaseCharacter);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCoverUpdateSignature, FCoverUpdateInfo, CoverUpdateInfo);
+
 UCLASS(config = Game)
 class FREEDOMPHANTOMS_API ABaseCharacter : public ACharacter
 {
@@ -33,60 +35,60 @@ public:
 
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class USpringArmComponent* CameraBoom;
+	class USpringArmComponent* CameraBoom;
 
 	/*
 	* Left shoulder spring arm.
 	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		USpringArmComponent* AimCameraLeftSpring;
+	USpringArmComponent* AimCameraLeftSpring;
 
 	/*
 	* Right shoulder spring arm.
 	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		USpringArmComponent* AimCameraRightSpring;
+	USpringArmComponent* AimCameraRightSpring;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		USpringArmComponent* FirstPersonCameraSpring;
+	USpringArmComponent* FirstPersonCameraSpring;
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class UCameraComponent* FollowCamera;
+	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UOptimizerComponent* OptimizerComponent;
+	UOptimizerComponent* OptimizerComponent;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		float BaseTurnRate;
+	float BaseTurnRate;
 
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		float BaseLookUpRate;
+	float BaseLookUpRate;
 
 
 #pragma region DataTables
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
-		UDataTable* VoiceClipsDatatable;
+	UDataTable* VoiceClipsDatatable;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
-		TArray<FName> VoiceSetRows;
+	TArray<FName> VoiceSetRows;
 	FVoiceClipSet* VoiceClipsSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
-		UDataTable* AccessoryDatatable;
+	UDataTable* AccessoryDatatable;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
-		FName AccessoryRowName;
+	FName AccessoryRowName;
 	FAccessorySet* AccessorySet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
-		UDataTable* DeathAnimDatatable;
+	UDataTable* DeathAnimDatatable;
 	FDeathAnimation* DeathAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
-		FName FootRowName;
+	FName FootRowName;
 	FSurfaceImpact* FootSurfaceImpact;
 
 private:
@@ -98,171 +100,201 @@ private:
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UAudioComponent* VoiceAudioComponent;
+	UAudioComponent* VoiceAudioComponent;
 
 protected:
 
 	UPROPERTY()
-		class AGameModeManager* GameModeManager;
+	class AGameModeManager* GameModeManager;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
-		FName HeadSocket;
+	FName HeadSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
-		FName RightHandSocket;
+	FName RightHandSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
-		FName ShoulderLeftocket;
+	FName ShoulderLeftocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
-		FName ShoulderRightSocket;
+	FName ShoulderRightSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
-		FName LeftFootSocket;
+	FName LeftFootSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sockets", meta = (AllowPrivateAccess = "true"))
-		FName RightFootSocket;
+	FName RightFootSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool UseRootMotion;
+	bool UseRootMotion;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool UseAimCameraSpring;
+	bool UseAimCameraSpring;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsFirstPersonView;
+	bool IsFirstPersonView;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		float CharacterSpeed;
+	float CharacterSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		float CharacterDirection;
+	float CharacterDirection;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float ForwardInputValue;
+	float ForwardInputValue;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float RightInputValue;
+	float RightInputValue;
 
 	/** Delay time for destroying character after death */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float DestroyDelayTime;
+	float DestroyDelayTime;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool IsCharacterInAir;
+	bool IsCharacterInAir;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool isSprinting;
+	bool isSprinting;
 
 	/** Toggling for sprint */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsSprintDefault;
+	bool IsSprintDefault;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		float aimYaw;
+	float aimYaw;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		float aimPitch;
+	float aimPitch;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float AimCameraFOV;
+	float AimCameraFOV;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", ClampMin = 0.1, ClampMax = 100))
-		float AimCameraZoomSpeed;
+	float AimCameraZoomSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isTakingCover;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	bool isTakingCover;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isCoveringHigh;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	bool isCoveringHigh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isCoveringLow;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	bool isCoveringLow;
 
 	/**
 	* To prevent the stand to crouch animations from playing if aleady in croching position, this is usefulf when changing from cover state back to default animation state.
 	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool IsCurrentlyCrouched;
+	bool IsCurrentlyCrouched;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float CoverDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	float CoverDistance;
 
 	/**
 	* Last position when taking cover. This is to allow the character to move back last position after moving out of corner cover using root motion.
 	*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FVector LastCoverPosition;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	FVector LastCoverPosition;
 
 	/**
 	* Last rotation when taking cover. This is to allow the character to move back last position after moving out of corner cover using root motion.
 	*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FRotator LastCoverRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	FRotator LastCoverRotation;
+
+	/**
+	* Add an offset for the character's Yaw axis when first taken cover.
+	* This is to ensure the character is aligned correctly based on the cover obstacle.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	float CoverStartYawOffset;
+
+	/**
+	* Add an offset for the character's Yaw axis when moving during cover.
+	* This is to ensure the character is aligned correctly based on the cover obstacle.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	float CoverMovementYawOffset;
+
+	/**
+	* Add an offset for the character's Yaw axis when moving during left cover corner.
+	* This is to ensure the character is aligned correctly based on the cover obstacle.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	float CoverCornerLeftYawOffset;
+
+	/**
+	* Add an offset for the character's Yaw axis when moving during right cover corner.
+	* This is to ensure the character is aligned correctly based on the cover obstacle.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	float CoverCornerRightYawOffset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	bool isAtCoverCorner;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	bool isFacingCoverRHS;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool IsExitingVehicle;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isAtCoverCorner;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isFacingCoverRHS;
+	bool IsExitingVehicle;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool ChangedCharacterDirection;
+	bool ChangedCharacterDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isAiming;
+	bool isAiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsInVehicle;
+	bool IsInVehicle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		bool isReviving;
+	bool isReviving;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FRotator CoverRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	FRotator CoverRotation;
 
 	/** Left cover corner camera constraint pitch (x => minimum, y => maximum)  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FVector2D CoverRotationLeftPitch;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	FVector2D CoverRotationLeftPitch;
 
 	/** Left cover corner camera constraint yaw (x => minimum, y => maximum)  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FVector2D CoverRotationLeftYaw;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	FVector2D CoverRotationLeftYaw;
 
 	/** Right cover corner camera constraint pitch (x => minimum, y => maximum)  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FVector2D CoverRotationRightPitch;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	FVector2D CoverRotationRightPitch;
 
 	/** Right cover corner camera constraint yaw (x => minimum, y => maximum)  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FVector2D CoverRotationRightYaw;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	FVector2D CoverRotationRightYaw;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UPostProcessComponent* CharacterOutlinePPComp;
+	UPostProcessComponent* CharacterOutlinePPComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FVehicletSeating CurrentVehicleSeat;
+	FVehicletSeating CurrentVehicleSeat;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		UHealthComponent* HealthComp;
+	UHealthComponent* HealthComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		class URappellerComponent* RappellerComponent;
+	class URappellerComponent* RappellerComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UAnimSequence* DeathAnimationAsset;
+	UAnimSequence* DeathAnimationAsset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<AOrderIcon> OverheadIconClass;
+	TSubclassOf<AOrderIcon> OverheadIconClass;
 
 	UPROPERTY()
-		AOrderIcon* OverheadIcon;
+	AOrderIcon* OverheadIcon;
 
 protected:
 	float DefaultMaxWalkSpeed;
@@ -276,7 +308,7 @@ private:
 	FName DefaultMeshCollisionName;
 
 	UPROPERTY()
-		AController* DefaultController;
+	AController* DefaultController;
 	FVector DefaultMeshLocation;
 	FRotator DefaultMeshRotation;
 	FRotator RotationInput; // input for controller when looking around while taking cover and aiming
@@ -296,7 +328,7 @@ private:
 	FTimerHandle THandler_Destroyer;
 
 	UPROPERTY()
-		AAIController* DefaultAIController;
+	AAIController* DefaultAIController;
 
 protected:
 	virtual void Init();
@@ -319,15 +351,15 @@ protected:
 	virtual	void UpdateCharacterMovement();
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
-		virtual void OnHealthUpdate(FHealthParameters InHealthParameters);
+	virtual void OnHealthUpdate(FHealthParameters InHealthParameters);
 
 	UFUNCTION(BlueprintCallable, Category = "Rappelling")
-		virtual void OnRappelChange(FRappellingParameters RappellingInfo);
+	virtual void OnRappelChange(FRappellingParameters RappellingInfo);
 
 	virtual void PlayDeathAnim(FHealthParameters InHealthParameters);
 
 	UFUNCTION()
-		void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	virtual void Landed(const FHitResult& Hit) override;
 
@@ -345,10 +377,13 @@ private:
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-		FOnRappelUpdateignature OnRappelUpdate;
+	FOnRappelUpdateignature OnRappelUpdate;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-		FOnCharacterActionUpdateignature OnCharacterActionUpdate;
+	FOnCharacterActionUpdateignature OnCharacterActionUpdate;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnCoverUpdateSignature OnCoverUpdate;
 
 	virtual FVector GetPawnViewLocation() const override;
 
@@ -397,13 +432,13 @@ public:
 	* Can character aim based on current state eg. while taking cover or crouching etc.
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		bool CanAim();
+	bool CanAim();
 
 	/**
 	* Can character peak up while in cover?
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		bool CanCoverPeakUp();
+	bool CanCoverPeakUp();
 
 	void SetVehicleSeat(FVehicletSeating Seat);
 	virtual void SetIsExitingVehicle(bool IsExiting);
@@ -416,7 +451,7 @@ public:
 
 	/** Line trace from foot for footstep VFX */
 	UFUNCTION(BlueprintCallable)
-		void TraceFootstep();
+	void TraceFootstep();
 
 	void PostDeath();
 
@@ -510,7 +545,7 @@ public:
 
 	void SetIsReviving(bool Value);
 
-	
+
 	void SetRightInputValue(float Value) {
 		RightInputValue = Value;
 	}
