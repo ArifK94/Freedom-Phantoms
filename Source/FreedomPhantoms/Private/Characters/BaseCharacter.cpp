@@ -1096,12 +1096,15 @@ bool ABaseCharacter::CanCoverPeakUp()
 
 	FVector WallDirection = GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f; // get direction towards the cover wall
 
-	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection)) * GetCapsuleComponent()->GetScaledCapsuleRadius();
-	FVector Start = GetActorLocation() + RightVector + FVector(0.0f, 0.0f, 50.0f);
+	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection));
+	FVector Start = RightVector + GetMesh()->GetSocketLocation(HeadSocket);
 	FVector End = WallDirection * CoverDistance + Start;
 
 	FHitResult OutHit;
-	bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, QueryParams);
 
 	return !LineTrace;
 }
