@@ -470,7 +470,7 @@ void ABaseCharacter::RetrieveDeathAnimDataSet()
 	}
 
 	static const FString ContextString(TEXT("DeathAnim DataSet"));
-	DeathAnimation = DeathAnimDatatable->FindRow<FDeathAnimation>("0", ContextString, true);
+	DeathAnimation = DeathAnimDatatable->FindRow<FDeathAnimation>(DeathAnimRowName, ContextString, true);
 }
 
 void ABaseCharacter::UpdateCameraView()
