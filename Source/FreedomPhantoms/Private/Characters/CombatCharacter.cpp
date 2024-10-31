@@ -1245,7 +1245,7 @@ void ACombatCharacter::CloneCharacter(ACombatCharacter* NewCharacter)
 
 void ACombatCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 {
-	if (isUsingMountedWeapon && !InHealthParameters.IsExplosive)
+	if (!DeathAnimation->MountedGuns.IsEmpty() && isUsingMountedWeapon && !InHealthParameters.IsExplosive)
 	{
 		DeathAnimationAsset = DeathAnimation->MountedGuns[rand() % DeathAnimation->MountedGuns.Num()];
 	}

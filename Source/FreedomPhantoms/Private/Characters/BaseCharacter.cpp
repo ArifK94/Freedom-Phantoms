@@ -1328,34 +1328,34 @@ void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 	{
 		if (isSprinting)
 		{
-			if (HasHitLeft)
+			if (HasHitLeft && !DeathAnimation->SprintExplosionsRight.IsEmpty())
 			{
 				DeathAnimationAsset = DeathAnimation->SprintExplosionsRight[rand() % DeathAnimation->SprintExplosionsRight.Num()];
 			}
-			else if (HasHitRight)
+			else if (HasHitRight && !DeathAnimation->SprintExplosionsLeft.IsEmpty())
 			{
 				DeathAnimationAsset = DeathAnimation->SprintExplosionsLeft[rand() % DeathAnimation->SprintExplosionsLeft.Num()];
 			}
-			else
+			else if (!DeathAnimation->SprintExplosionsFront.IsEmpty())
 			{
 				DeathAnimationAsset = DeathAnimation->SprintExplosionsFront[rand() % DeathAnimation->SprintExplosionsFront.Num()];
 			}
 		}
 		else
 		{
-			if (HasHitFront)
+			if (HasHitFront && !DeathAnimation->StandExplosionsBack.IsEmpty())
 			{
 				DeathAnimationAsset = DeathAnimation->StandExplosionsBack[rand() % DeathAnimation->StandExplosionsBack.Num()];
 			}
-			else if (HasHitLeft)
+			else if (HasHitLeft && !DeathAnimation->StandExplosionsRight.IsEmpty())
 			{
 				DeathAnimationAsset = DeathAnimation->StandExplosionsRight[rand() % DeathAnimation->StandExplosionsRight.Num()];
 			}
-			else if (HasHitRight)
+			else if (HasHitRight && !DeathAnimation->StandExplosionsLeft.IsEmpty())
 			{
 				DeathAnimationAsset = DeathAnimation->StandExplosionsLeft[rand() % DeathAnimation->StandExplosionsLeft.Num()];
 			}
-			else
+			else if (!DeathAnimation->StandExplosionsFront.IsEmpty())
 			{
 				DeathAnimationAsset = DeathAnimation->StandExplosionsFront[rand() % DeathAnimation->StandExplosionsFront.Num()];
 			}
@@ -1365,36 +1365,36 @@ void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 
 	if (InHealthParameters.WeaponCauser && InHealthParameters.WeaponCauser->GetWeaponType() == WeaponType::Shotgun)
 	{
-		if (SurfaceType == SURFACE_LEGS)
+		if (SurfaceType == SURFACE_LEGS && !DeathAnimation->ShotgunHitsLegs.IsEmpty())
 		{
 			DeathAnimationAsset = DeathAnimation->ShotgunHitsLegs[rand() % DeathAnimation->ShotgunHitsLegs.Num()];
 			return;
 		}
-		else if (HasHitFront)
+		else if (HasHitFront && !DeathAnimation->ShotgunHitsFront.IsEmpty())
 		{
 			DeathAnimationAsset = DeathAnimation->ShotgunHitsFront[rand() % DeathAnimation->ShotgunHitsFront.Num()];
 			return;
 		}
-		else if (HasHitLeft)
+		else if (HasHitLeft && !DeathAnimation->ShotgunHitsLeft.IsEmpty())
 		{
 			DeathAnimationAsset = DeathAnimation->ShotgunHitsLeft[rand() % DeathAnimation->ShotgunHitsLeft.Num()];
 			return;
 		}
-		else if (HasHitRight)
+		else if (HasHitRight && !DeathAnimation->ShotgunHitsRight.IsEmpty())
 		{
 			DeathAnimationAsset = DeathAnimation->ShotgunHitsRight[rand() % DeathAnimation->ShotgunHitsRight.Num()];
 			return;
 		}
 	}
 
-	if (isSprinting)
+	if (isSprinting && !DeathAnimation->Sprints.IsEmpty())
 	{
 		int RandomIndex = rand() % DeathAnimation->Sprints.Num();
 		DeathAnimationAsset = DeathAnimation->Sprints[RandomIndex];
 		return;
 	}
 
-	if (GetCharacterMovement()->IsCrouching())
+	if (GetCharacterMovement()->IsCrouching() && !DeathAnimation->Crouches.IsEmpty())
 	{
 		int RandomIndex = rand() % DeathAnimation->Crouches.Num();
 		DeathAnimationAsset = DeathAnimation->Crouches[RandomIndex];
@@ -1405,13 +1405,22 @@ void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 	switch (SurfaceType)
 	{
 	case SURFACE_HEAD:
-		DeathAnimationAsset = DeathAnimation->Headshots[rand() % DeathAnimation->Headshots.Num()];
+		if (!DeathAnimation->Headshots.IsEmpty())
+		{
+			DeathAnimationAsset = DeathAnimation->Headshots[rand() % DeathAnimation->Headshots.Num()];
+		}
 		return;
 	case SURFACE_FLESHVULNERABLE:
-		DeathAnimationAsset = DeathAnimation->Vulernables[rand() % DeathAnimation->Vulernables.Num()];
+		if (!DeathAnimation->Vulernables.IsEmpty())
+		{
+			DeathAnimationAsset = DeathAnimation->Vulernables[rand() % DeathAnimation->Vulernables.Num()];
+		}
 		return;
 	case SURFACE_GROIN:
-		DeathAnimationAsset = DeathAnimation->Groins[rand() % DeathAnimation->Groins.Num()];
+		if (!DeathAnimation->Groins.IsEmpty())
+		{
+			DeathAnimationAsset = DeathAnimation->Groins[rand() % DeathAnimation->Groins.Num()];
+		}
 		return;
 	default:
 		DeathAnimationAsset = DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
