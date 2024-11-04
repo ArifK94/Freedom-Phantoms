@@ -529,4 +529,7 @@ public:
 
 	TSet <AActor*> GetInstigators() { return Instigators; }
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool HasAmmo();
+
 };

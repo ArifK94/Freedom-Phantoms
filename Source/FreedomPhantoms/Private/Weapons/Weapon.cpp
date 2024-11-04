@@ -1201,3 +1201,8 @@ FTimerManager& AWeapon::GetTimerManager() const
 
 	return OwningGameInstance->GetTimerManager();
 }
+
+bool AWeapon::HasAmmo()
+{
+	return CurrentAmmo > 0;
+}
