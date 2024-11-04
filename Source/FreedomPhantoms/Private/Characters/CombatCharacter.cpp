@@ -928,19 +928,8 @@ void ACombatCharacter::HolsterWeapon()
 
 void ACombatCharacter::BeginFire()
 {
-	if (!CanUseWeapon()) {
-
-		if (isReloading) {
-			// Pump Action Weapons can fire if there is ammo
-			if (Cast<APumpActionWeapon>(currentWeaponObj) && currentWeaponObj->GetCurrentAmmo() > 0) {
-				isReloading = false;
-				EndReload();
-			}
-			else {
-				return;
-			}
-		}
-
+	if (!CanUseWeapon()) 
+	{
 		return;
 	}
 
@@ -1054,6 +1043,30 @@ void ACombatCharacter::EndReload()
 
 bool ACombatCharacter::CanUseWeapon()
 {
+	if (isReloading)
+	{
+		APumpActionWeapon* PumpAction = Cast<APumpActionWeapon>(currentWeaponObj);
+
+		// Pump Action Weapons can fire if there is ammo / shells in the weapon.
+		if (PumpAction)
+		{
+			if (currentWeaponObj->HasAmmo())
+			{
+				isReloading = false;
+				EndReload();
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	return currentWeaponObj && !isReloading && hasEquippedWeapon && !isEquippingWeapon && !isSwappingWeapon;
 }
 
