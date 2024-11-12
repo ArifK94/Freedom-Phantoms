@@ -65,6 +65,7 @@ AWeapon::AWeapon()
 	LaserSocket = "Laser";
 	TorchlightSocket = "Torchlight";
 	ParentHolderSocket = "Hand";
+	ChargeSoundParamName = "ChargeAmount";
 
 	MaxAmmoCapacity = 120;
 	RateOfFire = 600.0f;
@@ -98,6 +99,8 @@ AWeapon::AWeapon()
 
 	DrawDebugShotLine = false;
 	ShotLineDuration = 5.0f;
+
+	MaxChargeAmount = 1.f;
 }
 
 void AWeapon::BeginPlay()
@@ -795,35 +798,23 @@ void AWeapon::ChargeDown()
 
 void AWeapon::IncreaseCharge()
 {
-	CurrentChargeAmount = FMath::Clamp(CurrentChargeAmount + .1f, 0.f, ChargeUpTime);
+	CurrentChargeAmount = FMath::Clamp(CurrentChargeAmount + .1f, 0.f, MaxChargeAmount);
 
-	// Start from the last item, check against if the current charge amount is greater than current iteration start amount
-	for (int i = ChargeUpSounds.Num() - 1; i > 0; i--)
+	if (ChargeUpSound)
 	{
-		auto Sound = ChargeUpSounds[i];
-
-		// if already played & not set to loop then ignore this item
-		if (Sound.AudioComponent && !Sound.IsLoop) {
-			continue;
+		if (ChargingAudioComponent->GetSound() != ChargeUpSound)
+		{
+			ChargingAudioComponent->SetSound(ChargeUpSound);
 		}
 
-		// if current charge amount has reached or greater than current item's start amount
-		if (CurrentChargeAmount >= Sound.StartAmount) {
+		if (!ChargingAudioComponent->IsPlaying())
+		{
+			ChargingAudioComponent->Play();
+		}
 
-			bool CanPlay = true;
-
-			// if meant to be looping but not playing, play again
-			if (Sound.IsLoop && Sound.AudioComponent && Sound.AudioComponent->IsPlaying()) {
-				CanPlay = false;
-			}
-
-			if (CanPlay) {
-				Sound.AudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetMyWorld(), Sound.Audio, GetActorLocation(), FRotator::ZeroRotator, .5f, 1.f, 0.f, ChargingAudioComponent->AttenuationSettings);
-			}
-
-			// update the array struct 
-			ChargeUpSounds[i] = Sound;
-			break;
+		if (CurrentChargeAmount < MaxChargeAmount)
+		{
+			ChargingAudioComponent->SetFloatParameter(ChargeSoundParamName, CurrentChargeAmount);
 		}
 	}
 }
@@ -834,42 +825,27 @@ void AWeapon::DecreaseCharge()
 		return;
 	}
 
-	for (int i = 0; i < ChargeUpSounds.Num(); i++)
-	{
-		auto Sound = ChargeUpSounds[i];
-		if (Sound.AudioComponent) {
-			Sound.AudioComponent->Stop();
-			Sound.AudioComponent = nullptr;
-			ChargeUpSounds[i] = Sound;
-		}
-	}
+	CurrentChargeAmount = FMath::Clamp(CurrentChargeAmount - .1f, 0.f, MaxChargeAmount);
 
-
-	for (int i = 0; i < ChargeDownSounds.Num(); i++)
+	if (ChargeDownSound)
 	{
-		auto Sound = ChargeDownSounds[i];
-		if (CurrentChargeAmount >= Sound.StartAmount && !Sound.AudioComponent) {
-			Sound.AudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetMyWorld(), Sound.Audio, GetActorLocation(), FRotator::ZeroRotator, .5f, 1.f, 0.f, ChargingAudioComponent->AttenuationSettings);
-			ChargeDownSounds[i] = Sound;
-			break;
+		if (ChargingAudioComponent->GetSound() != ChargeDownSound)
+		{
+			ChargingAudioComponent->SetSound(ChargeDownSound);
 		}
+
+		if (!ChargingAudioComponent->IsPlaying())
+		{
+			ChargingAudioComponent->Play();
+		}
+
+		ChargingAudioComponent->SetFloatParameter(ChargeSoundParamName, CurrentChargeAmount);
 	}
 
 	if (CurrentChargeAmount <= 0.0f)
 	{
-		for (int i = 0; i < ChargeDownSounds.Num(); i++)
-		{
-			auto Sound = ChargeDownSounds[i];
-			if (Sound.AudioComponent) {
-				Sound.AudioComponent = nullptr;
-				ChargeDownSounds[i] = Sound;
-			}
-		}
-
 		GetTimerManager().ClearTimer(THandler_ChargeDown);
 	}
-
-	CurrentChargeAmount = FMath::Clamp(CurrentChargeAmount - .1f, 0.f, ChargeUpTime);
 }
 
 void AWeapon::DisableMuzzleLight()

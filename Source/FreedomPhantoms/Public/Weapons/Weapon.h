@@ -293,16 +293,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* ChargingAudioComponent;
 
-	/** Starting from the low charge sound down to high charge sound */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
-		TArray<FCrossfadeAudio> ChargeUpSounds;
-
-	/** Starting from the high charge sound down to low charge sound */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
-		TArray<FCrossfadeAudio> ChargeDownSounds;
+		USoundBase* ChargeUpSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
-		float ChargeUpTime;
+		USoundBase* ChargeDownSound;
+
+	/** Paramater name for the crossfade by param in the charging sound cue assigned to the charging audio component */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
+		FName ChargeSoundParamName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging", meta = (AllowPrivateAccess = "true"))
+		float MaxChargeAmount;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Charging", meta = (AllowPrivateAccess = "true"))
 		bool IsChargingUp;

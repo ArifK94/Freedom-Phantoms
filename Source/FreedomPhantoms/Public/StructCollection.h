@@ -305,35 +305,6 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FCrossfadeAudio
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		USoundBase* Audio;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float StartAmount;
-
-	/** Should it run infinite amound of times */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		bool IsLoop;
-
-	/** In case loop is set, this will be set when played first time then checked if has already been assigned to preventing playing again if no loop */
-	UPROPERTY()
-		UAudioComponent* AudioComponent;
-
-	FCrossfadeAudio()
-	{
-		Audio = nullptr;
-		StartAmount = 0.f;
-		IsLoop = false;
-		AudioComponent = nullptr;
-	}
-};
-
-USTRUCT(BlueprintType)
 struct FSupportPackageVoiceOverSet : public FTableRowBase
 {
 	GENERATED_BODY()
