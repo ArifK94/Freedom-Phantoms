@@ -425,18 +425,6 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 			}
 		}
 
-
-		if (SimulateExplosionPhysics)
-		{
-			MeshComponent->SetSimulatePhysics(true);
-
-
-			// Boost upwards
-			FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;
-			MeshComponent->AddImpulse(BoostIntensity, NAME_None, true);
-
-		}
-
 		// Play FX
 		if (SurfaceImpactSet)
 		{
@@ -452,16 +440,33 @@ void AVehicleBase::OnHealthUpdate(FHealthParameters InHealthParameters)
 			}
 		}
 
-
 		if (ExplosionMesh)
 		{
 			MeshComponent->SetSkeletalMesh(ExplosionMesh, false);
 			MeshComponent->AddWorldTransform(ExplosionMeshTransformOffset);
+
+			if (SimulateExplosionPhysics)
+			{
+				MeshComponent->SetSimulatePhysics(true);
+			}
 		}
 		// Only show damaged if static mesh assigned.
 		else if (DamagedMeshComponent->GetStaticMesh())
 		{
 			SetShowDamaged(true);
+
+			if (SimulateExplosionPhysics)
+			{
+				DamagedMeshComponent->SetSimulatePhysics(true);
+			}
+		}
+
+		if (SimulateExplosionPhysics)
+		{
+			// Boost upwards
+			FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;
+			MeshComponent->AddImpulse(BoostIntensity, NAME_None, true);
+
 		}
 
 
