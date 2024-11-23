@@ -4,51 +4,51 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/TimelineComponent.h"
 #include "Rope.generated.h"
 
+class UPhysicsConstraintComponent;
 UCLASS()
 class FREEDOMPHANTOMS_API ARope : public AActor
 {
 	GENERATED_BODY()
-	
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		class UCableComponent* CableComp;
+	USkeletalMeshComponent* RopeMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsRopeDropped;
+	bool IsRopeDeployed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsRopeReleased;
+	bool IsRopeReleased;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsRopeOccupied;
+	bool IsRopeOccupied;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool IsRopeLeft;
+	bool IsRopeLeft;
 
-	/** The socket where characters will be holding onto the rope from the top part of the rope */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		FName TopAttachPointSocket;
-
-public:	
+public:
 	ARope();
 
-	void UpdateCableLength();
-
-	void DropRope();
-	void ReleaseRope();
+	void DeployRope();
+	void DetachRope();
 
 	void AttachActorToRope(AActor* Actor);
-	void DettachActorToRope();
+	void DettachActorFromRope();
 
-	FVector GetStartLocation();
-	FVector GetEndLocation();
+	// Function to get the bone's location along the rope
+	FVector GetBoneLocation(int32 BoneIndex) const;
 
-protected:
-	virtual void BeginPlay() override;
+	// Function to get the total number of bones in the rope
+	int32 GetNumBones() const;
 
-public:	
+public:
+
+	bool GetIsRopeDeployed() { return IsRopeDeployed; }
+
+
 	bool GetIsRopeOccupied() { return IsRopeOccupied; }
 	void SetRopeOccupied(bool Value) { IsRopeOccupied = Value; }
 

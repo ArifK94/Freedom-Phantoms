@@ -37,6 +37,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rappelling", meta = (AllowPrivateAccess = "true"))
 	class ARope* Rope;
 
+
+	int32 CurrentBoneIndex;
+
 public:
 	URappellerComponent();
 
@@ -53,6 +56,8 @@ public:
 	/** Function to handle the end of the rappel */
 	UFUNCTION()
 	void OnRappelFinished();
+
+	void HandleRappelling(float DeltaTime);
 
 	/** Initializes the rappel setup */
 	UFUNCTION(BlueprintCallable)

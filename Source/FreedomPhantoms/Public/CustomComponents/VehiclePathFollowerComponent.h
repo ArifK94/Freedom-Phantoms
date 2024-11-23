@@ -215,7 +215,7 @@ private:
 
 	void SpawnRope();
 
-	void ReleaseRopes();
+	void DetachRopes();
 
 	bool CanFollowPath();
 

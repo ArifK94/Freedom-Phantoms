@@ -444,7 +444,7 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 				{
 					if (VehicleSeat.IsSeatLeftSide)
 					{
-						if (RopeLeft && !RopeLeft->GetIsRopeOccupied())
+						if (RopeLeft && !RopeLeft->GetIsRopeOccupied() && RopeLeft->GetIsRopeDeployed())
 						{
 							Character->GetRappellerComponent()->InitializeRappel(RopeLeft);
 							IsExiting = true;
@@ -452,7 +452,7 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 					}
 					else
 					{
-						if (RopeRight && !RopeRight->GetIsRopeOccupied())
+						if (RopeRight && !RopeRight->GetIsRopeOccupied() && RopeRight->GetIsRopeDeployed())
 						{
 							Character->GetRappellerComponent()->InitializeRappel(RopeRight);
 							IsExiting = true;
@@ -471,7 +471,7 @@ void UVehiclePathFollowerComponent::ExitPassengers()
 
 	if (!HasRemainingPassengers)
 	{
-		ReleaseRopes();
+		DetachRopes();
 
 		// Let the ropes fall to the ground then resume path
 		GetOwner()->GetWorldTimerManager().SetTimer(THandler_ResumePath, this, &UVehiclePathFollowerComponent::ResumePath, 1.f, false, 1.f);
@@ -492,39 +492,43 @@ void UVehiclePathFollowerComponent::SpawnRope()
 
 	if (RopeLeft == nullptr)
 	{
-		RopeLeft = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		FVector OutLocation;
+		FRotator OutRotation;
+		OwningVehicle->GetMeshComponent()->GetSocketWorldLocationAndRotation(LeftRopeSocket, OutLocation, OutRotation);
+
+		RopeLeft = GetWorld()->SpawnActor<ARope>(RopeClass, OutLocation, OutRotation, SpawnParams);
 
 		if (RopeLeft) {
 			RopeLeft->AttachToComponent(OwningVehicle->GetMeshComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftRopeSocket);
-			RopeLeft->UpdateCableLength();
 			RopeLeft->SetRopeLeft(true);
-			RopeLeft->DropRope();
+			RopeLeft->DeployRope();
 		}
 
 	}
 
 	if (RopeRight == nullptr)
 	{
-		RopeRight = GetWorld()->SpawnActor<ARope>(RopeClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		FVector OutLocation;
+		FRotator OutRotation;
+		OwningVehicle->GetMeshComponent()->GetSocketWorldLocationAndRotation(RightRopeSocket, OutLocation, OutRotation);
+
+		RopeRight = GetWorld()->SpawnActor<ARope>(RopeClass, OutLocation, OutRotation, SpawnParams);
 
 		if (RopeRight) {
 			RopeRight->AttachToComponent(OwningVehicle->GetMeshComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightRopeSocket);
-			RopeRight->UpdateCableLength();
-			RopeRight->DropRope();
+			RopeRight->DeployRope();
 		}
 	}
-
-
 }
 
-void UVehiclePathFollowerComponent::ReleaseRopes()
+void UVehiclePathFollowerComponent::DetachRopes()
 {
 	if (RopeLeft) {
-		RopeLeft->ReleaseRope();
+		RopeLeft->DetachRope();
 	}
 
 	if (RopeRight) {
-		RopeRight->ReleaseRope();
+		RopeRight->DetachRope();
 	}
 }
 
@@ -577,11 +581,11 @@ void UVehiclePathFollowerComponent::SetRopeFree(FVehicletSeating VehicletSeat)
 
 	if (VehicletSeat.IsSeatLeftSide)
 	{
-		VehiclePathComp->GetRopeLeft()->DettachActorToRope();
+		VehiclePathComp->GetRopeLeft()->DettachActorFromRope();
 	}
 	else
 	{
-		VehiclePathComp->GetRopeRight()->DettachActorToRope();
+		VehiclePathComp->GetRopeRight()->DettachActorFromRope();
 	}
 }
 
@@ -605,7 +609,7 @@ void UVehiclePathFollowerComponent::ResumePath()
 
 	CurrentVehicleMovement = EVehicleMovement::MovingForward;
 
-	ReleaseRopes();
+	DetachRopes();
 
 	CurveTimeline.Play();
 
@@ -668,6 +672,6 @@ void UVehiclePathFollowerComponent::ClearPath()
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ExitPassenger);
 		GetOwner()->GetWorldTimerManager().ClearTimer(THandler_ResumePath);
 
-		ReleaseRopes();
+		DetachRopes();
 	}
 }

@@ -18,6 +18,8 @@ URappellerComponent::URappellerComponent()
 	StartPosition = FVector::ZeroVector;
 	EndPosition = FVector::ZeroVector;
 	RappelDuration = 5.f;
+
+	CurrentBoneIndex = 0;
 }
 
 void URappellerComponent::BeginPlay()
@@ -32,7 +34,7 @@ void URappellerComponent::BeginPlay()
 
 		FOnTimelineEvent RappelFinishedFunction;
 		RappelFinishedFunction.BindUFunction(this, FName("OnRappelFinished"));
-		CurveTimeline.SetTimelineFinishedFunc(RappelFinishedFunction);
+		//CurveTimeline.SetTimelineFinishedFunc(RappelFinishedFunction);
 
 		if (Rope)
 		{
@@ -54,12 +56,11 @@ void URappellerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 void URappellerComponent::InitializeRappel(ARope* RopeActor)
 {
 	Rope = RopeActor;
+	CurrentBoneIndex = 0;
 
 	if (Rope && RappelCurve)
 	{
 		Rope->AttachActorToRope(GetOwner());
-		StartPosition = Rope->GetStartLocation();
-		EndPosition = Rope->GetEndLocation();
 
 		CurveTimeline.SetLooping(false);
 		CurveTimeline.SetPlayRate(1 / RappelDuration);
@@ -69,11 +70,9 @@ void URappellerComponent::InitializeRappel(ARope* RopeActor)
 
 void URappellerComponent::UpdateRappelProgress(float Value)
 {
-	FVector NewPosition = FMath::Lerp(StartPosition, EndPosition, Value);
-	AActor* Owner = GetOwner();
-	if (Owner)
+	if (GetOwner())
 	{
-		Owner->SetActorLocation(NewPosition);
+		HandleRappelling(Value);
 
 		FRappellingParameters RappellingParams;
 		RappellingParams.IsRappelling = true;
@@ -83,7 +82,67 @@ void URappellerComponent::UpdateRappelProgress(float Value)
 
 void URappellerComponent::OnRappelFinished()
 {
+	GetOwner()->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	Rope->DettachActorFromRope();
+
+	CurrentBoneIndex = 0;
+
 	FRappellingParameters RappellingParams;
 	RappellingParams.IsComplete = true;
 	OnRappelChanged.Broadcast(RappellingParams);
+}
+
+void URappellerComponent::HandleRappelling(float DeltaTime)
+{
+	if (!Rope) return;
+
+	// Get the number of bones in the rope
+	int32 NumBones = Rope->GetNumBones();
+	if (NumBones == 0) return;
+
+	// Calculate the new bone index based on rappel speed
+	float DistanceToMove = RappelDuration * DeltaTime;
+	FVector CurrentBoneLocation = Rope->GetBoneLocation(CurrentBoneIndex);
+
+	while (DistanceToMove > 0 && CurrentBoneIndex < NumBones - 1)
+	{
+		FVector NextBoneLocation = Rope->GetBoneLocation(CurrentBoneIndex + 1);
+		float BoneDistance = FVector::Dist(CurrentBoneLocation, NextBoneLocation);
+
+		if (DistanceToMove >= BoneDistance)
+		{
+			DistanceToMove -= BoneDistance;
+			CurrentBoneIndex++;
+			CurrentBoneLocation = NextBoneLocation;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// Update character location
+	if (Rope && CurrentBoneIndex < NumBones)
+	{
+		FVector TargetLocation = Rope->GetBoneLocation(CurrentBoneIndex);
+		GetOwner()->SetActorLocation(TargetLocation);
+
+		// Compute the yaw rotation to align with the rope direction
+		FVector NextBoneLocation = Rope->GetBoneLocation(CurrentBoneIndex + 1);
+
+		FVector Direction = NextBoneLocation - CurrentBoneLocation;
+		Direction.Z = 0; // Ignore pitch (vertical direction) to constrain rotation to yaw
+		FRotator TargetYawRotation = Direction.Rotation();
+
+		// Apply only the yaw rotation
+		FRotator CurrentRotation = GetOwner()->GetActorRotation();
+		CurrentRotation.Yaw = TargetYawRotation.Yaw;
+		GetOwner()->SetActorRotation(CurrentRotation);
+	}
+
+	// If the character reaches the end of the rope, stop rappelling
+	if (CurrentBoneIndex >= NumBones - 1)
+	{
+		OnRappelFinished();
+	}
 }
