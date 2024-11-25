@@ -508,6 +508,8 @@ public:
 	void SetUnlimitedAmmo(bool IsUnlimited) { HasUnlimitedAmmo = IsUnlimited; }
 
 	USceneComponent* GetEyeViewPointComponent() { return EyeViewPointComponent; }
+
+	UFUNCTION(BlueprintCallable)
 	void SetComponentEyeViewPoint(USceneComponent* Comp) { EyeViewPointComponent = Comp; }
 
 	void SetCrosshairErrorTolerance(float Value) { CrosshairErrorTolerance = Value; }
