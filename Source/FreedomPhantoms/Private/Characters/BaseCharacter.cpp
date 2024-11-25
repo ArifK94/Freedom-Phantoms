@@ -134,6 +134,7 @@ ABaseCharacter::ABaseCharacter()
 
 	FootRowName = "Foot";
 
+	CoverPeakUpOffset = FVector::ZeroVector;
 	CoverRotationLeftPitch = FVector2D(-10.0f, 10.0f);
 	CoverRotationLeftYaw = FVector2D(-20.0f, 0.0f);
 	CoverRotationRightPitch = FVector2D(-10.0f, 10.0f);
@@ -1097,13 +1098,12 @@ bool ABaseCharacter::CanCoverPeakUp()
 	FVector WallDirection = GetCharacterMovement()->GetPlaneConstraintNormal() * -1.0f; // get direction towards the cover wall
 
 	FVector RightVector = UKismetMathLibrary::GetRightVector(UKismetMathLibrary::MakeRotFromX(WallDirection));
-	FVector Start = RightVector + GetMesh()->GetSocketLocation(HeadSocket);
+	FVector Start = RightVector + GetMesh()->GetSocketLocation(HeadSocket) + CoverPeakUpOffset;
 	FVector End = WallDirection * CoverDistance + Start;
 
 	FHitResult OutHit;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-
 	bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, QueryParams);
 
 	return !LineTrace;

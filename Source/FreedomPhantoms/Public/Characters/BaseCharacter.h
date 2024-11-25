@@ -194,6 +194,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
 	float CoverDistance;
 
+	/** Add an offset when checking if character can peak up, this can vary depending on character's cover animation. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	FVector CoverPeakUpOffset;
+
 	/**
 	* Last position when taking cover. This is to allow the character to move back last position after moving out of corner cover using root motion.
 	*/
