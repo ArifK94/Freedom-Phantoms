@@ -39,6 +39,7 @@ AStronghold::AStronghold()
 	FactionFlag->CanCharacterStepUpOn = ECB_No;
 	FactionFlag->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 	FlagClothMaterialIndex = 0;
+	FactionFlag->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	StrongholdAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("StrongholdAudio"));
 	StrongholdAudio->SetupAttachment(RootComponent);

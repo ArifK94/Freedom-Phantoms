@@ -35,6 +35,7 @@ void AAccessory::CreateSkeletalMeshParent()
 	SkelMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SkelMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	SkelMesh->CanCharacterStepUpOn = ECB_No;
+	SkelMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 }
 
 void AAccessory::setMeshSocket(UStaticMeshComponent* parentComp)

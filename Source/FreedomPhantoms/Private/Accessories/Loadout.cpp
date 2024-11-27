@@ -19,6 +19,7 @@ ALoadout::ALoadout()
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	Mesh->SetCollisionProfileName(TEXT("Loadout"));
 	Mesh->CanCharacterStepUpOn = ECB_No;
+	Mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 	RootComponent = Mesh;
 
 	FRotator MakeControlRot = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, 270.0f);

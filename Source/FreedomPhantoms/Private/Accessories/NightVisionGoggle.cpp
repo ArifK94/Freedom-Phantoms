@@ -14,6 +14,7 @@ ANightVisionGoggle::ANightVisionGoggle()
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
 	Mesh->CanCharacterStepUpOn = ECB_No;
+	Mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	VisionPPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("VisionPPComp"));
 

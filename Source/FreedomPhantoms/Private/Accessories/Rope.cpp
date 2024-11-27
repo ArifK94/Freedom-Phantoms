@@ -7,6 +7,7 @@ ARope::ARope()
 	PrimaryActorTick.bCanEverTick = false;
 
 	RopeMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RopeMesh"));
+	RopeMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 	RootComponent = RopeMesh;
 
 	IsRopeOccupied = false;
