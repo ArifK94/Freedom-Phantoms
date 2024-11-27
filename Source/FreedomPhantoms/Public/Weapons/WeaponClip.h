@@ -17,7 +17,7 @@ class FREEDOMPHANTOMS_API AWeaponClip : public AActor
 public:	
 	AWeaponClip();
 
-	void DropClip(USkeletalMeshComponent* MeshComp, FName ClipSocket, TSubclassOf<class AWeaponClip> weaponClip);
+	void DropClip(USkeletalMeshComponent* MeshComp, FName ClipSocket);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ammo", meta = (AllowPrivateAccess = "true"))

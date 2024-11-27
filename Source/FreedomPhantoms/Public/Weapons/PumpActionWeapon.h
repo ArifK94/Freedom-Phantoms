@@ -44,10 +44,6 @@ private:
 
 public:
 
-	void PlayPumpPullSound();
-
-	void PlayPumpPushSound();
-
 	void BeginLoadShell();
 
 	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))

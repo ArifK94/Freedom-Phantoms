@@ -20,6 +20,9 @@ AWeaponClip::AWeaponClip()
 	clipMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClipMeshComp"));
 	clipMeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	clipMeshComp->CanCharacterStepUpOn = ECB_No;
+	clipMeshComp->SetCastShadow(false);
+	clipMeshComp->bAutoActivate = false;
+	clipMeshComp->SetComponentTickEnabled(false);
 	RootComponent = clipMeshComp;
 
 	ammoCapacity = 30;
@@ -32,6 +35,7 @@ void AWeaponClip::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentAmmo = ammoCapacity;
+	clipMeshComp->SetComponentTickEnabled(false);
 }
 
 void AWeaponClip::SetCurrentAmmo(int value)
@@ -40,7 +44,7 @@ void AWeaponClip::SetCurrentAmmo(int value)
 }
 
 
-void AWeaponClip::DropClip(USkeletalMeshComponent* MeshComp, FName ClipSocket, TSubclassOf<class AWeaponClip> weaponClip)
+void AWeaponClip::DropClip(USkeletalMeshComponent* MeshComp, FName ClipSocket)
 {
 	UWorld* world = GetWorld();
 
@@ -55,7 +59,7 @@ void AWeaponClip::DropClip(USkeletalMeshComponent* MeshComp, FName ClipSocket, T
 		FRotator rotation = MeshComp->GetSocketRotation(ClipSocket);
 
 		// Spawn the weapon actor
-		DroppedClip = world->SpawnActor<AWeaponClip>(weaponClip, location, rotation, SpawnParams);
+		DroppedClip = world->SpawnActor<AWeaponClip>(GetClass(), location, rotation, SpawnParams);
 
 		if (DroppedClip)
 		{

@@ -34,18 +34,25 @@ AWeapon::AWeapon()
 	RootComponent = MeshComp;
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->CanCharacterStepUpOn = ECB_No;
+	MeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	ObjectPoolComponent = CreateDefaultSubobject<UObjectPoolComponent>(TEXT("ObjectPoolComponent"));
 	UseObjectPool = true;
 
 	ShotAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotAudioComponent"));
 	ShotAudioComponent->SetupAttachment(MeshComp);
+	ShotAudioComponent->SetComponentTickEnabled(false);
+	ShotAudioComponent->bAutoActivate = false;
 
 	ClipAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ClipAudioComponent"));
 	ClipAudioComponent->SetupAttachment(MeshComp);
+	ClipAudioComponent->SetComponentTickEnabled(false);
+	ClipAudioComponent->bAutoActivate = false;
 
 	ChargingAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ChargingAudioComponent"));
 	ChargingAudioComponent->SetupAttachment(MeshComp);
+	ChargingAudioComponent->SetComponentTickEnabled(false);
+	ChargingAudioComponent->bAutoActivate = false;
 
 	MuzzleLightComponent = CreateDefaultSubobject<UPointLightComponent>(TEXT("MuzzleLightComponent"));
 	MuzzleLightComponent->SetupAttachment(MeshComp);
@@ -54,6 +61,8 @@ AWeapon::AWeapon()
 	MuzzleLightComponent->SetCastShadows(false);
 	MuzzleLightComponent->SetVisibility(false);
 	MuzzleLightComponent->SetHiddenInGame(true, true);
+	MuzzleLightComponent->SetComponentTickEnabled(false);
+	MuzzleLightComponent->bAutoActivate = false;
 
 	MuzzleSocket = "Muzzle";
 	ClipSocket = "Clip";
@@ -127,6 +136,16 @@ void AWeapon::DelayedInit()
 	MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
 	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+
+	DeleteUnusedComponents();
+
+
+	if (!PlayFireSoundAtLocation)
+	{
+		ShotAudioComponent->OnAudioFinished.AddDynamic(this, &AWeapon::HandleFiringAudioFinished);
+	}
+
+	ClipAudioComponent->OnAudioFinished.AddDynamic(this, &AWeapon::HandleClipAudioFinished);
 
 	GetTimerManager().ClearTimer(THandler_DelayedInit);
 }
@@ -572,6 +591,7 @@ void AWeapon::SpawnProjectile(FVector Locatiom, FRotator Rotation)
 
 void AWeapon::PlayShotEffect(FVector EyeLocation)
 {
+	MuzzleLightComponent->Activate();
 	MuzzleLightComponent->SetVisibility(true, true);
 	MuzzleLightComponent->SetHiddenInGame(false, true);
 
@@ -596,6 +616,7 @@ void AWeapon::PlayShotEffect(FVector EyeLocation)
 		}
 		else
 		{
+			ShotAudioComponent->Activate();
 			ShotAudioComponent->Sound = ShotSound;
 			ShotAudioComponent->Play(0.0f);
 		}
@@ -618,6 +639,16 @@ void AWeapon::OnProjectileImpacted(FProjectileImpactParameters ProjectileImpactP
 	{
 		ProjectileImpactParameters.ProjectileActor->OnProjectileImpact.Clear();
 	}
+}
+
+void AWeapon::HandleFiringAudioFinished()
+{
+	ShotAudioComponent->Deactivate();
+}
+
+void AWeapon::HandleClipAudioFinished()
+{
+	ClipAudioComponent->Deactivate();
 }
 
 // Bullet spread random point
@@ -798,6 +829,12 @@ void AWeapon::ChargeDown()
 
 void AWeapon::IncreaseCharge()
 {
+	if (!ChargingAudioComponent) {
+		return;
+	}
+
+	ChargingAudioComponent->Activate();
+
 	CurrentChargeAmount = FMath::Clamp(CurrentChargeAmount + .1f, 0.f, MaxChargeAmount);
 
 	if (ChargeUpSound)
@@ -821,9 +858,11 @@ void AWeapon::IncreaseCharge()
 
 void AWeapon::DecreaseCharge()
 {
-	if (!GetMyWorld()) {
+	if (!ChargingAudioComponent) {
 		return;
 	}
+
+	ChargingAudioComponent->Activate();
 
 	CurrentChargeAmount = FMath::Clamp(CurrentChargeAmount - .1f, 0.f, MaxChargeAmount);
 
@@ -852,9 +891,20 @@ void AWeapon::DisableMuzzleLight()
 {
 	MuzzleLightComponent->SetVisibility(false, true);
 	MuzzleLightComponent->SetHiddenInGame(true, true);
+	MuzzleLightComponent->Deactivate();
 
 	if (GetMyWorld() && THandler_MuzzleLight.IsValid()) {
 		GetTimerManager().ClearTimer(THandler_MuzzleLight);
+	}
+}
+
+void AWeapon::PlayClipSound(USoundBase* InSound)
+{
+	if (InSound)
+	{
+		ClipAudioComponent->Activate();
+		ClipAudioComponent->Sound = InSound;
+		ClipAudioComponent->Play();
 	}
 }
 
@@ -913,11 +963,7 @@ void AWeapon::BeginReload()
 
 void AWeapon::EndReload()
 {
-	if (ReloadEndSound != NULL)
-	{
-		ClipAudioComponent->Sound = ReloadEndSound;
-		ClipAudioComponent->Play();
-	}
+	PlayClipSound(ReloadEndSound);
 
 	isReloading = false;
 	HasPlayedClipIn = false;
@@ -932,10 +978,9 @@ void AWeapon::EndReload()
 
 void AWeapon::ClipIn()
 {
-	if (!HasPlayedClipIn && ReloadClipInSound != NULL)
+	if (!HasPlayedClipIn)
 	{
-		ClipAudioComponent->Sound = ReloadClipInSound;
-		ClipAudioComponent->Play();
+		PlayClipSound(ReloadClipInSound);
 		HasPlayedClipIn = true;
 	}
 
@@ -947,8 +992,7 @@ void AWeapon::ClipOut()
 {
 	if (!HasPlayedClipOut && ReloadClipOutSound != NULL)
 	{
-		ClipAudioComponent->Sound = ReloadClipOutSound;
-		ClipAudioComponent->Play();
+		PlayClipSound(ReloadClipOutSound);
 		HasPlayedClipOut = true;
 	}
 
@@ -956,7 +1000,7 @@ void AWeapon::ClipOut()
 	// Drop magazine
 	if (weaponClipObj && weaponClip && canShowClip)
 	{
-		weaponClipObj->DropClip(MeshComp, ClipSocket, weaponClip);
+		weaponClipObj->DropClip(MeshComp, ClipSocket);
 	}
 }
 
@@ -1064,11 +1108,7 @@ void AWeapon::SetHandGuardIK(USkeletalMeshComponent* CharacterMesh, FName Trigge
 
 void AWeapon::AutoReloadBegin()
 {
-	if (ReloadClipInSound != NULL)
-	{
-		ClipAudioComponent->Sound = ReloadClipInSound;
-		ClipAudioComponent->Play();
-	}
+	PlayClipSound(ReloadClipInSound);
 
 	FWeaponUpdateParameters WeaponUpdateParameters;
 	WeaponUpdateParameters.WeaponState = EWeaponState::Reloading;
@@ -1151,6 +1191,21 @@ void AWeapon::DropWeapon(bool RemoveOwner, bool SimulatePhysics)
 	MeshComp->SetSimulatePhysics(SimulatePhysics);
 
 }
+
+void AWeapon::DeleteUnusedComponents()
+{
+	if (!ChargeUpSound && !ChargeDownSound)
+	{
+		ChargingAudioComponent->DestroyComponent();
+	}
+
+	if (PlayFireSoundAtLocation)
+	{
+		ShotAudioComponent->DestroyComponent();
+	}
+
+}
+
 
 void AWeapon::AddInstigator(AActor* Actor)
 {

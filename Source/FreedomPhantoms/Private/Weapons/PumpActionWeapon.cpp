@@ -74,7 +74,7 @@ void APumpActionWeapon::BeginLoadShell()
 	// pull the handguard
 	IsPullingPump = true;
 
-	PlayPumpPullSound();
+	PlayClipSound(PumpPullSound);
 
 	GetWorldTimerManager().SetTimer(THandler_Pump, this, &APumpActionWeapon::EndLoadShell, PumpPullSound->GetDuration(), false);
 }
@@ -83,7 +83,7 @@ void APumpActionWeapon::EndLoadShell()
 {
 	GetWorldTimerManager().ClearTimer(THandler_Pump);
 
-	PlayPumpPushSound();
+	PlayClipSound(PumpPushSound);
 
 	BeginShellEffect();
 
@@ -106,11 +106,7 @@ void APumpActionWeapon::OnReload()
 
 		CurrentAmmo++;
 
-		if (InsertAmmoSound != NULL)
-		{
-			ClipAudioComponent->Sound = InsertAmmoSound;
-			ClipAudioComponent->Play();
-		}
+		PlayClipSound(InsertAmmoSound);
 
 		if (CurrentMaxAmmo > 0)
 		{
@@ -124,34 +120,5 @@ void APumpActionWeapon::OnReload()
 	else
 	{
 		EndLoadShell();
-	}
-}
-
-void APumpActionWeapon::PlayPumpPullSound()
-{
-	if (ClipAudioComponent != NULL)
-	{
-		if (ClipAudioComponent->IsPlaying())
-			ClipAudioComponent->Stop();
-
-		ClipAudioComponent->Sound = PumpPullSound;
-
-		if (!ClipAudioComponent->IsPlaying())
-			ClipAudioComponent->Play();
-	}
-}
-
-void APumpActionWeapon::PlayPumpPushSound()
-{
-	if (ClipAudioComponent != NULL)
-	{
-		if (ClipAudioComponent->IsPlaying())
-			ClipAudioComponent->Stop();
-
-
-		ClipAudioComponent->Sound = PumpPushSound;
-
-		if (!ClipAudioComponent->IsPlaying())
-			ClipAudioComponent->Play();
 	}
 }

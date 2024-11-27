@@ -357,6 +357,12 @@ public:
 	UFUNCTION()
 		void OnProjectileImpacted(FProjectileImpactParameters ProjectileImpactParameters);
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon Audio")
+		void HandleFiringAudioFinished();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon Audio")
+		void HandleClipAudioFinished();
+
 	// Interactable interface methods
 	virtual FString GetKeyDisplayName_Implementation() override;
 	virtual FString OnInteractionFound_Implementation(APawn* InPawn, AController* InController) override;
@@ -436,6 +442,9 @@ private:
 
 	void DisableMuzzleLight();
 
+	/** If some components will not be used, then delete them to save memory. */
+	void DeleteUnusedComponents();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -465,6 +474,8 @@ protected:
 	void BeginShellEffect();
 
 	void PlayShotEffect(FVector EyeLocation);
+
+	void PlayClipSound(USoundBase* InSound);
 
 	void EmptyClipEvent();
 

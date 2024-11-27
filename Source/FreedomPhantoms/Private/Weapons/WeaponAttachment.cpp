@@ -13,6 +13,8 @@ AWeaponAttachment::AWeaponAttachment()
 	RootComponent = MeshComp;
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->CanCharacterStepUpOn = ECB_No;
+	MeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+
 }
 
 void AWeaponAttachment::SetDesertCamo()
