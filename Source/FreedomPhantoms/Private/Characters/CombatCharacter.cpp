@@ -437,6 +437,7 @@ void ACombatCharacter::RetrieveWeaponAnimDataSet()
 
 	if (WeaponAnimDataSet)
 	{
+		FWeaponAnimSet WeaponAnimDataSetEditor;
 		WeaponAnimDataSetEditor.StandArmed = WeaponAnimDataSet->StandArmed;
 		WeaponAnimDataSetEditor.CrouchArmed = WeaponAnimDataSet->CrouchArmed;
 		WeaponAnimDataSetEditor.StandAimingBS = WeaponAnimDataSet->StandAimingBS;
@@ -454,6 +455,8 @@ void ACombatCharacter::RetrieveWeaponAnimDataSet()
 		WeaponAnimDataSetEditor.AimOffsetStanding = WeaponAnimDataSet->AimOffsetStanding;
 		WeaponAnimDataSetEditor.AimOffsetCrouching = WeaponAnimDataSet->AimOffsetCrouching;
 		WeaponAnimDataSetEditor.AimOffsetProning = WeaponAnimDataSet->AimOffsetProning;
+
+		OnWeaponAnimSetUpdate.Broadcast(WeaponAnimDataSetEditor);
 	}
 }
 

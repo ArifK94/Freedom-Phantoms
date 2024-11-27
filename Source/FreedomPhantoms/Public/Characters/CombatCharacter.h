@@ -16,6 +16,7 @@ class AThrowableWeapon;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCharacter*, CombatCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMountedGunEnabledSignature, AMountedGun*, MountedGun);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAnimSetUpdateSignature, FWeaponAnimSet, WeaponAnimSet);
 
 UCLASS()
 class FREEDOMPHANTOMS_API ACombatCharacter : public ABaseCharacter, public IInteractable
@@ -33,8 +34,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
 		UDataTable* WeaponsAnimationDatatable;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		FWeaponAnimSet WeaponAnimDataSetEditor;
 	FWeaponAnimSet* WeaponAnimDataSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Datatables", meta = (AllowPrivateAccess = "true"))
@@ -150,6 +149,10 @@ public:
 	ACombatCharacter();
 
 	virtual void SetDefaultState() override;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnWeaponAnimSetUpdateSignature OnWeaponAnimSetUpdate;
+	
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnCombatUpdatedignature OnCombatUpdated;
