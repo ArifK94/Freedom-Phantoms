@@ -221,9 +221,16 @@ void ABaseCharacter::SetDefaultState()
 
 void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 {
+	bool RemoveRappelComponent = false;
 	if (Seat.OwningVehicle)
 	{
 		CurrentVehicleSeat = Seat;
+
+		// if character will not exit the vehicle, then remove the rappel component.
+		if (!Seat.ExitPassengerOnPoint)
+		{
+			RemoveRappelComponent = true;
+		}
 
 		if (UseAimCameraSpring)
 		{
@@ -253,7 +260,13 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 
 		HealthComp->SetCanBeWounded(HealthComp->GetCanBeWoundedDefault());
 
-		if (RappellerComponent) RappellerComponent->DestroyComponent();
+		// rappel component is no longer needed once exited vehicle.
+		RemoveRappelComponent = true;
+	}
+
+	if (RemoveRappelComponent && RappellerComponent)
+	{
+		RappellerComponent->DestroyComponent();
 	}
 
 }
