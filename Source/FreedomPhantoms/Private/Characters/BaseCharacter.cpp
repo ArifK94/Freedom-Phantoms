@@ -316,6 +316,20 @@ void ABaseCharacter::SetIsReviving(bool Value)
 	}
 }
 
+void ABaseCharacter::SetForwardInputValue(float Value)
+{
+	ForwardInputValue = Value;
+
+	if (Value > 0.f)
+	{
+		// Check if can peak up if in cover.
+		if (isTakingCover)
+		{
+			CanPerformCoverPeakUp();
+		}
+	}
+}
+
 void ABaseCharacter::InitTimeHandlers()
 {
 	GetWorldTimerManager().SetTimer(THandler_CharacterMovement, this, &ABaseCharacter::UpdateCharacterMovement, .1f, true);

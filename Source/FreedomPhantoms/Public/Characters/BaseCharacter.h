@@ -563,9 +563,7 @@ public:
 		RightInputValue = Value;
 	}
 
-	void SetForwardInputValue(float Value) {
-		ForwardInputValue = Value;
-	}
+	void SetForwardInputValue(float Value);
 
 
 	FRotator GetRotationInput() {
