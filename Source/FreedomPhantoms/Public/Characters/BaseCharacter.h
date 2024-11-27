@@ -49,9 +49,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* AimCameraRightSpring;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* FirstPersonCameraSpring;
-
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
@@ -327,6 +324,7 @@ private:
 
 	float SprintSpeed;
 
+	FTimerHandle THandler_DelayedBeginPlay;
 	FTimerHandle THandler_CharacterMovement;
 	FTimerHandle THandler_CharacterDirection;
 
@@ -363,6 +361,9 @@ protected:
 	virtual void OnRappelChange(FRappellingParameters RappellingInfo);
 
 	virtual void PlayDeathAnim(FHealthParameters InHealthParameters);
+
+	UFUNCTION(BlueprintCallable, Category = "Voice")
+	void HandleVoiceAudioFinished();
 
 	UFUNCTION()
 	void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -461,6 +462,8 @@ public:
 
 	void PostDeath();
 
+	virtual void DestroyUnusedComponents();
+
 protected:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -469,10 +472,11 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	void BeginDelayedPlay();
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void Revived();
-
 
 public:
 	AAIController* GetDefaultAIController() {

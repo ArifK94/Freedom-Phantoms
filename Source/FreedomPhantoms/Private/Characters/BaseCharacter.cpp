@@ -84,16 +84,6 @@ ABaseCharacter::ABaseCharacter()
 	AimCameraLeftSpring->bEnableCameraLag = false;
 	AimCameraLeftSpring->bEnableCameraRotationLag = false;
 
-
-	FirstPersonCameraSpring = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCameraSpring"));
-	FirstPersonCameraSpring->bUsePawnControlRotation = true;
-	FirstPersonCameraSpring->SetupAttachment(GetMesh());
-	FirstPersonCameraSpring->TargetArmLength = 0.f;
-	FirstPersonCameraSpring->SocketOffset.Set(0.f, 0.f, 0.f);
-	FirstPersonCameraSpring->bEnableCameraLag = false;
-	FirstPersonCameraSpring->bEnableCameraRotationLag = false;
-
-
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
@@ -101,6 +91,8 @@ ABaseCharacter::ABaseCharacter()
 	FollowCamera->SetHiddenInGame(false);
 
 	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
+	VoiceAudioComponent->bAutoActivate = false;
+	VoiceAudioComponent->SetComponentTickEnabled(false);
 	VoiceAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 	CharacterOutlinePPComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("CharacterOutlinePPComp"));
@@ -173,7 +165,6 @@ void ABaseCharacter::BeginPlay()
 
 	AimCameraLeftSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderLeftocket);
 	AimCameraRightSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ShoulderRightSocket);
-	FirstPersonCameraSpring->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeadSocket);
 
 	InitTimeHandlers();
 
@@ -182,6 +173,20 @@ void ABaseCharacter::BeginPlay()
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnCapsuleHit);
 	HealthComp->OnHealthChanged.AddDynamic(this, &ABaseCharacter::OnHealthUpdate);
 	RappellerComponent->OnRappelChanged.AddDynamic(this, &ABaseCharacter::OnRappelChange);
+
+	GetWorld()->GetTimerManager().SetTimer(THandler_DelayedBeginPlay, this, &ABaseCharacter::BeginDelayedPlay, 1.f, false, 1.f);
+}
+
+void ABaseCharacter::BeginDelayedPlay()
+{
+	if (!IsPlayerControlled())
+	{
+		DestroyUnusedComponents();
+	}
+
+	if (RappellerComponent && !IsInVehicle) RappellerComponent->DestroyComponent();
+
+	GetWorld()->GetTimerManager().ClearTimer(THandler_DelayedBeginPlay);
 }
 
 void ABaseCharacter::Tick(float DeltaTime)
@@ -247,6 +252,8 @@ void ABaseCharacter::SetVehicleSeat(FVehicletSeating Seat)
 		SetIsExitingVehicle(false);
 
 		HealthComp->SetCanBeWounded(HealthComp->GetCanBeWoundedDefault());
+
+		if (RappellerComponent) RappellerComponent->DestroyComponent();
 	}
 
 }
@@ -355,6 +362,7 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		{
 			if (VoiceClipsSet->DeathSound != nullptr)
 			{
+				VoiceAudioComponent->Activate();
 				VoiceAudioComponent->Sound = VoiceClipsSet->DeathSound;
 				VoiceAudioComponent->Play();
 			}
@@ -476,7 +484,7 @@ void ABaseCharacter::RetrieveDeathAnimDataSet()
 
 void ABaseCharacter::UpdateCameraView()
 {
-	if (IsFirstPersonView) {
+	if (IsFirstPersonView || !IsPlayerControlled()) {
 		return;
 	}
 
@@ -702,7 +710,7 @@ void ABaseCharacter::Jump()
 void ABaseCharacter::SetFirstPersonView()
 {
 	IsFirstPersonView = true;
-	FollowCamera->AttachToComponent(FirstPersonCameraSpring, FAttachmentTransformRules::SnapToTargetNotIncludingScale, USpringArmComponent::SocketName);
+	FollowCamera->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HeadSocket);
 }
 
 void ABaseCharacter::ShowCharacterOutline(bool CanShow, bool IgnoreDeath)
@@ -1289,6 +1297,7 @@ void ABaseCharacter::PlayVoiceSound(USoundBase* Sound)
 		return;
 	}
 
+	VoiceAudioComponent->Activate();
 	VoiceAudioComponent->Sound = Sound;
 	VoiceAudioComponent->Play();
 }
@@ -1428,12 +1437,25 @@ void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 	}
 }
 
+void ABaseCharacter::HandleVoiceAudioFinished()
+{
+	VoiceAudioComponent->Deactivate();
+}
+
 void ABaseCharacter::PostDeath()
 {
 	//GetMesh()->SetAnimInstanceClass(NULL);
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Death"));
 	GetMesh()->SetSimulatePhysics(true);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void ABaseCharacter::DestroyUnusedComponents()
+{
+	if (AimCameraRightSpring) AimCameraRightSpring->DestroyComponent();
+	if (AimCameraLeftSpring) AimCameraLeftSpring->DestroyComponent();
+	if (CameraBoom) CameraBoom->DestroyComponent();
+	if (RappellerComponent && !IsInVehicle) RappellerComponent->DestroyComponent();
 }
 
 void ABaseCharacter::StartDestroy()
