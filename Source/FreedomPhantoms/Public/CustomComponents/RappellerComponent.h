@@ -37,6 +37,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rappelling", meta = (AllowPrivateAccess = "true"))
 	class ARope* Rope;
 
+	/** Destroy this component after rappelling has finished? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rappelling", meta = (AllowPrivateAccess = "true"))
+	bool DestroyAfterRapelled;
 
 	int32 CurrentBoneIndex;
 

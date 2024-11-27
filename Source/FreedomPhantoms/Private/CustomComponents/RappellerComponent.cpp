@@ -20,6 +20,8 @@ URappellerComponent::URappellerComponent()
 	RappelDuration = 5.f;
 
 	CurrentBoneIndex = 0;
+
+	DestroyAfterRapelled = true;
 }
 
 void URappellerComponent::BeginPlay()
@@ -90,6 +92,11 @@ void URappellerComponent::OnRappelFinished()
 	FRappellingParameters RappellingParams;
 	RappellingParams.IsComplete = true;
 	OnRappelChanged.Broadcast(RappellingParams);
+
+	if (DestroyAfterRapelled)
+	{
+		DestroyComponent();
+	}
 }
 
 void URappellerComponent::HandleRappelling(float DeltaTime)
