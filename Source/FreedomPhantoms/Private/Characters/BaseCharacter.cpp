@@ -54,6 +54,10 @@ ABaseCharacter::ABaseCharacter()
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 150.0f;
+	GetCharacterMovement()->PrimaryComponentTick.TickInterval = 0.03f; // 30ms tick
+	GetCharacterMovement()->bEnablePhysicsInteraction = false;
+	GetCharacterMovement()->MaxSimulationIterations = 4;
+
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
