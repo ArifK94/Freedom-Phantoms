@@ -178,7 +178,7 @@ void UCoverAction::BeginCoverPeak()
 		ShouldAim = true;
 	}
 
-	if (OwningCombatCharacter->CanCoverPeakUp()) 
+	if (OwningCombatCharacter->CanPerformCoverPeakUp()) 
 	{
 
 		if (ShouldAim)

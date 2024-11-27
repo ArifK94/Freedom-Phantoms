@@ -934,7 +934,7 @@ void ACombatCharacter::BeginFire()
 	}
 
 	// can shoot from cover?
-	if (isTakingCover && !isAtCoverCorner && !CanCoverPeakUp()) {
+	if (isTakingCover && !isAtCoverCorner && !CanPerformCoverPeakUp()) {
 		return;
 	}
 

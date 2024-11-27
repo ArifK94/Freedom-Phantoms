@@ -1100,7 +1100,7 @@ bool ABaseCharacter::CanAim()
 		}
 		else
 		{
-			if (CanCoverPeakUp()) {
+			if (CanPerformCoverPeakUp()) {
 				return true;
 			}
 			else {
@@ -1114,7 +1114,7 @@ bool ABaseCharacter::CanAim()
 	}
 }
 
-bool ABaseCharacter::CanCoverPeakUp()
+bool ABaseCharacter::CanPerformCoverPeakUp()
 {
 	if (!isTakingCover) {
 		return false;
@@ -1130,6 +1130,8 @@ bool ABaseCharacter::CanCoverPeakUp()
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	bool LineTrace = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, QueryParams);
+
+	CanCoverPeakUp = !LineTrace;
 
 	return !LineTrace;
 }

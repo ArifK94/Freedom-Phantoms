@@ -181,6 +181,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
 	bool isCoveringLow;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cover", meta = (AllowPrivateAccess = "true"))
+	bool CanCoverPeakUp;
+
+
 	/**
 	* To prevent the stand to crouch animations from playing if aleady in croching position, this is usefulf when changing from cover state back to default animation state.
 	*/
@@ -444,8 +448,7 @@ public:
 	/**
 	* Can character peak up while in cover?
 	*/
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	bool CanCoverPeakUp();
+	bool CanPerformCoverPeakUp();
 
 	void SetVehicleSeat(FVehicletSeating Seat);
 	virtual void SetIsExitingVehicle(bool IsExiting);
