@@ -17,6 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUpdatedignature, ACombatCha
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKillConfirmSignature, int, KillCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMountedGunEnabledSignature, AMountedGun*, MountedGun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAnimSetUpdateSignature, FWeaponAnimSet, WeaponAnimSet);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentWeaponUpdateSignature, AWeapon*, Weapon);
 
 UCLASS()
 class FREEDOMPHANTOMS_API ACombatCharacter : public ABaseCharacter, public IInteractable
@@ -153,6 +154,8 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnWeaponAnimSetUpdateSignature OnWeaponAnimSetUpdate;
 	
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnCurrentWeaponUpdateSignature OnCurrentWeaponUpdate;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FOnCombatUpdatedignature OnCombatUpdated;
@@ -304,6 +307,8 @@ public:
 	AWeapon* GetCurrentWeapon() {
 		return currentWeaponObj;
 	}
+
+	void SetCurrentWeapon(AWeapon* Weapon);
 
 	AWeapon* GetPrimaryWeapon() {
 		return primaryWeaponObj;

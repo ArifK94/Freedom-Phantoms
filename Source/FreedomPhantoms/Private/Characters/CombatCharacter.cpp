@@ -103,11 +103,11 @@ void ACombatCharacter::BeginPlay()
 
 	if (primaryWeaponObj)
 	{
-		currentWeaponObj = primaryWeaponObj;
+		SetCurrentWeapon(primaryWeaponObj);
 	}
 	else if (secondaryWeaponObj)
 	{
-		currentWeaponObj = secondaryWeaponObj;
+		SetCurrentWeapon(secondaryWeaponObj);
 	}
 
 	RegisterWeaponEvents(primaryWeaponObj, true);
@@ -208,6 +208,12 @@ bool ACombatCharacter::CanInteract_Implementation(APawn* InPawn, AController* In
 	}
 }
 
+void ACombatCharacter::SetCurrentWeapon(AWeapon* Weapon)
+{
+	currentWeaponObj = Weapon;
+	OnCurrentWeaponUpdate.Broadcast(currentWeaponObj);
+}
+
 
 void ACombatCharacter::SetMountedGun(AWeapon* Mount)
 {
@@ -234,7 +240,8 @@ void ACombatCharacter::SetPrimaryWeapon(AWeapon* Weapon)
 
 	Weapon->SetOwner(this);
 	primaryWeaponObj = Weapon;
-	currentWeaponObj = primaryWeaponObj;
+
+	SetCurrentWeapon(primaryWeaponObj);
 
 	LoadoutType LoadoutType = LoadoutType::Assault;
 
@@ -792,11 +799,11 @@ void ACombatCharacter::BeginWeaponSwap()
 		// swap weapons without the need of animations if not already equipped
 		if (currentWeaponObj == primaryWeaponObj)		// set secondary weapon
 		{
-			currentWeaponObj = secondaryWeaponObj;
+			SetCurrentWeapon(secondaryWeaponObj);
 		}
 		else // set primary weapon
 		{
-			currentWeaponObj = primaryWeaponObj;
+			SetCurrentWeapon(primaryWeaponObj);
 		}
 		currentWeaponObj->ReadyToUse();
 	}
@@ -822,7 +829,7 @@ void ACombatCharacter::swapWeapon()
 		NewEquippedWeapon = currentWeaponObj == primaryWeaponObj ? secondaryWeaponObj : primaryWeaponObj;
 	}
 
-	currentWeaponObj = NewEquippedWeapon;
+	SetCurrentWeapon(NewEquippedWeapon);
 	currentWeaponObj->ReadyToUse();
 
 	// reset the value to be used again next time otherwise previous if statement will fail if no specific weapon was chosen to be equipped.
@@ -910,7 +917,7 @@ void ACombatCharacter::PickupWeapon(AWeapon* NewWeapon)
 
 		CurrentWeapon->setWeaponSocket(GetMesh(), WeaponHandSocket);
 
-		currentWeaponObj = CurrentWeapon;
+		SetCurrentWeapon(CurrentWeapon);
 
 		RetrieveWeaponAnimDataSet();
 	}
@@ -1176,7 +1183,8 @@ void ACombatCharacter::UseMountedGun()
 
 	MountedGun->SetOwner(this);
 	MountedGun->SetPotentialOwner(this);
-	currentWeaponObj = MountedGun;
+	SetCurrentWeapon(MountedGun);
+
 
 	RegisterWeaponEvents(MountedGun, true);
 
@@ -1220,7 +1228,7 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 		// Reassign to collide with the MG again
 		GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, false);
 
-		currentWeaponObj = primaryWeaponObj;
+		SetCurrentWeapon(primaryWeaponObj);
 
 		RetrieveWeaponAnimDataSet();
 		BeginEquipWeapon();
