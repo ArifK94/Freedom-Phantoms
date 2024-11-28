@@ -273,7 +273,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void OnHealthUpdate(FHealthParameters InHealthParameters) override;
-	virtual void PlayDeathAnim(FHealthParameters InHealthParameters) override;
+	virtual UAnimSequence* GetDeathAnim(FHealthParameters InHealthParameters) override;
 
 	virtual void Revived() override;
 

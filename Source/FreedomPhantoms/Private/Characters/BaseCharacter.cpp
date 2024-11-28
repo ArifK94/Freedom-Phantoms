@@ -365,6 +365,22 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 {
 	if (!HealthComp->IsAlive())
 	{
+
+		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(InHealthParameters.HitInfo.PhysMaterial.Get());
+
+		// Play death sound if not recieved a headshot
+		if (SurfaceType != SURFACE_HEAD)
+		{
+			if (VoiceClipsSet->DeathSound != nullptr)
+			{
+				VoiceAudioComponent->Activate();
+				VoiceAudioComponent->Sound = VoiceClipsSet->DeathSound;
+				VoiceAudioComponent->Play();
+			}
+		}
+
+		//PlayDeathAnim(InHealthParameters);
+
 		if (IsInVehicle)
 		{
 			HealthComp->SetCanBeWounded(false);
@@ -383,28 +399,6 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 
 		// Custom collision profile to allow remove capsule collision but still run root motion
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Death"));
-
-
-
-		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(InHealthParameters.HitInfo.PhysMaterial.Get());
-
-		// Play death sound if not recieved a headshot
-		if (SurfaceType != SURFACE_HEAD)
-		{
-			if (VoiceClipsSet->DeathSound != nullptr)
-			{
-				VoiceAudioComponent->Activate();
-				VoiceAudioComponent->Sound = VoiceClipsSet->DeathSound;
-				VoiceAudioComponent->Play();
-			}
-		}
-
-		PlayDeathAnim(InHealthParameters);
-
-		// In case death anim asset is empty
-		if (!DeathAnimationAsset) {
-			DeathAnimationAsset = DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
-		}
 
 
 		if (InHealthParameters.AffectedHealthComponent->GetIsWounded())
@@ -1335,7 +1329,7 @@ void ABaseCharacter::PlayVoiceSound(USoundBase* Sound)
 	VoiceAudioComponent->Play();
 }
 
-void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
+UAnimSequence* ABaseCharacter::GetDeathAnim(FHealthParameters InHealthParameters)
 {
 	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(InHealthParameters.HitInfo.PhysMaterial.Get());
 
@@ -1372,75 +1366,68 @@ void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 		{
 			if (HasHitLeft && !DeathAnimation->SprintExplosionsRight.IsEmpty())
 			{
-				DeathAnimationAsset = DeathAnimation->SprintExplosionsRight[rand() % DeathAnimation->SprintExplosionsRight.Num()];
+				return DeathAnimation->SprintExplosionsRight[rand() % DeathAnimation->SprintExplosionsRight.Num()];
 			}
 			else if (HasHitRight && !DeathAnimation->SprintExplosionsLeft.IsEmpty())
 			{
-				DeathAnimationAsset = DeathAnimation->SprintExplosionsLeft[rand() % DeathAnimation->SprintExplosionsLeft.Num()];
+				return DeathAnimation->SprintExplosionsLeft[rand() % DeathAnimation->SprintExplosionsLeft.Num()];
 			}
 			else if (!DeathAnimation->SprintExplosionsFront.IsEmpty())
 			{
-				DeathAnimationAsset = DeathAnimation->SprintExplosionsFront[rand() % DeathAnimation->SprintExplosionsFront.Num()];
+				return DeathAnimation->SprintExplosionsFront[rand() % DeathAnimation->SprintExplosionsFront.Num()];
 			}
 		}
 		else
 		{
 			if (HasHitFront && !DeathAnimation->StandExplosionsBack.IsEmpty())
 			{
-				DeathAnimationAsset = DeathAnimation->StandExplosionsBack[rand() % DeathAnimation->StandExplosionsBack.Num()];
+				return DeathAnimation->StandExplosionsBack[rand() % DeathAnimation->StandExplosionsBack.Num()];
 			}
 			else if (HasHitLeft && !DeathAnimation->StandExplosionsRight.IsEmpty())
 			{
-				DeathAnimationAsset = DeathAnimation->StandExplosionsRight[rand() % DeathAnimation->StandExplosionsRight.Num()];
+				return DeathAnimation->StandExplosionsRight[rand() % DeathAnimation->StandExplosionsRight.Num()];
 			}
 			else if (HasHitRight && !DeathAnimation->StandExplosionsLeft.IsEmpty())
 			{
-				DeathAnimationAsset = DeathAnimation->StandExplosionsLeft[rand() % DeathAnimation->StandExplosionsLeft.Num()];
+				return DeathAnimation->StandExplosionsLeft[rand() % DeathAnimation->StandExplosionsLeft.Num()];
 			}
 			else if (!DeathAnimation->StandExplosionsFront.IsEmpty())
 			{
-				DeathAnimationAsset = DeathAnimation->StandExplosionsFront[rand() % DeathAnimation->StandExplosionsFront.Num()];
+				return DeathAnimation->StandExplosionsFront[rand() % DeathAnimation->StandExplosionsFront.Num()];
 			}
 		}
-		return;
 	}
 
 	if (InHealthParameters.WeaponCauser && InHealthParameters.WeaponCauser->GetWeaponType() == WeaponType::Shotgun)
 	{
 		if (SurfaceType == SURFACE_LEGS && !DeathAnimation->ShotgunHitsLegs.IsEmpty())
 		{
-			DeathAnimationAsset = DeathAnimation->ShotgunHitsLegs[rand() % DeathAnimation->ShotgunHitsLegs.Num()];
-			return;
+			return DeathAnimation->ShotgunHitsLegs[rand() % DeathAnimation->ShotgunHitsLegs.Num()];
 		}
 		else if (HasHitFront && !DeathAnimation->ShotgunHitsFront.IsEmpty())
 		{
-			DeathAnimationAsset = DeathAnimation->ShotgunHitsFront[rand() % DeathAnimation->ShotgunHitsFront.Num()];
-			return;
+			return DeathAnimation->ShotgunHitsFront[rand() % DeathAnimation->ShotgunHitsFront.Num()];
 		}
 		else if (HasHitLeft && !DeathAnimation->ShotgunHitsLeft.IsEmpty())
 		{
-			DeathAnimationAsset = DeathAnimation->ShotgunHitsLeft[rand() % DeathAnimation->ShotgunHitsLeft.Num()];
-			return;
+			return DeathAnimation->ShotgunHitsLeft[rand() % DeathAnimation->ShotgunHitsLeft.Num()];
 		}
 		else if (HasHitRight && !DeathAnimation->ShotgunHitsRight.IsEmpty())
 		{
-			DeathAnimationAsset = DeathAnimation->ShotgunHitsRight[rand() % DeathAnimation->ShotgunHitsRight.Num()];
-			return;
+			return DeathAnimation->ShotgunHitsRight[rand() % DeathAnimation->ShotgunHitsRight.Num()];
 		}
 	}
 
 	if (isSprinting && !DeathAnimation->Sprints.IsEmpty())
 	{
 		int RandomIndex = rand() % DeathAnimation->Sprints.Num();
-		DeathAnimationAsset = DeathAnimation->Sprints[RandomIndex];
-		return;
+		return DeathAnimation->Sprints[RandomIndex];
 	}
 
 	if (GetCharacterMovement()->IsCrouching() && !DeathAnimation->Crouches.IsEmpty())
 	{
 		int RandomIndex = rand() % DeathAnimation->Crouches.Num();
-		DeathAnimationAsset = DeathAnimation->Crouches[RandomIndex];
-		return;
+		return DeathAnimation->Crouches[RandomIndex];
 	}
 
 
@@ -1449,25 +1436,23 @@ void ABaseCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
 	case SURFACE_HEAD:
 		if (!DeathAnimation->Headshots.IsEmpty())
 		{
-			DeathAnimationAsset = DeathAnimation->Headshots[rand() % DeathAnimation->Headshots.Num()];
+			return DeathAnimation->Headshots[rand() % DeathAnimation->Headshots.Num()];
 		}
-		return;
 	case SURFACE_FLESHVULNERABLE:
 		if (!DeathAnimation->Vulernables.IsEmpty())
 		{
-			DeathAnimationAsset = DeathAnimation->Vulernables[rand() % DeathAnimation->Vulernables.Num()];
+			return DeathAnimation->Vulernables[rand() % DeathAnimation->Vulernables.Num()];
 		}
-		return;
 	case SURFACE_GROIN:
 		if (!DeathAnimation->Groins.IsEmpty())
 		{
-			DeathAnimationAsset = DeathAnimation->Groins[rand() % DeathAnimation->Groins.Num()];
+			return DeathAnimation->Groins[rand() % DeathAnimation->Groins.Num()];
 		}
-		return;
 	default:
-		DeathAnimationAsset = DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
-		return;
+		return DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
 	}
+
+	return DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
 }
 
 void ABaseCharacter::HandleVoiceAudioFinished()

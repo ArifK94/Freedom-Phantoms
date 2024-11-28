@@ -294,9 +294,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	class URappellerComponent* RappellerComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UAnimSequence* DeathAnimationAsset;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AOrderIcon> OverheadIconClass;
 
@@ -364,8 +361,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Rappelling")
 	virtual void OnRappelChange(FRappellingParameters RappellingInfo);
 
-	virtual void PlayDeathAnim(FHealthParameters InHealthParameters);
-
 	UFUNCTION(BlueprintCallable, Category = "Voice")
 	void HandleVoiceAudioFinished();
 
@@ -373,6 +368,9 @@ protected:
 	void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	virtual void Landed(const FHitResult& Hit) override;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Animation")
+	virtual UAnimSequence* GetDeathAnim(FHealthParameters InHealthParameters);
 
 private:
 	void SpawnOverheadIcon();

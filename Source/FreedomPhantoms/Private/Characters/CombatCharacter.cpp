@@ -1267,16 +1267,14 @@ void ACombatCharacter::CloneCharacter(ACombatCharacter* NewCharacter)
 	NewCharacter->AddKillCount(KillCounter);
 }
 
-void ACombatCharacter::PlayDeathAnim(FHealthParameters InHealthParameters)
+UAnimSequence* ACombatCharacter::GetDeathAnim(FHealthParameters InHealthParameters)
 {
 	if (!DeathAnimation->MountedGuns.IsEmpty() && isUsingMountedWeapon && !InHealthParameters.IsExplosive)
 	{
-		DeathAnimationAsset = DeathAnimation->MountedGuns[rand() % DeathAnimation->MountedGuns.Num()];
+		return DeathAnimation->MountedGuns[rand() % DeathAnimation->MountedGuns.Num()];
 	}
-	else
-	{
-		Super::PlayDeathAnim(InHealthParameters);
-	}
+
+	return Super::GetDeathAnim(InHealthParameters);
 }
 
 void ACombatCharacter::Revived()
