@@ -22,6 +22,7 @@ class AOrderIcon;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterActionUpdateignature, FCharacterActionParameters, CharacterActionParameters);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRappelUpdateignature, ABaseCharacter*, BaseCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCoverUpdateSignature, FCoverUpdateInfo, CoverUpdateInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMovementModeUpdateSignature, EMovementMode, PrevMovementMode, uint8, PreviousCustomMode);
 
 UCLASS(config = Game)
 class FREEDOMPHANTOMS_API ABaseCharacter : public ACharacter
@@ -367,6 +368,8 @@ protected:
 	UFUNCTION()
 	void OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
+
 	virtual void Landed(const FHitResult& Hit) override;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Animation")
@@ -393,6 +396,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnCoverUpdateSignature OnCoverUpdate;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnMovementModeUpdateSignature OnMovementModeUpdate;
 
 	virtual FVector GetPawnViewLocation() const override;
 
