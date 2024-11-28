@@ -1214,6 +1214,8 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 	// prevent drop animations if not using MG.
 	if (isUsingMountedWeapon)
 	{
+		isUsingMountedWeapon = false;
+
 		EndFire();
 		EndAim();
 
@@ -1227,6 +1229,7 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 
 		// Reassign to collide with the MG again
 		GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, false);
+
 
 		SetCurrentWeapon(primaryWeaponObj);
 
@@ -1244,8 +1247,8 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 
 		MountedGun->SetPotentialOwner(nullptr);
 		MountedGun = nullptr;
-	}
 
+	}
 	isUsingMountedWeapon = false;
 
 }
