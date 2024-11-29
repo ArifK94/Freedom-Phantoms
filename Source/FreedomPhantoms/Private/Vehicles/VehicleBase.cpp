@@ -147,6 +147,7 @@ AVehicleBase::AVehicleBase()
 	HasNoPlayerInput = false;
 	MeshComponentTickEnabled = true;
 	DestroyOnDeath = false;
+	HasNoFollowCamera = false;
 
 	KillConfirmedParamName = "KillConfirmed";
 	SingleKillIndex = 0;
@@ -1276,6 +1277,11 @@ void AVehicleBase::OptimizeComponents()
 		USharedService::DestroyActorComponent(PilotAudio);
 		USharedService::DestroyActorComponent(ThermalVisionPPComp);
 		USharedService::DestroyActorComponent(ThermalToggleAudio);
+	}
+
+	if (HasNoFollowCamera)
+	{
+		USharedService::DestroyActorComponent(FollowCamera);
 	}
 
 	MeshComponent->SetComponentTickEnabled(MeshComponentTickEnabled);

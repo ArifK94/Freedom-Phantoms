@@ -274,6 +274,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Optimization", meta = (AllowPrivateAccess = "true"))
 		bool MeshComponentTickEnabled;
 
+	/** Should the FollowCamera be removed if it will not affect the vehicle? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Optimization", meta = (AllowPrivateAccess = "true"))
+		bool HasNoFollowCamera;
+
 	bool ShowTargetSystem;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Optimization", meta = (AllowPrivateAccess = "true"))
