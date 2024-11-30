@@ -24,8 +24,8 @@ AAutoTurretWeapon::AAutoTurretWeapon()
 	MeshComp->SetCollisionProfileName(TEXT("BlockAll"));
 	MeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(MeshComp);
+	EyeViewPointComponent = CreateDefaultSubobject<USceneComponent>(TEXT("EyeViewPointComponent"));
+	EyeViewPointComponent->SetupAttachment(MeshComp);
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	HealthComponent->SetRegenerateHealth(false);
@@ -190,10 +190,10 @@ void AAutoTurretWeapon::OnTargetSearchUpdate(FTargetSearchParameters TargetSearc
 
 void AAutoTurretWeapon::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
 {
-	if (FollowCamera)
+	if (EyeViewPointComponent)
 	{
-		OutLocation = FollowCamera->GetComponentLocation();
-		OutRotation = FollowCamera->GetComponentRotation();
+		OutLocation = EyeViewPointComponent->GetComponentLocation();
+		OutRotation = EyeViewPointComponent->GetComponentRotation();
 	}
 	else
 	{
@@ -211,7 +211,7 @@ void AAutoTurretWeapon::Shoot()
 	auto TargetRotation = FRotator::ZeroRotator;
 	auto NewRotationInput = FaceTarget(TargetActor, TargetRotation);
 	RotationInput = NewRotationInput;
-	FollowCamera->SetRelativeRotation(RotationInput);
+	EyeViewPointComponent->SetRelativeRotation(RotationInput);
 
 	auto NearlyEqualPitch = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Pitch, TargetRotation.Pitch, TurretRotationErrorTolerance);
 	auto NearlyEqualYaw = UKismetMathLibrary::NearlyEqual_FloatFloat(RotationInput.Yaw, TargetRotation.Yaw, TurretRotationErrorTolerance);
