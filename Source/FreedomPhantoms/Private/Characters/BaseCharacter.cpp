@@ -1458,8 +1458,6 @@ UAnimSequence* ABaseCharacter::GetDeathAnim(FHealthParameters InHealthParameters
 	default:
 		return DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
 	}
-
-	return DeathAnimation->Defaults[rand() % DeathAnimation->Defaults.Num()];
 }
 
 void ABaseCharacter::HandleVoiceAudioFinished()
