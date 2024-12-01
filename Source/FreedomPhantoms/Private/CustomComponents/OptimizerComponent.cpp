@@ -27,6 +27,8 @@ void UOptimizerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	DestroyComponent();
+
 	SetComponentTickEnabled(false);
 
 	//if (GetOwner()) {
