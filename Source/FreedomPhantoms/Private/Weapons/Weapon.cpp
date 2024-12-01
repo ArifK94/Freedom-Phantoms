@@ -116,12 +116,29 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Remove mesh tick if not animation blueprint is assigned to save performance.
+	if (!MeshComp->GetAnimInstance())
+	{
+		MeshComp->SetComponentTickEnabled(false);
+	}
+
 	// Use weapon mesh comp by default
 	ParentMesh = MeshComp;
 
-	MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+	if (MuzzleLightComponent)
+	{
+		MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	}
+
+	if (ShotAudioComponent)
+	{
+		ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	}
+
+	if (ClipAudioComponent)
+	{
+		ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+	}
 
 	SpawnMagazine();
 	ConfigSetup();
@@ -133,9 +150,20 @@ void AWeapon::DelayedInit()
 {
 	LoadParentMesh();
 
-	MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
-	ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+	if (MuzzleLightComponent)
+	{
+		MuzzleLightComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	}
+	
+	if (ShotAudioComponent)
+	{
+		ShotAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, MuzzleSocket);
+	}
+
+	if (ClipAudioComponent)
+	{
+		ClipAudioComponent->AttachToComponent(ParentMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ClipSocket);
+	}
 
 	DeleteUnusedComponents();
 
