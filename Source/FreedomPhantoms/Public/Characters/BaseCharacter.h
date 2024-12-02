@@ -301,6 +301,14 @@ protected:
 	UPROPERTY()
 	AOrderIcon* OverheadIcon;
 
+	/** 
+	* Hold mesh components that this character will have.
+	* Key is the mesh component
+	* Value is the meshcomponent's default collision profile name
+	*/
+	UPROPERTY()
+	TMap<UPrimitiveComponent*, FName> ComponentCollisionMap;
+
 protected:
 	float DefaultMaxWalkSpeed;
 
@@ -383,6 +391,9 @@ private:
 	void PlayFootstepSound(FHitResult HitInfo);
 
 	USoundBase* GetFootstepSound(FHitResult HitInfo);
+
+	/** Toggle collisions for mesh component in this actor. */
+	void EnableComponentCollisions(bool Enabled);
 
 	void StartDestroy();
 	void DetroyChildActor(TArray<AActor*> ParentActor);
@@ -467,7 +478,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void TraceFootstep();
 
-	void PostDeath();
+	virtual void PostDeath();
 
 	virtual void DestroyUnusedComponents();
 

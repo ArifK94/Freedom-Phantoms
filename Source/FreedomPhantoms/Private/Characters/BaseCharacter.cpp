@@ -179,6 +179,20 @@ void ABaseCharacter::BeginPlay()
 	RappellerComponent->OnRappelChanged.AddDynamic(this, &ABaseCharacter::OnRappelChange);
 
 	GetWorld()->GetTimerManager().SetTimer(THandler_DelayedBeginPlay, this, &ABaseCharacter::BeginDelayedPlay, 1.f, false, 1.f);
+
+
+	// Add all components and their collision profiles.
+	TArray<UMeshComponent*> CollisionComps;
+	GetComponents<UMeshComponent>(CollisionComps);
+	for (int32 ComponentIdx = 0; ComponentIdx < CollisionComps.Num(); ++ComponentIdx)
+	{
+		FName CollisionProfileName = CollisionComps[ComponentIdx]->GetCollisionProfileName();
+
+		auto MeshComp = CollisionComps[ComponentIdx];
+		ComponentCollisionMap.Add(MeshComp, CollisionProfileName);
+	}
+
+	ComponentCollisionMap.Add(GetCapsuleComponent(), GetCapsuleComponent()->GetCollisionProfileName());
 }
 
 void ABaseCharacter::BeginDelayedPlay()
@@ -205,6 +219,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 
 void ABaseCharacter::Revived()
 {
+	EnableComponentCollisions(true);
 	InitTimeHandlers();
 	DefaultController->Possess(this);
 }
@@ -397,9 +412,10 @@ void ABaseCharacter::OnHealthUpdate(FHealthParameters InHealthParameters)
 		// In case if died in vehicle.
 		GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
 
+		PostDeath();
+
 		// Custom collision profile to allow remove capsule collision but still run root motion
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Death"));
-
 
 		if (InHealthParameters.AffectedHealthComponent->GetIsWounded())
 		{
@@ -441,13 +457,6 @@ void ABaseCharacter::OnCapsuleHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 		GetCapsuleComponent()->IgnoreActorWhenMoving(Character, true);
 		Character->GetCapsuleComponent()->IgnoreActorWhenMoving(this, true);
 	}
-
-	//if (!HealthComp->IsAlive() && OtherActor != this)
-	//{
-	//	if (!HealthComp->GetIsWounded()) {
-	//		PostDeath();
-	//	}
-	//}
 }
 
 void ABaseCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -1325,6 +1334,28 @@ USoundBase* ABaseCharacter::GetFootstepSound(FHitResult HitInfo)
 	return SurfaceImpactSet.Sound;
 }
 
+void ABaseCharacter::EnableComponentCollisions(bool Enabled)
+{
+	for (const auto& Pair : ComponentCollisionMap)
+	{
+		UPrimitiveComponent* Component = Pair.Key; // The key (UMeshComponent*)
+		FName CollisionProfileName = Pair.Value;              // The value (FName)
+
+		// Log the mesh component name and associated FName
+		if (Component)
+		{
+			if (Enabled)
+			{
+				Component->SetCollisionProfileName(CollisionProfileName);
+			}
+			else
+			{
+				Component->SetCollisionProfileName(TEXT("NoCollision"));
+			}
+		}
+	}
+}
+
 void ABaseCharacter::PlayVoiceSound(USoundBase* Sound)
 {
 	if (!HealthComp->IsAlive() || Sound == nullptr) {
@@ -1467,10 +1498,7 @@ void ABaseCharacter::HandleVoiceAudioFinished()
 
 void ABaseCharacter::PostDeath()
 {
-	//GetMesh()->SetAnimInstanceClass(NULL);
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Death"));
-	GetMesh()->SetSimulatePhysics(true);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EnableComponentCollisions(false);
 }
 
 void ABaseCharacter::DestroyUnusedComponents()
