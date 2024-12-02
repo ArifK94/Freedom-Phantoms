@@ -1193,7 +1193,7 @@ void ACombatCharacter::UseMountedGun()
 
 	if (MountedGun->GetAdjustBehindMG())
 	{
-		AttachToComponent(MountedGun->GetParentMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MountedGun->GetCharacterPositionSocket());
+		MountedGun->AttachActorToMG(this);
 		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	}
 
@@ -1230,6 +1230,10 @@ void ACombatCharacter::DropMountedGun(bool ClearMG)
 		// Reassign to collide with the MG again
 		GetCapsuleComponent()->IgnoreActorWhenMoving(MountedGun, false);
 
+		if (MountedGun->GetAdjustBehindMG())
+		{
+			DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		}
 
 		SetCurrentWeapon(primaryWeaponObj);
 

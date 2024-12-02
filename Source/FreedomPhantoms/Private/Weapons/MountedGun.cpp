@@ -231,6 +231,11 @@ void AMountedGun::ResetCamera()
 	RotationInput = FRotator::ZeroRotator;
 }
 
+void AMountedGun::AttachActorToMG(AActor* Actor)
+{
+	Actor->AttachToComponent(GetParentMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CharacterPositionSocket);
+}
+
 void AMountedGun::ZoomIn()
 {
 	if (!GetWorld()) {

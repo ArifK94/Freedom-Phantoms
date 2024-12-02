@@ -123,6 +123,8 @@ public:
 
 	void ResetCamera();
 
+	void AttachActorToMG(AActor* Actor);
+
 	virtual void SetIsAiming(bool isAiming) override;
 
 	FVector GetCharacterStandPos();
